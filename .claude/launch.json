@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "harvestscape",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8643", "--directory", "game"],
+      "port": 8643
+    },
+    {
+      "name": "prototype",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8642", "--directory", "prototype"],
+      "port": 8642
+    }
+  ]
+}

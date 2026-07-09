@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#12100f">
+<title>Harvestscape</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="frame">
+  <div id="stage">
+    <canvas id="game" width="320" height="208"></canvas>
+
+    <!-- ============ IN-GAME HUD OVERLAY ============ -->
+    <div id="hud" class="overlay hidden">
+      <div id="hudTop">
+        <div class="pill" id="clock">
+          <canvas id="clockDial" width="22" height="22"></canvas>
+          <div class="clockText"><span id="dateLine">Spring · Day 1</span><span id="timeLine">6:00 am</span></div>
+        </div>
+        <div class="pill" id="goldPill"><span class="coin">◉</span> <span id="goldVal">500</span></div>
+      </div>
+      <div id="energyWrap" title="Energy">
+        <div id="energyBar"></div>
+        <div id="energyLabel">ENERGY</div>
+      </div>
+      <div id="questTracker"></div>
+      <div id="toasts"></div>
+    </div>
+
+    <!-- ============ HOTBAR ============ -->
+    <div id="hotbar" class="hidden"></div>
+
+    <!-- ============ CENTER BANNER (level-ups etc) ============ -->
+    <div id="banner"></div>
+
+    <!-- ============ DIALOGUE ============ -->
+    <div id="dialog" class="hidden">
+      <canvas id="portrait" width="64" height="64"></canvas>
+      <div class="dwrap">
+        <div class="who"></div>
+        <div class="txt"></div>
+        <div class="hint">▾ [E] / click</div>
+      </div>
+    </div>
+
+    <!-- ============ PANELS ============ -->
+    <div class="panel hidden" id="skillsPanel"><div class="phead"><h2>SKILLS</h2><button class="pclose">✕</button></div><div class="body"></div></div>
+    <div class="panel hidden" id="invPanel"><div class="phead"><h2>BACKPACK</h2><button class="pclose">✕</button></div><div class="body"></div></div>
+    <div class="panel hidden" id="questPanel"><div class="phead"><h2>JOURNAL</h2><button class="pclose">✕</button></div><div class="body"></div></div>
+    <div class="panel wide hidden" id="shopPanel"><div class="phead"><h2>TOM'S GENERAL STORE</h2><button class="pclose">✕</button></div>
+      <div class="tabs" id="shopTabs"></div><div class="body"></div></div>
+    <div class="panel wide hidden" id="cookPanel"><div class="phead"><h2>KITCHEN</h2><button class="pclose">✕</button></div><div class="body"></div></div>
+    <div class="panel hidden" id="giftPanel"><div class="phead"><h2 id="giftHead">A GIFT</h2><button class="pclose">✕</button></div><div class="body"></div></div>
+    <div class="panel hidden" id="settingsPanel"><div class="phead"><h2>SETTINGS</h2><button class="pclose">✕</button></div><div class="body"></div></div>
+
+    <!-- ============ CINEMATIC LETTERBOX ============ -->
+    <div id="cinebars"><div class="cbar top"></div><div class="cbar bot"></div></div>
+
+    <!-- ============ TITLE SCREEN ============ -->
+    <div id="title" class="screen">
+      <div id="titleLogo">
+        <div class="logoMain">HARVESTSCAPE</div>
+        <div class="logoSub">a cozy valley to call your own</div>
+      </div>
+      <div id="titleMenu">
+        <button class="mbtn" id="btnContinue">Continue</button>
+        <button class="mbtn primary" id="btnNew">New Game</button>
+        <button class="mbtn" id="btnHowto">How to Play</button>
+        <button class="mbtn ghost" id="btnMute">♪ Music: On</button>
+      </div>
+      <div id="titleFoot">v1.0 · made with sunlight &amp; code · <span id="clickHint">click to begin</span></div>
+    </div>
+
+    <!-- ============ INTRO LETTER CUTSCENE ============ -->
+    <div id="intro" class="screen hidden">
+      <div id="letter">
+        <div class="lhead">✒ A letter, left on the kitchen table</div>
+        <div id="letterBody"></div>
+        <button class="mbtn primary" id="btnLetterNext">Continue ▸</button>
+      </div>
+    </div>
+
+    <!-- ============ DAY TRANSITION / SLEEP ============ -->
+    <div id="fade"></div>
+    <div id="sleepCard" class="hidden">
+      <div class="scInner">
+        <div id="scTitle">Day 1</div>
+        <div id="scSub"></div>
+        <ul id="scList"></ul>
+        <div class="scHint">☾ ...</div>
+      </div>
+    </div>
+
+    <!-- ============ TOUCH CONTROLS ============ -->
+    <div id="touchUI" class="hidden">
+      <div id="dpad">
+        <button data-dir="up">▲</button>
+        <button data-dir="left">◀</button>
+        <button data-dir="right">▶</button>
+        <button data-dir="down">▼</button>
+      </div>
+      <div id="touchBtns">
+        <button id="btnUse">USE</button>
+        <button id="btnAct">ACT</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="belowbar">
+    <div id="controlsHint"></div>
+  </div>
+</div>
+
+<script src="js/00-core.js"></script>
+<script src="js/01-data.js"></script>
+<script src="js/02-audio.js"></script>
+<script src="js/03-art.js"></script>
+<script src="js/04-world.js"></script>
+<script src="js/05-particles.js"></script>
+<script src="js/06-weather.js"></script>
+<script src="js/07-entities.js"></script>
+<script src="js/08-actions.js"></script>
+<script src="js/09-quests.js"></script>
+<script src="js/13-content.js"></script>
+<script src="js/10-ui.js"></script>
+<script src="js/11-title.js"></script>
+<script src="js/14-story.js"></script>
+<script src="js/12-game.js"></script>
+</body>
+</html>

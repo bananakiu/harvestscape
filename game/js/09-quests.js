@@ -1,0 +1,107 @@
+"use strict";
+/* ============================================================
+   09-quests.js — quest progression & story beats.
+   ============================================================ */
+
+function totalLevel(){ let t=0; for(const s in state.skills) t += skillLvl(s); return t; }
+function curQuest(){ return QUESTS[state.questIdx] || null; }
+
+function objDone(o){
+  if(o.stat)       return (state.stats[o.stat]||0) >= o.goal;
+  if(o.level)      return skillLvl(o.level.skill) >= o.level.n;
+  if(o.heart)      return heartsOf("maya") >= o.heart;
+  if(o.totalLevel) return totalLevel() >= o.totalLevel;
+  if(o.gold)       return state.gold >= o.gold;
+  if(o.talk)       return !!state.rel[o.talk];
+  if(o.mineDepth)  return (state.mineBest||0) >= o.mineDepth;
+  if(o.flag)       return !!state.flags[o.flag];
+  return false;
+}
+function objProgress(o){
+  if(o.stat)       return [Math.min(state.stats[o.stat]||0, o.goal), o.goal];
+  if(o.level)      return [Math.min(skillLvl(o.level.skill), o.level.n), o.level.n];
+  if(o.heart)      return [Math.min(heartsOf("maya"), o.heart), o.heart];
+  if(o.totalLevel) return [Math.min(totalLevel(), o.totalLevel), o.totalLevel];
+  if(o.gold)       return [Math.min(state.gold, o.gold), o.gold];
+  if(o.talk)       return [state.rel[o.talk]?1:0, 1];
+  if(o.mineDepth)  return [Math.min(state.mineBest||0, o.mineDepth), o.mineDepth];
+  if(o.flag)       return [state.flags[o.flag]?1:0, 1];
+  return [0,1];
+}
+
+let _questGuard = false;
+function checkQuests(){
+  if(_questGuard) return;             // avoid re-entrancy from give()/bump()
+  _questGuard = true;
+  let safety = 0;
+  while(state.questIdx < QUESTS.length && !state.questReady){
+    const q = QUESTS[state.questIdx];
+    if(q.obj.every(objDone)){
+      const npc = QUEST_GIVER_NPC[q.giver];
+      if(npc){                        // quest with a real giver — wait for the player to report in
+        state.questReady = true;
+        setTimeout(() => toast("▸ Report to " + NPCDEF[npc].name + " — " + q.title, "#ffce5a"), 300);
+        break;
+      }
+      advanceQuest(q);                // letters / "the valley" auto-complete
+      if(safety++ > 12) break;
+    } else break;
+  }
+  _questGuard = false;
+  refreshQuestTracker();
+}
+function advanceQuest(q){
+  completeQuest(q);
+  state.questDone.push(q.id);
+  state.questIdx++;
+  state.questReady = false;
+  if(state.questIdx < QUESTS.length){
+    const nq = QUESTS[state.questIdx];
+    setTimeout(() => toast("✒ New task: " + nq.title, "#ffce5a"), 900);
+  }
+  refreshQuestTracker();
+}
+// called when the player talks to an NPC — completes a ready quest given by them
+function tryTurnIn(npcId){
+  const q = QUESTS[state.questIdx];
+  if(!q || !state.questReady || QUEST_GIVER_NPC[q.giver] !== npcId) return false;
+  advanceQuest(q);
+  const def = NPCDEF[npcId];
+  if(q.turnIn && q.turnIn.cutscene){ setTimeout(() => startCutscene(q.turnIn.cutscene), 250); }
+  else {
+    const line = (q.turnIn && q.turnIn.line) || (q.reward && q.reward.msg) || "Well done — thank you.";
+    setTimeout(() => showDialog(def.name + "   " + heartStr(heartsOf(npcId)), line, def.portrait), 200);
+  }
+  return true;
+}
+
+function completeQuest(q){
+  const r = q.reward || {};
+  if(r.gold){ state.gold += r.gold; }
+  if(r.items) for(const it in r.items) give(it, r.items[it], true);
+  playSfx("quest");
+  pSparkle(state.px, state.py-14, "#ffce5a", 16);
+
+  if(q.finale){
+    banner("✦ The Valley is Ready ✦", "Night falls on the coast…");
+    setTimeout(startFestival, 1100);
+  } else {
+    banner("✔ " + q.title, r.gold ? ("Reward: " + r.gold + "g" + (r.msg?" · "+r.msg:"")) : (r.msg||"Nicely done."));
+  }
+  if(r.gold) floatText(state.px, state.py-24, "+"+r.gold+"g", "#ffce5a");
+  refreshHUD();
+}
+
+// data for the on-screen tracker (current quest only)
+function trackerData(){
+  const q = curQuest();
+  if(!q) return null;
+  if(state.questReady){
+    const npc = QUEST_GIVER_NPC[q.giver];
+    return { title:q.title, reportTo: npc ? NPCDEF[npc].name : "", objs:[] };
+  }
+  return {
+    title: q.title,
+    objs: q.obj.map(o => { const [c,m] = objProgress(o); return { text:o.text, cur:c, max:m, done:c>=m }; }),
+  };
+}

@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Harvestscape — Prototype</title>
+<style>
+  :root{ --ui-bg:rgba(24,20,37,.92); --ui-border:#5a4a3f; --gold:#ffd76a; }
+  html,body{margin:0;padding:0;background:#1a1423;color:#efe6d5;font-family:"Courier New",monospace;
+    display:flex;flex-direction:column;align-items:center;min-height:100vh;user-select:none;}
+  h1{font-size:18px;letter-spacing:3px;margin:10px 0 6px;color:#ffd76a;text-shadow:2px 2px 0 #4a2d15;}
+  #wrap{position:relative;width:min(960px,96vw);}
+  canvas{image-rendering:pixelated;border:4px solid #4a3628;border-radius:4px;background:#000;display:block;
+    width:100%;height:auto;box-sizing:border-box;}
+  #hud{position:absolute;top:8px;left:10px;right:10px;display:flex;justify-content:space-between;
+    pointer-events:none;font-weight:bold;font-size:14px;text-shadow:1px 1px 0 #000;}
+  .pill{background:var(--ui-bg);border:2px solid var(--ui-border);border-radius:6px;padding:4px 10px;}
+  #energyWrap{position:absolute;top:44px;left:10px;width:150px;height:14px;background:var(--ui-bg);
+    border:2px solid var(--ui-border);border-radius:6px;overflow:hidden;pointer-events:none;}
+  #energyBar{height:100%;background:linear-gradient(#9ee66a,#4f9e2f);width:100%;}
+  #hotbar{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;}
+  .slot{width:52px;height:52px;background:var(--ui-bg);border:2px solid var(--ui-border);border-radius:6px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;
+    font-size:10px;text-align:center;line-height:1.1;}
+  .slot.sel{border-color:#ffd76a;box-shadow:0 0 8px #ffd76a66;}
+  .slot .ico{font-size:20px;}
+  .slot .key{color:#9c8b7a;font-size:9px;}
+  #toasts{position:absolute;top:70px;left:10px;pointer-events:none;font-weight:bold;font-size:13px;text-shadow:1px 1px 0 #000;}
+  .toast{margin-bottom:3px;animation:fadeup 2.2s forwards;}
+  @keyframes fadeup{0%{opacity:0;transform:translateY(6px)}10%{opacity:1;transform:none}75%{opacity:1}100%{opacity:0;transform:translateY(-8px)}}
+  #banner{position:absolute;top:34%;left:50%;transform:translateX(-50%);background:var(--ui-bg);
+    border:3px solid var(--gold);border-radius:10px;padding:14px 26px;text-align:center;display:none;
+    font-weight:bold;pointer-events:none;box-shadow:0 0 30px #000a;}
+  #banner .big{color:var(--gold);font-size:20px;margin-bottom:6px;}
+  #dialog{position:absolute;left:50%;transform:translateX(-50%);bottom:76px;width:70%;background:var(--ui-bg);
+    border:3px solid var(--ui-border);border-radius:10px;padding:12px 16px;display:none;font-size:14px;line-height:1.4;}
+  #dialog .who{color:var(--gold);font-weight:bold;margin-bottom:4px;}
+  .panel{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--ui-bg);
+    border:3px solid var(--ui-border);border-radius:12px;padding:16px 20px;display:none;min-width:420px;
+    max-height:80%;overflow-y:auto;font-size:13px;box-shadow:0 0 40px #000c;}
+  .panel h2{margin:0 0 10px;color:var(--gold);font-size:16px;letter-spacing:2px;}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:4px 2px;border-bottom:1px solid #ffffff14;gap:10px;}
+  .row button{background:#3d5a2e;border:2px solid #6a8f52;color:#efe6d5;border-radius:5px;cursor:pointer;
+    font-family:inherit;font-size:11px;padding:2px 8px;font-weight:bold;}
+  .row button:hover{background:#4f7a3a;}
+  .row button:disabled{background:#333;border-color:#555;color:#777;cursor:default;}
+  .row button.buy{background:#5a442e;border-color:#8f7a52;}
+  .row button.buy:hover:enabled{background:#7a5f3a;}
+  .locked{color:#8a7b6c;}
+  .xpbarWrap{background:#000;border:1px solid #5a4a3f;height:10px;width:180px;border-radius:4px;overflow:hidden;}
+  .xpbar{height:100%;background:linear-gradient(#8fd3ff,#3f7fbf);}
+  #footer{margin:8px 0 14px;font-size:12px;color:#9c8b7a;text-align:center;line-height:1.6;max-width:960px;}
+  #footer b{color:#cfc0aa;}
+  #footer button{background:#402828;border:1px solid #7a5252;color:#d0b0b0;border-radius:4px;cursor:pointer;
+    font-family:inherit;font-size:10px;padding:2px 8px;margin-left:10px;}
+  .heart{color:#ff6a8a;}
+  @media (max-width:700px){
+    h1{font-size:13px;margin:6px 0 4px;}
+    #hud{font-size:10px;top:4px;left:6px;right:6px;}
+    .pill{padding:2px 6px;border-width:1px;}
+    #energyWrap{top:26px;left:6px;width:90px;height:9px;border-width:1px;}
+    #toasts{top:42px;left:6px;font-size:10px;}
+    .slot{width:34px;height:34px;font-size:7px;border-width:1px;border-radius:4px;}
+    .slot .ico{font-size:12px;}
+    .slot .key{display:none;}
+    #hotbar{bottom:5px;gap:3px;}
+    #dialog{bottom:44px;width:88%;font-size:10px;padding:7px 9px;border-width:2px;}
+    #banner{padding:8px 14px;font-size:11px;border-width:2px;}
+    #banner .big{font-size:13px;}
+    .panel{min-width:0;width:92%;font-size:10px;padding:10px 12px;box-sizing:border-box;}
+    .panel h2{font-size:12px;}
+    .xpbarWrap{width:90px;}
+    #footer{font-size:9px;max-width:96vw;}
+  }
+</style>
+</head>
+<body>
+<h1>🌾 HARVESTSCAPE — prototype</h1>
+<div id="wrap">
+  <canvas id="game" width="960" height="624"></canvas>
+  <div id="hud">
+    <span class="pill" id="hudTime">Spring, Day 1 — 6:00</span>
+    <span class="pill" id="hudGold">🪙 500</span>
+  </div>
+  <div id="energyWrap"><div id="energyBar"></div></div>
+  <div id="toasts"></div>
+  <div id="banner"></div>
+  <div id="dialog"><div class="who"></div><div class="txt"></div><div style="color:#9c8b7a;font-size:11px;margin-top:6px;">[E] close</div></div>
+  <div id="hotbar"></div>
+  <div class="panel" id="skillsPanel"><h2>SKILLS</h2><div class="body"></div></div>
+  <div class="panel" id="invPanel"><h2>BACKPACK</h2><div class="body"></div></div>
+  <div class="panel" id="shopPanel"><h2>TOM'S GENERAL STORE</h2><div class="body"></div></div>
+</div>
+<div id="footer">
+  <b>Move</b> WASD/arrows · <b>Use tool</b> Space/click · <b>Interact / harvest / talk</b> E · <b>Gift</b> G ·
+  <b>Eat</b> F · <b>Cycle seeds</b> R<br>
+  <b>Skills</b> K · <b>Backpack</b> I · <b>Select slot</b> 1–6 · Sleep in your bed to grow crops &amp; save
+  <button onclick="if(confirm('Delete save and restart?')){window.__wipe=true;localStorage.removeItem('harvestscape');location.reload()}">reset save</button>
+</div>
+
+<script>
+"use strict";
+// ============================== CONSTANTS ==============================
+const TILE=16, SCALE=3, TS=TILE*SCALE;
+const VW=20, VH=13;                       // view size in tiles
+const W=48, H=36;                         // world size in tiles
+const cv=document.getElementById("game"), ctx=cv.getContext("2d");
+ctx.imageSmoothingEnabled=false;
+
+// Tiles
+const T={GRASS:0,DIRT:1,TILLED:2,WATERED:3,WATER:4,PATH:5,WALL:6,FLOOR:7,BED:8,FIRE:9,STALL:10,SAND:11};
+const SOLID=new Set([T.WATER,T.WALL,T.STALL,T.BED]);
+
+// RuneScape XP table (level 1..99)
+const XP_TABLE=[0,0]; { let a=0; for(let l=1;l<99;l++){ a+=Math.floor(l+300*Math.pow(2,l/7)); XP_TABLE.push(Math.floor(a/4)); } }
+const levelFor=xp=>{ let l=1; while(l<99 && XP_TABLE[l+1]<=xp) l++; return l; };
+
+// Content tables (level-gated — the RuneScape layer)
+const CROPS={
+  turnip:    {name:"Turnip",     lvl:1,  days:2, seed:20,  sell:35,  xp:12,  col:"#e8d5ef", top:"#b98fd4"},
+  potato:    {name:"Potato",     lvl:5,  days:3, seed:50,  sell:80,  xp:22,  col:"#d8b46a", top:"#b98b45"},
+  strawberry:{name:"Strawberry", lvl:12, days:4, seed:90,  sell:160, xp:38,  col:"#ff5a5a", top:"#d43a4a"},
+  pumpkin:   {name:"Pumpkin",    lvl:20, days:6, seed:180, sell:340, xp:65,  col:"#ff9138", top:"#d46a1f"},
+  starfruit: {name:"Starfruit",  lvl:30, days:8, seed:400, sell:850, xp:130, col:"#ffe25a", top:"#e8b91f"},
+};
+const TREES={
+  tree: {name:"Tree",       lvl:1,  hp:3,  xp:25,  drop:"Wood",       n:2},
+  pine: {name:"Pine",       lvl:8,  hp:7,  xp:60,  drop:"Pine Wood",  n:2},
+  maple:{name:"Maple",      lvl:18, hp:12, xp:115, drop:"Maple Wood", n:2},
+};
+const ORES={
+  stone: {name:"Rock",        lvl:1,  hp:2,  xp:8,   drop:"Stone",     col:"#9a9a9a"},
+  copper:{name:"Copper Rock", lvl:1,  hp:4,  xp:26,  drop:"Copper Ore",col:"#c77b3f"},
+  iron:  {name:"Iron Rock",   lvl:12, hp:8,  xp:62,  drop:"Iron Ore",  col:"#bfa8a0"},
+  gold:  {name:"Gold Rock",   lvl:28, hp:12, xp:145, drop:"Gold Ore",  col:"#ffd75a"},
+};
+const FISH=[
+  {name:"Sardine",    lvl:1,  xp:15,  sell:30},
+  {name:"Bass",       lvl:5,  xp:32,  sell:65},
+  {name:"Trout",      lvl:12, xp:55,  sell:120},
+  {name:"Salmon",     lvl:20, xp:95,  sell:240},
+  {name:"Golden Koi", lvl:32, xp:190, sell:620},
+];
+const ITEM_SELL={ "Wood":12,"Pine Wood":28,"Maple Wood":52,"Stone":3,"Copper Ore":28,"Iron Ore":65,"Gold Ore":160 };
+FISH.forEach(f=>ITEM_SELL[f.name]=f.sell);
+FISH.forEach(f=>ITEM_SELL["Cooked "+f.name]=Math.floor(f.sell*1.7));
+for(const k in CROPS) ITEM_SELL[CROPS[k].name]=CROPS[k].sell;
+const EDIBLE={"Berry Bun":30}; FISH.forEach(f=>EDIBLE["Cooked "+f.name]=20+f.lvl);
+const TOOL_TIERS=["Basic","Copper","Iron","Gold"];
+const TIER_POWER=[1,2,3,5];
+const TIER_COST=[null,{g:300,ore:"Copper Ore",n:5},{g:1200,ore:"Iron Ore",n:5},{g:5000,ore:"Gold Ore",n:5}];
+const TIER_COL=["#8a7b6c","#c77b3f","#bfa8a0","#ffd75a"];
+const SEASONS=["Spring","Summer","Fall","Winter"];
+
+// ============================== STATE ==============================
+let state=null;
+function freshState(){
+  return {
+    px:12.5*TILE, py:12.5*TILE, face:"down",
+    gold:500, energy:100, day:1, time:6*60,
+    inv:{"Turnip Seeds":6,"Berry Bun":2},
+    seedSel:"turnip",
+    skills:{Farming:0,Woodcutting:0,Mining:0,Fishing:0,Cooking:0},
+    tools:{Hoe:0,Can:0,Axe:0,Pick:0,Rod:0},        // tier index
+    maya:{points:0,talkedDay:0,x:34*TILE,y:26*TILE},
+    tiles:null, objects:{}, crops:{},
+  };
+}
+function key(x,y){return x+","+y;}
+
+// ============================== WORLD GEN ==============================
+let R=(s=>()=> (s=(s*1103515245+12345)&0x7fffffff)/0x7fffffff)(42);
+function genWorld(st){
+  const t=new Array(W*H).fill(T.GRASS);
+  const set=(x,y,v)=>{if(x>=0&&y>=0&&x<W&&y<H)t[y*W+x]=v;};
+  const get=(x,y)=>t[y*W+x];
+  // pond (top right) + lake (bottom)
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const d1=Math.hypot((x-38)/6.5,(y-9)/4.2), d2=Math.hypot((x-14)/8,(y-31)/3.4);
+    if(d1<1||d2<1)set(x,y,T.WATER);
+    else if(d1<1.25||d2<1.25)set(x,y,T.SAND);
+  }
+  // house
+  for(let y=3;y<=6;y++)for(let x=4;x<=8;x++)set(x,y,T.FLOOR);
+  for(let x=3;x<=9;x++){set(x,2,T.WALL);set(x,7,T.WALL);}
+  for(let y=2;y<=7;y++){set(3,y,T.WALL);set(9,y,T.WALL);}
+  set(6,7,T.FLOOR); // door gap
+  set(5,4,T.BED);
+  // starter tilled patch
+  for(let y=10;y<=11;y++)for(let x=6;x<=11;x++)set(x,y,T.TILLED);
+  // paths
+  for(let y=8;y<=26;y++)set(24,y,T.PATH);
+  for(let x=24;x<=33;x++)set(x,26,T.PATH);
+  for(let x=7;x<=24;x++)set(x,8,T.PATH);
+  set(13,10,T.FIRE);   // campfire — placed after paths so nothing overwrites it
+  // shop stall
+  set(33,25,T.STALL);set(34,25,T.STALL);set(35,25,T.STALL);
+  st.tiles=t;
+  // objects: forest (left/bottom), rocks (top-right ridge)
+  const obj={};
+  const place=(x,y,kind,hp)=>{ if(get(x,y)===T.GRASS && !obj[key(x,y)]) obj[key(x,y)]={kind,hp}; };
+  for(let i=0;i<26;i++){
+    const x=2+Math.floor(R()*13), y=16+Math.floor(R()*12);
+    const r=R(), kind=r<0.5?"tree":r<0.8?"pine":"maple";
+    place(x,y,kind,TREES[kind].hp);
+  }
+  for(let i=0;i<24;i++){
+    const x=27+Math.floor(R()*19), y=1+Math.floor(R()*4.6);
+    const r=R(), kind=r<0.35?"stone":r<0.7?"copper":r<0.9?"iron":"gold";
+    place(x,y,kind,ORES[kind].hp);
+  }
+  // a few close-by starter nodes
+  place(15,14,"tree",3);place(17,15,"tree",3);place(19,13,"copper",4);place(20,15,"stone",2);
+  st.objects=obj;
+}
+
+// ============================== SAVE / LOAD ==============================
+function save(){ if(window.__wipe)return; try{ localStorage.setItem("harvestscape",JSON.stringify(state)); }catch(e){} }
+function load(){
+  try{ const s=JSON.parse(localStorage.getItem("harvestscape")); if(s&&s.tiles&&s.tiles.length===W*H) return s; }catch(e){}
+  return null;
+}
+
+// ============================== SPRITES (programmatic 16-bit pixel art) ==============================
+const sprites={};
+function mkSpr(name,w,h,fn){ const c=document.createElement("canvas");c.width=w;c.height=h;
+  const g=c.getContext("2d"); fn(g); sprites[name]=c; }
+const px=(g,x,y,w,h,col)=>{g.fillStyle=col;g.fillRect(x,y,w,h);};
+let rseed=7; const rnd=()=> (rseed=(rseed*1103515245+12345)&0x7fffffff)/0x7fffffff;
+
+function buildSprites(){
+  // --- terrain tiles ---
+  mkSpr("grass",16,16,g=>{ px(g,0,0,16,16,"#6aab46");
+    for(let i=0;i<10;i++)px(g,Math.floor(rnd()*16),Math.floor(rnd()*16),1,1,rnd()<.5?"#7fbe55":"#5c9a3c");
+    px(g,3,11,1,2,"#4f8a34");px(g,11,4,1,2,"#4f8a34"); });
+  mkSpr("dirt",16,16,g=>{ px(g,0,0,16,16,"#b08650");
+    for(let i=0;i<8;i++)px(g,Math.floor(rnd()*16),Math.floor(rnd()*16),1,1,"#9a7342"); });
+  mkSpr("tilled",16,16,g=>{ px(g,0,0,16,16,"#8a6238");
+    for(let y=1;y<16;y+=4)px(g,0,y,16,2,"#75512c");
+    for(let i=0;i<5;i++)px(g,Math.floor(rnd()*16),Math.floor(rnd()*16),1,1,"#a0774a"); });
+  mkSpr("watered",16,16,g=>{ px(g,0,0,16,16,"#5e4023");
+    for(let y=1;y<16;y+=4)px(g,0,y,16,2,"#4d341b"); });
+  mkSpr("water0",16,16,g=>{ px(g,0,0,16,16,"#3f7fbf");
+    px(g,2,3,4,1,"#6fb0e8");px(g,10,9,4,1,"#6fb0e8");px(g,5,13,3,1,"#356ba3"); });
+  mkSpr("water1",16,16,g=>{ px(g,0,0,16,16,"#3f7fbf");
+    px(g,3,4,4,1,"#6fb0e8");px(g,9,10,4,1,"#6fb0e8");px(g,12,2,3,1,"#356ba3"); });
+  mkSpr("sand",16,16,g=>{ px(g,0,0,16,16,"#e0c98a");
+    for(let i=0;i<7;i++)px(g,Math.floor(rnd()*16),Math.floor(rnd()*16),1,1,"#c9b276"); });
+  mkSpr("path",16,16,g=>{ px(g,0,0,16,16,"#c2a878");
+    px(g,2,2,4,3,"#b09468");px(g,9,4,5,3,"#b09468");px(g,4,9,5,4,"#b09468");px(g,11,11,4,3,"#b09468"); });
+  mkSpr("wall",16,16,g=>{ px(g,0,0,16,16,"#7a5a3a");
+    for(let y=0;y<16;y+=4){px(g,0,y,16,1,"#5e4426");for(let x=(y%8?0:4);x<16;x+=8)px(g,x,y,1,4,"#5e4426");}
+    px(g,0,0,16,2,"#8f6f48"); });
+  mkSpr("floor",16,16,g=>{ px(g,0,0,16,16,"#c9a06a");
+    px(g,0,7,16,1,"#a8834f");px(g,0,15,16,1,"#a8834f");px(g,5,0,1,7,"#a8834f");px(g,11,8,1,8,"#a8834f"); });
+  mkSpr("bed",16,16,g=>{ px(g,1,1,14,14,"#7a3a3a");px(g,2,2,12,12,"#c05050");
+    px(g,2,2,12,4,"#f0ead8");px(g,3,3,4,2,"#d8cfb8");px(g,1,1,14,1,"#5e2a2a"); });
+  mkSpr("fire",16,16,g=>{ px(g,3,11,10,3,"#6e4a2a");px(g,2,12,3,2,"#5a3a20");px(g,11,12,3,2,"#5a3a20");
+    px(g,6,4,4,7,"#ff9138");px(g,7,2,2,3,"#ffd75a");px(g,5,7,6,4,"#ff5a2a");px(g,7,6,2,3,"#fff0a0"); });
+  mkSpr("stall",16,16,g=>{ px(g,0,0,16,3,"#c05050");px(g,0,3,16,3,"#f0ead8");px(g,0,0,8,3,"#f0ead8");px(g,8,3,8,3,"#c05050");
+    px(g,1,6,14,8,"#8a6238");px(g,1,6,14,2,"#a0774a");px(g,2,14,2,2,"#5e4426");px(g,12,14,2,2,"#5e4426"); });
+  // --- crops: 4 stages, tinted per crop ---
+  for(const id in CROPS){ const c=CROPS[id];
+    mkSpr("crop_"+id+"_0",16,16,g=>{ px(g,7,11,2,3,"#4f8a34");px(g,6,10,1,2,"#66a844");px(g,9,10,1,2,"#66a844"); });
+    mkSpr("crop_"+id+"_1",16,16,g=>{ px(g,7,8,2,6,"#4f8a34");px(g,5,8,2,2,"#66a844");px(g,9,7,2,2,"#66a844");px(g,7,6,2,2,"#66a844"); });
+    mkSpr("crop_"+id+"_2",16,16,g=>{ px(g,7,6,2,8,"#4f8a34");px(g,4,7,3,3,"#66a844");px(g,9,5,3,3,"#66a844");
+      px(g,6,4,4,3,"#66a844");px(g,7,7,2,2,c.top); });
+    mkSpr("crop_"+id+"_3",16,16,g=>{ px(g,7,5,2,9,"#4f8a34");px(g,4,6,3,3,"#66a844");px(g,9,4,3,3,"#66a844");
+      px(g,5,3,3,3,c.top);px(g,9,8,4,4,c.col);px(g,4,9,4,4,c.col);px(g,6,1,4,4,c.col);
+      px(g,7,2,2,1,"#ffffff55"); });
+  }
+  // --- trees (16x32) ---
+  const treeCols={tree:["#3f8a3f","#4fa84f","#2f6a2f"],pine:["#2f6a52","#3f8a6a","#204a3a"],maple:["#b8683a","#d4854f","#8a4a28"]};
+  for(const id in TREES){ const [c1,c2,c3]=treeCols[id];
+    mkSpr(id,16,32,g=>{ px(g,6,20,4,11,"#6e4a2a");px(g,6,20,1,11,"#5a3a20");px(g,4,29,8,2,"#5a3a20");
+      if(id==="pine"){ px(g,3,12,10,8,c1);px(g,1,17,14,4,c3);px(g,4,6,8,8,c1);px(g,5,2,6,6,c2);px(g,7,0,2,4,c2); }
+      else{ px(g,2,6,12,14,c1);px(g,1,9,14,8,c1);px(g,4,3,8,6,c2);px(g,3,15,10,5,c3);px(g,5,5,4,3,c2);
+        if(id==="maple"){px(g,3,8,2,2,"#ffd75a");px(g,10,12,2,2,"#ffd75a");} }
+    });
+  }
+  // --- rocks ---
+  for(const id in ORES){ const c=ORES[id].col;
+    mkSpr(id,16,16,g=>{ px(g,3,6,10,8,"#7d7d7d");px(g,2,8,12,6,"#7d7d7d");px(g,5,4,7,4,"#909090");
+      px(g,3,12,12,2,"#5f5f5f");px(g,5,5,3,2,"#a8a8a8");
+      if(id!=="stone"){px(g,5,8,3,3,c);px(g,9,10,2,2,c);px(g,10,6,2,2,c);} });
+  }
+  // --- characters (16x24): player, maya, tom ---
+  const mkChar=(name,skin,hair,shirt,pants)=>{
+    for(const face of["down","up","side"]){
+      mkSpr(name+"_"+face,16,24,g=>{
+        px(g,4,12,8,7,shirt); px(g,4,19,3,4,pants); px(g,9,19,3,4,pants);          // body+legs
+        px(g,4,23,3,1,"#3a2a1a");px(g,9,23,3,1,"#3a2a1a");                          // shoes
+        px(g,2,13,2,5,skin);px(g,12,13,2,5,skin);                                   // arms
+        px(g,4,2,8,9,skin);                                                          // head
+        if(face==="down"){ px(g,4,1,8,4,hair);px(g,3,2,2,5,hair);px(g,11,2,2,5,hair);
+          px(g,6,6,1,2,"#241a10");px(g,9,6,1,2,"#241a10");px(g,7,9,2,1,"#b06a5a"); }
+        else if(face==="up"){ px(g,4,1,8,9,hair); }
+        else { px(g,4,1,8,4,hair);px(g,3,2,2,7,hair);px(g,9,6,1,2,"#241a10");px(g,7,9,2,1,"#b06a5a"); }
+      });
+    }
+  };
+  mkChar("player","#eec39a","#7a4a2a","#3f6fa8","#5e4426");
+  mkChar("maya","#eec39a","#a83a4a","#7a4a8a","#3a3a5e");
+  mkChar("tom","#d8a878","#4a4a4a","#5a7a3a","#4a3a2a");
+}
+
+// ============================== UI HELPERS ==============================
+const $=id=>document.getElementById(id);
+function toast(msg,col){ const d=document.createElement("div");d.className="toast";d.textContent=msg;
+  if(col)d.style.color=col; $("toasts").appendChild(d); setTimeout(()=>d.remove(),2200); }
+let bannerTimer=null;
+function banner(big,small){ const b=$("banner"); b.innerHTML=`<div class="big">${big}</div><div>${small||""}</div>`;
+  b.style.display="block"; clearTimeout(bannerTimer); bannerTimer=setTimeout(()=>b.style.display="none",3200); }
+function dialog(who,txt){ $("dialog").querySelector(".who").textContent=who;
+  $("dialog").querySelector(".txt").innerHTML=txt; $("dialog").style.display="block"; ui.dialogOpen=true; }
+function closeDialog(){ $("dialog").style.display="none"; ui.dialogOpen=false; }
+
+const ui={dialogOpen:false,shop:false,skills:false,inv:false, get anyPanel(){return this.shop||this.skills||this.inv||this.dialogOpen;}};
+
+// ============================== XP / SKILLS ==============================
+function unlocksAt(skill,lvl){
+  const u=[];
+  if(skill==="Farming") for(const k in CROPS) if(CROPS[k].lvl===lvl) u.push(CROPS[k].name+" seeds");
+  if(skill==="Woodcutting") for(const k in TREES) if(TREES[k].lvl===lvl) u.push(TREES[k].name+"s");
+  if(skill==="Mining") for(const k in ORES) if(ORES[k].lvl===lvl) u.push(ORES[k].name+"s");
+  if(skill==="Fishing") FISH.forEach(f=>{if(f.lvl===lvl)u.push(f.name)});
+  return u;
+}
+function addXP(skill,amt){
+  const before=levelFor(state.skills[skill]);
+  state.skills[skill]+=amt;
+  toast(`+${amt} ${skill} XP`,"#8fd3ff");
+  const after=levelFor(state.skills[skill]);
+  if(after>before){
+    let unl=[]; for(let l=before+1;l<=after;l++) unl=unl.concat(unlocksAt(skill,l));
+    banner(`⬆ ${skill} level ${after}!`, unl.length?("Unlocked: "+unl.join(", ")):"Keep it up!");
+  }
+}
+const skillLvl=s=>levelFor(state.skills[s]);
+
+// ============================== INVENTORY ==============================
+function give(item,n=1){ state.inv[item]=(state.inv[item]||0)+n; toast(`+${n} ${item}`,"#ffd76a"); }
+function take(item,n=1){ if((state.inv[item]||0)<n)return false; state.inv[item]-=n; if(state.inv[item]<=0)delete state.inv[item]; return true; }
+function ownedSeeds(){ return Object.keys(CROPS).filter(id=>state.inv[CROPS[id].name+" Seeds"]>0); }
+
+// ============================== INPUT ==============================
+const keys={};
+document.addEventListener("keydown",e=>{
+  if(e.repeat)return;
+  const k=e.key.toLowerCase(); keys[k]=true;
+  if(k==="e"){ if(ui.dialogOpen){closeDialog();} else if(ui.shop){toggleShop(false);} else interact(); }
+  if(k===" "){ e.preventDefault();
+    if(fishing.state==="bite") catchFish();
+    else if(fishing.state==="wait"){ fishing.state="idle"; toast("Reeled in early."); }
+    else if(!ui.anyPanel) useTool(); }
+  if(k==="k"){ ui.skills=!ui.skills; renderSkillsPanel(); $("skillsPanel").style.display=ui.skills?"block":"none"; }
+  if(k==="i"){ ui.inv=!ui.inv; renderInvPanel(); $("invPanel").style.display=ui.inv?"block":"none"; }
+  if(k==="escape"){ ui.skills=ui.inv=false; $("skillsPanel").style.display="none"; $("invPanel").style.display="none"; toggleShop(false); closeDialog(); }
+  if(k==="r") cycleSeed();
+  if(k==="f") eatFood();
+  if(k==="g") giveGift();
+  if("123456".includes(k)) selectSlot(+k-1);
+});
+document.addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+window.addEventListener("blur",()=>{for(const k in keys)keys[k]=false;});
+cv.addEventListener("mousedown",()=>{
+  if(fishing.state==="bite") catchFish();
+  else if(fishing.state==="wait"){ fishing.state="idle"; toast("Reeled in early."); }
+  else if(!ui.anyPanel) useTool();
+});
+
+// hotbar
+const HOTBAR=[
+  {tool:"Hoe", ico:"⛏",label:"Hoe"},
+  {tool:"Can", ico:"🚿",label:"Can"},
+  {tool:"Axe", ico:"🪓",label:"Axe"},
+  {tool:"Pick",ico:"⚒",label:"Pick"},
+  {tool:"Rod", ico:"🎣",label:"Rod"},
+  {tool:"Seeds",ico:"🌱",label:"Seeds"},
+];
+let slotSel=0;
+function selectSlot(i){ slotSel=i; renderHotbar(); }
+function renderHotbar(){
+  const hb=$("hotbar"); hb.innerHTML="";
+  HOTBAR.forEach((s,i)=>{
+    const d=document.createElement("div"); d.className="slot"+(i===slotSel?" sel":"");
+    let label=s.label;
+    if(s.tool==="Seeds"){ const c=CROPS[state.seedSel]; const n=state.inv[c.name+" Seeds"]||0; label=c.name+" ×"+n; }
+    else if(state.tools[s.tool]>0){ label=TOOL_TIERS[state.tools[s.tool]]+" "+s.label; }
+    d.innerHTML=`<span class="ico">${s.ico}</span><span style="color:${s.tool!=="Seeds"?TIER_COL[state.tools[s.tool]]:"#efe6d5"}">${label}</span><span class="key">${i+1}</span>`;
+    d.onclick=()=>selectSlot(i);
+    hb.appendChild(d);
+  });
+}
+function cycleSeed(){
+  const ids=Object.keys(CROPS).filter(id=>skillLvl("Farming")>=CROPS[id].lvl);
+  const i=ids.indexOf(state.seedSel);
+  state.seedSel=ids[(i+1)%ids.length]||"turnip";
+  renderHotbar(); toast("Seeds: "+CROPS[state.seedSel].name);
+}
+
+// ============================== PLAYER / MOVEMENT ==============================
+const tileAt=(x,y)=>(x<0||y<0||x>=W||y>=H)?T.WALL:state.tiles[y*W+x];
+const setTile=(x,y,v)=>{state.tiles[y*W+x]=v;};
+function blocked(pxx,pyy){
+  // feet bbox 10x8 centered at (pxx,pyy) near bottom of sprite
+  const corners=[[pxx-5,pyy-3],[pxx+5,pyy-3],[pxx-5,pyy+4],[pxx+5,pyy+4]];
+  for(const[cx,cy]of corners){
+    const tx=Math.floor(cx/TILE), ty=Math.floor(cy/TILE);
+    if(SOLID.has(tileAt(tx,ty)))return true;
+    if(state.objects[key(tx,ty)])return true;
+  }
+  return false;
+}
+function facingTile(){
+  let tx=Math.floor(state.px/TILE), ty=Math.floor(state.py/TILE);
+  if(state.face==="down")ty++; else if(state.face==="up")ty--;
+  else if(state.face==="left")tx--; else tx++;
+  return[tx,ty];
+}
+let walkCycle=0, moving=false;
+function updatePlayer(dt){
+  if(ui.anyPanel||fishing.state!=="idle"){moving=false;return;}
+  let dx=0,dy=0;
+  if(keys.w||keys.arrowup)dy-=1; if(keys.s||keys.arrowdown)dy+=1;
+  if(keys.a||keys.arrowleft)dx-=1; if(keys.d||keys.arrowright)dx+=1;
+  moving=dx!==0||dy!==0;
+  if(!moving)return;
+  if(dy<0)state.face="up"; else if(dy>0)state.face="down";
+  if(dx<0)state.face="left"; else if(dx>0)state.face="right";
+  const sp=70*dt, len=Math.hypot(dx,dy);
+  const nx=state.px+dx/len*sp, ny=state.py+dy/len*sp;
+  if(!blocked(nx,state.py))state.px=Math.max(6,Math.min(W*TILE-6,nx));
+  if(!blocked(state.px,ny))state.py=Math.max(8,Math.min(H*TILE-4,ny));
+  walkCycle+=dt*10;
+}
+
+// ============================== TOOLS / ACTIONS ==============================
+function spendEnergy(n){
+  if(state.energy<=0){ toast("Too tired! Eat something (F) or sleep.","#ff8a8a"); return false; }
+  state.energy=Math.max(0,state.energy-n); return true;
+}
+function useTool(){
+  const tool=HOTBAR[slotSel].tool;
+  const[tx,ty]=facingTile(); const tt=tileAt(tx,ty); const obj=state.objects[key(tx,ty)];
+  const tier=state.tools[tool]||0, power=TIER_POWER[tier];
+
+  if(tool==="Hoe"){
+    if(obj||tt!==T.GRASS&&tt!==T.DIRT&&tt!==T.PATH){ if(tt===T.TILLED||tt===T.WATERED)return; toast("Can't till that."); return; }
+    if(!spendEnergy(2))return;
+    setTile(tx,ty,T.TILLED); addXP("Farming",1);
+  }
+  else if(tool==="Can"){
+    if(!spendEnergy(1))return;
+    let watered=0;
+    const radius=tier>=3?1:0;   // gold can waters 3×3
+    for(let oy=-radius;oy<=radius;oy++)for(let ox=-radius;ox<=radius;ox++){
+      const x=tx+ox,y=ty+oy;
+      if(tileAt(x,y)===T.TILLED){ setTile(x,y,T.WATERED); watered++; }
+    }
+    if(watered)addXP("Farming",watered);
+    else toast("Nothing to water there.");
+  }
+  else if(tool==="Seeds"){
+    const c=CROPS[state.seedSel];
+    if(skillLvl("Farming")<c.lvl){ toast(`Need Farming ${c.lvl} for ${c.name}.`,"#ff8a8a"); return; }
+    if(tt!==T.TILLED&&tt!==T.WATERED){ toast("Till the soil first (Hoe)."); return; }
+    if(state.crops[key(tx,ty)]){ toast("Something is growing there."); return; }
+    if(!take(c.name+" Seeds")){ toast("No "+c.name+" seeds — buy at Tom's shop!","#ff8a8a"); return; }
+    state.crops[key(tx,ty)]={type:state.seedSel,days:0};
+    addXP("Farming",4);
+  }
+  else if(tool==="Axe"){
+    if(!obj||!TREES[obj.kind]){ toast("Face a tree to chop."); return; }
+    const tr=TREES[obj.kind];
+    if(skillLvl("Woodcutting")<tr.lvl){ toast(`Need Woodcutting ${tr.lvl} to chop ${tr.name}s.`,"#ff8a8a"); return; }
+    if(!spendEnergy(2))return;
+    obj.hp-=power; shake(tx,ty);
+    if(obj.hp<=0){ delete state.objects[key(tx,ty)]; give(tr.drop,tr.n); addXP("Woodcutting",tr.xp); }
+  }
+  else if(tool==="Pick"){
+    if(!obj||!ORES[obj.kind]){ toast("Face a rock to mine."); return; }
+    const o=ORES[obj.kind];
+    if(skillLvl("Mining")<o.lvl){ toast(`Need Mining ${o.lvl} for ${o.name}s.`,"#ff8a8a"); return; }
+    if(!spendEnergy(2))return;
+    obj.hp-=power; shake(tx,ty);
+    if(obj.hp<=0){ delete state.objects[key(tx,ty)]; give(o.drop,1); addXP("Mining",o.xp); }
+  }
+  else if(tool==="Rod"){
+    if(tt!==T.WATER){ toast("Face the water to fish."); return; }
+    if(!spendEnergy(1))return;
+    startFishing(tx,ty);
+  }
+  renderHotbar(); renderHUD();
+}
+
+// object hit feedback
+let shakes={};
+function shake(x,y){ shakes[key(x,y)]=0.18; }
+
+// ---- fishing minigame ----
+const fishing={state:"idle",t:0,biteWin:0,bx:0,by:0};
+function startFishing(tx,ty){
+  fishing.state="wait";
+  const rodTier=state.tools.Rod;
+  fishing.t=1.2+Math.random()*(3.5-rodTier*0.6);
+  fishing.bx=tx;fishing.by=ty;
+  toast("Cast... wait for the !");
+}
+function updateFishing(dt){
+  if(fishing.state==="idle")return;
+  if(fishing.state==="wait"){
+    fishing.t-=dt;
+    if(keys[" "]){/*ignore hold*/}
+    if(fishing.t<=0){ fishing.state="bite"; fishing.biteWin=0.75+state.tools.Rod*0.15; }
+  } else if(fishing.state==="bite"){
+    fishing.biteWin-=dt;
+    if(fishing.biteWin<=0){ fishing.state="idle"; toast("It got away...","#ff8a8a"); }
+  }
+}
+function catchFish(){
+  const lvl=skillLvl("Fishing");
+  const pool=FISH.filter(f=>f.lvl<=lvl);
+  // weight toward the best you can catch
+  const f=pool[Math.min(pool.length-1,Math.floor(Math.random()*pool.length+Math.random()*1.4))]||FISH[0];
+  give(f.name,1); addXP("Fishing",f.xp);
+  fishing.state="idle";
+}
+
+// ---- interact (E) ----
+function interact(){
+  const[tx,ty]=facingTile(); const tt=tileAt(tx,ty); const k=key(tx,ty);
+  // harvest
+  const crop=state.crops[k];
+  if(crop){
+    const c=CROPS[crop.type];
+    if(crop.days>=c.days){ delete state.crops[k]; setTile(tx,ty,T.TILLED); give(c.name,1); addXP("Farming",c.xp); }
+    else toast(`${c.name}: day ${crop.days}/${c.days}${tileAt(tx,ty)===T.WATERED?"":" — needs water!"}`);
+    return;
+  }
+  // bed
+  if(tt===T.BED){ sleep(); return; }
+  // campfire cooking
+  if(tt===T.FIRE){
+    const raw=FISH.find(f=>state.inv[f.name]>0);
+    if(!raw){ toast("Catch a fish first, then cook it here."); return; }
+    take(raw.name); give("Cooked "+raw.name); addXP("Cooking",Math.floor(raw.xp*0.9));
+    return;
+  }
+  // shop (stall or Tom)
+  if(tt===T.STALL||near(34*TILE,24*TILE,28)){ toggleShop(true); return; }
+  // Maya
+  if(near(state.maya.x,state.maya.y,26)){ talkMaya(); return; }
+  toast("Nothing here. (Space uses your tool)");
+}
+function near(x,y,d){ return Math.hypot(state.px-x,state.py-y)<d; }
+
+// ---- food ----
+function eatFood(){
+  const item=Object.keys(EDIBLE).find(i=>state.inv[i]>0);
+  if(!item){ toast("No food! Buy a Berry Bun or cook a fish.","#ff8a8a"); return; }
+  take(item); state.energy=Math.min(100,state.energy+EDIBLE[item]);
+  toast(`Ate ${item} (+${EDIBLE[item]} energy)`,"#9ee66a"); renderHUD(); renderHotbar();
+}
+
+// ============================== NPC: MAYA ==============================
+let mayaDir={x:0,y:0}, mayaTimer=0, mayaFace="down";
+function updateMaya(dt){
+  mayaTimer-=dt;
+  if(mayaTimer<=0){ mayaTimer=1+Math.random()*2.5;
+    const r=Math.random();
+    mayaDir=r<.4?{x:0,y:0}:{x:[-1,0,1][Math.floor(Math.random()*3)],y:[-1,0,1][Math.floor(Math.random()*3)]};
+  }
+  const m=state.maya, sp=26*dt;
+  const nx=m.x+mayaDir.x*sp, ny=m.y+mayaDir.y*sp;
+  const tx=Math.floor(nx/TILE),ty=Math.floor(ny/TILE);
+  if(nx>27*TILE&&nx<45*TILE&&ny>21*TILE&&ny<33*TILE&&!SOLID.has(tileAt(tx,ty))&&!state.objects[key(tx,ty)]){ m.x=nx;m.y=ny; }
+  else mayaTimer=0;
+  if(mayaDir.y<0)mayaFace="up";else if(mayaDir.y>0)mayaFace="down";else if(mayaDir.x)mayaFace=mayaDir.x<0?"left":"right";
+}
+function hearts(){ return Math.min(10,Math.floor(state.maya.points/100)); }
+function talkMaya(){
+  const h=hearts();
+  const total=Object.keys(state.skills).reduce((a,s)=>a+skillLvl(s),0);
+  let extra="";
+  if(total>=40) extra=` ...Wow, total level ${total} already? The old Guild of Nine would have loved you.`;
+  else if(skillLvl("Mining")>=12) extra=" I heard you cracked iron in the ridge — the blacksmith used to dream of that.";
+  const lines=[
+    "Oh! You're the new farmer, right? I'm Maya. The valley's quiet, but... it grows on you."+extra,
+    "The pond's beautiful at dusk. Papa used to fish Golden Koi there, before the guild closed."+extra,
+    "You've been working hard. It shows — the valley feels a little more awake lately."+extra,
+    "I saved you a seat at the festival grounds. Y'know... whenever there's a festival again."+extra,
+    "Honestly? Days feel brighter when you wander by. Don't tell Tom I said that. ♥"+extra,
+  ];
+  const li=Math.min(lines.length-1,Math.floor(h/2));
+  if(state.maya.talkedDay!==state.day){ state.maya.talkedDay=state.day; state.maya.points+=20; toast("Maya +20 ♥","#ff6a8a"); }
+  dialog(`Maya  ${"♥".repeat(hearts())}${"♡".repeat(10-hearts())}`, lines[li]);
+}
+function giveGift(){
+  if(!near(state.maya.x,state.maya.y,26)){ toast("Stand next to Maya to give a gift (G)."); return; }
+  const giftable=Object.keys(state.inv).find(i=>ITEM_SELL[i]&&!i.endsWith("Seeds"));
+  if(!giftable){ toast("Nothing giftable — crops, fish, and cooked food work!"); return; }
+  take(giftable);
+  const val=ITEM_SELL[giftable];
+  const loved=giftable==="Strawberry"||giftable.startsWith("Cooked");
+  const pts=Math.min(120,Math.floor((loved?60:25)+val/10));
+  state.maya.points+=pts; toast(`Maya +${pts} ♥`,"#ff6a8a");
+  dialog(`Maya  ${"♥".repeat(hearts())}${"♡".repeat(10-hearts())}`,
+    loved?`A ${giftable}?! That's my absolute favorite. Thank you!!`:`Oh, a ${giftable} — that's really thoughtful of you.`);
+}
+
+// ============================== SHOP ==============================
+function toggleShop(open){
+  ui.shop=open; $("shopPanel").style.display=open?"block":"none";
+  if(open)renderShop();
+}
+function renderShop(){
+  const b=$("shopPanel").querySelector(".body");
+  let html=`<div style="color:#9c8b7a;margin-bottom:8px;">"Welcome! Coin for goods, goods for coin." — Tom</div>`;
+  html+=`<h2 style="font-size:13px;">SELL</h2>`;
+  const sellables=Object.keys(state.inv).filter(i=>ITEM_SELL[i]);
+  if(!sellables.length)html+=`<div class="locked">Nothing to sell yet — go harvest, chop, mine, or fish!</div>`;
+  sellables.forEach(i=>{
+    html+=`<div class="row"><span>${i} ×${state.inv[i]} <span style="color:#ffd76a">(${ITEM_SELL[i]}g)</span></span>
+      <span><button onclick="sellItem('${i}',1)">sell 1</button> <button onclick="sellItem('${i}',${state.inv[i]})">sell all</button></span></div>`;
+  });
+  html+=`<h2 style="font-size:13px;margin-top:14px;">SEEDS &amp; FOOD</h2>`;
+  for(const id in CROPS){ const c=CROPS[id]; const ok=skillLvl("Farming")>=c.lvl;
+    html+=`<div class="row ${ok?"":"locked"}"><span>${c.name} Seeds — ${c.seed}g ${ok?"":`🔒 Farming ${c.lvl}`}<br>
+      <span style="color:#9c8b7a;font-size:11px;">grows ${c.days}d · sells ${c.sell}g · ${c.xp}xp</span></span>
+      <button class="buy" ${ok&&state.gold>=c.seed?"":"disabled"} onclick="buySeed('${id}')">buy</button></div>`;
+  }
+  html+=`<div class="row"><span>Berry Bun — 30g <span style="color:#9c8b7a;font-size:11px;">(+30 energy)</span></span>
+    <button class="buy" ${state.gold>=30?"":"disabled"} onclick="buyBun()">buy</button></div>`;
+  html+=`<h2 style="font-size:13px;margin-top:14px;">TOOL UPGRADES</h2>`;
+  for(const tool of["Hoe","Can","Axe","Pick","Rod"]){
+    const cur=state.tools[tool];
+    if(cur>=3){ html+=`<div class="row"><span style="color:${TIER_COL[3]}">${TOOL_TIERS[3]} ${tool} — maxed ★</span></div>`; continue; }
+    const c=TIER_COST[cur+1];
+    const can=state.gold>=c.g&&(state.inv[c.ore]||0)>=c.n;
+    html+=`<div class="row"><span><span style="color:${TIER_COL[cur+1]}">${TOOL_TIERS[cur+1]} ${tool}</span> — ${c.g}g + ${c.n} ${c.ore}
+      <br><span style="color:#9c8b7a;font-size:11px;">you have ${state.inv[c.ore]||0} ${c.ore}${tool==="Can"&&cur+1===3?" · waters 3×3!":""}${tool==="Rod"?" · faster bites":""}</span></span>
+      <button class="buy" ${can?"":"disabled"} onclick="buyTool('${tool}')">upgrade</button></div>`;
+  }
+  html+=`<div style="margin-top:12px;color:#9c8b7a;font-size:11px;">[E] or [Esc] to close</div>`;
+  b.innerHTML=html;
+}
+window.sellItem=(i,n)=>{ n=Math.min(n,state.inv[i]||0); if(n<=0)return;
+  take(i,n); state.gold+=ITEM_SELL[i]*n; toast(`Sold ${n} ${i} (+${ITEM_SELL[i]*n}g)`,"#ffd76a"); renderShop(); renderHUD(); };
+window.buySeed=id=>{ const c=CROPS[id]; if(state.gold<c.seed)return;
+  state.gold-=c.seed; give(c.name+" Seeds",1); renderShop(); renderHUD(); renderHotbar(); };
+window.buyBun=()=>{ if(state.gold<30)return; state.gold-=30; give("Berry Bun",1); renderShop(); renderHUD(); };
+window.buyTool=tool=>{ const cur=state.tools[tool], c=TIER_COST[cur+1];
+  if(state.gold<c.g||(state.inv[c.ore]||0)<c.n)return;
+  state.gold-=c.g; take(c.ore,c.n); state.tools[tool]=cur+1;
+  banner(`🔧 ${TOOL_TIERS[cur+1]} ${tool}!`,"Faster, stronger, cozier."); renderShop(); renderHUD(); renderHotbar(); };
+
+// ============================== PANELS ==============================
+function renderSkillsPanel(){
+  const b=$("skillsPanel").querySelector(".body");
+  let total=0, html="";
+  for(const s in state.skills){
+    const xp=state.skills[s], lvl=levelFor(xp); total+=lvl;
+    const cur=XP_TABLE[lvl], next=lvl>=99?cur:XP_TABLE[lvl+1];
+    const pct=lvl>=99?100:Math.floor((xp-cur)/(next-cur)*100);
+    html+=`<div class="row"><span style="width:120px;">${s} <b style="color:#ffd76a">${lvl}</b></span>
+      <span class="xpbarWrap"><span class="xpbar" style="display:block;width:${pct}%"></span></span>
+      <span style="color:#9c8b7a;font-size:11px;width:110px;text-align:right;">${xp} / ${next} xp</span></div>`;
+  }
+  html+=`<div style="margin-top:10px;text-align:center;color:#ffd76a;font-weight:bold;">Total level: ${total} / ${99*5}</div>`;
+  html+=`<div style="margin-top:6px;color:#9c8b7a;font-size:11px;text-align:center;">Real RuneScape XP curve — level 92 is halfway to 99.</div>`;
+  b.innerHTML=html;
+}
+function renderInvPanel(){
+  const b=$("invPanel").querySelector(".body");
+  const items=Object.keys(state.inv);
+  b.innerHTML=items.length?items.map(i=>`<div class="row"><span>${i}</span><span>×${state.inv[i]}</span></div>`).join("")
+    :`<div class="locked">Empty. The valley provides — go get it!</div>`;
+}
+function renderHUD(){
+  const seas=SEASONS[Math.floor((state.day-1)/28)%4], d=((state.day-1)%28)+1;
+  const hh=Math.floor(state.time/60), mm=Math.floor(state.time%60/10)*10;
+  $("hudTime").textContent=`${seas}, Day ${d} — ${hh}:${mm.toString().padStart(2,"0")}`;
+  $("hudGold").textContent=`🪙 ${state.gold}`;
+  $("energyBar").style.width=state.energy+"%";
+}
+
+// ============================== DAY CYCLE ==============================
+function sleep(){
+  let grew=0;
+  for(const k in state.crops){
+    const[cx,cy]=k.split(",").map(Number);
+    if(tileAt(cx,cy)===T.WATERED){ state.crops[k].days++; grew++; }
+  }
+  // dry out soil
+  for(let i=0;i<W*H;i++) if(state.tiles[i]===T.WATERED)state.tiles[i]=T.TILLED;
+  // respawn nodes
+  respawn("tree",16,2,13,16,12);respawn("rock",27,1,19,4.6,0);
+  state.day++; state.time=6*60; state.energy=100;
+  save();
+  banner(`☀ ${SEASONS[Math.floor((state.day-1)/28)%4]}, Day ${((state.day-1)%28)+1}`,
+    grew?`${grew} crop${grew>1?"s":""} grew overnight. Game saved.`:"Water your crops so they grow! Game saved.");
+  renderHUD();
+}
+function respawn(zone){
+  // repopulate forest & ridge up to a soft cap
+  const treeCount=Object.values(state.objects).filter(o=>TREES[o.kind]).length;
+  const rockCount=Object.values(state.objects).filter(o=>ORES[o.kind]).length;
+  for(let i=0;i<6&&treeCount+i<22;i++){
+    const x=2+Math.floor(Math.random()*13),y=16+Math.floor(Math.random()*12),k=key(x,y);
+    if(tileAt(x,y)===T.GRASS&&!state.objects[k]&&!state.crops[k]){
+      const r=Math.random(),kind=r<.5?"tree":r<.8?"pine":"maple";
+      state.objects[k]={kind,hp:TREES[kind].hp};
+    }
+  }
+  for(let i=0;i<6&&rockCount+i<22;i++){
+    const x=27+Math.floor(Math.random()*19),y=1+Math.floor(Math.random()*4.6),k=key(x,y);
+    if(tileAt(x,y)===T.GRASS&&!state.objects[k]){
+      const r=Math.random(),kind=r<.35?"stone":r<.7?"copper":r<.9?"iron":"gold";
+      state.objects[k]={kind,hp:ORES[kind].hp};
+    }
+  }
+}
+function updateTime(dt){
+  state.time+=dt*(60/18);         // 1 game hour = 18 real seconds
+  if(state.time>=26*60){ toast("You stayed up way too late...","#ff8a8a"); sleep(); }
+}
+
+// ============================== RENDER ==============================
+let camX=0,camY=0,animT=0;
+function render(){
+  animT+=1/60;
+  camX=Math.max(0,Math.min(W*TILE-VW*TILE,state.px-VW*TILE/2));
+  camY=Math.max(0,Math.min(H*TILE-VH*TILE,state.py-VH*TILE/2));
+  ctx.save();ctx.scale(SCALE,SCALE);ctx.translate(-camX,-camY);
+  const x0=Math.floor(camX/TILE),y0=Math.floor(camY/TILE);
+  // tiles
+  for(let y=y0;y<=y0+VH;y++)for(let x=x0;x<=x0+VW;x++){
+    if(x<0||y<0||x>=W||y>=H)continue;
+    const tt=state.tiles[y*W+x];
+    let s="grass";
+    if(tt===T.DIRT)s="dirt"; else if(tt===T.TILLED)s="tilled"; else if(tt===T.WATERED)s="watered";
+    else if(tt===T.WATER)s=Math.floor(animT*2+((x+y)%2))%2?"water1":"water0";
+    else if(tt===T.PATH)s="path"; else if(tt===T.WALL)s="wall"; else if(tt===T.FLOOR)s="floor";
+    else if(tt===T.SAND)s="sand";
+    else if(tt===T.BED){ctx.drawImage(sprites.floor,x*TILE,y*TILE);s="bed";}
+    else if(tt===T.FIRE){ctx.drawImage(sprites.grass,x*TILE,y*TILE);s="fire";}
+    else if(tt===T.STALL){ctx.drawImage(sprites.path,x*TILE,y*TILE);s="stall";}
+    ctx.drawImage(sprites[s],x*TILE,y*TILE);
+    if(s==="fire"&&Math.floor(animT*6)%2)ctx.drawImage(sprites.fire,x*TILE,y*TILE-1);
+  }
+  // crops
+  for(const k in state.crops){
+    const[cx,cy]=k.split(",").map(Number); const c=state.crops[k],cfg=CROPS[c.type];
+    const stage=Math.min(3,Math.floor(c.days/cfg.days*3+(c.days>=cfg.days?1:0)));
+    ctx.drawImage(sprites["crop_"+c.type+"_"+Math.min(3,stage)],cx*TILE,cy*TILE);
+    if(c.days>=cfg.days){ // ready sparkle
+      if(Math.floor(animT*3)%2){ctx.fillStyle="#fff";ctx.fillRect(cx*TILE+12,cy*TILE+1,2,2);}
+    }
+  }
+  // depth-sorted entities: objects, player, maya, tom
+  const ents=[];
+  for(const k in state.objects){
+    const[ox,oy]=k.split(",").map(Number); const o=state.objects[k];
+    ents.push({y:oy*TILE+TILE,draw(){
+      let sx=0; if(shakes[k]>0){sx=Math.sin(animT*60)*1.2;shakes[k]-=1/60;}
+      if(TREES[o.kind])ctx.drawImage(sprites[o.kind],ox*TILE+sx,oy*TILE-16);
+      else ctx.drawImage(sprites[o.kind],ox*TILE+sx,oy*TILE);
+    }});
+  }
+  const bob=moving?Math.floor(walkCycle)%2:0;
+  ents.push({y:state.py,draw(){
+    const f=state.face==="left"||state.face==="right"?"side":state.face;
+    ctx.save();
+    if(state.face==="left"){ctx.translate(state.px+8,0);ctx.scale(-1,1);ctx.translate(-(state.px+8),0);}
+    ctx.drawImage(sprites["player_"+f],Math.round(state.px-8),Math.round(state.py-20-bob));
+    ctx.restore();
+  }});
+  ents.push({y:state.maya.y,draw(){
+    const f=mayaFace==="left"||mayaFace==="right"?"side":mayaFace;
+    ctx.save();
+    if(mayaFace==="left"){ctx.translate(state.maya.x+8,0);ctx.scale(-1,1);ctx.translate(-(state.maya.x+8),0);}
+    ctx.drawImage(sprites["maya_"+f],Math.round(state.maya.x-8),Math.round(state.maya.y-20));
+    ctx.restore();
+    ctx.fillStyle="#ffd76a";ctx.font="5px monospace";ctx.fillText("Maya",state.maya.x-6,state.maya.y-24);
+  }});
+  ents.push({y:24*TILE+15,draw(){
+    ctx.drawImage(sprites.tom_down,34*TILE-8+8,24*TILE-8);
+    ctx.fillStyle="#ffd76a";ctx.font="5px monospace";ctx.fillText("Tom",34*TILE+3,24*TILE-10);
+  }});
+  ents.sort((a,b)=>a.y-b.y).forEach(e=>e.draw());
+  // facing cursor
+  const[fx,fy]=facingTile();
+  ctx.strokeStyle="rgba(255,255,255,.45)";ctx.lineWidth=1;
+  ctx.strokeRect(fx*TILE+.5,fy*TILE+.5,TILE-1,TILE-1);
+  // fishing bobber / bite
+  if(fishing.state!=="idle"){
+    ctx.fillStyle="#c03030";ctx.beginPath();
+    ctx.arc(fishing.bx*TILE+8,fishing.by*TILE+8+Math.sin(animT*6),2.2,0,7);ctx.fill();
+    if(fishing.state==="bite"){
+      ctx.fillStyle="#ffd75a";ctx.font="bold 10px monospace";
+      ctx.fillText("!",state.px-2,state.py-26);
+      ctx.fillText("SPACE!",fishing.bx*TILE-4,fishing.by*TILE-4);
+    }
+  }
+  ctx.restore();
+  // night tint
+  const hr=state.time/60;
+  if(hr>=19){ const a=Math.min(.45,(hr-19)/6*.55); ctx.fillStyle=`rgba(10,10,50,${a})`; ctx.fillRect(0,0,cv.width,cv.height); }
+}
+
+// ============================== MAIN LOOP ==============================
+let last=0;
+function loop(ts){
+  const dt=Math.min(0.05,(ts-last)/1000)||0.016; last=ts;
+  if(!ui.anyPanel){ updateTime(dt); updateMaya(dt); updateFishing(dt); }
+  updatePlayer(dt);
+  render(); renderHUD();
+  requestAnimationFrame(loop);
+}
+
+// ============================== BOOT ==============================
+buildSprites();
+state=load();
+if(!state){ state=freshState(); genWorld(state); }
+else if(state.introSeen){ toast("Save loaded — welcome back!","#9ee66a"); }
+if(!state.introSeen){ state.introSeen=true;
+  setTimeout(()=>dialog("Grandpa's Letter",
+    "Welcome to Willowbrook, kiddo. The farm's yours now.<br><br>Till with the <b>Hoe</b>, plant <b>Seeds</b>, <b>Water</b> daily, and sleep in your bed to pass the day. Tom at the stall (south-east) buys anything. Chop, mine, fish — every skill remembers your effort, 1 to 99.<br><br>Oh — and say hi to Maya. She's good people. ♥"),400);
+}
+renderHotbar(); renderHUD();
+requestAnimationFrame(loop);
+window.addEventListener("beforeunload",save);
+</script>
+</body>
+</html>
