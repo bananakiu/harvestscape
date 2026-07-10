@@ -48,6 +48,8 @@ Sell and upgrade at **Tom's stall**; **sleep at your cottage door** to pass the 
 
 - `game/` — the finished game (`index.html`, `css/`, `js/` split into 15 ordered modules, `00-core` → `14-story` → `12-game`).
 - `CHANGELOG.md` — the single internal audit trail of every change and the reasoning behind it (mirrored in-game by the `CHANGELOG` array in `game/js/01-data.js`).
+- `DEVLOG.md` — the owner's playtest feedback and direction calls, recorded near-verbatim; the human signal behind the changelog's decisions.
+- `NEW_PLAYER_EXPERIENCE.md` — the planned (not yet built) onboarding beta: story exposition, contextual tutorial, and making the main storyline visible.
 - `AGENTS.md` — instructions for any AI agent working in this repo (canonical; `CLAUDE.md`, `GEMINI.md`, etc. are symlinks to it).
 - `GAME_SCOPE.md` — the original design vision (the larger Godot ambition this browser build is the vertical slice of).
 - `prototype/` — the original zero-dependency proof-of-concept.

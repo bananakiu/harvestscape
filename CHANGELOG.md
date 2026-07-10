@@ -22,6 +22,27 @@
 
 ---
 
+## Docs — playtest feedback loop + NPX plan · 2026-07-11
+
+No game code changed. First owner playtest verdict after v2.1.0: the core loop is fun, but a
+casual player never learns the game's premise or mission — no exposition, no in-game tutorial,
+and the two-act storyline doesn't surface during normal play. The story *content* already
+exists (letters, quest spine, finale); the gap is pacing and surfacing.
+
+- **Added `DEVLOG.md`** — a developer log for the owner's playtest feedback and direction
+  calls, recorded near-verbatim. **Why a separate file:** `CHANGELOG.md` records implementation
+  decisions; the raw human signal that *caused* them was previously lost to chat history. A
+  future agent should be able to re-derive our decisions from the owner's actual words.
+- **Added `NEW_PLAYER_EXPERIENCE.md`** — the planned (deliberately not yet built) onboarding
+  beta: (A) a skippable three-beat prologue + revised Grandpa letter that states the mission,
+  (B) contextual first-verb hints and first-encounter tips replacing the title-screen prose
+  dump, (C) act-aware tracker/journal so the storyline shows through mid-game. Constraints
+  locked in the doc: everything skippable (cozy contract), no new engine work, save-compatible
+  via `migrateSave` flags. **Why plan-first:** owner's explicit call — beta scope now,
+  cutscene polish deferred to the roadmap until the core game is further along.
+- `README.md` / `AGENTS.md` reference-doc lists updated to match (standing rule: docs move
+  in the same change).
+
 ## v2.1.0 — "Clear Skies" · 2026-07-11 · tag `v2.1.0`
 
 Version code **21**. A readability & release-infrastructure release — the night and mine now
