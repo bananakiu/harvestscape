@@ -22,6 +22,38 @@
 
 ---
 
+## v2.6.1 — "Second Look" · 2026-07-11 · tag `v2.6.1`
+
+Version code **28**. Fixes for **all four findings** from an adversarial regression review of this
+session's six releases (a workflow: 5 dimension auditors → per-finding independent verifiers;
+4 reported, 4 confirmed, 0 refuted). A runtime smoke test independently caught the first.
+
+### Fixed
+- **Collection seeding for old saves was dead code** (`migrateSave`, `11-title.js`). `freshState()`
+  now returns a non-empty default `discovered` (2 starter items), so the generic
+  `for(const k in f)` backfill set `s.discovered` *before* the `if(!s.discovered){…}` seeding block —
+  which then saw a truthy object and skipped. Veteran saves showed only 2 items in the Collection.
+  Fixed by folding the inv/legend seeding into the `npxGame === undefined` (pre-existing-save) branch
+  so it **merges** into the defaulted object. Node-verified: a mock old save now seeds inventory +
+  caught legends, leaves uncaught legends locked, keeps NPX suppressed.
+- **The "Skip intro" button was invisible and unclickable** (`startPrologue`, `11-title.js`). It's a
+  `.mbtn` inside `#letter`, which CSS renders `visibility:hidden` until it also has `.show` — the code
+  only removed `hidden` (clears `display:none`), never added `.show`. So the advertised escape hatch
+  was present-but-invisible the whole prologue (my earlier test "passed" only because `.click()`
+  bypasses visibility). Now adds/removes `.show` alongside `hidden`.
+- **The day-one arrival + Act banner were lost on a mid-scene reload** (`startIntro`/`maybeArrival`).
+  `saveGame()` ran *before* `maybeArrival` set `arrivalSeen`, and the cutscene never persisted it, so a
+  reload during Maya's greeting dropped the scene forever (continueGame never replayed it). Now
+  `arrivalSeen` is set + saved **at the end** of the scene, and `continueGame` replays the arrival if a
+  new-player day-1 save reloaded before it finished.
+- **The Collection listed "Wool", which has no source** (`MUSEUM`, `10-ui.js`) — no sheep, no shear,
+  no `give("Wool")` anywhere — so its cell could never unlock and 100% completion was impossible.
+  Removed Wool from the "Farm & Forage" section (the item/sprite/examine stay, harmless, for a future
+  sheep).
+
+Verification note: the migrateSave fix is Node-verified; the other three are CSS/logic-verified (the
+browser preview was asleep overnight, so no screenshots — the mechanisms are simple and deterministic).
+
 ## v2.6.0 — "Journeyman" · 2026-07-11 · tag `v2.6.0`
 
 Version code **27**. The scorecard's standing priority #2 — "pay out the other four curves." Two of

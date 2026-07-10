@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "2.6.0", code: 27, codename: "Journeyman", date: "2026-07-11" };
+const VERSION = { name: "2.6.1", code: 28, codename: "Second Look", date: "2026-07-11" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"2.6.1", code:28, date:"2026-07-11", name:"Second Look", notes:[
+    { t:"fix",   s:"The “Skip intro” button now actually appears and works during the opening." },
+    { t:"fix",   s:"The Collection no longer lists an item you can't get, so it can be completed — and a returning save fills in from what you already own." },
+    { t:"fix",   s:"Reloading during the very first Maya scene no longer skips it forever." },
+  ]},
   { v:"2.6.0", code:27, date:"2026-07-11", name:"Journeyman", notes:[
     { t:"new",   s:"Cooking now has a real ladder — recipes unlock as your Cooking level climbs, from Fried Egg all the way to Frostbloom Tea." },
     { t:"new",   s:"Reach a skill mastery (25/50/75/99) and the neighbour who cares most about that craft says a warm word — in their own voice." },

@@ -169,7 +169,9 @@ function actBanner(){
 }
 function maybeArrival(){
   if(!state || state.flags.arrivalSeen || state.day !== 1 || !state.flags.npxGame){ actBanner(); return; }
-  state.flags.arrivalSeen = true;
+  // NB: arrivalSeen is set at the END of the scene (and saved there), NOT here — otherwise a reload
+  // partway through the cutscene would drop the whole arrival + Act banner for good. Until it fully
+  // plays, the save keeps arrivalSeen falsy, and continueGame() replays it (see 11-title.js).
   let maya = curMap.npcs.find(n => n.id === "maya");
   const spawned = !maya;
   if(spawned){ maya = mkNpc("maya", 12*TILE, 12*TILE, {face:"left"}); curMap.npcs.push(maya); }
@@ -187,6 +189,7 @@ function maybeArrival(){
       text:"For now, though? That little plot below your cottage is just begging for seeds. I'll leave you to it — welcome home." },
     { type:"move", actor:"maya", x:14, y:15, face:"down", sp:46 },
     { type:"run", fn:()=>{ if(spawned && !(curHour()>=7 && curHour()<18.5)){ const k=curMap.npcs.indexOf(maya); if(k>=0) curMap.npcs.splice(k,1); } } },
+    { type:"run", fn:()=>{ state.flags.arrivalSeen = true; saveGame(); } },   // only now is it "seen" — persist it
     { type:"run", fn:actBanner },
   ]);
 }

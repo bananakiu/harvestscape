@@ -145,7 +145,10 @@ function continueGame(){
   state = s; migrateSave(state);
   beginPlay();
   toast("Welcome back to Willowbrook!", "#8fd06a");
-  storySoFar();          // one line naming the act + where you're headed
+  // If a new player reloaded mid-arrival (arrivalSeen never persisted), give them the day-one scene
+  // now rather than dropping it forever; otherwise just the "story so far" recap.
+  if(state.flags.npxGame && !state.flags.arrivalSeen && state.day === 1){ maybeArrival(); }
+  else storySoFar();     // one line naming the act + where you're headed
   maybeShowWhatsNew();   // surface the changelog once after an update
 }
 // A gentle "story so far" on load, so a returning player re-enters the arc, not just the sandbox.
@@ -167,14 +170,16 @@ function migrateSave(s){
   if(!s.animals.cows) s.animals.cows = [];      // barns arrived after the first saves
   if(!s.flags) s.flags = {};
   // The new-player experience (prologue, verb hints, tips, arrival scene) belongs only to saves
-  // BORN in the NPX era. Any pre-existing save is mid-journey — mark it done so nothing fires.
-  if(s.flags.npxGame === undefined){ s.flags.npxGame = false; s.flags.arrivalSeen = true; }
-  if(!s.market) s.market = {};                 // Tom's demand arrived in v2.0
-  if(!s.discovered){                            // the Collection arrived in v2.5 — seed it from what a save already has
-    s.discovered = {};
+  // BORN in the NPX era. Any pre-existing save is mid-journey — mark it done so nothing fires, and
+  // seed its Collection from what it already holds (the generic backfill above has already given it
+  // freshState's default `discovered`, so we MERGE into that — a bare `if(!s.discovered)` never ran).
+  if(s.flags.npxGame === undefined){
+    s.flags.npxGame = false; s.flags.arrivalSeen = true;
+    if(!s.discovered) s.discovered = {};
     for(const it in (s.inv||{})) s.discovered[it] = true;
     for(const l of LEGENDS) if(s.flags["caught_"+l.id]) s.discovered[l.name] = true;
   }
+  if(!s.market) s.market = {};                 // Tom's demand arrived in v2.0
   if(!WEATHERS[s.weather]) s.weather = "clear"; // old saves may hold a weather we no longer have
   // courtship was Maya-only before v1.4
   if(s.flags.mayaConfided) s.flags.confided_maya = true;
@@ -289,7 +294,10 @@ function startPrologue(){
     btn.classList.remove("show");
     typeLetter($("letterBody"), PROLOGUE[i], () => btn.classList.add("show"));
   };
-  const toLetter = () => { intro.classList.remove("prologue"); if(skip) skip.classList.add("hidden"); startIntro(); };
+  // NB: #letter .mbtn is visibility:hidden until it also has `.show` — so the skip button needs BOTH
+  // `hidden` removed (clears display:none) AND `.show` added, or it renders present-but-invisible.
+  const hideSkip = () => { if(skip){ skip.classList.add("hidden"); skip.classList.remove("show"); } };
+  const toLetter = () => { intro.classList.remove("prologue"); hideSkip(); startIntro(); };
   const advance = () => {
     if(_letterActive){ finishLetter(); return; }   // first click just finishes the type-on
     i++;
@@ -297,7 +305,7 @@ function startPrologue(){
     showCard();
   };
   btn.onclick = advance;
-  if(skip){ skip.classList.remove("hidden"); skip.onclick = e => { e.stopPropagation(); toLetter(); }; }
+  if(skip){ skip.classList.remove("hidden"); skip.classList.add("show"); skip.onclick = e => { e.stopPropagation(); toLetter(); }; }
   intro.onclick = e => { if(e.target.closest("#btnLetterNext") || e.target.closest("#btnSkipIntro")) return; advance(); };
   showCard();
 }
@@ -308,7 +316,7 @@ function startIntro(){
   const intro = $("intro"); intro.classList.remove("hidden");
   $("intro").querySelector(".lhead").textContent = "✒ A letter, left on the kitchen table";
   const btn = $("btnLetterNext"); btn.textContent = "Continue ▸"; btn.classList.remove("show");
-  const skip = $("btnSkipIntro"); if(skip) skip.classList.add("hidden");
+  const skip = $("btnSkipIntro"); if(skip){ skip.classList.add("hidden"); skip.classList.remove("show"); }
   typeLetter($("letterBody"), LETTER, () => btn.classList.add("show"));
   btn.onclick = () => {
     beginPlay();

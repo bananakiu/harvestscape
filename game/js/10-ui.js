@@ -327,7 +327,7 @@ const MUSEUM = [
   { name:"The Legends",   items:()=>LEGENDS.map(l=>l.name) },
   { name:"Gems",          items:()=>Object.keys(GEM_SELL) },
   { name:"The Shore",     items:()=>Object.keys(SHORE) },
-  { name:"Farm & Forage", items:()=>["Field Salad","Frostberry","Berry Bun","Honey","Egg","Large Egg","Milk","Large Milk","Wool"] },
+  { name:"Farm & Forage", items:()=>["Field Salad","Frostberry","Berry Bun","Honey","Egg","Large Egg","Milk","Large Milk"] },   // no Wool: there are no sheep, so it can never be discovered (would cap the Collection one short)
   { name:"The Kitchen",   items:()=>RECIPES.map(r=>r.name) },
   { name:"Materials",     items:()=>["Wood","Pine Wood","Maple Wood","Stone","Copper Ore","Iron Ore","Gold Ore"] },
 ];
