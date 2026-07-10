@@ -135,8 +135,9 @@ function updateMuteBtn(){ $("btnMute").textContent = "♪ Music: " + (SND.enable
 function startNewGame(){
   state = freshState();
   state.farm = newMap("farm");
+  state.flags.npxGame = true;   // this save gets the new-player experience (prologue, hints, tips)
   try { localStorage.setItem("hs_seen_version", VERSION.code); } catch(e){}  // new players start current
-  startIntro();
+  startPrologue();
 }
 function continueGame(){
   const s = loadGame();
@@ -144,7 +145,15 @@ function continueGame(){
   state = s; migrateSave(state);
   beginPlay();
   toast("Welcome back to Willowbrook!", "#8fd06a");
+  storySoFar();          // one line naming the act + where you're headed
   maybeShowWhatsNew();   // surface the changelog once after an update
+}
+// A gentle "story so far" on load, so a returning player re-enters the arc, not just the sandbox.
+function storySoFar(){
+  if(!state || state.questIdx >= QUESTS.length) return;
+  const t = trackerData(); if(!t) return;
+  const where = t.reportTo ? `Report to ${t.reportTo}` : (t.objs[0] ? t.objs[0].text : t.title);
+  setTimeout(() => toast(`${actInfo().title} · ${where}`, "#e8d18a"), 1400);
 }
 function migrateSave(s){
   const f = freshState();
@@ -157,6 +166,9 @@ function migrateSave(s){
   if(!s.animals.chickens) s.animals.chickens = [];
   if(!s.animals.cows) s.animals.cows = [];      // barns arrived after the first saves
   if(!s.flags) s.flags = {};
+  // The new-player experience (prologue, verb hints, tips, arrival scene) belongs only to saves
+  // BORN in the NPX era. Any pre-existing save is mid-journey — mark it done so nothing fires.
+  if(s.flags.npxGame === undefined){ s.flags.npxGame = false; s.flags.arrivalSeen = true; }
   if(!s.market) s.market = {};                 // Tom's demand arrived in v2.0
   if(!WEATHERS[s.weather]) s.weather = "clear"; // old saves may hold a weather we no longer have
   // courtship was Maya-only before v1.4
@@ -186,11 +198,22 @@ function beginPlay(){
   }
 }
 
+// ---- the prologue: three narration cards, all skippable, that state the premise before the
+// letter states the mission. New-game only; a returning player never sees any of this.
+const PROLOGUE = [
+"There was a time this valley never slept.\n\nNine crafts under one roof — the Guild lit every window, and on festival nights the whole coast floated with lanterns.",
+"Then, one by one, the crafts went cold. The Guild closed its doors. The lanterns stayed in their boxes.\n\nWillowbrook learned to live small, and the years went quietly by.",
+"Far away, an old farmer always meant to go back and set it right.\n\nHe ran out of seasons.\n\nThen a letter came — addressed to you.",
+];
+
 // ---- intro letter ----
+// The letter keeps Grandpa's voice but now names the mission plainly: the Guild went dark, the
+// festival died, and waking the valley is the thing he's leaving you.
 const LETTER =
 "My dear grandchild,\n\n" +
 "If you're reading this, the old farm is yours now. I know it doesn't look like much — the weeds have had their way, and the valley's gone quiet since the Guild closed its doors.\n\n" +
 "But this soil remembers every seed I ever planted. Tend it, and it'll tend to you. Plant a little each day, water what you sow, and rest when the sun goes down.\n\n" +
+"I'll not dress up the rest: Willowbrook is fading. The Guild of Nine Crafts stands dark, one craft at a time gone cold, and the Grand Festival that once lit the whole coast hasn't been held in years. I always meant to wake it back up — relight the crafts, put the lanterns back on the water. I ran out of seasons. Maybe you won't.\n\n" +
 "The rest, you'll figure out — same as I did. Oh — and do say hello to Maya. She's good people.\n\n" +
 "Welcome home, kiddo.\nWelcome to Willowbrook.\n            — Grandpa";
 
@@ -247,18 +270,46 @@ function finishLetter(natural){
 }
 function escapeHtml(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
+// Three narration cards over a darkened title, one click each. A persistent "Skip intro"
+// jumps straight to the letter — no beat is ever forced (the cozy contract).
+function startPrologue(){
+  gameMode = "intro";
+  $("title").classList.add("hidden");
+  const intro = $("intro"); intro.classList.remove("hidden"); intro.classList.add("prologue");
+  const btn = $("btnLetterNext"), skip = $("btnSkipIntro");
+  let i = 0;
+  const showCard = () => {
+    intro.querySelector(".lhead").textContent = "✦ Willowbrook";
+    btn.textContent = (i < PROLOGUE.length - 1) ? "▸" : "The letter ▸";
+    btn.classList.remove("show");
+    typeLetter($("letterBody"), PROLOGUE[i], () => btn.classList.add("show"));
+  };
+  const toLetter = () => { intro.classList.remove("prologue"); if(skip) skip.classList.add("hidden"); startIntro(); };
+  const advance = () => {
+    if(_letterActive){ finishLetter(); return; }   // first click just finishes the type-on
+    i++;
+    if(i >= PROLOGUE.length){ toLetter(); return; }
+    showCard();
+  };
+  btn.onclick = advance;
+  if(skip){ skip.classList.remove("hidden"); skip.onclick = e => { e.stopPropagation(); toLetter(); }; }
+  intro.onclick = e => { if(e.target.closest("#btnLetterNext") || e.target.closest("#btnSkipIntro")) return; advance(); };
+  showCard();
+}
+
 function startIntro(){
   gameMode = "intro";
   $("title").classList.add("hidden");
   const intro = $("intro"); intro.classList.remove("hidden");
   $("intro").querySelector(".lhead").textContent = "✒ A letter, left on the kitchen table";
   const btn = $("btnLetterNext"); btn.textContent = "Continue ▸"; btn.classList.remove("show");
+  const skip = $("btnSkipIntro"); if(skip) skip.classList.add("hidden");
   typeLetter($("letterBody"), LETTER, () => btn.classList.add("show"));
   btn.onclick = () => {
     beginPlay();
     state.flags.introSeen = true;
-    banner("☀ Welcome to Willowbrook", "First task: wake the soil in the plot below your cottage.");
     saveGame();
+    maybeArrival();   // Maya greets you at the farm, then the Act I banner (both skippable)
   };
   // click to skip typing
   intro.onclick = e => { if(e.target.closest("#btnLetterNext")) return; if(_letterActive) finishLetter(); };
@@ -267,27 +318,8 @@ function startIntro(){
 function showHowto(){
   const intro = $("intro"); intro.classList.remove("hidden");
   intro.querySelector(".lhead").textContent = "✒ How to Play";
-  const txt =
-"Move with WASD or the arrow keys.\n\n" +
-"Space uses your selected tool on the tile you face:\n" +
-"• Hoe tills soil  • Watering Can waters it  • Seeds plant a crop\n" +
-"• Axe chops trees  • Pick mines rock  • Rod fishes water\n\n" +
-"E interacts — harvest crops, talk to folk, open doors, cook, and step inside your cottage to sleep in your bed and pass the night.\n\n" +
-"Fishing: cast with the Rod, wait for the !, then press Space to hook it. Now HOLD Space to raise the green bar and keep the fish inside it — let it slip and the line goes slack. Land one cleanly for a perfect catch.\n\n" +
-"Explore! Enter the shops and houses in town, descend the old mine (north) for ore and gems, and follow the south path to the coast. Keep hens in the coop and cows in the barn — visit them each morning.\n\n" +
-"Read the sky. Tomorrow's weather is chalked on the noticeboard every evening, and each kind of day offers something the others don't — rain doubles your foraging and brings the fish up; a storm shuts the coast but drives the veins, and leaves wrack on the sand the morning after; fog makes the deep seams read rich. Sleep through a day and you miss what it was offering. Nothing is ever lost.\n\n" +
-"Tom can only shift so much of one thing a day. Sell forty of the same crop and the price slides; bring him variety and it doesn't. Watch the price in his shop before you sell.\n\n" +
-"Bram knows five fish that rise only when everything lines up — the right water, the right hour, the right weather, the right season. He'll tell you about one for every heart you earn, and the Almanac remembers.\n\n" +
-"Saplings and beehives go in open ground (press R to select one, then Space). A tree takes a season to bear, then bears every day of its season, forever. Bees make more honey where more is in bloom.\n\n" +
-"The valley keeps a calendar. Four festivals return every year — be on the coast on the day, and bring something (Bram's Luau wants a fish; the Harvest Fair judges the best crop you've sold that season). Everyone has a birthday, too: a gift on the day is worth three. Check the Almanac in your Journal (J).\n\n" +
-"A noticeboard stands by Tom's door. Each morning someone in the valley wants something small — bring it to them for good coin and warmer feelings. It's never required, and it's gone by dawn.\n\n" +
-"Your grandfather tore up his old almanac and left the pages where he lived. You'll find them by working the way he worked. Nine in all, and the last one isn't a page about farming.\n\n" +
-"Every skill keeps paying past its last unlock: mastery lands at 25, 50, 75 and 99. And when your coin outgrows your needs, read the ledger on Rowan's desk — the valley has unfinished work.\n\n" +
-"Give your neighbours time and gifts and they'll open up — each has scenes of their own. Two of them might one day accept a Willowbrook bouquet.\n\n" +
-"Sell at Tom's stall, buy seeds and upgrade tools. Every action trains a skill from 1 to 99. Follow the tasks in your Journal (J) to wake the valley.\n\n" +
-"R cycles seeds · F eats food · G gifts Maya · K skills · I backpack";
   const body = $("letterBody");
-  body.innerHTML = escapeHtml(txt);
+  body.innerHTML = escapeHtml(HOWTO_TEXT);
   body.scrollTop = 0;                                  // no typewriter here — set the fade by hand
   body.onscroll = updateLetterFade;
   requestAnimationFrame(updateLetterFade);

@@ -7,6 +7,40 @@
 const HOTBAR = [ { tool:"Hoe" }, { tool:"Can" }, { tool:"Axe" }, { tool:"Pick" }, { tool:"Rod" }, { tool:"Seeds" } ];
 let slotSel = 0;
 function selectSlot(i){ if(i<0||i>=HOTBAR.length) return; slotSel = i; playSfx("select"); refreshHotbar(); }
+
+// ---- new-player tutoring: one-shot, contextual, only on a save born in the NPX era ----
+function tutTip(flag, text){
+  if(!state || !state.flags.npxGame || state.flags[flag]) return;
+  state.flags[flag] = true;
+  toast(text, "#ffe6a0"); playSfx("select");
+}
+// Teach each verb the first moment the player is actually positioned to use it — never on a
+// timer, never twice. New-game saves only; existing saves have npxGame=false and see nothing.
+function tutoringTick(){
+  if(!state || !state.flags.npxGame) return;
+  if(gameMode!=="play" || paused || uiBlocking() || isCutscene() || fishing.state!=="idle" || !curMap) return;
+  // first-encounter tips (fire anywhere in play)
+  if(curMap.outdoor && isRain() && !state.flags.tip_rain)
+    tutTip("tip_rain","Rain waters your fields for free today — and the fish are rising.");
+  if(curMap.id==="mine" && !state.flags.tip_mine)
+    tutTip("tip_mine","Swing your Pick at the rock for ore and gems. Find a ladder to go deeper.");
+  // contextual verb hints, keyed to what you're facing with the tool in hand
+  const slot = HOTBAR[slotSel]; if(!slot) return;
+  const tool = slot.tool;
+  const [tx,ty] = facingTile(); const tt = tileAt(tx,ty), obj = objAt(tx,ty);
+  if(tool==="Hoe" && curMap.id==="farm" && TILLABLE.has(tt) && !obj && !curMap.crops[key(tx,ty)])
+    tutTip("hint_hoe","This soil is ready — press SPACE to till it.");
+  else if(tool==="Seeds" && (tt===T.TILLED||tt===T.WATERED) && !curMap.crops[key(tx,ty)])
+    tutTip("hint_seed","SPACE plants your seed here. Press R to switch which seed.");
+  else if(tool==="Can" && tt===T.TILLED)
+    tutTip("hint_can","SPACE waters the soil — young crops drink every day.");
+  else if(tool==="Axe" && obj && TREES[obj.kind])
+    tutTip("hint_axe","Face the tree and press SPACE to chop — it trains Woodcutting.");
+  else if(tool==="Pick" && obj && (ORES[obj.kind]||obj.kind==="gemrock"||obj.kind==="crystal"))
+    tutTip("hint_pick","Press SPACE to mine. A better pick breaks the rock faster.");
+  else if(tool==="Rod" && tt===T.WATER)
+    tutTip("hint_rod","Face the water and press SPACE to cast your line.");
+}
 // Everything you can put in the ground: seeds you've levelled into, plus any sapling or hive
 // you're actually carrying. `state.seedSel` is a crop id, "sap:<type>", or "hive".
 function plantables(){
@@ -260,7 +294,7 @@ function interact(){
       }
       case "shipbin": toast("Shipping bin — sell your goods here.", "#e9dcc0"); openShop("sell", true); return;
       case "sign": showDialog("Weathered Sign", obj.text || "…", "port_sign"); return;
-      case "noticeboard": showDialog("The Noticeboard", boardText(), "port_sign"); return;
+      case "noticeboard": tutTip("tip_board","Someone in the valley wants something small each day. Bring it for coin and goodwill — never required."); showDialog("The Noticeboard", boardText(), "port_sign"); return;
       case "ledger": openProjects(); return;
       case "fountain": tossCoin(); return;
       case "boardwalk": travelTo("beach", 30*TILE+8, 3*TILE, "down"); return;

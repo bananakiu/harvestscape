@@ -50,3 +50,8 @@ writing more story.
 on the roadmap for after the core game is further along.
 
 **Produced:** [NEW_PLAYER_EXPERIENCE.md](NEW_PLAYER_EXPERIENCE.md) — the beta NPX plan.
+
+**Built:** **v2.2.0 "First Light"** (2026-07-11) — all three workstreams shipped to beta
+(prologue + mission letter + Maya arrival; contextual verb hints + tips + in-Journal how-to;
+act-aware tracker/journal + Continue recap). See `CHANGELOG.md`. The roadmap tier (§6 of the
+plan — art'd prologue, per-NPC intros, music stings) stays deferred, per the owner's call.

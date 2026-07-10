@@ -158,6 +158,39 @@ function endCutscene(){
   if(cb) cb();
 }
 
+// ===================== DAY-ONE ARRIVAL =====================
+// Maya meets you at the farm the moment you take control, then the Act I banner names the goal.
+// Both are skippable (advance the dialogue), fire once ever, and only on a fresh new-game save.
+function actBanner(){
+  const a = actInfo();
+  banner(a.title, a.n === 1
+    ? "Wake the valley — relight the Nine Crafts and bring the festival home."
+    : "The lanterns are lit, but one chair is still empty.");
+}
+function maybeArrival(){
+  if(!state || state.flags.arrivalSeen || state.day !== 1 || !state.flags.npxGame){ actBanner(); return; }
+  state.flags.arrivalSeen = true;
+  let maya = curMap.npcs.find(n => n.id === "maya");
+  const spawned = !maya;
+  if(spawned){ maya = mkNpc("maya", 12*TILE, 12*TILE, {face:"left"}); curMap.npcs.push(maya); }
+  startCutscene([
+    { type:"wait", t:0.5 },
+    { type:"setpos", actor:"maya", x:12, y:12, face:"left" },
+    { type:"move", actor:"maya", x:10, y:12, face:"left", sp:42 },
+    { type:"say", who:"Maya", portrait:"port_maya",
+      text:"You're here — you're really here! I'm Maya. I mind the place just over the fence." },
+    { type:"say", who:"Maya", portrait:"port_maya",
+      text:"Welcome to Willowbrook. It's… quieter than it used to be. Your grandpa's farm has waited a long while for someone to wake it up." },
+    { type:"say", who:"Maya", portrait:"port_maya",
+      text:"When you've found your feet, go and see Elder Rowan — the old man up at the Guild Hall. He can tell you the rest far better than I can." },
+    { type:"say", who:"Maya", portrait:"port_maya",
+      text:"For now, though? That little plot below your cottage is just begging for seeds. I'll leave you to it — welcome home." },
+    { type:"move", actor:"maya", x:14, y:15, face:"down", sp:46 },
+    { type:"run", fn:()=>{ if(spawned && !(curHour()>=7 && curHour()<18.5)){ const k=curMap.npcs.indexOf(maya); if(k>=0) curMap.npcs.splice(k,1); } } },
+    { type:"run", fn:actBanner },
+  ]);
+}
+
 // ===================== GRANDPA'S LETTERS =====================
 let _letterCb = null;
 function openLetter(head, text, onClose){

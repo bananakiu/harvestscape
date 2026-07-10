@@ -123,6 +123,7 @@ body{
   animation:qtin .4s ease;
 }
 @keyframes qtin{from{opacity:0;transform:translateX(1em)}to{opacity:1}}
+.qt-act{ color:#c8a86a; font-size:.66em; letter-spacing:.06em; text-transform:uppercase; opacity:.85; margin-bottom:.15em; }
 .qt-title{ color:var(--gold-hi); font-size:.86em; line-height:1.05; }
 .qt-obj{ color:#e6d8bc; font-size:.8em; line-height:1.1; opacity:.95; }
 .qt-obj.done{ color:var(--green); text-decoration:line-through; opacity:.65; }
@@ -315,6 +316,16 @@ body{
 .xpbar{ height:100%; background:linear-gradient(var(--blue),#3f7fbf); box-shadow:inset 0 .2em 0 rgba(255,255,255,.25); transition:width .4s ease; }
 .xpRow .xpnum{ width:7.5em; text-align:right; color:var(--ink-soft); font-size:.8em; }
 
+.actHead{ color:var(--gold); font-size:.82em; font-weight:bold; letter-spacing:.05em; text-transform:uppercase;
+  margin:.6em 0 .5em; padding-bottom:.2em; border-bottom:.12em solid rgba(255,206,90,.28); }
+.actHead:first-child{ margin-top:0; }
+.jq.dest{ opacity:.6; }
+.jq.dest h3{ color:#cbb98f; }
+.howto{ margin-top:.8em; border-top:.1em solid rgba(255,255,255,.1); padding-top:.5em; }
+.howto summary{ cursor:pointer; color:var(--gold-hi); font-size:.95em; list-style:none; }
+.howto summary::-webkit-details-marker{ display:none; }
+.howto summary:hover{ color:#fff2c4; }
+.howtoBody{ white-space:pre-wrap; color:#d8c9ab; font-size:.86em; line-height:1.5; margin-top:.5em; }
 .jq{ margin-bottom:.7em; padding-bottom:.5em; border-bottom:.1em solid rgba(255,255,255,.08); }
 .jq h3{ margin:0 0 .1em; color:var(--gold-hi); font-size:1.02em; }
 .jq h3.done{ color:var(--green); }
@@ -400,6 +411,16 @@ body{
   font-size:clamp(13px,2.5vw,24px); line-height:1.5;
 }
 .lhead{ font-size:.82em; letter-spacing:.08em; color:#8a6a3c; margin-bottom:.7em; font-style:italic; flex:0 0 auto; }
+
+/* Prologue: three narration cards over near-black — atmospheric, not a paper letter */
+#intro.prologue{ background:rgba(4,4,9,.93); backdrop-filter:blur(3px); }
+#intro.prologue #letter{ background:none; border:none; box-shadow:none; transform:none;
+  color:#e9e3d5; width:min(86%,32em); text-align:center; }
+#intro.prologue .lhead{ color:#9c8f74; letter-spacing:.22em; text-align:center; }
+#intro.prologue #letterBody{ font-size:1.05em; line-height:1.75; text-align:center; color:#e9e3d5;
+  padding-right:0; }
+#intro.prologue #letterBody .cursor{ color:#9c8f74; }
+#intro.prologue #letterFoot{ justify-content:center; gap:1.4em; }
 
 /* the scrolling middle of the letter */
 #letterScroll{ position:relative; flex:1 1 auto; min-height:0; display:flex; }

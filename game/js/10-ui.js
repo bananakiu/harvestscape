@@ -175,7 +175,7 @@ function refreshQuestTracker(){
   const q = trackerData();
   let html = "";
   if(q){
-    html += `<div class="qt-card"><div class="qt-title">✒ ${q.title}</div>`;
+    html += `<div class="qt-card"><div class="qt-act">${actInfo().title}</div><div class="qt-title">✒ ${q.title}</div>`;
     for(const o of q.objs){
       html += `<div class="qt-obj ${o.done?"done":""}">${o.done?'<span class="chk">✔</span> ':"• "}${o.text}` +
               (o.max>1 && !o.done ? ` (${o.cur}/${o.max})` : "") + `</div>`;
@@ -258,10 +258,21 @@ function renderJournal(){
   WINGS.forEach(w => { const on = w.lit();
     html += `<span style="color:${on?"var(--gold-hi)":"var(--ink-soft)"}">${on?"◆":"◇"} ${w.name}</span>`; });
   html += `</div></div>`;
+  // Story quests grouped under their act, so a casual player perceives the arc — not a flat list.
+  html += `<div class="actHead">${ACT_TITLES[1]}</div>`;
+  let act2Open = false;
   QUESTS.forEach((q, idx) => {
     const done = idx < state.questIdx;
     const active = idx === state.questIdx;
-    if(idx > state.questIdx) return; // hide future quests
+    if(idx > state.questIdx){
+      // Always reveal the finale as Act I's destination — greyed, so the goal is visible early.
+      if(idx === FINALE_IDX && state.questIdx < FINALE_IDX){
+        html += `<div class="jq dest"><h3>◇ ${QUESTS[FINALE_IDX].title} <span style="color:var(--ink-soft);font-size:.8em;">— where Act I is heading</span></h3>` +
+                `<div class="desc">Relight the Nine Crafts and bring the Grand Festival back to the coast.</div></div>`;
+      }
+      return; // other future quests stay hidden
+    }
+    if(idx > FINALE_IDX && !act2Open){ html += `<div class="actHead">${ACT_TITLES[2]}</div>`; act2Open = true; }
     html += `<div class="jq"><h3 class="${done?"done":""}">${done?"✔ ":active?"✒ ":""}${q.title} <span style="color:var(--ink-soft);font-size:.8em;">— ${q.giver}</span></h3>`;
     html += `<div class="desc">“${q.desc}”</div>`;
     q.obj.forEach(o => { const [c,m] = objProgress(o); const d = c>=m;
@@ -271,6 +282,7 @@ function renderJournal(){
   if(state.questIdx >= QUESTS.length) html += `<div style="text-align:center;color:var(--gold-hi);">✦ Every task complete. The valley is yours. ✦</div>`;
   html += renderPages();
   html += renderAlmanac();
+  html += `<details class="howto"><summary>❔ How to Play</summary><div class="howtoBody">${escapeHtml(HOWTO_TEXT)}</div></details>`;
   b.innerHTML = html;
 }
 

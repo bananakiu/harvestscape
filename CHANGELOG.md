@@ -22,6 +22,52 @@
 
 ---
 
+## v2.2.0 — "First Light" · 2026-07-11 · tag `v2.2.0`
+
+Version code **22**. The New Player Experience beta — the fix for the owner's first playtest
+verdict (see [DEVLOG.md](DEVLOG.md), 2026-07-11): *fun core, cold open.* Built to the plan in
+[NEW_PLAYER_EXPERIENCE.md](NEW_PLAYER_EXPERIENCE.md). **Almost no new story — this re-paces and
+re-surfaces what already existed.** Every beat is skippable, and none of it touches a pre-existing
+save (gated on `state.flags.npxGame`, set only at new-game start; `migrateSave` marks old saves
+`npxGame:false, arrivalSeen:true` so nothing fires for them).
+
+### Added — A. Exposition (`11-title.js`, `14-story.js`)
+- **A three-card prologue before the letter.** Narration over a darkened title scene — the valley
+  as it was, the quiet years, the inheritance — establishing the premise the game never stated.
+  Fully skippable (a persistent "Skip intro ⏭" jumps straight to the letter). *Why cards, not a
+  cutscene:* pre-`beginPlay` there is no `curMap` for actors, so this reuses the letter/typewriter
+  UI with a `.prologue` dark style — zero new engine work, per the plan's non-goals.
+- **Grandpa's letter now names the mission.** One added paragraph: the Guild of Nine Crafts went
+  dark, the Grand Festival died, and waking the valley is what he's leaving you. The premise used
+  to first appear at quest #4 (Rowan), easily skimmed; now it's in minute one.
+- **A day-one arrival scene.** Maya walks up at the farm the moment you take control, welcomes
+  you, names Willowbrook and Elder Rowan ("go and hear him out"), and points at the plot —
+  planting quest #4's premise in minute two without moving the quest. Reuses the existing cutscene
+  engine (`startCutscene` say/move steps). Then an **Act I banner** names the goal.
+
+### Added — B. Tutorial (`08-actions.js`, `12-game.js`, `10-ui.js`, `01-data.js`)
+- **Contextual first-verb hints.** `tutoringTick()` (run each frame in free play) shows a one-time
+  hint the moment you're first positioned to use a verb — face bare soil with the Hoe → "press
+  SPACE to till"; face water with the Rod → "cast your line"; etc. Never on a timer, never twice
+  (`state.flags.hint_*`), never on an old save.
+- **First-encounter tips** — first rain, first mine floor, first noticeboard read — one sentence at
+  the moment of relevance, carrying the load the title-screen prose dump used to.
+- **How to Play moved in-world.** The reference text is now one shared `HOWTO_TEXT` constant
+  (`01-data.js`) rendered both on the title *and* inside the Journal (a collapsible section), where
+  a playing player can actually consult it.
+
+### Added — C. Story visibility (`09-quests.js`, `10-ui.js`, `11-title.js`)
+- **Act-aware tracker & journal.** `actInfo()` derives the act from `questIdx` (Act I through the
+  finale, Act II after). The quest tracker shows the act label; the Journal groups quests under
+  "Act I — The Quiet Valley" / "Act II — The Empty Chair", and reveals the finale ("Wake the
+  Valley") *greyed, early*, as the destination — so the player always sees where the chain leads.
+- **"Story so far" on Continue.** A returning player gets one line naming their act and next step
+  ("Act I — The Quiet Valley · Report to …"), re-entering the arc, not just the sandbox.
+
+Verified on a fresh save in-browser: prologue → mission letter → Maya arrival → Act I banner →
+contextual till hint → act-grouped Journal with the finale shown as the destination. Console clean.
+Old saves skip all of it. `master` per the standing workflow; tagged `v2.2.0`.
+
 ## Docs — playtest feedback loop + NPX plan · 2026-07-11
 
 No game code changed. First owner playtest verdict after v2.1.0: the core loop is fun, but a

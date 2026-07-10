@@ -1,8 +1,9 @@
 # New Player Experience — Beta Plan
 
 *Drafted 2026-07-11 from the owner's playtest feedback (see [DEVLOG.md](DEVLOG.md), same date).
-Status: **planned, not built.** Target: a beta-quality NPX in the next feature release; the
-polish tier (full cutscenes, art'd prologue) stays on the roadmap.*
+Status: **beta shipped in v2.2.0 "First Light"** (2026-07-11) — all three workstreams below are
+built; see `CHANGELOG.md`. The polish tier (§6: full cutscenes, art'd prologue, per-NPC intros,
+music stings) remains on the roadmap, per the owner's call.*
 
 ---
 

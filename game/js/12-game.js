@@ -19,6 +19,7 @@ function loop(ts){
     if(!paused && !frozen){
       updatePlayer(dt);                 // handles its own ui-blocking (stops movement)
       if(!uiBlocking()){                // menus & dialogue pause the world clock
+        tutoringTick();                 // contextual new-player hints (one-shot, npx saves only)
         updateTime(dt);
         updateNpcs(dt);
         updateAnimals(dt);

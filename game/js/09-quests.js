@@ -6,6 +6,14 @@
 function totalLevel(){ let t=0; for(const s in state.skills) t += skillLvl(s); return t; }
 function curQuest(){ return QUESTS[state.questIdx] || null; }
 
+// Which act the player is in — used to frame the tracker, journal, and Continue recap so the
+// two-act structure is visible in casual play. Act I runs through the finale ("Wake the Valley").
+const ACT_TITLES = { 1:"Act I — The Quiet Valley", 2:"Act II — The Empty Chair" };
+function actInfo(){
+  const n = (state && state.questIdx > FINALE_IDX) ? 2 : 1;
+  return { n, title: ACT_TITLES[n] };
+}
+
 function objDone(o){
   if(o.stat)       return (state.stats[o.stat]||0) >= o.goal;
   if(o.level)      return skillLvl(o.level.skill) >= o.level.n;
