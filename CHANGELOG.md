@@ -18,6 +18,25 @@
 
 ---
 
+## [Unreleased] — Model-agnostic agent instructions · 2026-07-11
+
+### Changed
+- **Made the AI-agent instruction setup tool-agnostic.** Previously the only guide was
+  `CLAUDE.md`, which meant any non-Claude agent (Gemini CLI, Cursor, Copilot, Cline,
+  Windsurf, Codex) would either get *no* project instructions or need a divergent copy —
+  a silent way for a future rebuild agent to miss the standing rules (changelog discipline,
+  the cozy no-combat contract, the load-order constraints). **Why this way:** rather than
+  maintain N parallel files that drift, there is now **one canonical `AGENTS.md`** (the
+  neutral cross-tool standard) and every tool's expected filename is a **symlink** to it —
+  `CLAUDE.md`, `GEMINI.md`, `.cursorrules`, `.clinerules`, `.windsurfrules`, and
+  `.github/copilot-instructions.md`. Single source of truth, zero drift, every agent reads
+  identical guidance. `CLAUDE.md`'s content moved verbatim into `AGENTS.md` (nothing
+  dropped); added a "Cross-agent setup" section (symlink map + how to onboard a new tool),
+  a Windows/`core.symlinks` caveat, a "keep the README current" rule, and a skills
+  placeholder for when `.claude/skills/` is added.
+
+---
+
 ## [Unreleased] — Lighting & readability polish · 2026-07-11
 
 Player-facing complaints about visibility, resolved with the Stardew philosophy that a
