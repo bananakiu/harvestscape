@@ -25,10 +25,17 @@ different engine or direction — with full knowledge of *why* each decision was
    future agent recreating the game needs the reasoning, not a one-liner.
 3. **Update the log in the same change as the code**, under the `[Unreleased]` heading; on
    commit, retitle that section with the date and commit hash.
-4. **Commit and push regularly** — after each coherent unit of work, not in one giant dump.
-   Small, well-described commits *are* the audit trail. Don't let the working tree pile up.
-   - Branch first if on a protected branch; otherwise commit to the working branch.
-   - Only commit/push when it won't surprise the user, or when they've asked you to.
+4. **Commit and push freely and regularly** — after each coherent unit of work, not in one
+   giant dump. Small, well-described commits *are* the audit trail. Don't let the working
+   tree pile up, and **don't wait to be asked** — the owner has standing approval for you to
+   commit and push on your own.
+   - **Commit directly to `master` and push** — that is the established workflow here. No
+     feature branch or PR is needed unless the owner explicitly asks for one.
+   - You don't need to pause for confirmation before committing or pushing. Everything here
+     is versioned and reversible (`git revert`/`git reset`), so favor shipping small commits
+     over hoarding uncommitted changes.
+   - The one hard requirement stays: the `CHANGELOG.md` entry ships **in the same commit** as
+     the code it describes.
 
 Treat the changelog as non-optional deliverable output, the same as the code itself.
 

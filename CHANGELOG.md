@@ -18,6 +18,19 @@
 
 ---
 
+## [Unreleased] — Free commit/push standing approval · 2026-07-11
+
+### Changed
+- **Loosened the commit/push rule to standing pre-approval.** The old rule 4 hedged — "only
+  commit/push when it won't surprise the user, or when they've asked you to" — which made
+  agents pile up uncommitted work waiting for a go-ahead. The owner has now given **standing
+  approval to commit and push freely**, directly to `master`, without pausing to ask.
+  **Why:** everything here is versioned and reversible (`git revert`/`git reset`), so the
+  cost of an unwanted commit is trivial while the cost of an uncommitted working tree — lost
+  audit-trail granularity — is real. The one hard invariant is unchanged: the `CHANGELOG.md`
+  entry ships in the same commit as the code. Updated in `AGENTS.md` so every agent inherits
+  the new default.
+
 ## [Unreleased] — Model-agnostic agent instructions · 2026-07-11
 
 ### Changed
