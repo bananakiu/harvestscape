@@ -633,7 +633,8 @@ function landFish(){
     bump("legends", 1);
     give(f.name, 1); bump("fished");
     addXP("Fishing", f.xp);
-    playSfx("level"); pSparkle(state.px, state.py-16, f.pal[1], 30); cam.shake = 3;
+    playSfx("legend"); pSparkle(state.px, state.py-16, f.pal[1], 30); cam.shake = 2;   // bespoke fanfare, contained shake
+    pItemPop(state.px, state.py-14, "item_"+f.name);   // the trophy leaps off the line with an apex pop
     banner("✦ " + f.name + " ✦", "You've landed a legend. Bram will want to hear about this.");
     setTimeout(() => toast(`${legendsCaught()}/${LEGENDS.length} legends — the Almanac remembers.`, "#ffd75a"), 900);
     return;

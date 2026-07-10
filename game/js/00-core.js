@@ -96,6 +96,12 @@ const tweens = [];
 function tween(obj, prop, to, dur, ease = easeOutCubic, onDone){
   tweens.push({ obj, prop, from: obj[prop], to, t: 0, dur, ease, onDone });
 }
+// retween: replace any in-flight tween on the same obj+prop, so rapid re-triggers (a gold
+// count-up interrupted by another sale) restart cleanly instead of two tweens fighting.
+function retween(obj, prop, to, dur, ease = easeOutCubic, onDone){
+  for(let i = tweens.length - 1; i >= 0; i--){ if(tweens[i].obj === obj && tweens[i].prop === prop) tweens.splice(i, 1); }
+  tween(obj, prop, to, dur, ease, onDone);
+}
 function updateTweens(dt){
   for(let i = tweens.length - 1; i >= 0; i--){
     const w = tweens[i]; w.t += dt;

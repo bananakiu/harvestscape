@@ -22,6 +22,28 @@
 
 ---
 
+## v2.4.0 — "With Feeling" · 2026-07-11 · tag `v2.4.0`
+
+Version code **24**. A game-feel pass that finally wires the dormant tween system (the scorecard's
+Juice grade sat at **B** with the tween registry having *no call sites*, "two audits running").
+
+### Added / Changed
+- **Gold count-up.** The gold pill eases toward its true value each frame (`syncGold()` in
+  `10-ui.js`, driven by a tween on `goldUI.shown`) and pulses — `earn` (scale-up + brighten) or
+  `spend` (dip) — so a 400g sale reads as a little count-up, not a silent number swap. Added
+  `retween()` (`00-core.js`) so a sale mid-count restarts cleanly instead of two tweens fighting.
+- **Item-pop flourish.** `pItemPop` now arcs gently (lower gravity, a beat of apex hang) and the
+  icon **scale-pops** in `drawParticles` (0.3 → 1.25 → 1.0 on an ease) — the "gotcha" juice the
+  scorecard asked for, on every harvest/mine/forage.
+- **A bespoke legendary-catch fanfare** (`SFX.legend`, `02-audio.js`): a rising seven-note flourish
+  over a low sustained fifth — grander and longer than a level-up, which the legend catch used to
+  borrow. Landing a legend now also throws the **trophy in an apex pop**, and its screen shake is
+  **contained** (3 → 2), fixing the scorecard's "exceeds the shake budget" note.
+
+Audio note: the other P4 items (rain/storm music ducking, ±10% tool detune via `dj`) were already
+in place from v2.1 — verified, not re-done. Verified in-browser: gold eases both directions with
+the right pulse, `retween` leaves one clean tween, console clean. Tagged `v2.4.0`.
+
 ## v2.3.0 — "A Word on Everything" · 2026-07-11 · tag `v2.3.0`
 
 Version code **23**. Examine text — the scorecard's most-repeated free win ("the #1 free channel,

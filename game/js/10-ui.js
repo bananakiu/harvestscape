@@ -99,6 +99,21 @@ function advanceDialog(){
 function closeDialog(){ $("dialog").classList.add("hidden"); dlg.open = false; clearInterval(dlg.timer); playSfx("menuClose"); }
 
 // ---- HUD ----
+// The gold counter eases toward its true value each frame (via a tween on goldUI.shown) and the
+// pill pulses on the way — earning 400g reads as a little count-up, not a silent number-swap.
+const goldUI = { shown: 0, target: null };
+function syncGold(){
+  const el = $("goldVal"); if(!el || !state) return;
+  if(goldUI.target === null){ goldUI.target = goldUI.shown = state.gold; }
+  else if(state.gold !== goldUI.target){
+    const up = state.gold > goldUI.target;
+    goldUI.target = state.gold;
+    retween(goldUI, "shown", state.gold, 0.5);
+    const pill = $("goldPill");
+    if(pill){ pill.classList.remove("earn","spend"); void pill.offsetWidth; pill.classList.add(up ? "earn" : "spend"); }
+  }
+  el.textContent = Math.round(goldUI.shown);
+}
 function refreshHUD(){
   if(!state) return;
   const seas = SEASONS[Math.floor((state.day-1)/SEASON_DAYS)%4];
@@ -107,7 +122,7 @@ function refreshHUD(){
   let h = Math.floor(state.time/60)%24, m = Math.floor(state.time%60/10)*10;
   const ap = h>=12 ? "pm":"am"; let h12 = h%12; if(h12===0) h12=12;
   $("timeLine").textContent = h12 + ":" + String(m).padStart(2,"0") + " " + ap;
-  $("goldVal").textContent = state.gold;
+  // gold is drawn by syncGold() each frame so it counts up (see below); don't snap it here
   const e = state.energy, bar = $("energyBar");
   bar.style.width = e + "%";
   bar.style.background = e>50 ? "linear-gradient(#b6f27a,#5aa733)" : e>22 ? "linear-gradient(#ffd76a,#e0a020)" : "linear-gradient(#ff8a7a,#c0402a)";

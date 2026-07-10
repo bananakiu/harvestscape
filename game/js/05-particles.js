@@ -96,7 +96,9 @@ function floatText(x,y,text,color="#fff"){
 // an item icon that leaps out and arcs up (harvest/gather payoff)
 function pItemPop(x, y, spriteName){
   if(!spr[spriteName]) return;
-  addP({ x, y, vx:rand(-16,16), vy:-52, grav:150, life:0, max:0.85, size:16, color:"#fff", type:"icon", spriteName });
+  // a gentler arc than a straight ballistic toss — it floats up, hangs a beat at the apex, then
+  // settles. The scale pop (in drawParticles) does the real "juice"; the physics just carries it.
+  addP({ x, y, vx:rand(-10,10), vy:-42, grav:96, life:0, max:1.0, size:16, color:"#fff", type:"icon", spriteName });
 }
 
 function updateParticles(dt){
@@ -122,7 +124,14 @@ function drawParticles(){
       ctx.fillStyle = "#ffd98a"; ctx.fillRect((p.x-1)|0, (p.y-1)|0, 2, 3);
       ctx.fillStyle = "#fff2c0"; ctx.fillRect(p.x|0, (p.y-1)|0, 1, 1);
     } else if(p.type==="icon"){
-      const s = spr[p.spriteName]; if(s) ctx.drawImage(s, Math.round(p.x-8), Math.round(p.y-8));
+      const s = spr[p.spriteName];
+      if(s){
+        // pop in fast (0.3 → 1.25), then ease back to 1 — a satisfying little "gotcha" flourish
+        const sc = p.life < 0.13 ? lerp(0.3, 1.25, easeOutCubic(p.life/0.13))
+                                 : lerp(1.25, 1.0, clamp((p.life-0.13)/0.22, 0, 1));
+        ctx.save(); ctx.translate(Math.round(p.x), Math.round(p.y)); ctx.scale(sc, sc);
+        ctx.drawImage(s, -8, -8); ctx.restore();
+      }
     } else if(p.type==="star"){
       const s = p.size + (k>.5?1:0);
       ctx.fillRect(p.x-.5, p.y-s/2, 1, s); ctx.fillRect(p.x-s/2, p.y-.5, s, 1);

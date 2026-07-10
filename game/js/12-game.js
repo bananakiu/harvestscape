@@ -41,6 +41,7 @@ function loop(ts){
   }
 
   if(gameMode === "play"){
+    syncGold();                       // count the gold pill up/down every frame (tween-driven)
     _hudAcc += dt;
     if(_hudAcc > 0.2){ _hudAcc = 0; refreshHUD(); }
   }

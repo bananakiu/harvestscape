@@ -249,6 +249,11 @@ const SFX = {
     blip(52, t+0.05, 0.9, "triangle", 0.07, {glide:30}); },
   select(){ const t=T0(); blip(587,t,0.05,"square",0.08,{}); },
   upgrade(){ const t=T0(); [55,62,67,74,79].forEach((m,i)=>blip(midi(m),t+i*0.07,0.28,"triangle",0.14,{rev:true,delay:true})); },
+  // the legendary catch — grander and longer than a level-up: a rising seven-note flourish over a
+  // low sustained fifth, so landing a legend never sounds like just another level.
+  legend(){ const t=T0();
+    [60,64,67,72,76,79,84].forEach((m,i)=>blip(midi(m),t+i*0.085,0.5,"triangle",0.15,{rev:true,delay:true}));
+    [48,55].forEach(m=>note(midi(m),t,1.1,{type:"sine",gain:0.09,atk:0.02,rel:0.9,dest:SND.sfxGain,rev:true})); },
 };
 function T0(){ return SND.ctx ? SND.ctx.currentTime + 0.001 : 0; }
 function playSfx(name){ if(SND.enabled && SND.ctx && SFX[name]) SFX[name](); }
