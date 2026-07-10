@@ -602,6 +602,13 @@ function renderCooking(){
   }
   html += `<h2 style="font-size:1em;color:var(--gold-hi);margin:.4em 0 .2em;">RECIPES</h2>`;
   RECIPES.forEach((r,i) => {
+    const lvlOk = skillLvl("Cooking") >= r.lvl;
+    if(!lvlOk){
+      html += `<div class="row locked"><span class="lead" data-icon="item_${r.name}"><canvas></canvas>` +
+        `<span>${r.name} <span class="sub">🔒 learned at Cooking ${r.lvl}</span></span></span>` +
+        `<button disabled>cook</button></div>`;
+      return;
+    }
     const can = Object.keys(r.ing).every(it => (state.inv[it]||0) >= r.ing[it]);
     const ingStr = Object.keys(r.ing).map(it => { const have=state.inv[it]||0, need=r.ing[it];
       return `${need}× ${it} <span style="color:${have>=need?'#8fd06a':'#c98a6a'}">(${have})</span>`; }).join(", ");

@@ -92,7 +92,8 @@ function nextUnlock(skill){
   if(skill==="Woodcutting") for(const k in TREES) add(TREES[k].lvl, TREES[k].name);
   if(skill==="Mining")      for(const k in ORES)  add(ORES[k].lvl,  ORES[k].name);
   if(skill==="Fishing"){ FISH.forEach(f=>add(f.lvl, f.name)); LEGENDS.forEach(l=>add(l.lvl, l.name+" (legend)")); }
-  return best;   // Cooking has no level-gated content, so null — honestly nothing to show
+  if(skill==="Cooking") for(const r of RECIPES) add(r.lvl, r.name);
+  return best;
 }
 
 function unlocksAt(skill, lvl){
@@ -101,6 +102,7 @@ function unlocksAt(skill, lvl){
   if(skill==="Woodcutting") for(const k in TREES) if(TREES[k].lvl===lvl) u.push(TREES[k].name);
   if(skill==="Mining") for(const k in ORES) if(ORES[k].lvl===lvl) u.push(ORES[k].name);
   if(skill==="Fishing") FISH.forEach(f=>{ if(f.lvl===lvl) u.push(f.name); });
+  if(skill==="Cooking") for(const r of RECIPES) if(r.lvl===lvl) u.push(r.name);
   if(MASTERY[skill] && MASTERY[skill][lvl]) u.push("★ " + MASTERY[skill][lvl]);
   return u;
 }
@@ -114,8 +116,18 @@ function addXP(skill, amt){
     let unl = []; for(let l=before+1; l<=after; l++) unl = unl.concat(unlocksAt(skill, l));
     banner("⬆ "+skill+" Lv "+after+"!", unl.length ? ("Unlocked: "+unl.join(", ")) : "Well done.");
     playSfx("level"); pSparkle(state.px, state.py-14, "#8fd3ff", 14); refreshHotbar();
+    // a neighbour notices when you cross a mastery tier — one warm line, in their own voice
+    for(const tier of [25,50,75,99]) if(before < tier && after >= tier) masteryPraise(skill, tier);
   }
   checkQuests();
+}
+// The valley acknowledges a milestone. A toast in the relevant neighbour's voice, a beat after the
+// level banner so they don't collide. Fires once per tier, naturally, as you cross it.
+function masteryPraise(skill, tier){
+  const id = MASTERY_NPC[skill]; const line = MASTERY_PRAISE[skill] && MASTERY_PRAISE[skill][tier];
+  if(!id || !line) return;
+  const name = (NPCDEF[id] && NPCDEF[id].name) || id;
+  setTimeout(() => { toast(`${name}: “${line}”`, "#ffe6a0"); playSfx("heart"); }, 1700);
 }
 
 // ---- inventory ----
@@ -445,6 +457,7 @@ function openVault(tx, ty){
 function cook(){ openCooking(); }
 function cookRecipe(i){
   const r = RECIPES[i]; if(!r) return;
+  if(skillLvl("Cooking") < r.lvl){ toast(`Need Cooking ${r.lvl} to make ${r.name}.`, "#ff8a7a"); playSfx("error"); return; }
   if(!Object.keys(r.ing).every(it => (state.inv[it]||0) >= r.ing[it])){ toast("Missing ingredients."); playSfx("error"); return; }
   for(const it in r.ing) take(it, r.ing[it]);
   const n = 1 + (hasMastery("Cooking",25) && chance(0.15) ? 1 : 0);   // ★ Second Helping

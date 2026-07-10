@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "2.5.1", code: 26, codename: "Homely", date: "2026-07-11" };
+const VERSION = { name: "2.6.0", code: 27, codename: "Journeyman", date: "2026-07-11" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"2.6.0", code:27, date:"2026-07-11", name:"Journeyman", notes:[
+    { t:"new",   s:"Cooking now has a real ladder — recipes unlock as your Cooking level climbs, from Fried Egg all the way to Frostbloom Tea." },
+    { t:"new",   s:"Reach a skill mastery (25/50/75/99) and the neighbour who cares most about that craft says a warm word — in their own voice." },
+  ]},
   { v:"2.5.1", code:26, date:"2026-07-11", name:"Homely", notes:[
     { t:"polish",s:"The calendar cue up top no longer lingers all week — it appears only on the day itself or its eve, with a warm heads-up in your evening summary." },
     { t:"polish",s:"Low energy now deepens to warm amber instead of flashing red — nothing in the valley is a danger." },
@@ -63,6 +67,34 @@ const CHANGELOG = [
     { t:"new",   s:"The first cozy build: farming, fishing, mining, foraging, skills 1–99, townsfolk, quests, seasons and weather — all procedural, no combat." },
   ]},
 ];
+
+// ---- MASTERY RECOGNITION ----
+// The 1–99 grind used to pass its milestones in silence. Now, when you cross a mastery tier
+// (25/50/75/99) in a skill, the neighbour who cares most about that craft says a warm word — in
+// their own voice. One line per skill per tier; fires once, naturally, as you cross it.
+const MASTERY_NPC = { Farming:"maya", Woodcutting:"tom", Mining:"rowan", Fishing:"bram", Cooking:"pip" };
+const MASTERY_PRAISE = {
+  Farming: { 25:"Your rows are getting straighter than mine. I'm a little jealous.",
+             50:"The whole valley's greener since you came — I paint it that way now.",
+             75:"Your grandpa would hardly know the place. In the best possible way.",
+             99:"You've made this soil sing. I don't think anyone's ever farmed like you." },
+  Woodcutting: { 25:"That's good clean timber you keep bringing me. Keep it coming!",
+                 50:"You go through axes like I go through sales patter. Respect.",
+                 75:"Half my lumber stock has your name on it now. Business is good!",
+                 99:"Nobody's felled a tree in this valley like you. I should charge admission." },
+  Mining: { 25:"The old shafts haven't heard a pick that sure in years.",
+            50:"You read the stone the way a Guild miner ought to. Good.",
+            75:"The deep seams are giving themselves up to you. Few ever earned that.",
+            99:"You mine as though the mountain trusts you. And I believe it does." },
+  Fishing: { 25:"You're not scaring them off anymore. That's something, that is.",
+             50:"Cleaner line than most who've fished these waters twice as long.",
+             75:"I've stopped giving you pointers. You'd only go and correct me.",
+             99:"You fish better than your grandpa did. Don't you dare tell him I said so." },
+  Cooking: { 25:"That smelled AMAZING. Can I try some? Please? Please?",
+             50:"You cook better than the festival stalls! I'm telling everyone.",
+             75:"When I grow up I'm gonna cook just like you. Save me a plate?",
+             99:"You're the best cook in the whole valley. That's a FACT, not an opinion." },
+};
 
 const SEASONS = ["Spring", "Summer", "Fall", "Winter"];
 const SEASON_DAYS = 28;
@@ -229,20 +261,22 @@ EDIBLE["Egg"] = 16; EDIBLE["Milk"] = 22; EDIBLE["Large Milk"] = 40;
 // Sell values obey one rule: a dish must never be worth LESS than the crops that went into it.
 // Anything that lost money was raised to ~1.30x its ingredient value; anything already above
 // that was left alone. No dish is craftable purely from shop-bought inputs, so there is no loop.
+// `lvl` gates the recipe on your Cooking level — so Cooking finally has a 1→40 curve of its own
+// (it used to unlock nothing). Grilling raw fish stays ungated as the entry-level way to train.
 const RECIPES = [
-  { name:"Fried Egg",         ing:{Egg:1},                       energy:45,  sell:90,  xp:16, col:"#ffd75a" },
-  { name:"Baked Potato",      ing:{Potato:1},                    energy:42,  sell:95,  xp:16, col:"#caa06a" },
-  { name:"Bread",             ing:{Wheat:2},                     energy:48,  sell:160, xp:22, col:"#e0b46a" },
-  { name:"Garden Salad",      ing:{"Field Salad":1, Carrot:1},   energy:55,  sell:160, xp:28, col:"#7fbe55" },
-  { name:"Berry Jam",         ing:{Strawberry:2},                energy:50,  sell:440, xp:32, col:"#e0455a" },
-  { name:"Corn Bread",        ing:{Corn:1, Wheat:1},             energy:72,  sell:400, xp:36, col:"#ffd94a" },
-  { name:"Tomato Soup",       ing:{Tomato:2},                    energy:66,  sell:470, xp:34, col:"#e0452a" },
-  { name:"Blueberry Tart",    ing:{Blueberry:2, Wheat:1},        energy:80,  sell:470, xp:42, col:"#5a6ad0" },
-  { name:"Pumpkin Soup",      ing:{Pumpkin:1, Milk:1},           energy:95,  sell:680, xp:52, col:"#ff8a2a" },
-  { name:"Farmer's Omelette", ing:{Egg:2, Milk:1},               energy:100, sell:360, xp:50, col:"#ffe08a" },
-  { name:"Fish Stew",         ing:{Salmon:1, Carrot:1, Tomato:1},energy:88,  sell:680, xp:48, col:"#d76a4a" },
-  { name:"Cranberry Sauce",   ing:{Cranberry:2},                 energy:60,  sell:730, xp:40, col:"#c02a3a" },
-  { name:"Frostbloom Tea",    ing:{Frostbloom:1, Milk:1},        energy:70,  sell:590, xp:44, col:"#a8d8f0" },
+  { name:"Fried Egg",         lvl:1,  ing:{Egg:1},                       energy:45,  sell:90,  xp:16, col:"#ffd75a" },
+  { name:"Baked Potato",      lvl:1,  ing:{Potato:1},                    energy:42,  sell:95,  xp:16, col:"#caa06a" },
+  { name:"Bread",             lvl:3,  ing:{Wheat:2},                     energy:48,  sell:160, xp:22, col:"#e0b46a" },
+  { name:"Garden Salad",      lvl:5,  ing:{"Field Salad":1, Carrot:1},   energy:55,  sell:160, xp:28, col:"#7fbe55" },
+  { name:"Berry Jam",         lvl:8,  ing:{Strawberry:2},                energy:50,  sell:440, xp:32, col:"#e0455a" },
+  { name:"Corn Bread",        lvl:12, ing:{Corn:1, Wheat:1},             energy:72,  sell:400, xp:36, col:"#ffd94a" },
+  { name:"Tomato Soup",       lvl:15, ing:{Tomato:2},                    energy:66,  sell:470, xp:34, col:"#e0452a" },
+  { name:"Blueberry Tart",    lvl:18, ing:{Blueberry:2, Wheat:1},        energy:80,  sell:470, xp:42, col:"#5a6ad0" },
+  { name:"Farmer's Omelette", lvl:22, ing:{Egg:2, Milk:1},               energy:100, sell:360, xp:50, col:"#ffe08a" },
+  { name:"Pumpkin Soup",      lvl:28, ing:{Pumpkin:1, Milk:1},           energy:95,  sell:680, xp:52, col:"#ff8a2a" },
+  { name:"Fish Stew",         lvl:32, ing:{Salmon:1, Carrot:1, Tomato:1},energy:88,  sell:680, xp:48, col:"#d76a4a" },
+  { name:"Cranberry Sauce",   lvl:36, ing:{Cranberry:2},                 energy:60,  sell:730, xp:40, col:"#c02a3a" },
+  { name:"Frostbloom Tea",    lvl:40, ing:{Frostbloom:1, Milk:1},        energy:70,  sell:590, xp:44, col:"#a8d8f0" },
 ];
 RECIPES.forEach(r => { ITEM_SELL[r.name] = r.sell; EDIBLE[r.name] = r.energy; });
 

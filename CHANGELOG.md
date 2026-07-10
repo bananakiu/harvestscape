@@ -22,6 +22,36 @@
 
 ---
 
+## v2.6.0 — "Journeyman" · 2026-07-11 · tag `v2.6.0`
+
+Version code **27**. The scorecard's standing priority #2 — "pay out the other four curves." Two of
+the flagged gaps closed: Cooking's empty progression and the total absence of milestone recognition.
+
+### Added
+- **Cooking is now a real 1→40 curve.** Every recipe carries a `lvl` (`RECIPES`, `01-data.js`) and
+  unlocks as your Cooking level climbs — Fried Egg/Baked Potato at 1, up through Fish Stew (32),
+  Cranberry Sauce (36), Frostbloom Tea (40). `cookRecipe()` refuses a too-high recipe; the Kitchen
+  shows locked ones as "🔒 learned at Cooking N"; grilling raw fish stays ungated as the entry-level
+  trainer. **Why:** the scorecard's "Cooking has zero gated recipes" — it unlocked *nothing*, so the
+  skill was a flat grind. Now `nextUnlock("Cooking")` returns the next dish, so the skills panel and
+  level-up banner point somewhere (they returned `null` for Cooking before).
+- **The valley notices your mastery.** Crossing a mastery tier (25/50/75/99) in any skill now draws a
+  warm one-line toast from the neighbour who cares most about that craft — Maya (Farming), Tom
+  (Woodcutting), Rowan (Mining), Bram (Fishing), Pip (Cooking) — each in their established voice
+  (`MASTERY_NPC` / `MASTERY_PRAISE`, `01-data.js`; `masteryPraise()` fired from `addXP` on the
+  crossing, a beat after the level banner). **Why:** the scorecard's "zero NPC recognition of
+  milestones" — the 1–99 grind passed every mastery in silence. Fires once, naturally, as you cross.
+
+### Fixed
+- **Skills-panel XP bars were rendering empty** — as bare inline `<span>`s the fill ignored
+  width/height and collapsed to 0×0, so only the black track showed. Made `.xpbarWrap`/`.xpbar`
+  `display:block` with a small min-width (working-tree fix, folded in here since it's the same
+  skills surface this release makes point somewhere).
+
+Verified in-browser: at Cooking 1, 11 of 13 recipes show locked with their level; `nextUnlock`
+returns Bread@3; crossing Cooking 24→25 shows the mastery banner *and* Pip's praise toast; console
+clean. Tagged `v2.6.0`.
+
 ## v2.5.1 — "Homely" · 2026-07-11 · tag `v2.5.1`
 
 Version code **26**. A cozy-contract UI polish pass that landed in the working tree (HUD, event

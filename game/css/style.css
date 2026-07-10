@@ -340,8 +340,10 @@ body{
 .heart{ color:var(--rose); }
 .heart.off{ color:#5a4a3f; }
 
-.xpbarWrap{ flex:1; height:.85em; background:#000; border:.1em solid var(--wood-d); border-radius:.3em; overflow:hidden; }
-.xpbar{ height:100%; background:linear-gradient(var(--blue),#3f7fbf); box-shadow:inset 0 .2em 0 rgba(255,255,255,.25); transition:width .4s ease; }
+/* display:block is load-bearing — as bare inline <span>s these ignore width/height and the blue fill
+   collapses to 0×0 (only the empty black track shows), which is why the XP bars used to look empty. */
+.xpbarWrap{ display:block; height:.85em; background:#0d0a08; border:.1em solid var(--wood-d); border-radius:.3em; overflow:hidden; }
+.xpbar{ display:block; min-width:.2em; height:100%; background:linear-gradient(var(--blue),#3f7fbf); box-shadow:inset 0 .28em 0 rgba(255,255,255,.28); transition:width .4s ease; }
 
 /* ---- Skills panel: RuneScape-style skill grid ---- */
 .skillTotal{ text-align:center; color:var(--gold-hi); font-size:1.05em; margin:.1em 0 .55em; letter-spacing:.02em; }
@@ -364,7 +366,7 @@ body{
 }
 .sBody{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:.18em; }
 .sName{ color:var(--parch); font-size:.92em; line-height:1; }
-.skillCell .xpbarWrap{ flex:0 0 auto; width:100%; height:.62em; }
+.skillCell .xpbarWrap{ flex:0 0 auto; width:100%; height:.72em; }
 .sgoal{ font-size:.7em; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .sgoal.unlock{ color:var(--blue); }
 .sgoal.mast{ color:var(--ink-soft); }
