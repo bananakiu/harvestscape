@@ -1,0 +1,415 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HarvestScape · Music Lab</title>
+<style>
+  :root{
+    --bg:#1c1710; --bg2:#241d14; --panel:#2c2318; --panel2:#342a1d;
+    --ink:#f3e9d6; --dim:#b6a483; --line:#4a3c28;
+    --mc:#6fae6a; --sd:#e0a34a; --rs:#c9743c; --hs:#dcc76a;
+    --glow:#ffe6a8;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:
+     radial-gradient(1200px 600px at 50% -10%, #33291b 0%, transparent 60%),
+     var(--bg);color:var(--ink);
+     font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;}
+  .wrap{max-width:960px;margin:0 auto;padding:28px 18px 80px}
+  h1{font-size:26px;margin:0 0 2px;letter-spacing:.5px}
+  h1 .em{color:var(--glow)}
+  .sub{color:var(--dim);font-size:13px;margin:0 0 22px;line-height:1.5}
+  .grp{margin:26px 0}
+  .grp h2{font-size:15px;margin:0 0 3px;display:flex;align-items:center;gap:9px}
+  .dot{width:11px;height:11px;border-radius:3px;box-shadow:0 0 10px currentColor}
+  .grp.mc h2{color:var(--mc)} .grp.sd h2{color:var(--sd)} .grp.rs h2{color:var(--rs)} .grp.hs h2{color:var(--hs)}
+  .grp.hs .card{background:linear-gradient(180deg,#3a3016,#2c2413)}
+  .divider{color:var(--line);filter:brightness(1.7);font-size:12px;text-align:center;
+    margin:40px 0 4px;letter-spacing:1px}
+  .grp .tag{color:var(--dim);font-size:12px;margin:0 0 14px}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:620px){.cards{grid-template-columns:1fr}}
+  .card{background:linear-gradient(180deg,var(--panel2),var(--panel));
+    border:1px solid var(--line);border-radius:12px;padding:14px 15px;
+    display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;
+    transition:border-color .2s,transform .1s}
+  .card.play{border-color:var(--glow);box-shadow:0 0 0 1px var(--glow),0 8px 30px rgba(0,0,0,.35)}
+  .card h3{margin:0;font-size:15px}
+  .card .desc{color:var(--dim);font-size:12px;line-height:1.55;min-height:52px}
+  .card .meta{color:var(--line);font-size:11px;letter-spacing:.4px;filter:brightness(1.6)}
+  .btn{appearance:none;border:1px solid var(--line);background:#3c2f1f;color:var(--ink);
+    font:inherit;font-size:13px;padding:9px 12px;border-radius:8px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px;transition:.12s}
+  .btn:hover{background:#4a3a26;border-color:#6b543500}
+  .card.play .btn{background:var(--glow);color:#2a2010;border-color:var(--glow);font-weight:600}
+  .eq{display:flex;align-items:flex-end;gap:2px;height:12px}
+  .eq i{width:3px;background:currentColor;height:30%;border-radius:1px}
+  .card.play .eq i{animation:eq .6s ease-in-out infinite alternate}
+  .card.play .eq i:nth-child(2){animation-delay:.15s}
+  .card.play .eq i:nth-child(3){animation-delay:.3s}
+  .card.play .eq i:nth-child(4){animation-delay:.45s}
+  @keyframes eq{to{height:100%}}
+  .bar{position:sticky;top:0;z-index:5;background:rgba(28,23,16,.9);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);margin:-28px -18px 0;padding:12px 18px;
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .bar .now{font-size:13px;color:var(--dim);flex:1;min-width:140px}
+  .bar .now b{color:var(--glow)}
+  .stop{border:1px solid var(--line);background:#3c2f1f;color:var(--ink);font:inherit;font-size:12px;
+    padding:7px 12px;border-radius:8px;cursor:pointer}
+  .vol{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dim)}
+  input[type=range]{width:110px;accent-color:var(--glow)}
+  canvas{display:block;width:100%;height:44px;border-radius:8px;background:#181309;
+    border:1px solid var(--line);margin-top:6px}
+  .foot{color:var(--line);filter:brightness(1.5);font-size:11px;margin-top:34px;line-height:1.6}
+</style>
+
+<div class="wrap">
+  <div class="bar">
+    <div class="now" id="now">Tap any track to audition · <span style="color:var(--dim)">nothing playing</span></div>
+    <div class="vol">vol <input type="range" id="vol" min="0" max="1" step="0.01" value="0.7"></div>
+    <button class="stop" id="stopAll">■ Stop</button>
+  </div>
+
+  <h1 style="margin-top:22px">HarvestScape <span class="em">Music Lab</span></h1>
+  <p class="sub">Candidate soundtracks, all synthesized live in WebAudio (no audio files, same engine the
+    game uses). Up top: <b>three fusion attempts</b> — a Minecraft bed tinted with RuneScape and Stardew.
+    Below: the six original reference vibes, for comparison. Loop each, live with it a minute, and pick a
+    direction. Whatever you like, I port back into <code>02-audio.js</code>.</p>
+
+  <div class="grp hs">
+    <h2><span class="dot" style="color:var(--hs);background:var(--hs)"></span>HarvestScape · the blend
+      <span style="font-weight:400;color:var(--dim);font-size:12px">← new · start here</span></h2>
+    <p class="tag">Minecraft's sparse piano bed, tinted with RuneScape's <b>modal</b> color and warmed by Stardew's
+      melody — aiming for <i>our</i> identity, not a copy of any one. Three different balances.</p>
+    <div class="cards" id="cards-hs"></div>
+  </div>
+
+  <div class="divider">— original reference vibes, for comparison —</div>
+
+  <div class="grp mc">
+    <h2><span class="dot" style="color:var(--mc);background:var(--mc)"></span>Minecraft · C418</h2>
+    <p class="tag">Sparse, weightless, faintly melancholic. Soft piano and pads with lots of air.</p>
+    <div class="cards" id="cards-mc"></div>
+  </div>
+
+  <div class="grp sd">
+    <h2><span class="dot" style="color:var(--sd);background:var(--sd)"></span>Stardew Valley · ConcernedApe</h2>
+    <p class="tag">Warm, folky, hummable. Marimba and pluck with a real tune and a spring in its step.</p>
+    <div class="cards" id="cards-sd"></div>
+  </div>
+
+  <div class="grp rs">
+    <h2><span class="dot" style="color:var(--rs);background:var(--rs)"></span>RuneScape · old-school</h2>
+    <p class="tag">Modal, medieval-fantasy. Harp, flute and lute — one wandering, one jaunty.</p>
+    <div class="cards" id="cards-rs"></div>
+  </div>
+
+  <canvas id="scope" width="924" height="44"></canvas>
+  <p class="foot">Each track is ~a dozen lines of the same primitives the game already has
+    (<code>note()</code> → osc + envelope + reverb/delay). Porting is mechanical once you choose.</p>
+</div>
+
+<script>
+"use strict";
+/* ---------- tiny synth core: mirrors game/js/02-audio.js ---------- */
+let ctx=null, master=null, musicGain=null, revNode=null, delayNode=null, analyser=null;
+let musicVol=0.7;
+const midi = n => 440*Math.pow(2,(n-69)/12);
+const pick = a => a[(Math.random()*a.length)|0];
+const rand = (a,b)=>a+Math.random()*(b-a);
+
+function makeImpulse(dur,decay){
+  const len=ctx.sampleRate*dur, buf=ctx.createBuffer(2,len,ctx.sampleRate);
+  for(let c=0;c<2;c++){const d=buf.getChannelData(c);
+    for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay);}
+  return buf;
+}
+function makeNoise(dur){
+  const len=ctx.sampleRate*dur, buf=ctx.createBuffer(1,len,ctx.sampleRate);
+  const d=buf.getChannelData(0); for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+  return buf;
+}
+function audioInit(){
+  if(ctx) return;
+  const AC=window.AudioContext||window.webkitAudioContext; ctx=new AC();
+  master=ctx.createGain(); master.gain.value=0.9;
+  analyser=ctx.createAnalyser(); analyser.fftSize=512;
+  master.connect(analyser); analyser.connect(ctx.destination);
+  const rev=ctx.createConvolver(); rev.buffer=makeImpulse(2.4,2.4);
+  const rg=ctx.createGain(); rg.gain.value=0.3; rev.connect(rg); rg.connect(master); revNode=rev;
+  const dl=ctx.createDelay(); dl.delayTime.value=0.32;
+  const fb=ctx.createGain(); fb.gain.value=0.3; const dw=ctx.createGain(); dw.gain.value=0.2;
+  dl.connect(fb); fb.connect(dl); dl.connect(dw); dw.connect(master); delayNode=dl;
+  musicGain=ctx.createGain(); musicGain.gain.value=musicVol; musicGain.connect(master);
+  drawScope();
+}
+
+// core voice — like the game's note(), plus a "pluck" decay mode + optional vibrato
+function voice(freq,t,dur,opt={}){
+  const o=ctx.createOscillator();
+  o.type=opt.type||"triangle";
+  o.frequency.setValueAtTime(freq,t);
+  if(opt.detune) o.detune.value=opt.detune;
+  if(opt.glide) o.frequency.exponentialRampToValueAtTime(opt.glide,t+dur);
+  const g=ctx.createGain();
+  const peak=opt.gain??0.3, atk=opt.atk??0.01;
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(peak,t+atk);
+  if(opt.pluck){
+    g.gain.exponentialRampToValueAtTime(Math.max(0.00012,peak*0.015),t+dur);
+  }else{
+    const rel=opt.rel??Math.min(0.4,dur*0.9);
+    g.gain.setValueAtTime(peak,t+Math.max(atk,dur-rel));
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  }
+  let node=o;
+  if(opt.filter){const f=ctx.createBiquadFilter(); f.type=opt.ftype||"lowpass"; f.frequency.value=opt.filter; node.connect(f); node=f;}
+  node.connect(g); g.connect(opt.dest||musicGain);
+  if(opt.rev) g.connect(revNode);
+  if(opt.delay) g.connect(delayNode);
+  if(opt.vibrato){
+    const lfo=ctx.createOscillator(); lfo.frequency.value=opt.vibrato;
+    const lg=ctx.createGain(); lg.gain.value=opt.vibDepth||6;
+    lfo.connect(lg); lg.connect(o.detune); lfo.start(t); lfo.stop(t+dur+0.05);
+  }
+  o.start(t); o.stop(t+dur+0.05);
+}
+function noise(t,dur,opt={}){
+  const src=ctx.createBufferSource(); src.buffer=makeNoise(dur+0.03);
+  const f=ctx.createBiquadFilter(); f.type=opt.ftype||"bandpass";
+  f.frequency.value=opt.freq||3000; f.Q.value=opt.q??0.8;
+  const g=ctx.createGain();
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(opt.gain??0.05,t+0.004);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  src.connect(f); f.connect(g); g.connect(musicGain);
+  src.start(t); src.stop(t+dur+0.03);
+}
+
+/* ---------- instrument patches ---------- */
+const P={
+  bass:(m,t,d,g)=>voice(midi(m),t,d,{type:"sine",gain:g,atk:0.02,rel:d*0.4,filter:480}),
+  piano(m,t,d,g){ voice(midi(m),t,d,{type:"triangle",gain:g,atk:0.004,pluck:true,filter:2800,rev:true});
+                  voice(midi(m),t,d*0.7,{type:"sine",gain:g*0.45,atk:0.004,pluck:true,rev:true}); },
+  pad:(m,t,d,g)=>voice(midi(m),t,d,{type:"triangle",gain:g,atk:0.7,rel:d*0.5,filter:1400,rev:true}),
+  bell(m,t,d,g){ voice(midi(m),t,d,{type:"sine",gain:g,atk:0.004,pluck:true,rev:true,delay:true});
+                 voice(midi(m+12),t,d*0.55,{type:"sine",gain:g*0.22,atk:0.004,pluck:true,rev:true}); },
+  marimba(m,t,d,g){ voice(midi(m),t,d,{type:"sine",gain:g,atk:0.004,pluck:true,filter:2600,rev:true});
+                    voice(midi(m),t,d*0.5,{type:"triangle",gain:g*0.5,atk:0.004,pluck:true,filter:3200}); },
+  pluck:(m,t,d,g)=>voice(midi(m),t,d,{type:"triangle",gain:g,atk:0.003,pluck:true,filter:3200,delay:true}),
+  accordion(m,t,d,g){ voice(midi(m),t,d,{type:"sawtooth",gain:g,atk:0.06,rel:d*0.4,filter:1500,detune:-7,rev:true});
+                      voice(midi(m),t,d,{type:"sawtooth",gain:g,atk:0.06,rel:d*0.4,filter:1500,detune:7}); },
+  flute(m,t,d,g){ voice(midi(m),t,d,{type:"triangle",gain:g,atk:0.09,rel:d*0.4,filter:2200,rev:true,vibrato:5.5,vibDepth:7});
+                  voice(midi(m),t,d,{type:"sine",gain:g*0.4,atk:0.09,rel:d*0.4}); },
+  harp:(m,t,d,g)=>voice(midi(m),t,d,{type:"triangle",gain:g,atk:0.004,pluck:true,filter:2600,rev:true}),
+  strings(m,t,d,g){ voice(midi(m),t,d,{type:"sawtooth",gain:g,atk:0.5,rel:d*0.5,filter:1100,detune:-5,rev:true});
+                    voice(midi(m),t,d,{type:"sawtooth",gain:g,atk:0.5,rel:d*0.5,filter:1100,detune:5}); },
+  lute(m,t,d,g){ voice(midi(m),t,d,{type:"sawtooth",gain:g,atk:0.003,pluck:true,filter:3200,rev:true});
+                 voice(midi(m),t,d*0.6,{type:"square",gain:g*0.3,atk:0.003,pluck:true,filter:2600}); },
+  celeste(m,t,d,g){ voice(midi(m),t,d,{type:"sine",gain:g,atk:0.005,pluck:true,rev:true,delay:true});
+                    voice(midi(m+19),t,d*0.5,{type:"sine",gain:g*0.14,atk:0.005,pluck:true,rev:true}); },
+  shaker:(t,g)=>noise(t,0.05,{ftype:"highpass",freq:6500,gain:g,q:0.7}),
+  tamb:(t)=>noise(t,0.08,{ftype:"highpass",freq:5000,gain:0.05,q:0.5}),
+};
+
+/* ================= THE SIX TRACKS ================= */
+// Each: tempo, sub (steps/beat), beats (total loop), render(i,t,dt).
+const MCA=[
+ {bass:48,arp:[60,64,67,71,72],mel:[72,71,67,64]}, // Cmaj7
+ {bass:43,arp:[59,62,67,71,74],mel:[74,71,67,62]}, // G
+ {bass:45,arp:[57,60,64,67,72],mel:[72,67,64,60]}, // Am7
+ {bass:41,arp:[53,57,60,64,65],mel:[65,64,60,57]}, // Fmaj7
+];
+const MCB_DR=[[45,52,57],[41,48,53],[48,55,60],[43,50,55]]; // Am F C G
+const MCB_BELLS=[69,72,76,79,81,84,88];
+const SDA_CH=[{bass:48,ch:[60,64,67]},{bass:45,ch:[57,60,64]},{bass:41,ch:[53,57,60]},{bass:43,ch:[55,59,62]}];
+const SDA_MEL=[[67,69,72,76],[76,74,72,69],[69,72,77,76],[74,72,71,67]];
+const SDA_SC=[60,62,64,65,67,69,71,72,74,76,77];
+const SDB=[{bass:38,ch:[57,62,66]},{bass:47,ch:[59,62,66]},{bass:43,ch:[55,59,62]},{bass:45,ch:[57,61,64]}]; // D Bm G A
+const SDB_MEL=[[69,74],[71,69],[67,74],[73,69]];
+const RSA=[{bass:45,arp:[57,60,64,69,72]},{bass:40,arp:[59,64,67,71,76]},{bass:41,arp:[57,60,65,69,72]},{bass:43,arp:[59,62,67,71,74]}]; // Am Em F G
+const RSA_FL=[69,72,74,76,77,81];
+const RSB_MEL=[[74,69,74,77,74,72,74,69],[72,67,72,76,72,71,72,67],[70,65,70,74,70,69,70,65],[69,64,69,73,69,68,69,64]];
+const RSB_ROOT=[38,36,34,33]; // Dm C Bb A
+
+// --- the fusion candidates ---
+// Homestead: C Mixolydian (major + b7 Bb = warm-but-old-world). MC piano bed, SD melody, a RS harp roll.
+const HS_A=[
+ {bass:36,pad:[60,64,67],   arp:[48,55,60,64,67]}, // C
+ {bass:41,pad:[53,57,60,65],arp:[53,57,60,65,69]}, // Fmaj7
+ {bass:46,pad:[58,62,65,69],arp:[46,53,58,62,65]}, // Bbmaj7  ← the b7 modal colour
+ {bass:41,pad:[53,57,60,65],arp:[53,57,60,65,69]}, // F
+];
+const HS_A_MEL=[[[0,67],[6,64],[12,60]],[[0,65],[6,69],[12,72]],[[0,70],[6,69],[10,67]],[[0,65],[8,64],[12,62]]];
+// Wayfarer: D Dorian (minor + raised-6 B = the RuneScape fingerprint). Harp+flute forward, cleaned up.
+const HS_B=[
+ {bass:38,arp:[50,53,57,62,65],pad:[50,53,57]}, // Dm
+ {bass:43,arp:[50,55,59,62,67],pad:[50,55,59]}, // G   ← B natural = Dorian brightness
+ {bass:45,arp:[52,57,60,64,69],pad:[52,57,60]}, // Am
+ {bass:48,arp:[48,55,60,64,67],pad:[48,55,60]}, // C
+];
+const HS_B_FL=[[[0,69,10],[10,74,6]],[[2,71,8],[10,74,6]],[[0,72,8],[8,69,6],[12,67,4]],[[0,65,6],[6,64,6],[12,62,10]]];
+// Meadowlight: Stardew's warmth & hummable tune, but on piano+celeste (no folk band), lightly modal.
+const HS_C=[
+ {bass:43,pad:[55,59,62],   arp:[55,59,62,67]}, // G
+ {bass:48,pad:[55,60,64],   arp:[55,60,64,67]}, // C
+ {bass:40,pad:[55,59,62,64],arp:[52,55,59,64]}, // Em7
+ {bass:48,pad:[55,60,64],   arp:[55,60,64,67]}, // C
+];
+const HS_C_MEL=[[[0,74,8],[8,71,6],[12,67,6]],[[0,76,8],[8,74,6],[12,72,6]],[[0,71,6],[6,74,6],[12,71,6]],[[0,72,4],[4,71,4],[8,69,4],[12,67,10]]];
+
+const TRACKS={
+ hsA:{name:"Homestead",group:"hs",tempo:64,sub:4,beats:16,
+   desc:"Minecraft-forward & warm. Sparse rolling piano in C Mixolydian — a flat-7 gives it a folk/old-world tint — with a soft tune and one harp roll of RuneScape colour per loop.",
+   meta:"64 BPM · piano + harp · C Mixolydian · MC▸SD▸RS",
+   render(i,t,dt){const bar=(i/16|0)%4,s=i%16,c=HS_A[bar];
+     if(s===0){P.bass(c.bass,t,dt*30,0.14); c.pad.forEach(m=>P.pad(m,t,dt*30,0.017));}
+     if(s%2===0)P.piano(c.arp[(s/2)%c.arp.length],t,dt*6,0.05);
+     const hit=HS_A_MEL[bar].find(x=>x[0]===s); if(hit)P.piano(hit[1],t,dt*10,0.085);
+     if(bar===2&&s===2)[0,1,2,3,4].forEach(k=>P.harp(c.arp[k]+12,t+k*dt*1.1,dt*4,0.03));
+   }},
+ hsB:{name:"Wayfarer",group:"hs",tempo:78,sub:4,beats:16,
+   desc:"RuneScape-forward but cozy & cleaned up. Flowing harp arpeggios and a wandering flute in D Dorian (that bright raised-6 is the RS signature), grounded by a sparse piano bed. The questy, heading-out feeling.",
+   meta:"78 BPM · harp + flute · D Dorian · RS▸MC▸SD",
+   render(i,t,dt){const bar=(i/16|0)%4,s=i%16,c=HS_B[bar];
+     if(s===0){P.bass(c.bass-12,t,dt*30,0.12); c.pad.forEach(m=>P.strings(m,t,dt*30,0.015));}
+     if(s%2===0&&s!==14){const m=c.arp[(s/2)%c.arp.length]+(s>=8?12:0); P.harp(m,t,dt*5,0.045);}
+     if(s===0)P.piano(c.pad[0],t,dt*10,0.05);
+     if(s===8)P.piano(c.pad[1],t,dt*8,0.04);
+     const hit=HS_B_FL[bar].find(x=>x[0]===s); if(hit)P.flute(hit[1],t,dt*hit[2],0.07);
+   }},
+ hsC:{name:"Meadowlight",group:"hs",tempo:72,sub:4,beats:16,
+   desc:"Keeps the Stardew warmth you liked — a genuinely hummable tune — but on piano and glassy celeste instead of marimba/accordion, so it reads cozy without reading Stardew. The gentlest of the three.",
+   meta:"72 BPM · piano + celeste · G major (modal) · SD▸MC",
+   render(i,t,dt){const bar=(i/16|0)%4,s=i%16,c=HS_C[bar];
+     if(s===0){P.bass(c.bass-12,t,dt*30,0.13); c.pad.forEach(m=>P.pad(m,t,dt*28,0.015));}
+     if(s%4===0)P.piano(c.arp[(s/4)%c.arp.length],t,dt*6,0.05);
+     if(s===6||s===10)P.celeste(c.arp[3],t,dt*6,0.028);
+     const hit=HS_C_MEL[bar].find(x=>x[0]===s);
+     if(hit){P.piano(hit[1],t,dt*hit[2],0.08); P.celeste(hit[1]+12,t,dt*hit[2]*0.7,0.02);}
+   }},
+ mcA:{name:"Sunlit Keys",group:"mc",tempo:66,sub:4,beats:16,
+   desc:"Rolling left-hand piano over a lazy Cmaj7→Am7 loop. A tune finds you rather than announces itself.",
+   meta:"66 BPM · piano · Cmaj7 loop",
+   render(i,t,dt){const bar=(i/16|0)%4,s=i%16,c=MCA[bar];
+     if(s===0){P.bass(c.bass-12,t,dt*30,0.15); c.arp.slice(0,3).forEach(m=>P.pad(m,t,dt*28,0.02));}
+     if(s%2===0){P.piano(c.arp[(s/2)%c.arp.length],t,dt*6,0.065);}
+     if(s===4||s===12){P.piano(c.mel[s===4?0:2],t,dt*10,0.09);}
+     if(s===10&&Math.random()<0.6)P.piano(pick(c.mel),t,dt*8,0.055);
+   }},
+ mcB:{name:"Aurora Drift",group:"mc",tempo:60,sub:2,beats:32,
+   desc:"Almost no pulse — a slow shifting pad with far-off bells. The most ambient, best for quiet screens.",
+   meta:"60 BPM · pad + bells · Am aeolian",
+   render(i,t,dt){const seg=(i/16|0)%4;
+     if(i%16===0){MCB_DR[seg].forEach(m=>P.pad(m,t,dt*34,0.03)); P.bass(MCB_DR[seg][0]-12,t,dt*32,0.09);}
+     if(i%2===0&&Math.random()<0.22)P.bell(pick(MCB_BELLS),t,dt*9,0.055);
+     if(i%8===5&&Math.random()<0.5)P.bell(pick([88,84,79]),t,dt*11,0.035);
+   }},
+ sdA:{name:"First Bloom",group:"sd",tempo:116,sub:4,beats:16,
+   desc:"Bouncy marimba tune over I–vi–IV–V with an off-beat mandolin and a whisper of shaker. Pure spring.",
+   meta:"116 BPM · marimba · C major",
+   render(i,t,dt){const bar=(i/16|0)%4,s=i%16,c=SDA_CH[bar];
+     if(s===0||s===8)P.bass(c.bass,t,dt*6,0.17);
+     if(s===4||s===12)P.bass(c.bass+7,t,dt*6,0.14);
+     if(s===2||s===6||s===10||s===14)c.ch.forEach(m=>P.pluck(m+12,t+dt*0.18,dt*2,0.028));
+     if(s%4===0)P.marimba(SDA_MEL[bar][s/4],t,dt*3.5,0.12);
+     if(s%4===2&&Math.random()<0.55)P.marimba(pick(SDA_SC),t+dt*0.15,dt*1.6,0.055);
+     if(s%2===0)P.shaker(t,s%4===0?0.05:0.03);
+     if(s===0)c.ch.forEach(m=>P.pad(m,t,dt*15,0.014));
+   }},
+ sdB:{name:"Hearth Waltz",group:"sd",tempo:150,sub:2,beats:12,
+   desc:"A slow 3/4 waltz — accordion oom-pah-pah, wistful flute on top. The cozy, fireside, autumn end.",
+   meta:"150 BPM · 3/4 · accordion + flute · D major",
+   render(i,t,dt){const bar=(i/6|0)%4,s=i%6,c=SDB[bar];
+     if(s===0)P.bass(c.bass,t,dt*4,0.16);
+     if(s===2||s===4)c.ch.forEach(m=>P.accordion(m,t,dt*2.2,0.028));
+     if(s===0)P.flute(SDB_MEL[bar][0],t,dt*7,0.09);
+     if(s===4)P.flute(SDB_MEL[bar][1],t,dt*4,0.075);
+     if(s===0)P.pad(c.bass+12,t,dt*10,0.018);
+   }},
+ rsA:{name:"Wanderlust",group:"rs",tempo:96,sub:4,beats:16,
+   desc:"Flowing harp arpeggios, a low bowed drone, a flute that drifts in and out. Modal, wistful, questy.",
+   meta:"96 BPM · harp + flute · A aeolian",
+   render(i,t,dt){const bar=(i/16|0)%4,s=i%16,c=RSA[bar];
+     if(s===0){c.arp.slice(0,3).forEach(m=>P.strings(m-12,t,dt*30,0.02)); P.bass(c.bass-12,t,dt*30,0.11);}
+     if(s%8!==7){const m=c.arp[s%c.arp.length]+(s>=8?12:0); P.harp(m,t,dt*5,0.05);}
+     if((s===0||s===8)&&Math.random()<0.7)P.flute(pick(RSA_FL),t,dt*10,0.06);
+   }},
+ rsB:{name:"Tavern Jig",group:"rs",tempo:120,sub:4,beats:16,
+   desc:"Jaunty lute hook, a walking bass and a tambourine — the Sea-Shanty end of RuneScape. Swaggers.",
+   meta:"120 BPM · lute · D minor · swung",
+   render(i,t,dt){const bar=(i/16|0)%4,s=i%16,root=RSB_ROOT[bar];
+     if(s%2===0){const m=RSB_MEL[bar][s/2],sw=((s/2)%2)?dt*0.28:0; P.lute(m,t+sw,dt*1.7,0.085);}
+     if(s===0)P.bass(root-12,t,dt*4,0.17);
+     if(s===4)P.bass(root-5,t,dt*4,0.14);
+     if(s===8)P.bass(root,t,dt*4,0.15);
+     if(s===12)P.bass(root-5,t,dt*4,0.14);
+     if(s%4===2)P.tamb(t);
+     if(s===0)[root+12,root+15,root+19].forEach(m=>P.pad(m,t,dt*6,0.02));
+   }},
+};
+
+/* ---------- scheduler / transport ---------- */
+let current=null, sched=null, step=0, nextTime=0;
+function stopAll(){
+  if(sched){clearInterval(sched); sched=null;}
+  current=null; step=0;
+  if(musicGain) musicGain.gain.setTargetAtTime(0,ctx.currentTime,0.06);
+  document.querySelectorAll(".card").forEach(c=>c.classList.remove("play"));
+  document.getElementById("now").innerHTML='Tap any track to audition · <span style="color:var(--dim)">nothing playing</span>';
+}
+function playTrack(id){
+  audioInit();
+  if(ctx.state==="suspended") ctx.resume();
+  if(current===id){ stopAll(); return; }
+  if(sched){clearInterval(sched); sched=null;}
+  current=id; step=0; nextTime=ctx.currentTime+0.08;
+  musicGain.gain.cancelScheduledValues(ctx.currentTime);
+  musicGain.gain.setTargetAtTime(musicVol,ctx.currentTime,0.15);
+  const tr=TRACKS[id];
+  sched=setInterval(()=>{
+    const dt=(60/tr.tempo)/tr.sub, steps=tr.beats*tr.sub;
+    while(nextTime<ctx.currentTime+0.13){
+      tr.render(step%steps,nextTime,dt);
+      nextTime+=dt; step++;
+    }
+  },25);
+  document.querySelectorAll(".card").forEach(c=>c.classList.toggle("play",c.dataset.id===id));
+  document.getElementById("now").innerHTML='Now playing · <b>'+tr.name+'</b> <span style="color:var(--dim)">— '+tr.meta+'</span>';
+}
+
+/* ---------- UI build ---------- */
+function cardHTML(id){const t=TRACKS[id];return `
+  <div class="card" data-id="${id}">
+    <div class="meta">${t.meta}</div>
+    <h3>${t.name}</h3>
+    <div class="desc">${t.desc}</div>
+    <button class="btn" data-id="${id}">
+      <span class="eq"><i></i><i></i><i></i><i></i></span>
+      <span class="lbl">Play loop</span>
+    </button>
+  </div>`;}
+document.getElementById("cards-hs").innerHTML=cardHTML("hsA")+cardHTML("hsB")+cardHTML("hsC");
+document.getElementById("cards-mc").innerHTML=cardHTML("mcA")+cardHTML("mcB");
+document.getElementById("cards-sd").innerHTML=cardHTML("sdA")+cardHTML("sdB");
+document.getElementById("cards-rs").innerHTML=cardHTML("rsA")+cardHTML("rsB");
+document.querySelectorAll(".btn[data-id]").forEach(b=>b.addEventListener("click",()=>playTrack(b.dataset.id)));
+document.getElementById("stopAll").addEventListener("click",stopAll);
+document.getElementById("vol").addEventListener("input",e=>{
+  musicVol=+e.target.value; if(musicGain&&current) musicGain.gain.setTargetAtTime(musicVol,ctx.currentTime,0.05);
+});
+
+/* ---------- oscilloscope ---------- */
+function drawScope(){
+  const cv=document.getElementById("scope"), g=cv.getContext("2d");
+  const buf=new Uint8Array(analyser.fftSize);
+  (function loop(){
+    requestAnimationFrame(loop);
+    g.clearRect(0,0,cv.width,cv.height);
+    if(!current) return;
+    analyser.getByteTimeDomainData(buf);
+    g.lineWidth=2; g.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue("--glow").trim();
+    g.beginPath();
+    for(let i=0;i<buf.length;i++){const x=i/buf.length*cv.width,y=(buf[i]/128-1)*cv.height*0.42+cv.height/2;
+      i?g.lineTo(x,y):g.moveTo(x,y);}
+    g.stroke();
+  })();
+}
+</script>

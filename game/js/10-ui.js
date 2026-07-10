@@ -37,22 +37,30 @@ function showExamine(title, text){
 // ---- item pickup log ---- a fading, stacking notification of what you just collected.
 // Repeat pickups of the same item roll up into one entry (which pulses and its timer resets),
 // so mass-harvesting reads as "+50 Corn" rather than fifty separate lines.
-const _pickups = new Map();          // item name -> { el, amtEl, count, timer }
+// Each row also carries the running TOTAL you now own of that item — a small, de-emphasized
+// number on the right ("+1 Stone … 12"), so a pickup answers "and how many do I have?" at a
+// glance, the way Stardew shows the stack size. The total is read straight from state.inv, which
+// give() has already incremented by the time we're called, so there's no separate counter to sync.
+const _pickups = new Map();          // item name -> { el, amtEl, totEl, count, timer }
 function clearPickups(){ const b = $("pickups"); if(b) b.innerHTML = ""; _pickups.clear(); }
 function notePickup(item, n){
   const box = $("pickups"); if(!box) return;
+  const owned = (state && state.inv[item]) || n;   // total held AFTER this pickup
   let p = _pickups.get(item);
   if(p && p.el.isConnected){
     p.count += n; p.amtEl.textContent = "+" + p.count;
+    if(p.totEl) p.totEl.textContent = owned;
     p.el.classList.remove("out","bump"); void p.el.offsetWidth; p.el.classList.add("bump");
   } else {
     const el = document.createElement("div"); el.className = "pickup";
     el.appendChild(mkIcon("item_" + item));
     const amt = document.createElement("span"); amt.className = "amt"; amt.textContent = "+" + n;
     const nm  = document.createElement("span"); nm.className = "pname"; nm.textContent = item;
-    el.appendChild(amt); el.appendChild(nm);
+    const tot = document.createElement("span"); tot.className = "ptot"; tot.textContent = owned;
+    tot.title = "in your backpack";
+    el.appendChild(amt); el.appendChild(nm); el.appendChild(tot);
     box.appendChild(el);
-    p = { el, amtEl: amt, count: n, timer: 0 };
+    p = { el, amtEl: amt, totEl: tot, count: n, timer: 0 };
     _pickups.set(item, p);
     while(box.children.length > 6) box.removeChild(box.firstChild);
   }
@@ -125,16 +133,26 @@ function refreshHUD(){
   // gold is drawn by syncGold() each frame so it counts up (see below); don't snap it here
   const e = state.energy, bar = $("energyBar");
   bar.style.width = e + "%";
-  bar.style.background = e>50 ? "linear-gradient(#b6f27a,#5aa733)" : e>22 ? "linear-gradient(#ffd76a,#e0a020)" : "linear-gradient(#ff8a7a,#c0402a)";
+  // Warm all the way down — green → gold → deep amber. Energy is deliberately non-hazardous (you can
+  // always eat or sleep), so "low" must not read as a survival-red alarm at the player (Cozy Contract
+  // + palette discipline 8.1): the narrowing bar already says "low"; the tone just deepens, never reddens.
+  bar.style.background = e>50 ? "linear-gradient(#b6f27a,#5aa733)"
+                       : e>22 ? "linear-gradient(var(--gold-hi),var(--gold))"
+                       :        "linear-gradient(var(--gold),var(--gold-d))";
   refreshEventPill();
   drawClockDial();
 }
 
-// "Luau in 3 days" — only shows when something is close, so it isn't permanent clutter
+// A gentle cue that only appears on the day itself or the eve of it — never a week-long countdown.
+// Because every festival, the anniversary AND all five birthdays feed nextEvent() across a 112-day
+// year, a 7-day window meant *something* was almost always inside it, so the pill read as permanent
+// top-of-screen chrome — the "badge / nagging" the design bible (8.4) forbids. Tightening to
+// today/tomorrow makes it vanish on the ~26 of 28 days when nothing's imminent; the full calendar
+// still lives in the Almanac, and a one-line warm nudge is surfaced at wake (see showSleepCard).
 function refreshEventPill(){
   const pill = $("eventPill"); if(!pill) return;
   const ev = nextEvent();
-  if(!ev || ev.daysAway > 7){ pill.classList.add("hidden"); return; }
+  if(!ev || ev.daysAway > 1){ pill.classList.add("hidden"); return; }
   const icon = ev.kind === "birthday" ? "🎂" : "✦";
   pill.textContent = ev.daysAway === 0 ? `${icon} ${ev.name} — today!`
                    : ev.daysAway === 1 ? `${icon} ${ev.name} — tomorrow`
@@ -237,32 +255,56 @@ function closePanel(id){ if(openPanels.has(id)){ openPanels.delete(id); $(id).cl
 function closeAllPanels(silent){ for(const id of Array.from(openPanels)){ openPanels.delete(id); $(id).classList.add("hidden"); } if(!silent && dlg.open) closeDialog(); }
 function togglePanel(id, render){ if(openPanels.has(id)) closePanel(id); else openPanel(id, render); }
 
+// ---- Skills panel: a RuneScape-style skill grid ----
+// A compact tile per skill — procedural icon + level badge + XP bar + one muted next-goal line —
+// instead of the old wall of prose. The full detail (exact XP, remaining to next, earned masteries
+// and the whole 25/50/75/99 table) opens on tap, one skill at a time, so the reference is all still
+// there (principle 4.3) without burying the levels. Icons reuse the mkIcon/hydrateIcons sprite
+// pipeline; every colour role is the pre-blessed one (level --gold, bar --blue, unlock --blue,
+// mastery --gold-hi, next-mastery --ink-soft) — no new hex, no new frame.
+const SKILL_ICON = { Farming:"item_Turnip", Woodcutting:"item_Wood", Mining:"item_Stone", Fishing:"item_Sardine", Cooking:"item_Berry Bun" };
+let skillSel = null;   // which skill's detail is expanded (null = grid only)
+function selectSkill(s){ skillSel = (skillSel === s) ? null : s; playSfx("select"); renderSkills(); }
+function skillDetailHtml(s){
+  if(!s || !(s in state.skills))
+    return `<div class="skillHint">Tap a skill for its XP, unlocks and mastery milestones.</div>`;
+  const xp = state.skills[s], lvl = levelFor(xp);
+  const next = lvl>=99 ? xp : XP_TABLE[lvl+1], remain = Math.max(0, next - xp);
+  let h = `<div class="sdHead"><span class="sdName">${s}</span><span class="sdLvl">Level ${lvl}</span></div>`;
+  h += `<div class="sdXp">${xp.toLocaleString()} XP` +
+       (lvl>=99 ? ` · <span class="max">MAX</span>` : ` · ${remain.toLocaleString()} to Lv ${lvl+1}`) + `</div>`;
+  const un = nextUnlock(s);
+  if(un) h += `<div class="sdLine unlock">▸ Unlocks ${un.label} at Lv ${un.at}</div>`;
+  const earned = [25,50,75,99].filter(n => lvl >= n);
+  if(earned.length) h += earned.map(n => `<div class="sdLine earned">★ ${MASTERY[s][n]}</div>`).join("");
+  const nx = nextMastery(s);
+  if(nx) h += `<div class="sdLine next">☆ Lv ${nx.at}: ${nx.text}</div>`;
+  else if(!un) h += `<div class="sdLine earned">Mastered — every craft learned.</div>`;
+  return h;
+}
 function renderSkills(){
   const b = $("skillsPanel").querySelector(".body");
-  const iconFor = { Farming:"item_Turnip", Woodcutting:"item_Wood", Mining:"item_Stone", Fishing:"item_Sardine", Cooking:"item_Berry Bun" };
-  let total=0, html="";
+  let total = 0; for(const s in state.skills) total += levelFor(state.skills[s]);
+  let html = `<div class="skillTotal">Total Level <b>${total}</b> / ${99*5}</div><div class="skillGrid">`;
   for(const s in state.skills){
-    const xp = state.skills[s], lvl = levelFor(xp); total += lvl;
+    const xp = state.skills[s], lvl = levelFor(xp);
     const cur = XP_TABLE[lvl], next = lvl>=99?cur:XP_TABLE[lvl+1];
-    const pct = lvl>=99?100:Math.floor(inv(xp,cur,next)*100);
-    html += `<div class="xpRow"><span class="sname"><span class="lvl">${lvl}</span> ${s}</span>` +
+    const pct = lvl>=99 ? 100 : Math.floor(inv(xp,cur,next)*100);
+    const un = nextUnlock(s), nx = nextMastery(s);
+    const goal = un ? `<span class="sgoal unlock">▸ ${un.label} · ${un.at}</span>`
+               : nx ? `<span class="sgoal mast">☆ Lv ${nx.at}: ${MASTERY[s][nx.at].split(" — ")[0]}</span>`
+               :      `<span class="sgoal done">★ mastered</span>`;
+    html += `<div class="skillCell${s===skillSel?" sel":""}" onclick="selectSkill('${s}')">` +
+      `<span class="sIcon" data-icon="${SKILL_ICON[s]}"><canvas></canvas><span class="sLvl">${lvl}</span></span>` +
+      `<span class="sBody"><span class="sName">${s}</span>` +
       `<span class="xpbarWrap"><span class="xpbar" style="width:${pct}%"></span></span>` +
-      `<span class="xpnum">${xp}/${lvl>=99?"MAX":next}</span></div>`;
-    // the next thing this skill will unlock — content first, then mastery, so a level always leads somewhere
-    const un = nextUnlock(s);
-    if(un) html += `<div style="margin:-.1em 0 0 .2em;font-size:.78em;color:var(--blue);">` +
-      `▸ unlocks ${un.label} at Lv ${un.at}</div>`;
-    const earned = [25,50,75,99].filter(n => lvl >= n);
-    if(earned.length) html += `<div style="margin:.05em 0 .1em .2em;font-size:.78em;color:var(--gold-hi);">` +
-      earned.map(n => "★ " + MASTERY[s][n].split(" — ")[0]).join(" · ") + `</div>`;
-    const nx = nextMastery(s);
-    if(nx) html += `<div style="margin:0 0 .35em .2em;font-size:.76em;color:var(--ink-soft);">` +
-      `☆ Lv ${nx.at}: ${nx.text}</div>`;
-    else if(!un) html += `<div style="margin:0 0 .35em .2em;font-size:.76em;color:var(--ink-soft);">mastered — every craft learned</div>`;
+      goal + `</span></div>`;
   }
-  html += `<div style="margin-top:.6em;text-align:center;color:var(--gold-hi);">Total Level ${total} / ${99*5}</div>`;
-  html += `<div style="margin-top:.2em;text-align:center;color:var(--ink-soft);font-size:.82em;">Real RuneScape XP curve — 92 is halfway to 99. Mastery at 25 · 50 · 75 · 99.</div>`;
+  html += `</div><div id="skillDetail">${skillDetailHtml(skillSel)}</div>`;
+  html += `<details class="skillHelp"><summary>About the XP curve</summary>` +
+    `<div>A real RuneScape XP curve — 92 is halfway to 99. Every skill earns a mastery at 25 · 50 · 75 · 99.</div></details>`;
   b.innerHTML = html;
+  hydrateIcons(b);   // draw the skill-tile icons (the old panel declared an icon map but never used it)
 }
 function renderInv(){
   const b = $("invPanel").querySelector(".body");
@@ -646,6 +688,18 @@ function showSleepCard(s){
   if(s.spouse) lines.push(`💕 ${spouseName()} watered ${s.spouse} crop${s.spouse>1?"s":""} for you`);
   if(s.built) for(const p of s.built) lines.push(`🔨 ${p.done}`);
   if(s.forecast) lines.push(`${weatherInfo(s.forecast).icon} Tomorrow: ${weatherInfo(s.forecast).name}`);
+  // The calendar cue that used to nag from the top bar all week now lands here, once, warmly — and
+  // only when it's actually the day or its eve. A friendly invitation, never an obligation.
+  const ev = (typeof nextEvent === "function") ? nextEvent() : null;
+  if(ev && ev.daysAway <= 1){
+    const icon = ev.kind === "birthday" ? "🎂" : "✦";
+    if(ev.daysAway === 0)
+      lines.push(ev.kind === "birthday"
+        ? `${icon} ${ev.name} is today — a small gift means a lot`
+        : `${icon} ${ev.name} is today, down on the coast`);
+    else
+      lines.push(`${icon} ${ev.name} is tomorrow`);
+  }
   lines.push("☕ Energy restored");
   lines.push("💾 Progress saved");
   lines.forEach((t,i) => { const li = document.createElement("li"); li.textContent = t; li.style.animationDelay = (i*0.28+0.3)+"s"; list.appendChild(li); });
@@ -664,9 +718,10 @@ function showSleepCard(s){
 
 // ---- controls hint ----
 function setControlsHint(){
+  // Line 1 = left-hand world verbs (all reachable without leaving WASD); line 2 = right-hand menus.
   $("controlsHint").innerHTML =
-    `<b>Move</b> <kbd>WASD</kbd> · <b>Use tool</b> <kbd>Space</kbd> · <b>Interact / harvest / talk</b> <kbd>E</kbd> · <b>Cycle seeds</b> <kbd>R</kbd> · <b>Eat</b> <kbd>F</kbd> · <b>Gift Maya</b> <kbd>G</kbd><br>` +
-    `<b>Skills</b> <kbd>K</kbd> · <b>Backpack</b> <kbd>I</kbd> · <b>Journal</b> <kbd>J</kbd> · <b>Examine</b> <kbd>X</kbd> · Enter buildings, the mine &amp; the coast · <b>Sleep</b> in your bed indoors · slots <kbd>1</kbd>–<kbd>6</kbd>`;
+    `<b>Move</b> <kbd>WASD</kbd> · <b>Use tool</b> <kbd>Space</kbd> · <b>Interact / harvest / talk</b> <kbd>E</kbd> · <b>Examine</b> <kbd>Q</kbd> · <b>Cycle seeds</b> <kbd>R</kbd> · <b>Eat</b> <kbd>F</kbd> · <b>Gift Maya</b> <kbd>G</kbd><br>` +
+    `<b>Skills</b> <kbd>K</kbd> · <b>Backpack</b> <kbd>I</kbd> · <b>Journal</b> <kbd>J</kbd> · slots <kbd>1</kbd>–<kbd>6</kbd> · Enter buildings, the mine &amp; the coast · <b>Sleep</b> in your bed indoors`;
 }
 
 // ---- INPUT ----
@@ -703,6 +758,11 @@ document.addEventListener("keydown", e => {
   if(e.repeat){ keys[k] = true; return; }
   keys[k] = true;
 
+  // Verb-key layout convention: LEFT hand (on WASD) owns the world verbs — E interact, Space use,
+  // Q examine, R seeds, F eat, G gift — and the RIGHT hand owns the menus (K/I/J/P, slots 1–6). Any
+  // NEW verb should land on a spare left-hand finger (Q/ring, Tab/pinky, or a Space-modifier) rather
+  // than a fifth key under the index finger. Examine used to live only on X (bottom row, two rows
+  // under S) which pulled the whole hand off the movement keys — Q sits directly above A and keeps it.
   if(k === "e"){ if(advanceDialog()) return; if(anyPanelOpen()){ closeAllPanels(); return; } interact(); }
   else if(k === " "){
     if(fishing.state === "reel"){ /* held — updateReel reads keys[" "] */ }
@@ -716,7 +776,7 @@ document.addEventListener("keydown", e => {
   else if(k === "r"){ if(!uiBlocking()) cycleSeed(); }
   else if(k === "f"){ if(!uiBlocking()) eatFood(); }
   else if(k === "g"){ if(!uiBlocking()) giveGift(); }
-  else if(k === "x"){ examine(); }
+  else if(k === "q" || k === "x"){ examine(); }   // Q is the WASD-native primary; X kept as a legacy alias
   else if(k === "m"){ setMusicEnabled(!SND.enabled); toast("Music "+(SND.enabled?"on":"off")); }
   else if(k === "escape"){ if(dlg.open) closeDialog(); else closeAllPanels(); }
   else if("123456".includes(k)) selectSlot(+k-1);
@@ -776,6 +836,10 @@ function wireTouch(){
     if(isCutscene()){ cutsceneAdvance(); return; }
     closeTouchMenu();
     if(!advanceDialog()){ if(anyPanelOpen()) closeAllPanels(); else interact(); } });
+
+  // the Look (examine) button — the touch parity for Q/X. examine() self-guards, so no extra checks.
+  const lookBtn = $("btnLook");
+  if(lookBtn) lookBtn.addEventListener("pointerdown", e => { e.preventDefault(); firstGesture(); examine(); });
 
   // Backpack / Journal / Skills / Settings have no key on a touch device — give them a menu.
   const RENDER = { invPanel:renderInv, questPanel:renderJournal, skillsPanel:renderSkills, settingsPanel:renderSettings };

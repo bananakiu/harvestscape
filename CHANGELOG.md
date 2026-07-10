@@ -22,6 +22,31 @@
 
 ---
 
+## v2.5.1 — "Homely" · 2026-07-11 · tag `v2.5.1`
+
+Version code **26**. A cozy-contract UI polish pass that landed in the working tree (HUD, event
+cue, energy, pickup, touch) — versioned and documented here so the audit trail stays complete.
+
+### Changed
+- **The event pill stops nagging.** It used to show anything within 7 days — but across a 112-day
+  year of festivals + anniversary + five birthdays, *something* was almost always inside that
+  window, so the cue read as permanent top-bar chrome (the "badge/nagging" the design bible §8.4
+  forbids). Now it appears only on the day itself or its eve; the full calendar still lives in the
+  Almanac, and the day/eve nudge is surfaced once, warmly, on the evening **sleep card** instead.
+  The clock + pill were regrouped into a left `#hudTopLeft` cluster so the pill never claims center.
+- **Low energy warms, never reddens.** The energy bar now runs green → gold → deep amber instead of
+  green → gold → survival-red. Energy is deliberately non-hazardous (you can always eat or sleep),
+  so "low" must not read as a danger alarm aimed at the player (Cozy Contract + palette §8.1) — the
+  narrowing bar already says "low"; only the tone deepens.
+- **Pickup notices show the running total** you now hold of each item (read straight from
+  `state.inv`), the way Stardew shows a stack size — small and dim on the right so it never competes
+  with the `+N` gain.
+
+### Added
+- **Touch examine.** A 🔍 button in the touch controls calls `examine()` — touch parity for the
+  Q/X look verb from v2.3, so the examine feature works on phones too. (Examine's primary key is now
+  **Q**, WASD-native; X stays as an alias.)
+
 ## v2.5.0 — "The Collection" · 2026-07-11 · tag `v2.5.0`
 
 Version code **25**. A discovery museum — the completionism the scorecard's Psychology dimension

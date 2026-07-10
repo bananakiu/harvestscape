@@ -1,0 +1,485 @@
+<title>HarvestScape &mdash; Character Art Directions</title>
+<style>
+  :root{
+    --bg:#17110b; --bg2:#201811; --card:#261d13; --card2:#2e2418;
+    --ink:#f1e7d0; --ink-soft:#bca987; --ink-faint:#8b7a5e;
+    --gold:#f0c674; --gold-hi:#ffdd93; --sage:#a6c884; --teal:#77b6ac; --rust:#dd8259;
+    --rule:#6b4f38; --rule-soft:#392b1d;
+    --amber:#e0a24a; --good:#8fbf6b; --warn:#e6b45a;
+    --shadow:0 18px 44px -20px rgba(0,0,0,.7);
+    --maxw:1120px;
+    --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  :root{ --good:#8fbf6b; --warn:#e6b45a; --amber:#e0a24a; }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#ece0c8; --bg2:#f3ead6; --card:#faf3e3; --card2:#f5ecd8;
+      --ink:#2c2216; --ink-soft:#6a5941; --ink-faint:#8a765a;
+      --gold:#9a6f1f; --gold-hi:#7c5714; --sage:#4c7a30; --teal:#2c7a70; --rust:#b1512a;
+      --rule:#cdb890; --rule-soft:#e2d5ba;
+      --shadow:0 16px 36px -22px rgba(60,40,15,.5);
+      --good:#4e8a2e; --warn:#a9772a; --amber:#a9772a;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#17110b; --bg2:#201811; --card:#261d13; --card2:#2e2418;
+    --ink:#f1e7d0; --ink-soft:#bca987; --ink-faint:#8b7a5e;
+    --gold:#f0c674; --gold-hi:#ffdd93; --sage:#a6c884; --teal:#77b6ac; --rust:#dd8259;
+    --rule:#6b4f38; --rule-soft:#392b1d; --shadow:0 18px 44px -20px rgba(0,0,0,.7);
+    --good:#8fbf6b; --warn:#e6b45a; --amber:#e0a24a;
+  }
+  :root[data-theme="light"]{
+    --bg:#ece0c8; --bg2:#f3ead6; --card:#faf3e3; --card2:#f5ecd8;
+    --ink:#2c2216; --ink-soft:#6a5941; --ink-faint:#8a765a;
+    --gold:#9a6f1f; --gold-hi:#7c5714; --sage:#4c7a30; --teal:#2c7a70; --rust:#b1512a;
+    --rule:#cdb890; --rule-soft:#e2d5ba; --shadow:0 16px 36px -22px rgba(60,40,15,.5);
+    --good:#4e8a2e; --warn:#a9772a; --amber:#a9772a;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    margin:0; color:var(--ink); background:var(--bg);
+    font-family:var(--sans); font-size:17px; line-height:1.6;
+    background-image:
+      radial-gradient(120% 80% at 50% -10%, rgba(240,198,116,.06), transparent 60%),
+      repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0 1px, transparent 1px 26px);
+  }
+  @media (prefers-color-scheme: light){ body{ background-image:
+      radial-gradient(120% 80% at 50% -10%, rgba(154,111,31,.10), transparent 60%),
+      repeating-linear-gradient(90deg, rgba(120,90,40,.05) 0 1px, transparent 1px 26px); } }
+  .wrap{ max-width:var(--maxw); margin:0 auto; padding:0 22px; }
+  section{ padding:52px 0; border-top:1px solid var(--rule-soft); }
+  section:first-of-type{ border-top:none; }
+
+  h1,h2,h3{ font-family:var(--serif); font-weight:600; text-wrap:balance; line-height:1.12; margin:0; }
+  h1{ font-size:clamp(2.3rem,5.4vw,4rem); letter-spacing:-.01em; }
+  h2{ font-size:clamp(1.5rem,3vw,2.1rem); }
+  h3{ font-size:1.18rem; }
+  p{ margin:0 0 1rem; max-width:66ch; }
+  a{ color:var(--gold-hi); }
+  .eyebrow{ font-family:var(--mono); font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; color:var(--gold); margin:0 0 1.1rem; }
+  .lede{ font-size:1.16rem; color:var(--ink); max-width:60ch; }
+  .muted{ color:var(--ink-soft); }
+  .faint{ color:var(--ink-faint); }
+  .serif{ font-family:var(--serif); }
+
+  /* hero */
+  .hero{ padding-top:64px; }
+  .hero .quote{
+    margin:1.6rem 0 0; padding:1rem 1.3rem; border-left:3px solid var(--gold);
+    background:linear-gradient(90deg, rgba(240,198,116,.08), transparent);
+    color:var(--ink-soft); font-style:italic; font-family:var(--serif); font-size:1.05rem; border-radius:0 8px 8px 0;
+  }
+  .hero .quote b{ color:var(--ink); font-weight:600; font-style:normal; }
+
+  /* baseline strip */
+  .baseline{ margin-top:30px; background:var(--card); border:1px solid var(--rule-soft); border-radius:14px; padding:20px 20px 8px; box-shadow:var(--shadow); }
+  .baseline .btitle{ font-family:var(--mono); font-size:.72rem; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:14px; display:flex; align-items:center; gap:10px; }
+  .baseline .btitle::before{ content:""; width:8px; height:8px; border-radius:50%; background:var(--rust); box-shadow:0 0 0 4px rgba(221,130,89,.15); }
+  .basegrid{ display:grid; grid-template-columns:repeat(7,1fr); gap:14px; }
+  @media (max-width:720px){ .basegrid{ grid-template-columns:repeat(4,1fr); } }
+  @media (max-width:440px){ .basegrid{ grid-template-columns:repeat(3,1fr); } }
+  .bcell{ text-align:center; }
+  .bcell canvas{ image-rendering:pixelated; display:block; margin:0 auto; border-radius:6px; background:#221812; border:1px solid var(--rule-soft); }
+  .bcell .pc{ }
+  .bcell .sc{ margin-top:8px; background:#3a5a2e; }
+  .bcell .nm{ font-family:var(--mono); font-size:.68rem; color:var(--ink-soft); margin-top:7px; letter-spacing:.04em; }
+  .basecap{ margin:16px 2px 8px; font-size:.95rem; color:var(--ink-soft); max-width:none; }
+
+  /* generic two-col */
+  .cols{ display:grid; grid-template-columns:1fr 1fr; gap:34px; align-items:start; }
+  @media (max-width:820px){ .cols{ grid-template-columns:1fr; gap:22px; } }
+
+  .callout{ background:var(--card); border:1px solid var(--rule-soft); border-radius:12px; padding:20px 22px; }
+  .callout h3{ margin-bottom:.5rem; color:var(--gold-hi); }
+  .callout.world h3::before,.callout.face h3::before{ content:""; display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:9px; vertical-align:middle; }
+  .callout.world h3::before{ background:var(--sage); }
+  .callout.face h3::before{ background:var(--gold); }
+
+  /* character bible */
+  .bible{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:26px; }
+  @media (max-width:820px){ .bible{ grid-template-columns:1fr; } }
+  .bcard{ background:var(--card); border:1px solid var(--rule-soft); border-radius:12px; padding:18px 20px; }
+  .bcard .who{ font-family:var(--serif); font-size:1.15rem; color:var(--gold-hi); }
+  .bcard .role{ font-family:var(--mono); font-size:.68rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:.7rem; }
+  .tags{ display:flex; flex-wrap:wrap; gap:7px; margin-top:.5rem; }
+  .tag{ font-size:.78rem; padding:3px 10px; border-radius:20px; border:1px solid var(--rule); color:var(--ink-soft); background:rgba(255,255,255,.02); }
+
+  /* style cards */
+  .style{ background:var(--card); border:1px solid var(--rule-soft); border-radius:18px; padding:26px; margin-top:30px; box-shadow:var(--shadow); scroll-margin-top:20px; }
+  .style-head{ display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:4px; }
+  .style-name{ font-family:var(--serif); font-size:1.7rem; color:var(--gold-hi); }
+  .style-name .idx{ font-family:var(--mono); font-size:.9rem; color:var(--ink-faint); margin-right:12px; letter-spacing:.05em; }
+  .style-tl{ font-size:1.02rem; color:var(--ink-soft); font-style:italic; font-family:var(--serif); }
+  .style-body{ display:grid; grid-template-columns:1.15fr 1fr; gap:28px; margin-top:20px; align-items:start; }
+  @media (max-width:860px){ .style-body{ grid-template-columns:1fr; gap:20px; } }
+
+  .plate{ }
+  .portraits{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .shot{ position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--rule); background:var(--bg2); aspect-ratio:1/1; }
+  .shot img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .shot .cap{ position:absolute; left:0; right:0; bottom:0; font-family:var(--mono); font-size:.62rem; letter-spacing:.08em; text-transform:uppercase; color:#fff; background:linear-gradient(transparent, rgba(0,0,0,.72)); padding:14px 8px 5px; }
+  .sprite{ margin-top:10px; border-radius:10px; overflow:hidden; border:1px solid var(--rule); background:var(--bg2); }
+  .sprite img{ width:100%; display:block; }
+  .sprite .cap{ font-family:var(--mono); font-size:.62rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); padding:7px 10px; border-top:1px solid var(--rule-soft); }
+
+  .style-copy h4{ font-family:var(--mono); font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); margin:18px 0 8px; }
+  .style-copy h4:first-child{ margin-top:0; }
+  .style-copy p{ font-size:.96rem; margin-bottom:.7rem; }
+  .pc-list{ list-style:none; padding:0; margin:0; display:grid; gap:6px; }
+  .pc-list li{ font-size:.92rem; padding-left:22px; position:relative; color:var(--ink-soft); }
+  .pc-list li.pro::before{ content:"+"; position:absolute; left:4px; color:var(--good); font-weight:700; }
+  .pc-list li.con::before{ content:"&ndash;"; position:absolute; left:5px; color:var(--rust); font-weight:700; }
+
+  /* meters */
+  .meters{ display:grid; gap:9px; margin-top:6px; }
+  .meter{ display:grid; grid-template-columns:118px 1fr auto; align-items:center; gap:12px; }
+  .meter .ml{ font-family:var(--mono); font-size:.66rem; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); }
+  .segs{ display:flex; gap:4px; }
+  .seg{ height:8px; flex:1; border-radius:2px; background:var(--rule-soft); }
+  .seg.on{ background:var(--tone,var(--gold)); }
+  .meter .mv{ font-family:var(--mono); font-size:.66rem; color:var(--ink-faint); min-width:74px; text-align:right; }
+
+  .ships{ font-size:.9rem; color:var(--ink-soft); background:rgba(119,182,172,.07); border:1px solid var(--rule-soft); border-left:3px solid var(--teal); border-radius:0 8px 8px 0; padding:10px 14px; margin-top:6px; }
+  .ships b{ color:var(--ink); font-weight:600; }
+
+  /* recommendation */
+  .rec{ background:linear-gradient(160deg, var(--card2), var(--card)); border:1px solid var(--rule); border-radius:18px; padding:30px; box-shadow:var(--shadow); }
+  .rec .pick{ font-family:var(--serif); font-size:1.35rem; color:var(--ink); margin:6px 0 18px; }
+  .rec .pick b{ color:var(--gold-hi); }
+  .paths{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:20px; }
+  @media (max-width:820px){ .paths{ grid-template-columns:1fr; } }
+  .path{ background:var(--bg2); border:1px solid var(--rule-soft); border-radius:12px; padding:16px 18px; }
+  .path .pt{ font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--gold); margin-bottom:.5rem; }
+  .path .ph{ font-family:var(--serif); font-size:1.05rem; color:var(--ink); margin-bottom:.4rem; }
+  .path p{ font-size:.88rem; color:var(--ink-soft); margin:0; }
+
+  .steps{ counter-reset:s; list-style:none; padding:0; margin:20px 0 0; display:grid; gap:12px; }
+  .steps li{ position:relative; padding-left:44px; font-size:.98rem; color:var(--ink-soft); }
+  .steps li::before{ counter-increment:s; content:counter(s); position:absolute; left:0; top:-2px; width:28px; height:28px; border-radius:8px; background:var(--card); border:1px solid var(--rule); color:var(--gold-hi); font-family:var(--mono); font-size:.85rem; display:grid; place-items:center; }
+  .steps li b{ color:var(--ink); font-weight:600; }
+
+  footer{ padding:40px 0 64px; border-top:1px solid var(--rule-soft); color:var(--ink-faint); font-size:.85rem; }
+  footer .prov{ background:var(--card); border:1px solid var(--rule-soft); border-radius:10px; padding:14px 18px; margin-bottom:16px; }
+  .kbd{ font-family:var(--mono); font-size:.8em; background:var(--card2); border:1px solid var(--rule); border-radius:5px; padding:1px 6px; color:var(--ink); }
+
+  /* progressive-enhancement reveal: only hides when JS is present to un-hide it */
+  .js .reveal{ opacity:0; transform:translateY(14px); transition:opacity .6s ease, transform .6s ease; }
+  .js .reveal.in{ opacity:1; transform:none; }
+  @media (prefers-reduced-motion:reduce){ .js .reveal{ opacity:1; transform:none; transition:none; } }
+</style>
+
+<div class="wrap">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <p class="eyebrow">HarvestScape &middot; Character art direction</p>
+    <h1>Faces worth remembering</h1>
+    <p class="lede" style="margin-top:1.1rem">Four ways to give HarvestScape's people a memorable face &mdash; in the world and in conversation &mdash; each shown on the <em>same</em> three characters so the only thing changing is the style.</p>
+    <p class="quote">The brief, in your words: the character sprites are <b>too pixelated</b>, there aren't <b>enough defining features</b>, and nobody's <b>memorable &mdash; not even the main character</b>. The conversation portraits should be <b>higher-fidelity and more distinct</b> &mdash; cozy, unique, <b>not too anime</b>, and not a <b>Stardew clone</b>.</p>
+
+    <div class="baseline">
+      <div class="btitle">Where we are now &mdash; the live build</div>
+      <div class="basegrid" id="baselineGrid"><!-- rendered from the real drawing code --></div>
+      <p class="basecap">Every dialogue portrait is the <b>same 64&times;64 head template</b> recolored; every world body is the <b>same 16&times;22 rig</b> recolored. Hair colour aside, the faces don't individuate &mdash; which is exactly why nobody sticks in memory. The problem isn't only resolution; it's that there's <b>one silhouette wearing seven palettes.</b></p>
+    </div>
+  </section>
+
+  <!-- ============ CONSTRAINT ============ -->
+  <section class="reveal">
+    <p class="eyebrow">The constraint that shapes every option</p>
+    <h2>HarvestScape is 100% procedural &mdash; so this is really two problems</h2>
+    <p style="margin-top:1rem">There are no image files in the game; every sprite is drawn in canvas code. That single rule splits "better characters" into two very different jobs, and they don't have the same answer:</p>
+    <div class="cols" style="margin-top:8px">
+      <div class="callout world">
+        <h3>World sprites</h3>
+        <p class="muted" style="font-size:.95rem">16&times;22, drawn every frame, in many poses and directions. These <b>must stay pixel and procedural</b> to fit the real-time canvas pipeline. The fix here is <b>more resolution and a distinct silhouette per person</b> &mdash; not painting.</p>
+      </div>
+      <div class="callout face">
+        <h3>Dialogue portraits</h3>
+        <p class="muted" style="font-size:.95rem">Shown large, one at a time, static. This is where <b>real illustration fidelity is feasible and pays off most</b> &mdash; and where an anime-vs-storybook-vs-woodcut decision actually lives.</p>
+      </div>
+    </div>
+    <p style="margin-top:22px">So the honest shape of the answer is a <b>hybrid</b>: a pixel world with illustrated faces &mdash; which, not coincidentally, is exactly how Stardew Valley itself is built. The four directions below are really <b>four options for the faces</b>, each paired with the sprite treatment that matches it.</p>
+  </section>
+
+  <!-- ============ CHARACTER BIBLE ============ -->
+  <section class="reveal">
+    <p class="eyebrow">Before style &mdash; the memorability fix</p>
+    <h2>"Memorable" is a design decision before it's a resolution one</h2>
+    <p style="margin-top:1rem">A character sticks when the eye can catch <b>one thing</b> in a single frame &mdash; a silhouette, a prop, a colour. Give each person a signature and they read at 16 pixels or 1600. These three signatures carry across all four styles below &mdash; it's why you recognise the same people every time.</p>
+    <div class="bible">
+      <div class="bcard">
+        <div class="role">Protagonist &middot; you</div>
+        <div class="who">The Farmer</div>
+        <p class="muted" style="font-size:.9rem; margin:.5rem 0 0">The hero needs the strongest signature of all. A flat cap becomes the icon.</p>
+        <div class="tags"><span class="tag">flat cap + wheat sprig</span><span class="tag">rust neckerchief</span><span class="tag">olive jacket &middot; suspenders</span><span class="tag">chestnut curls &middot; freckles</span></div>
+      </div>
+      <div class="bcard">
+        <div class="role">Valley &middot; heart line</div>
+        <div class="who">Maya</div>
+        <p class="muted" style="font-size:.9rem; margin:.5rem 0 0">Warm and a little wistful &mdash; Elias's estranged daughter.</p>
+        <div class="tags"><span class="tag">copper side-braid</span><span class="tag">wildflower</span><span class="tag">freckles</span><span class="tag">forest-green blouse</span></div>
+      </div>
+      <div class="bcard">
+        <div class="role">Harbour &middot; old salt</div>
+        <div class="who">Bram</div>
+        <p class="muted" style="font-size:.9rem; margin:.5rem 0 0">A lifetime at sea in his face; gruff, grandfatherly.</p>
+        <div class="tags"><span class="tag">navy beanie</span><span class="tag">grey walrus mustache</span><span class="tag">teal oilskin collar</span><span class="tag">weathered ruddy skin</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STYLE CARDS ============ -->
+  <section>
+    <p class="eyebrow">Four directions</p>
+    <h2>The same valley, four ways</h2>
+    <p style="margin-top:1rem" class="muted">For each: the three anchor portraits, a world-sprite reference, how it would actually ship in the engine, and where it sits on the two lines you flagged &mdash; <em>anime-ness</em> and <em>Stardew-likeness</em> &mdash; plus build effort and how well it fits the no-assets rule.</p>
+    <div id="styleCards"></div>
+  </section>
+
+  <!-- ============ RECOMMENDATION ============ -->
+  <section class="reveal">
+    <p class="eyebrow">If I'm picking</p>
+    <h2>A recommendation, and the one real decision</h2>
+    <div class="rec" style="margin-top:22px">
+      <p class="pick">World sprites &rarr; <b>Harvest HD</b>. Faces &rarr; <b>Lamplight</b> (painterly). <span class="muted" style="font-size:.9rem">&mdash; the Stardew-proven combo: a crisp pixel world with warm illustrated faces, and the furthest of any option from both "anime" and "Stardew clone."</span></p>
+      <p style="font-size:.96rem">Harvest HD is the only face-style that also answers the <em>world</em> problem for free &mdash; it's pixel, so it stays procedural and fixes the "same rig recolored" sprites at the same time. Lay warm painted portraits on top and conversations get the fidelity jump you're after. <b>Meadowfolk</b> is the one I'd steer away from given your "not too anime" note &mdash; it's the closest of the four to that line. <b>Woodcut Folk</b> is the pick if you'd rather HarvestScape look like <em>nothing else on the shelf</em> &mdash; it's the boldest identity, at the cost of being the biggest departure from the current cozy-realistic tone.</p>
+
+      <p style="font-family:var(--mono); font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); margin:24px 0 10px">The decision underneath it</p>
+      <p style="font-size:.96rem">Everything except Harvest HD means <b>baking a small set of portrait image files</b> &mdash; a real, contained break from the "100% procedural, no assets" rule in <span class="kbd">CLAUDE.md</span>. That's a values call only you can make. Three honest paths:</p>
+      <div class="paths">
+        <div class="path">
+          <div class="pt">Path A &middot; purest</div>
+          <div class="ph">Stay 100% procedural</div>
+          <p>Harvest HD everywhere &mdash; hand-code higher-res pixel portraits + sprites. No rule broken. Ceiling is "gorgeous pixel," not "painted."</p>
+        </div>
+        <div class="path">
+          <div class="pt">Path B &middot; recommended</div>
+          <div class="ph">Bake a portrait set</div>
+          <p>Keep the pixel world procedural; ship a curated folder of ~7 characters &times; a few expressions as baked art (Lamplight or Woodcut). Biggest payoff, contained scope.</p>
+        </div>
+        <div class="path">
+          <div class="pt">Path C &middot; concept-only</div>
+          <div class="ph">North-star, then reproduce</div>
+          <p>Treat these images as targets and hand-reproduce the closest look in-engine. Keeps the rule; slower, and the painterly styles can't fully survive the trip.</p>
+        </div>
+      </div>
+
+      <p style="font-family:var(--mono); font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); margin:26px 0 6px">If you like a direction, next steps</p>
+      <ol class="steps">
+        <li><b>Pick a face style + a path</b> (A/B/C above). That's the only blocking decision.</li>
+        <li><b>Lock the protagonist first.</b> The hero's face is the one you said you can't remember &mdash; nail one canonical look and expression sheet before anyone else.</li>
+        <li><b>Prove one conversation end-to-end</b> in the real dialogue box at game scale &mdash; portrait + name + text &mdash; before committing to all seven.</li>
+        <li><b>Roll the Harvest HD silhouette pass into the world sprites</b> regardless of the face choice &mdash; distinct hats, builds and props are the cheapest memorability win and need no new assets.</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer>
+    <div class="prov">
+      <b style="color:var(--ink-soft)">On these images:</b> generated with ChatGPT image generation driven through the Codex CLI on your subscription &mdash; used purely as <b>concept north-stars</b>, not shipped assets. The "Where we are now" panel above is the real game, drawn live from the actual <span class="kbd">03-art.js</span> code. Nothing here is wired into the build yet; this is a board to decide direction.
+    </div>
+    HarvestScape character art exploration &middot; four directions on three anchor characters
+  </footer>
+</div>
+
+<script>
+document.documentElement.classList.add("js"); /* enables the reveal enhancement; without JS, content stays visible */
+/* ============================================================
+   BASELINE &mdash; reproduce the current art from the real code
+   (ported verbatim from game/js/03-art.js so the "before"
+   is pixel-exact with zero embedded images)
+   ============================================================ */
+function hexToRgb(h){h=h.replace('#','');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function rgbToHex(r,g,b){const c=v=>('0'+Math.max(0,Math.min(255,Math.round(v))).toString(16)).slice(-2);return '#'+c(r)+c(g)+c(b);}
+function shade(hex,f){const[r,g,b]=hexToRgb(hex);return rgbToHex(r*f,g*f,b*f);}
+function px(g,x,y,w,h,col){g.fillStyle=col;g.fillRect(x|0,y|0,w|0,h|0);}
+
+const CHAR_SPEC = {
+  player: { skin:"#eec39a", skinSh:"#d8a878", hair:"#7a4a2a", hairSh:"#5e3a1f", shirt:"#4a86c0", shirtSh:"#356a9e", pants:"#5e4426", pantsSh:"#463320", shoe:"#3a2a1a" },
+  maya:   { skin:"#eec39a", skinSh:"#d8a878", hair:"#a8503a", hairSh:"#82392a", shirt:"#5a9e6a", shirtSh:"#3f7a4e", pants:"#3a3a5e", pantsSh:"#2a2a46", shoe:"#5a3a2a" },
+  tom:    { skin:"#d8a878", skinSh:"#bd8e60", hair:"#5a4a3a", hairSh:"#403428", shirt:"#c0a068", shirtSh:"#9a7c4c", pants:"#4a3a2a", pantsSh:"#362a1e", shoe:"#3a2a1a" },
+  rowan:  { skin:"#e0bd94", skinSh:"#c49a6a", hair:"#dcdcdc", hairSh:"#b2b2b2", shirt:"#4a3f72", shirtSh:"#352c54", pants:"#3a3352", pantsSh:"#2a2540", shoe:"#3a2a1a" },
+  bram:   { skin:"#c99a6a", skinSh:"#a87e50", hair:"#2e2622", hairSh:"#1c1714", shirt:"#3f88a0", shirtSh:"#2c6072", pants:"#4a4238", pantsSh:"#352f28", shoe:"#2a2018" },
+  pip:    { skin:"#eec39a", skinSh:"#d8a878", hair:"#c98a3a", hairSh:"#a06a28", shirt:"#c0503a", shirtSh:"#9a3a2a", pants:"#3a5a8a", pantsSh:"#2a466e", shoe:"#3a2a1a" },
+  elias:  { skin:"#dcae82", skinSh:"#b98c62", hair:"#8a6250", hairSh:"#66473a", shirt:"#6a7a8a", shirtSh:"#4c5a68", pants:"#413a33", pantsSh:"#2e2924", shoe:"#2a2018" },
+};
+function drawChar(g, sp, face, pose){
+  const legY = 17, lx = 5, rx = 8; let loff=0, roff=0;
+  if(pose===1){ loff=1; roff=-1; } else if(pose===2){ loff=-1; roff=1; }
+  px(g, lx, legY-Math.max(0,loff), 3, 4+Math.abs(loff), sp.pants); px(g, lx, legY+3, 3, 1, sp.shoe);
+  px(g, rx, legY-Math.max(0,roff), 3, 4+Math.abs(roff), sp.pants); px(g, rx, legY+3, 3, 1, sp.shoe);
+  px(g, lx, legY, 1, 3, sp.pantsSh); px(g, rx+2, legY, 1, 3, sp.pantsSh);
+  px(g, 4, 11, 8, 7, sp.shirt); px(g, 4, 11, 8, 1, shade(sp.shirt,1.15));
+  px(g, 4, 11, 1, 7, sp.shirtSh); px(g, 11, 11, 1, 7, sp.shirtSh);
+  const swing = pose===3;
+  if(face === "side"){ px(g, 10, 12, 2, swing?3:5, sp.skin); if(swing){ px(g, 11, 10, 2, 3, sp.skin); } }
+  else { px(g, 2, 12, 2, 5, sp.skin); px(g, 12, 12, 2, 5, sp.skin); if(swing){ px(g, 12, 9, 2, 4, sp.skin); } }
+  px(g, 4, 3, 8, 8, sp.skin); px(g, 4, 3, 8, 1, shade(sp.skin,1.08)); px(g, 4, 10, 8, 1, sp.skinSh);
+  if(face === "down"){
+    px(g, 3, 2, 10, 4, sp.hair); px(g, 3, 2, 2, 6, sp.hair); px(g, 11, 2, 2, 6, sp.hair);
+    px(g, 3, 2, 10, 1, shade(sp.hair,1.2));
+    px(g, 6, 6, 1, 2, "#241a10"); px(g, 9, 6, 1, 2, "#241a10"); px(g, 7, 9, 2, 1, "#c07a6a");
+  } else if(face === "up"){
+    px(g, 3, 2, 10, 8, sp.hair); px(g, 3, 2, 10, 1, shade(sp.hair,1.2)); px(g, 4, 8, 8, 1, sp.hairSh);
+  } else {
+    px(g, 3, 2, 9, 4, sp.hair); px(g, 3, 2, 2, 7, sp.hair); px(g, 3, 2, 9, 1, shade(sp.hair,1.2));
+    px(g, 9, 6, 1, 2, "#241a10"); px(g, 11, 7, 1, 1, sp.skinSh); px(g, 10, 9, 2, 1, "#c07a6a");
+  }
+  if(sp === CHAR_SPEC.tom && face==="down"){ px(g,6,8,4,1,sp.hairSh); }
+  if(sp === CHAR_SPEC.maya && face==="down"){ px(g,3,5,2,5,sp.hair); px(g,5,6,1,1,sp.skinSh); px(g,10,6,1,1,sp.skinSh); }
+}
+
+const PORTRAIT_SPECS = {
+  player: { skin:"#eec39a", skinSh:"#d8a878", hair:"#7a4a2a", brow:"#5e3a1f", shirt:"#4a86c0", feature:"hair", extra:"" },
+  maya:   { skin:"#eec39a", skinSh:"#d8a878", hair:"#a8503a", brow:"#82392a", shirt:"#5a9e6a", feature:"braid", extra:"freckles" },
+  bram:   { skin:"#c99a6a", skinSh:"#a87e50", hair:"#2e2622", brow:"#1c1714", shirt:"#3f88a0", feature:"beanie", extra:"mustache" },
+  rowan:  { skin:"#e0bd94", skinSh:"#c49a6a", hair:"#dcdcdc", brow:"#b0b0b0", shirt:"#4a3f72", feature:"hair", extra:"beard" },
+  tom:    { skin:"#d8a878", skinSh:"#bd8e60", hair:"#6a5a48", brow:"#4a3a2a", shirt:"#c0a068", feature:"bald", extra:"mustache" },
+  pip:    { skin:"#eec39a", skinSh:"#d8a878", hair:"#c98a3a", brow:"#a06a28", shirt:"#c0503a", feature:"hair", extra:"freckles" },
+  elias:  { skin:"#dcae82", skinSh:"#b98c62", hair:"#8a6250", brow:"#66473a", shirt:"#6a7a8a", feature:"hair", extra:"beard" },
+};
+function drawPortraitInto(g, p){
+  px(g,0,0,64,64,"#2a2018");
+  for(let i=0;i<64;i+=2) px(g,0,i,64,1,"#31251a");
+  px(g,6,6,52,52,"#3a2c1e");
+  px(g,18,44,28,20,p.shirt); px(g,18,44,28,2,shade(p.shirt,1.2)); px(g,24,40,16,8,p.skin);
+  px(g,18,12,28,30,p.skin); px(g,18,12,28,2,shade(p.skin,1.08));
+  px(g,16,20,2,14,p.skin); px(g,46,20,2,14,p.skin);
+  px(g,18,38,28,4,p.skinSh);
+  px(g,15,26,3,6,p.skin); px(g,46,26,3,6,p.skin);
+  px(g,24,26,4,4,"#ffffff"); px(g,36,26,4,4,"#ffffff");
+  px(g,25,27,3,3,"#3a2a1a"); px(g,37,27,3,3,"#3a2a1a"); px(g,26,27,1,1,"#fff");
+  px(g,23,23,6,1,p.brow); px(g,35,23,6,1,p.brow);
+  px(g,31,32,2,4,p.skinSh); px(g,28,38,8,1,"#b06a5a");
+  if(p.feature==="hat"){ px(g,10,6,44,8,"#d8b46a"); px(g,10,6,44,2,"#e8c98a"); px(g,10,12,44,2,"#b8944a"); px(g,20,0,24,8,"#c9a55a"); px(g,20,0,24,2,"#d8b46a"); px(g,20,8,24,1,"#a8843a"); }
+  else if(p.feature==="bald"){ px(g,18,10,28,6,p.skin); px(g,16,14,4,8,p.hair); px(g,44,14,4,8,p.hair); px(g,18,11,28,2,shade(p.skin,1.1)); }
+  else if(p.feature==="braid"){ px(g,16,8,32,10,p.hair); px(g,16,8,32,2,shade(p.hair,1.2)); px(g,14,16,4,16,p.hair); px(g,46,16,4,20,p.hair); px(g,46,34,4,6,shade(p.hair,.85)); px(g,16,10,6,10,p.hair); }
+  else if(p.feature==="beanie"){ px(g,15,11,34,7,p.hair); px(g,11,3,42,10,"#3f6a5a"); px(g,11,3,42,2,"#5a8a76"); px(g,11,11,42,2,"#2f5044"); px(g,9,10,46,3,"#37604f"); }
+  else if(p.feature==="none"){ px(g,14,6,36,14,p.hair); px(g,14,6,36,2,shade(p.hair,1.2)); }
+  else { px(g,15,7,34,11,p.hair); px(g,15,7,34,2,shade(p.hair,1.25)); px(g,14,14,4,10,p.hair); px(g,46,14,4,10,p.hair); px(g,20,16,24,2,shade(p.hair,.85)); }
+  if(p.extra==="beard"){ px(g,20,38,24,12,p.hair); px(g,18,40,4,8,p.hair); px(g,42,40,4,8,p.hair); px(g,28,38,8,3,p.skinSh); px(g,20,39,24,1,shade(p.hair,1.2)); }
+  if(p.extra==="mustache"){ px(g,24,36,16,3,p.hair); px(g,24,36,16,1,shade(p.hair,1.2)); }
+  if(p.extra==="freckles"){ px(g,22,33,1,1,p.skinSh); px(g,25,34,1,1,p.skinSh); px(g,39,33,1,1,p.skinSh); px(g,42,34,1,1,p.skinSh); }
+  g.strokeStyle="#7a5c42"; g.lineWidth=2; g.strokeRect(1,1,62,62);
+}
+function renderPixel(canvas, w, h, drawFn){
+  const off=document.createElement("canvas"); off.width=w; off.height=h;
+  const og=off.getContext("2d"); og.imageSmoothingEnabled=false; drawFn(og);
+  const g=canvas.getContext("2d"); g.imageSmoothingEnabled=false;
+  g.clearRect(0,0,canvas.width,canvas.height);
+  g.drawImage(off,0,0,w,h,0,0,canvas.width,canvas.height);
+}
+(function buildBaseline(){
+  const grid=document.getElementById("baselineGrid"); if(!grid) return;
+  const people=[["player","You"],["maya","Maya"],["bram","Bram"],["rowan","Rowan"],["tom","Tom"],["pip","Pip"],["elias","Elias"]];
+  const PS=2, WS=4;
+  for(const [key,label] of people){
+    const cell=document.createElement("div"); cell.className="bcell";
+    const pc=document.createElement("canvas"); pc.className="pc"; pc.width=64*PS; pc.height=64*PS;
+    renderPixel(pc,64,64,g=>drawPortraitInto(g,PORTRAIT_SPECS[key]));
+    const sc=document.createElement("canvas"); sc.className="sc"; sc.width=16*WS; sc.height=22*WS;
+    renderPixel(sc,16,22,g=>drawChar(g,CHAR_SPEC[key],"down",0));
+    const nm=document.createElement("div"); nm.className="nm"; nm.textContent=label;
+    cell.append(pc,sc,nm); grid.appendChild(cell);
+  }
+})();
+
+/* ============================================================
+   STYLE CARDS
+   ============================================================ */
+const IMG = {/*__IMG_DATA__*/};
+const STYLES = [
+  {
+    key:"lamplight", idx:"01", name:"Lamplight", tl:"Soft hand-painted storybook &mdash; the premium cozy key-art look.",
+    desc:"Warm gouache-and-oil rendering with painterly edges and lamplit warmth. The most emotionally warm and the furthest from both anime and pixel &mdash; this is the register of Spiritfarer or Cozy Grove key art. Faces carry real subtlety; a smile actually reads as wistful.",
+    ships:"Portraits ship as a <b>baked image set</b> (breaks the no-assets rule). World sprites can't be painterly &mdash; they'd pair with a soft, higher-res pixel body.",
+    pros:["Warmest, most memorable faces of the four","Zero risk of reading as anime or as a Stardew clone","Expressions and mood land with real nuance"],
+    cons:["Cannot be procedural &mdash; must bake portrait assets","Highest craft cost; hardest to keep consistent across a cast","Painterly world sprites aren't feasible &mdash; hybrid only"],
+    meters:{anime:1, stardew:1, effort:5, fits:1}
+  },
+  {
+    key:"harvesthd", idx:"02", name:"Harvest HD", tl:"Higher-fidelity chunky pixel &mdash; Stardew's DNA, pushed further.",
+    desc:"Keeps the pixel language but roughly doubles the resolution and hand-picks a richer palette, with real facial features and a distinct silhouette per person. It's the natural evolution of what's already there &mdash; and the only direction that also fixes the world sprites for free.",
+    ships:"<b>Fits the engine best.</b> Both portraits and sprites stay pixel and can remain procedural / atlas-drawn &mdash; no rule broken.",
+    pros:["Stays 100% procedural &mdash; nothing baked","Fixes world sprites and faces in one pass","Lowest-risk evolution of the current look"],
+    cons:["Closest of the four to Stardew &mdash; needs palette identity to differ","Ceiling is 'beautiful pixel', not 'painted'","Higher-res pixel is still meticulous hand-work"],
+    meters:{anime:1, stardew:4, effort:3, fits:5}
+  },
+  {
+    key:"meadowfolk", idx:"03", name:"Meadowfolk", tl:"Clean-line cel cartoon &mdash; bright, animated, expressive.",
+    desc:"Confident ink outlines and flat cel shading in a warm daylight palette &mdash; a modern cozy-cartoon register (Ooblets, Moonstone Island). Very readable and easy to animate. The catch: it sits closest to the anime line you flagged, so it needs a deliberate hand to stay 'Western picture-book' rather than 'anime game'.",
+    ships:"Portraits ship as baked cel art (or flat SVG/canvas). World sprites pair with a flat, outlined mini version.",
+    pros:["Brightest, most 'animated feature' energy","Cleanest path to expressive, moving faces","Flat shading is comparatively cheap to produce"],
+    cons:["Closest to the anime look you want to avoid","Can read generic if the linework isn't distinctive","Still needs baked or vector assets"],
+    meters:{anime:3, stardew:2, effort:4, fits:2}
+  },
+  {
+    key:"woodcut", idx:"04", name:"Woodcut Folk", tl:"Bold flat folk-art print &mdash; looks like nothing else on the shelf.",
+    desc:"Thick warm outlines, a tight curated palette, and a printed-paper / linocut grain. The boldest identity by far: an heirloom picture-book that's instantly, ownably HarvestScape. Maximum distance from both anime and Stardew &mdash; at the cost of being the biggest departure from the current soft-realistic tone.",
+    ships:"Flat shapes are partly code-able (SVG/canvas), but the paper grain wants a baked texture. Realistically a baked set with a procedural assist.",
+    pros:["Most distinctive, ownable brand identity","Furthest from both anime and Stardew","Strong silhouettes read at any size"],
+    cons:["Biggest tonal shift from today's cozy-realistic look","Grain/texture leans on baked assets","A committed style &mdash; weak half-measures look off"],
+    meters:{anime:1, stardew:1, effort:4, fits:3}
+  }
+];
+const METER_DEFS = [
+  {k:"anime",   label:"Anime-ness",   hint:["none","faint","a touch","leaning","anime"],         tone:"var(--rust)"},
+  {k:"stardew", label:"Stardew-like", hint:["its own","distinct","adjacent","close","clone-ish"], tone:"var(--rust)"},
+  {k:"effort",  label:"Build effort", hint:["low","modest","medium","high","highest"],            tone:"var(--warn)"},
+  {k:"fits",    label:"Fits engine",  hint:["poor","weak","partial","good","native"],              tone:"var(--good)"}
+];
+function segs(level, tone){
+  let s='<div class="segs">';
+  for(let i=1;i<=5;i++) s+=`<span class="seg ${i<=level?'on':''}" style="--tone:${tone}"></span>`;
+  return s+'</div>';
+}
+function meters(m){
+  let h='<div class="meters">';
+  for(const d of METER_DEFS){
+    const lvl=m[d.k];
+    h+=`<div class="meter"><span class="ml">${d.label}</span>${segs(lvl,d.tone)}<span class="mv">${d.hint[lvl-1]}</span></div>`;
+  }
+  return h+'</div>';
+}
+function styleCard(s){
+  const shot=(subj,cap)=>`<div class="shot"><img data-key="${s.key}-${subj}" alt="${cap} &mdash; ${s.name}"><span class="cap">${cap}</span></div>`;
+  const pros=s.pros.map(x=>`<li class="pro">${x}</li>`).join("");
+  const cons=s.cons.map(x=>`<li class="con">${x}</li>`).join("");
+  return `<div class="style reveal" id="style-${s.key}">
+    <div class="style-head">
+      <div class="style-name"><span class="idx">${s.idx}</span>${s.name}</div>
+    </div>
+    <div class="style-tl">${s.tl}</div>
+    <div class="style-body">
+      <div class="plate">
+        <div class="portraits">${shot("protagonist","You")}${shot("maya","Maya")}${shot("bram","Bram")}</div>
+        <div class="sprite"><img data-key="${s.key}-sprite" alt="World sprite reference &mdash; ${s.name}"><div class="cap">World-sprite reference &middot; front + walk</div></div>
+      </div>
+      <div class="style-copy">
+        <p>${s.desc}</p>
+        <div class="ships">${s.ships}</div>
+        <h4>Reads</h4>
+        ${meters(s.meters)}
+        <h4>Trade-offs</h4>
+        <ul class="pc-list">${pros}${cons}</ul>
+      </div>
+    </div>
+  </div>`;
+}
+document.getElementById("styleCards").innerHTML = STYLES.map(styleCard).join("");
+document.querySelectorAll("img[data-key]").forEach(img=>{ const d=IMG[img.dataset.key]; if(d) img.src=d; });
+
+/* reveal on scroll — progressive enhancement; content is visible even if this fails */
+const reveals=[...document.querySelectorAll(".reveal")];
+const showAll=()=>reveals.forEach(el=>el.classList.add("in"));
+if("IntersectionObserver" in window){
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}})},{threshold:.06, rootMargin:"0px 0px -5% 0px"});
+  reveals.forEach(el=>io.observe(el));
+  setTimeout(showAll, 2500);
+} else showAll();
+</script>

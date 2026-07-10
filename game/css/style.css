@@ -66,10 +66,13 @@ body{
   position:absolute; top:2.2%; left:2.2%; right:2.2%;
   display:flex; justify-content:space-between; align-items:flex-start;
 }
-/* countdown to the next thing on the calendar */
-#eventPill{ align-self:center; font-size:.9em; color:var(--gold-hi); white-space:nowrap; }
+/* clock + the (rare) event cue share the left corner, so the pill never claims dead-center */
+#hudTopLeft{ display:flex; gap:.4em; align-items:center; min-width:0; }
+/* a gentle nudge for the day itself / its eve only — smaller than the clock, tucked beside it */
+#eventPill{ font-size:.82em; color:var(--gold-hi); white-space:nowrap; }
 #eventPill.soon{ color:#ffe6a0; border-color:var(--gold-hi); }
-#eventPill.today{ color:#fff2c4; border-color:var(--gold-hi); animation:pillPulse 1.6s ease-in-out infinite; }
+/* "today" gets a soft glow that announces itself twice, then settles — no perpetual pulsing alarm */
+#eventPill.today{ color:#fff2c4; border-color:var(--gold-hi); animation:pillPulse 1.6s ease-in-out 2 forwards; }
 @keyframes pillPulse{ 0%,100%{ box-shadow:0 .18em 0 rgba(0,0,0,.35); } 50%{ box-shadow:0 .18em 0 rgba(0,0,0,.35), 0 0 .7em var(--gold-hi); } }
 .pill{
   display:inline-flex; align-items:center; gap:.4em;
@@ -171,7 +174,15 @@ body{
 .pickup canvas{ width:1.7em; height:1.7em; image-rendering:pixelated; flex:0 0 auto; }
 .pickup .amt{ color:var(--gold-hi); font-variant-numeric:tabular-nums; }
 .pickup .pname{ color:var(--parch); }
+/* the running total held — pushed to the right, small and dim so it never competes with the "+N" gain */
+.pickup .ptot{
+  margin-left:auto; padding-left:.7em;
+  color:var(--parch-sh); font-size:.82em; opacity:.72;
+  font-variant-numeric:tabular-nums;
+}
 .pickup.bump{ animation:pickBump .34s ease; }
+.pickup.bump .ptot{ animation:ptotBump .34s ease; }
+@keyframes ptotBump{ 0%{ color:var(--gold-hi); opacity:1; } 100%{ color:var(--parch-sh); opacity:.72; } }
 @keyframes pickIn{ 0%{opacity:0;transform:translateX(-1em) scale(.9)} 100%{opacity:1;transform:none} }
 @keyframes pickBump{ 0%{transform:none} 38%{transform:scale(1.14)} 100%{transform:none} }
 
@@ -329,12 +340,52 @@ body{
 .heart{ color:var(--rose); }
 .heart.off{ color:#5a4a3f; }
 
-.xpRow{ display:flex; align-items:center; gap:.5em; padding:.3em .1em; }
-.xpRow .sname{ width:7em; display:flex; align-items:center; gap:.35em; }
-.xpRow .lvl{ color:var(--gold); font-weight:bold; }
 .xpbarWrap{ flex:1; height:.85em; background:#000; border:.1em solid var(--wood-d); border-radius:.3em; overflow:hidden; }
 .xpbar{ height:100%; background:linear-gradient(var(--blue),#3f7fbf); box-shadow:inset 0 .2em 0 rgba(255,255,255,.25); transition:width .4s ease; }
-.xpRow .xpnum{ width:7.5em; text-align:right; color:var(--ink-soft); font-size:.8em; }
+
+/* ---- Skills panel: RuneScape-style skill grid ---- */
+.skillTotal{ text-align:center; color:var(--gold-hi); font-size:1.05em; margin:.1em 0 .55em; letter-spacing:.02em; }
+.skillTotal b{ color:var(--gold); }
+.skillGrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(8.5em,1fr)); gap:.45em; }
+.skillCell{
+  display:flex; align-items:center; gap:.5em; padding:.42em .5em; cursor:pointer;
+  background:linear-gradient(var(--wood-l),var(--wood)); border:.14em solid var(--wood-d);
+  border-radius:.5em; box-shadow:0 .18em 0 rgba(0,0,0,.35), inset 0 .12em 0 rgba(255,255,255,.08);
+  transition:transform .08s ease;
+}
+.skillCell:hover{ transform:translateY(-.1em); }
+.skillCell.sel{ border-color:var(--gold); box-shadow:0 0 .45em var(--gold), 0 .18em 0 rgba(0,0,0,.35), inset 0 0 0 .1em var(--gold-hi); }
+.sIcon{ position:relative; flex:0 0 auto; width:2em; height:2em; display:flex; align-items:center; justify-content:center; }
+.sIcon canvas{ width:1.9em; height:1.9em; image-rendering:pixelated; }
+.sLvl{
+  position:absolute; right:-.4em; bottom:-.4em; min-width:1.35em; text-align:center;
+  background:var(--wood-d); border:.1em solid #0006; border-radius:.4em;
+  color:var(--gold); font-size:.72em; line-height:1.25; padding:0 .18em; text-shadow:0 1px 0 #000;
+}
+.sBody{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:.18em; }
+.sName{ color:var(--parch); font-size:.92em; line-height:1; }
+.skillCell .xpbarWrap{ flex:0 0 auto; width:100%; height:.62em; }
+.sgoal{ font-size:.7em; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sgoal.unlock{ color:var(--blue); }
+.sgoal.mast{ color:var(--ink-soft); }
+.sgoal.done{ color:var(--gold-hi); }
+#skillDetail{ margin-top:.55em; }
+.skillHint{ text-align:center; color:var(--ink-soft); font-size:.85em; font-style:italic; padding:.4em .2em; }
+.sdHead{ display:flex; align-items:baseline; justify-content:space-between; gap:.5em;
+  border-bottom:.1em solid rgba(255,255,255,.12); padding-bottom:.22em; margin-bottom:.3em; }
+.sdName{ color:var(--gold-hi); font-size:1.06em; letter-spacing:.02em; }
+.sdLvl{ color:var(--gold); font-size:.92em; }
+.sdXp{ color:var(--parch); font-size:.9em; margin-bottom:.3em; font-variant-numeric:tabular-nums; }
+.sdXp .max{ color:var(--gold-hi); }
+.sdLine{ font-size:.86em; line-height:1.32; margin:.14em 0; }
+.sdLine.unlock{ color:var(--blue); }
+.sdLine.earned{ color:var(--gold-hi); }
+.sdLine.next{ color:var(--ink-soft); }
+.skillHelp{ margin-top:.6em; border-top:.1em solid rgba(255,255,255,.1); padding-top:.4em; }
+.skillHelp summary{ cursor:pointer; color:var(--ink-soft); font-size:.82em; list-style:none; }
+.skillHelp summary::-webkit-details-marker{ display:none; }
+.skillHelp summary:hover{ color:var(--parch-sh); }
+.skillHelp div{ color:var(--ink-soft); font-size:.82em; margin-top:.3em; line-height:1.4; }
 
 .actHead{ color:var(--gold); font-size:.82em; font-weight:bold; letter-spacing:.05em; text-transform:uppercase;
   margin:.6em 0 .5em; padding-bottom:.2em; border-bottom:.12em solid rgba(255,206,90,.28); }
