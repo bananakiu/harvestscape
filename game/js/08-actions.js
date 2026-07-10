@@ -121,6 +121,7 @@ function addXP(skill, amt){
 // ---- inventory ----
 function give(item, n=1, quiet){
   state.inv[item] = (state.inv[item]||0) + n;
+  discover(item);   // the Collection remembers everything you've ever held
   // the sprite still pops off the player for juice, but the "+N Item" text now lives in the corner
   // pickup log — off the head, so it never collides with the XP drop from the same action.
   if(!quiet){ pItemPop(state.px, state.py-12, "item_"+item); notePickup(item, n); }

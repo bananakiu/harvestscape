@@ -22,6 +22,25 @@
 
 ---
 
+## v2.5.0 — "The Collection" · 2026-07-11 · tag `v2.5.0`
+
+Version code **25**. A discovery museum — the completionism the scorecard's Psychology dimension
+asked for ("log covers 5 items; crops/gems/dishes still unlogged"). Pairs with v2.3's examine text.
+
+### Added
+- **The Collection**, a collapsible museum in the Journal (`renderMuseum()`, `10-ui.js`): nine
+  sections (Crops, Orchard, Fish, Legends, Gems, Shore, Farm & Forage, Kitchen, Materials, 64
+  entries) drawn from the existing data tables. Discovered entries show their pixel icon, name, and
+  examine line on hover; undiscovered show a `?` silhouette. A `X/64 discovered` counter in the
+  summary.
+- **Discovery tracking.** `state.discovered` (new save field) is stamped by a one-line `discover()`
+  in `give()` — everything you ever hold is remembered, even after you sell it. `migrateSave` seeds
+  it from an existing save's inventory + caught legends, so returning players don't start empty;
+  new games seed the two starting items.
+
+Verified in-browser: giving 12 varied items lights their cells (13/64), icons hydrate, locked cells
+show silhouettes. Console clean. Tagged `v2.5.0`.
+
 ## v2.4.0 — "With Feeling" · 2026-07-11 · tag `v2.4.0`
 
 Version code **24**. A game-feel pass that finally wires the dormant tween system (the scorecard's

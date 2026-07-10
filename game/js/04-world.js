@@ -27,9 +27,16 @@ function freshState(){
             bestCropSold:0, festivals:0, requests:0 },   // bestCropSold resets each season; the Harvest Fair judges it
     questIdx:0, questDone:[], questReady:false,
     weather:"clear", forecast:null,        // forecast is rolled on the first newDay
+    discovered:{ "Turnip Seeds":true, "Berry Bun":true },   // everything you've ever held — the Collection remembers
 
     flags:{ introSeen:false },
   };
+}
+// mark an item as "discovered" for the Collection. First time only returns true (for a little fanfare).
+function discover(name){
+  if(!state.discovered) state.discovered = {};
+  if(state.discovered[name]) return false;
+  state.discovered[name] = true; return true;
 }
 function ensureRel(id){ if(!state.rel[id]) state.rel[id] = { points:0, talkedDay:0, giftedDay:0 }; return state.rel[id]; }
 

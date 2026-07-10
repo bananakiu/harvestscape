@@ -277,6 +277,36 @@ function renderInv(){
   }).join("");
   hydrateIcons(b);
 }
+// ---- The Collection: a museum of everything you've ever found, with its examine flavour ----
+const MUSEUM = [
+  { name:"Crops",         items:()=>Object.values(CROPS).map(c=>c.name) },
+  { name:"The Orchard",   items:()=>Object.values(FRUIT_TREES).map(t=>t.fruit) },
+  { name:"Fish",          items:()=>FISH.map(f=>f.name) },
+  { name:"The Legends",   items:()=>LEGENDS.map(l=>l.name) },
+  { name:"Gems",          items:()=>Object.keys(GEM_SELL) },
+  { name:"The Shore",     items:()=>Object.keys(SHORE) },
+  { name:"Farm & Forage", items:()=>["Field Salad","Frostberry","Berry Bun","Honey","Egg","Large Egg","Milk","Large Milk","Wool"] },
+  { name:"The Kitchen",   items:()=>RECIPES.map(r=>r.name) },
+  { name:"Materials",     items:()=>["Wood","Pine Wood","Maple Wood","Stone","Copper Ore","Iron Ore","Gold Ore"] },
+];
+function renderMuseum(){
+  const disc = state.discovered || {};
+  let total=0, found=0, body="";
+  for(const sec of MUSEUM){
+    const items = sec.items();
+    let cells = "";
+    for(const it of items){
+      total++;
+      if(disc[it]){ found++;
+        cells += `<div class="museItem has" data-icon="item_${it}" title="${escapeHtml(EXAMINE[it]||it)}"><canvas></canvas><span>${it}</span></div>`;
+      } else {
+        cells += `<div class="museItem locked" title="Not yet discovered"><span class="q">?</span><span>· · ·</span></div>`;
+      }
+    }
+    body += `<div class="museSec">${sec.name}</div><div class="museGrid">${cells}</div>`;
+  }
+  return `<details class="museum"><summary>🗃 The Collection — ${found}/${total} discovered</summary>${body}</details>`;
+}
 function renderJournal(){
   const b = $("questPanel").querySelector(".body");
   let html = "";
@@ -310,8 +340,10 @@ function renderJournal(){
   if(state.questIdx >= QUESTS.length) html += `<div style="text-align:center;color:var(--gold-hi);">✦ Every task complete. The valley is yours. ✦</div>`;
   html += renderPages();
   html += renderAlmanac();
+  html += renderMuseum();
   html += `<details class="howto"><summary>❔ How to Play</summary><div class="howtoBody">${escapeHtml(HOWTO_TEXT)}</div></details>`;
   b.innerHTML = html;
+  hydrateIcons(b);   // draw the Collection's discovered-item icons
 }
 
 // ---- Grandpa's torn pages: found by living, re-readable forever ----

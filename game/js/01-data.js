@@ -8,13 +8,16 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "2.4.0", code: 24, codename: "With Feeling", date: "2026-07-11" };
+const VERSION = { name: "2.5.0", code: 25, codename: "The Collection", date: "2026-07-11" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"2.5.0", code:25, date:"2026-07-11", name:"The Collection", notes:[
+    { t:"new",   s:"The Journal now keeps a Collection — a museum of everything you've ever found, filling in as you discover crops, fish, gems, dishes and more." },
+  ]},
   { v:"2.4.0", code:24, date:"2026-07-11", name:"With Feeling", notes:[
     { t:"polish",s:"Your gold now counts up (and down) with a little pulse when it changes, instead of silently blinking to a new number." },
     { t:"polish",s:"Items pop off with a satisfying little flourish when you collect them." },

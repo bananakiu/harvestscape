@@ -170,6 +170,11 @@ function migrateSave(s){
   // BORN in the NPX era. Any pre-existing save is mid-journey — mark it done so nothing fires.
   if(s.flags.npxGame === undefined){ s.flags.npxGame = false; s.flags.arrivalSeen = true; }
   if(!s.market) s.market = {};                 // Tom's demand arrived in v2.0
+  if(!s.discovered){                            // the Collection arrived in v2.5 — seed it from what a save already has
+    s.discovered = {};
+    for(const it in (s.inv||{})) s.discovered[it] = true;
+    for(const l of LEGENDS) if(s.flags["caught_"+l.id]) s.discovered[l.name] = true;
+  }
   if(!WEATHERS[s.weather]) s.weather = "clear"; // old saves may hold a weather we no longer have
   // courtship was Maya-only before v1.4
   if(s.flags.mayaConfided) s.flags.confided_maya = true;
