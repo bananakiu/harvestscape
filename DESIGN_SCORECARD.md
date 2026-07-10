@@ -183,3 +183,40 @@ design thinking behind v2 — diagnose the dominant strategy, fix incentives bef
 adding content, cut features that re-introduce chores — is exactly what the
 principles doc prescribes. The remaining work is a numbers pass the design already
 implies, plus the presentation debts that predate both audits.*
+
+---
+
+## Progress since this audit (v2.1 → v2.6.1, 2026-07-11)
+
+Every one of the six ranked priorities above has now shipped, plus the owner's playtest
+verdict and the two-audits-old presentation debts. Map (see `CHANGELOG.md` for detail):
+
+1. **Tom's Demand** → **v2.1** — overnight halving, floor 0.35, value-scaled allowance, blended sell-all. ✅
+2. **Pay out the four curves** → **partial**: next-unlock shown on level-up + skills panel (v2.1);
+   **Cooking level-gated 1→40** and **one NPC line per mastery tier** (v2.6). *Remaining:* the
+   Farming/Mining/Woodcutting *content* deserts between mastery tiers (perks fill them; no new gated items).
+3. **Bank mine depth** → **v2.1** — checkpoint every 5 floors, deeper ore table. ✅
+4. **Audio pass** → **v2.1** (rain/storm ducking, ±10% tool detune, `door` sfx) + **v2.4** (bespoke legend fanfare). ✅
+5. **Weather board + first sapling** → **v2.1** (Pip gifts the first sapling) + **v2.5.1** (event pill
+   de-nagged to day/eve, warm nudge moved to the sleep card). ✅
+6. **Crown the Hunt** → **v2.1** (5/5 → Bram's Oilskin keepsake) + **v2.4** (bespoke fanfare, apex-pop,
+   tween system wired; red vignette retired earlier). ✅
+
+**Beyond the audit, also shipped this session:**
+- **Examine text** (the "#1 free whimsy channel, two audits running") — press Q/X, 129 lines (**v2.3**).
+- **The Collection** — a discovery museum, the completionism the Psychology dimension asked for (**v2.5**).
+- **New Player Experience** — the owner's first-playtest #1 (prologue, mission letter, Maya arrival,
+  act-aware journal, contextual hints); see `DEVLOG.md` / `NEW_PLAYER_EXPERIENCE.md` (**v2.2**).
+- **Cozy-contract UI polish** — non-red low-energy bar, de-nagged calendar cue, pickup totals, touch
+  examine (**v2.5.1**). **Regression review** of the session → 4 confirmed bugs fixed (**v2.6.1**).
+
+**New top-of-backlog (recommended for the next session):**
+1. **Farming/Mining/Woodcutting content between tiers** — the last of the "deserts": a new gated
+   crop/tree/ore or a small mid-level unlock so those curves pay content, not just perks.
+2. **Artisan machines** — a keg/preserves-jar that turns a crop into a higher-value good over a day
+   (the Economy's "still no artisan machines" gap; interlocks with farming + Tom's variety demand).
+3. **A vanity / cosmetic gold sink** — late-game coin still has few homes past Rowan's projects.
+4. **Sheep + Wool** — restore Wool to the Collection with a real source (a sheep in the barn), which
+   v2.6.1 removed as unobtainable.
+5. **Mine-as-expedition depth** — a reason to go deep (a deep-only find / gentle goal), strictly within
+   the no-combat cozy contract.
