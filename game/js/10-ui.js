@@ -513,14 +513,44 @@ function renderSettings(){
     `<div class="setRow"><span>Sound FX</span><input type="range" id="setSfx" min="0" max="100" value="${Math.round(SND.sfxVol*100)}"><span class="val">${Math.round(SND.sfxVol*100)}</span></div>` +
     `<div class="setRow"><span>Audio</span><button class="dangerBtn" id="setMute" style="background:#3d5a2e;border-color:#6a8f52;color:#eaffd8;">${SND.enabled?"On":"Off"}</button></div>` +
     `<div class="setRow"><span>Save</span><span style="color:var(--ink-soft);font-size:.85em;">auto-saves each night</span></div>` +
+    `<div class="setRow"><span>Version</span><button class="dangerBtn" id="setNews" style="background:#3a3550;border-color:#6a648f;color:#e6e0ff;">v${VERSION.name} — What's New</button></div>` +
     `<div class="setRow"><span>Danger zone</span><button class="dangerBtn" id="setWipe">Delete Save &amp; Restart</button></div>` +
-    `<div style="margin-top:.5em;color:var(--ink-soft);font-size:.82em;text-align:center;">Harvestscape — a tiny cozy world, made in code.</div>`;
+    `<div style="margin-top:.5em;color:var(--ink-soft);font-size:.82em;text-align:center;">Harvestscape v${VERSION.name} — a tiny cozy world, made in code.</div>`;
   const mus = $("setMusic"), sfx = $("setSfx");
   mus.oninput = () => { setMusicVol(mus.value/100); mus.nextElementSibling.textContent = mus.value; };
   sfx.oninput = () => { setSfxVol(sfx.value/100); sfx.nextElementSibling.textContent = sfx.value; };
   sfx.onchange = () => playSfx("select");
   $("setMute").onclick = () => { setMusicEnabled(!SND.enabled); renderSettings(); };
+  $("setNews").onclick = () => openPanel("newsPanel", renderNews);
   $("setWipe").onclick = () => { if(confirm("Delete your save and restart from the title?")){ wipeSave(); location.reload(); } };
+}
+
+// The "What's New" / version-history panel — the player-facing mirror of CHANGELOG.md.
+function renderNews(){
+  const b = $("newsPanel").querySelector(".body");
+  const TAG = { new:["NEW","#8fd06a"], change:["CHANGED","#e0b04a"], balance:["BALANCE","#6ab0d0"],
+                polish:["POLISH","#c090d0"], fix:["FIX","#d08a6a"] };
+  let html = `<div class="newsHead">Harvestscape v${VERSION.name}${VERSION.codename ? ` · “${escapeHtml(VERSION.codename)}”` : ""}</div>`;
+  for(const rel of CHANGELOG){
+    html += `<div class="newsRel"><span class="newsVer">v${rel.v}</span>` +
+            `<span class="newsName">${escapeHtml(rel.name || "")}</span>` +
+            `<span class="newsDate">${escapeHtml(rel.date || "")}</span></div>`;
+    html += `<ul class="newsList">`;
+    for(const n of (rel.notes || [])){
+      const [lbl, col] = TAG[n.t] || [String(n.t).toUpperCase(), "#b9a98a"];
+      html += `<li><span class="newsTag" style="background:${col};">${lbl}</span><span>${escapeHtml(n.s)}</span></li>`;
+    }
+    html += `</ul>`;
+  }
+  b.innerHTML = html;
+  b.scrollTop = 0;
+}
+// Show What's New automatically the first time a player opens a build newer than they've seen.
+function maybeShowWhatsNew(){
+  let seen = 0;
+  try { seen = +(localStorage.getItem("hs_seen_version") || 0); } catch(e){}
+  if(seen && seen < VERSION.code){ openPanel("newsPanel", renderNews); }
+  try { localStorage.setItem("hs_seen_version", VERSION.code); } catch(e){}
 }
 
 // ---- fade / sleep ----

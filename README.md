@@ -28,6 +28,7 @@ Or just open `game/index.html` in any modern browser.
 - **Juice** — particles and item-pops for every action, hitstop on strikes, floating XP/gold text, screen shake, an animated sun/moon clock, and a typewriter dialogue system with pixel portraits.
 - **Generated audio** — an adaptive WebAudio soundtrack with distinct day, night, cozy-interior, mine and beach themes, plus a full library of synthesized sound effects.
 - **Save/continue** — auto-saves each night to `localStorage`.
+- **Version history in-game** — a **What's New** panel (click the version on the title screen, or open it from Settings) shows the changelog, and pops up once automatically after you update to a newer build.
 
 ## Controls
 
@@ -45,6 +46,8 @@ Sell and upgrade at **Tom's stall**; **sleep at your cottage door** to pass the 
 
 ## Layout
 
-- `game/` — the finished game (`index.html`, `css/`, `js/` split into 13 ordered modules).
+- `game/` — the finished game (`index.html`, `css/`, `js/` split into 15 ordered modules, `00-core` → `14-story` → `12-game`).
+- `CHANGELOG.md` — the single internal audit trail of every change and the reasoning behind it (mirrored in-game by the `CHANGELOG` array in `game/js/01-data.js`).
+- `AGENTS.md` — instructions for any AI agent working in this repo (canonical; `CLAUDE.md`, `GEMINI.md`, etc. are symlinks to it).
 - `GAME_SCOPE.md` — the original design vision (the larger Godot ambition this browser build is the vertical slice of).
 - `prototype/` — the original zero-dependency proof-of-concept.

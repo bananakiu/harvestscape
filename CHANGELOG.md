@@ -14,13 +14,31 @@
 > - Newest first. Group each batch under a dated heading; note the commit once known.
 > - Prefer *why over what*. The diff already records what; this records intent.
 > - `Added` / `Changed` / `Fixed` / `Design` / `Balance` sub-headings as useful.
-> - Update this file in the *same* change as the code, then commit and push (see `CLAUDE.md`).
+> - Update this file in the *same* change as the code, then commit and push (see `AGENTS.md`).
+> - **Versioning.** Every release has a semver `name` and a monotonic integer `code` (bump the
+>   code each release), defined in `VERSION` (`game/js/01-data.js`). Mirror the release into the
+>   in-game `CHANGELOG` array (same file, player-readable) and tag the commit `git tag v<name>`.
+>   Keep `VERSION`, the in-game `CHANGELOG` array, and this file in lockstep.
 
 ---
 
-## [Unreleased] — Free commit/push standing approval · 2026-07-11
+## v2.1.0 — "Clear Skies" · 2026-07-11 · tag `v2.1.0`
 
-### Changed
+Version code **21**. A readability & release-infrastructure release — the night and mine now
+read clearly, in-game text is crisp, and the project gained real version codes plus an in-game
+changelog. The sub-sections below fold in work that was drafted separately.
+
+### Added — versioning & in-game change log
+- **Version codes + an in-game "What's New" panel.** Single source of truth
+  `VERSION = { name:"2.1.0", code:21, codename:"Clear Skies", date }` in `game/js/01-data.js`,
+  shown on the title footer (clickable) and in Settings. A `CHANGELOG` array — the
+  player-readable mirror of this file — renders in a new `#newsPanel`, with a one-time
+  auto-popup when a returning player opens a build newer than they last saw (`hs_seen_version`
+  in localStorage, gated by `VERSION.code`). **Why:** players should see what changed, and
+  every push now carries a version code + git tag, anchoring this audit trail to concrete
+  releases. Keep `VERSION`, the in-game `CHANGELOG` array, and this file in lockstep.
+
+### Project & agent infrastructure
 - **Loosened the commit/push rule to standing pre-approval.** The old rule 4 hedged — "only
   commit/push when it won't surprise the user, or when they've asked you to" — which made
   agents pile up uncommitted work waiting for a go-ahead. The owner has now given **standing
@@ -31,9 +49,6 @@
   entry ships in the same commit as the code. Updated in `AGENTS.md` so every agent inherits
   the new default.
 
-## [Unreleased] — Model-agnostic agent instructions · 2026-07-11
-
-### Changed
 - **Made the AI-agent instruction setup tool-agnostic.** Previously the only guide was
   `CLAUDE.md`, which meant any non-Claude agent (Gemini CLI, Cursor, Copilot, Cline,
   Windsurf, Codex) would either get *no* project instructions or need a divergent copy —
@@ -48,14 +63,11 @@
   a Windows/`core.symlinks` caveat, a "keep the README current" rule, and a skills
   placeholder for when `.claude/skills/` is added.
 
----
-
-## [Unreleased] — Lighting & readability polish · 2026-07-11
+### Changed — lighting & readability
 
 Player-facing complaints about visibility, resolved with the Stardew philosophy that a
 cozy night should be *readably dim*, not black-with-a-spotlight.
 
-### Changed
 - **Night lighting overhaul (glare → clarity).** The surface at night was near-black
   (ambient `#11163a`, ~9% brightness) with the player emitting a big cold-blue additive
   "searchlight" (`200,215,255`, r52) that bloomed into glare over the void. Three fixes,

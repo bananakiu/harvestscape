@@ -36,6 +36,14 @@ different engine or direction — with full knowledge of *why* each decision was
      over hoarding uncommitted changes.
    - The one hard requirement stays: the `CHANGELOG.md` entry ships **in the same commit** as
      the code it describes.
+5. **Version every release.** The build's version lives in `VERSION` (`game/js/01-data.js`):
+   a semver `name` and a monotonic integer `code`. When you cut a release, **bump both**,
+   add an entry to the in-game `CHANGELOG` array (same file — the player-readable mirror that
+   the "What's New" panel renders), retitle the matching `CHANGELOG.md` section from
+   `[Unreleased]` to the version + date, and **tag the commit** `git tag v<name>` before
+   pushing (`git push --tags`). Version code + tag are the "relevant information" every push
+   must carry so the audit trail is anchored to concrete releases. Keep `VERSION`, the in-game
+   `CHANGELOG` array, and `CHANGELOG.md` in lockstep — they must never disagree.
 
 Treat the changelog as non-optional deliverable output, the same as the code itself.
 

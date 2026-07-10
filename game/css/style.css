@@ -365,6 +365,24 @@ body{
 .mbtn.dis{ opacity:.45; pointer-events:none; filter:grayscale(.6); }
 #titleFoot{ position:absolute; bottom:4%; font-size:clamp(10px,1.8vw,16px); color:#d8c4a0; opacity:.8; text-shadow:0 1px 3px #000; }
 #clickHint{ color:var(--gold-hi); animation:blink 1.4s steps(2) infinite; }
+#verTag{ font:inherit; color:var(--gold-hi); background:none; border:none; padding:0 .1em; cursor:pointer;
+  border-bottom:1px dotted var(--gold-d); text-shadow:inherit; }
+#verTag:hover{ color:#fff2c4; }
+
+/* ---- What's New / version history panel ---- */
+#newsPanel{ z-index:22; }   /* also opens over the title screen (z-index 20), so it must sit above it */
+.newsHead{ text-align:center; color:var(--gold-hi); font-size:1.05em; margin:.1em 0 .7em; letter-spacing:.02em; }
+.newsRel{ display:flex; align-items:baseline; gap:.5em; margin:.9em 0 .35em; padding-bottom:.2em;
+  border-bottom:.1em solid var(--wood-hi); }
+.newsRel:first-of-type{ margin-top:.2em; }
+.newsVer{ color:var(--gold); font-size:1.02em; font-weight:bold; }
+.newsName{ color:var(--parch); flex:1; }
+.newsDate{ color:var(--ink-soft); font-size:.8em; }
+.newsList{ list-style:none; margin:0 0 .4em; padding:0; }
+.newsList li{ display:flex; align-items:flex-start; gap:.5em; padding:.22em 0; color:var(--parch);
+  font-size:.92em; line-height:1.35; }
+.newsTag{ flex:none; min-width:5.2em; text-align:center; color:#241812; font-size:.68em; font-weight:bold;
+  letter-spacing:.03em; padding:.15em .35em; border-radius:.25em; margin-top:.12em; }
 
 /* intro letter */
 #intro{ background:rgba(8,6,4,.55); backdrop-filter:blur(2px); }

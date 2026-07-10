@@ -113,6 +113,9 @@ function initTitle(){
     if(hasSave() && !confirm("Start a new game? This will overwrite your current save.")) return;
     startNewGame(); };
   $("btnHowto").onclick = () => { firstGesture(); showHowto(); };
+  const ver = $("verTag");
+  if(ver){ ver.textContent = "v" + VERSION.name;
+    ver.onclick = (e) => { e.stopPropagation(); firstGesture(); openPanel("newsPanel", renderNews); }; }
   updateMuteBtn();
   $("btnMute").onclick = () => { firstGesture(); setMusicEnabled(!SND.enabled); updateMuteBtn(); };
   setMusicMode("title");
@@ -132,6 +135,7 @@ function updateMuteBtn(){ $("btnMute").textContent = "♪ Music: " + (SND.enable
 function startNewGame(){
   state = freshState();
   state.farm = newMap("farm");
+  try { localStorage.setItem("hs_seen_version", VERSION.code); } catch(e){}  // new players start current
   startIntro();
 }
 function continueGame(){
@@ -140,6 +144,7 @@ function continueGame(){
   state = s; migrateSave(state);
   beginPlay();
   toast("Welcome back to Willowbrook!", "#8fd06a");
+  maybeShowWhatsNew();   // surface the changelog once after an update
 }
 function migrateSave(s){
   const f = freshState();

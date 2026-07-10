@@ -4,6 +4,42 @@
    Colour palettes here drive the procedural pixel art.
    ============================================================ */
 
+// ---- VERSION ----
+// Single source of truth for the build. `name` is the semantic version shown to players;
+// `code` is a monotonic integer (bump every release) used to detect "you've updated" and
+// to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
+const VERSION = { name: "2.1.0", code: 21, codename: "Clear Skies", date: "2026-07-11" };
+
+// ---- IN-GAME CHANGE LOG ----
+// The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
+// design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
+// bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
+const CHANGELOG = [
+  { v:"2.1.0", code:21, date:"2026-07-11", name:"Clear Skies", notes:[
+    { t:"new",   s:"Version history — read this changelog any time from the title screen or Settings." },
+    { t:"change",s:"Night on the farm now reads as a clear moonlit valley instead of black-with-a-glare; your light is a warm lantern, not a cold searchlight." },
+    { t:"change",s:"The mine is brighter and readable — you can see the ore to swing at, while the corners stay dark and atmospheric." },
+    { t:"new",   s:"Collecting items pops a fading notice in the corner, and item names no longer overlap the XP text." },
+    { t:"polish",s:"All in-game text (floaters, prompts, name tags) is now crisp instead of pixel-blurred." },
+    { t:"balance",s:"Tom's demand retuned, mine depth banks every 5 floors, skills preview their next unlock, and the Hunt has a 5/5 capstone." },
+  ]},
+  { v:"2.0.0", code:20, date:"2026-07-10", name:"A Day Worth Living", notes:[
+    { t:"new",   s:"Tom's Demand: sell too much of one thing in a day and its price slides — variety pays." },
+    { t:"new",   s:"The Hunt: five legendary fish that rise only when water, hour, weather and season all line up." },
+    { t:"new",   s:"Orchards & apiaries — plant fruit trees and set beehives for slow, permanent income." },
+    { t:"new",   s:"A weather forecast and a daily offering give you a reason to plan tomorrow and show up today." },
+    { t:"change",s:"Bigger hoe tiers, honest winter snow, and a mine that deepens into a real descent." },
+  ]},
+  { v:"1.5.0", code:15, date:"2026-07-10", name:"The Valley Fills In", notes:[
+    { t:"new",   s:"Grandpa's nine journal pages, a village noticeboard, and Rowan's restoration projects." },
+    { t:"new",   s:"Skill mastery milestones at 25 / 50 / 75 / 99." },
+    { t:"change",s:"Watering-can tiers and an economy & season balance pass." },
+  ]},
+  { v:"1.0.0", code:10, date:"2026-07-09", name:"Willowbrook", notes:[
+    { t:"new",   s:"The first cozy build: farming, fishing, mining, foraging, skills 1–99, townsfolk, quests, seasons and weather — all procedural, no combat." },
+  ]},
+];
+
 const SEASONS = ["Spring", "Summer", "Fall", "Winter"];
 const SEASON_DAYS = 28;
 const YEAR_DAYS = SEASON_DAYS * 4;
