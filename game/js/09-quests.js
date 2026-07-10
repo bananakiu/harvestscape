@@ -10,6 +10,8 @@ function objDone(o){
   if(o.stat)       return (state.stats[o.stat]||0) >= o.goal;
   if(o.level)      return skillLvl(o.level.skill) >= o.level.n;
   if(o.heart)      return heartsOf("maya") >= o.heart;
+  if(o.heartOf)    return heartsOf(o.heartOf.id) >= o.heartOf.n;
+  if(o.item)       return (state.inv[o.item]||0) >= o.n;
   if(o.totalLevel) return totalLevel() >= o.totalLevel;
   if(o.gold)       return state.gold >= o.gold;
   if(o.talk)       return !!state.rel[o.talk];
@@ -21,6 +23,8 @@ function objProgress(o){
   if(o.stat)       return [Math.min(state.stats[o.stat]||0, o.goal), o.goal];
   if(o.level)      return [Math.min(skillLvl(o.level.skill), o.level.n), o.level.n];
   if(o.heart)      return [Math.min(heartsOf("maya"), o.heart), o.heart];
+  if(o.heartOf)    return [Math.min(heartsOf(o.heartOf.id), o.heartOf.n), o.heartOf.n];
+  if(o.item)       return [Math.min(state.inv[o.item]||0, o.n), o.n];
   if(o.totalLevel) return [Math.min(totalLevel(), o.totalLevel), o.totalLevel];
   if(o.gold)       return [Math.min(state.gold, o.gold), o.gold];
   if(o.talk)       return [state.rel[o.talk]?1:0, 1];
@@ -65,12 +69,18 @@ function advanceQuest(q){
 function tryTurnIn(npcId){
   const q = QUESTS[state.questIdx];
   if(!q || !state.questReady || QUEST_GIVER_NPC[q.giver] !== npcId) return false;
+  // questIdx advances now, but the turn-in cutscene that sets the NEXT quest's prerequisite flag
+  // doesn't start for another ~250ms. A save landing in that gap (tab close) would strand the
+  // chain on an unsatisfiable objective — so refuse to persist until the scene is actually running.
+  state.flags.turnInPending = true;
   advanceQuest(q);
   const def = NPCDEF[npcId];
-  if(q.turnIn && q.turnIn.cutscene){ setTimeout(() => startCutscene(q.turnIn.cutscene), 250); }
-  else {
+  if(q.turnIn && q.turnIn.cutscene){
+    setTimeout(() => { state.flags.turnInPending = false; startCutscene(q.turnIn.cutscene); }, 250);
+  } else {
     const line = (q.turnIn && q.turnIn.line) || (q.reward && q.reward.msg) || "Well done — thank you.";
-    setTimeout(() => showDialog(def.name + "   " + heartStr(heartsOf(npcId)), line, def.portrait), 200);
+    setTimeout(() => { state.flags.turnInPending = false;
+      showDialog(def.name + "   " + heartStr(heartsOf(npcId)), line, def.portrait); }, 200);
   }
   return true;
 }
@@ -84,6 +94,7 @@ function completeQuest(q){
 
   if(q.finale){
     banner("✦ The Valley is Ready ✦", "Night falls on the coast…");
+    paused = true; state.flags.festivalPending = true;   // lock control through the ~2s handoff
     setTimeout(startFestival, 1100);
   } else {
     banner("✔ " + q.title, r.gold ? ("Reward: " + r.gold + "g" + (r.msg?" · "+r.msg:"")) : (r.msg||"Nicely done."));

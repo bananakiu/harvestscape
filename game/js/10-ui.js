@@ -3,7 +3,9 @@
    10-ui.js — HUD, panels, dialogue, input wiring.
    ============================================================ */
 
-const IS_TOUCH = matchMedia("(pointer:coarse)").matches || "ontouchstart" in window;
+// ?touch=1 forces the on-screen controls (handy for testing, and for hybrid laptops)
+const IS_TOUCH = matchMedia("(pointer:coarse)").matches || "ontouchstart" in window
+              || /[?&]touch=1/.test(location.search);
 
 // ---- open-panel tracking ----
 const openPanels = new Set();
@@ -60,7 +62,7 @@ function refreshHUD(){
   if(!state) return;
   const seas = SEASONS[Math.floor((state.day-1)/SEASON_DAYS)%4];
   const d = ((state.day-1)%SEASON_DAYS)+1;
-  $("dateLine").textContent = seas + " · Day " + d;
+  $("dateLine").textContent = seas + " · Day " + d + "  " + weatherInfo(state.weather).icon;
   let h = Math.floor(state.time/60)%24, m = Math.floor(state.time%60/10)*10;
   const ap = h>=12 ? "pm":"am"; let h12 = h%12; if(h12===0) h12=12;
   $("timeLine").textContent = h12 + ":" + String(m).padStart(2,"0") + " " + ap;
@@ -68,7 +70,21 @@ function refreshHUD(){
   const e = state.energy, bar = $("energyBar");
   bar.style.width = e + "%";
   bar.style.background = e>50 ? "linear-gradient(#b6f27a,#5aa733)" : e>22 ? "linear-gradient(#ffd76a,#e0a020)" : "linear-gradient(#ff8a7a,#c0402a)";
+  refreshEventPill();
   drawClockDial();
+}
+
+// "Luau in 3 days" — only shows when something is close, so it isn't permanent clutter
+function refreshEventPill(){
+  const pill = $("eventPill"); if(!pill) return;
+  const ev = nextEvent();
+  if(!ev || ev.daysAway > 7){ pill.classList.add("hidden"); return; }
+  const icon = ev.kind === "birthday" ? "🎂" : "✦";
+  pill.textContent = ev.daysAway === 0 ? `${icon} ${ev.name} — today!`
+                   : ev.daysAway === 1 ? `${icon} ${ev.name} — tomorrow`
+                   : `${icon} ${ev.name} in ${ev.daysAway} days`;
+  pill.classList.remove("hidden", "soon", "today");
+  pill.classList.add(ev.daysAway === 0 ? "today" : "soon");
 }
 function drawClockDial(){
   const c = $("clockDial"); if(!c) return; const g = c.getContext("2d");
@@ -103,9 +119,12 @@ function refreshHotbar(){
     d.className = "slot" + (i===slotSel ? " sel" : "");
     let iconName, name, tierIdx = null, count = null;
     if(slot.tool === "Seeds"){
-      const c = CROPS[state.seedSel];
-      iconName = "item_" + c.name + " Seeds"; name = c.name + " Seeds";
-      count = state.inv[c.name+" Seeds"] || 0;
+      normalizeSeedSel();
+      name = plantableName(state.seedSel);
+      iconName = plantableIcon(state.seedSel);
+      count = isHiveSel(state.seedSel) ? (state.inv["Beehive"]||0)
+            : isSapSel(state.seedSel)  ? (state.inv[FRUIT_TREES[state.seedSel.slice(4)].name]||0)
+            : (state.inv[name] || 0);
     } else {
       iconName = "tool_" + TOOL_ICON[slot.tool];
       tierIdx = state.tools[slot.tool];
@@ -125,15 +144,30 @@ function refreshHotbar(){
 function refreshQuestTracker(){
   const box = $("questTracker"); if(!box) return;
   const q = trackerData();
-  if(!q){ box.innerHTML = ""; return; }
-  let html = `<div class="qt-card"><div class="qt-title">✒ ${q.title}</div>`;
-  for(const o of q.objs){
-    html += `<div class="qt-obj ${o.done?"done":""}">${o.done?'<span class="chk">✔</span> ':"• "}${o.text}` +
-            (o.max>1 && !o.done ? ` (${o.cur}/${o.max})` : "") + `</div>`;
+  let html = "";
+  if(q){
+    html += `<div class="qt-card"><div class="qt-title">✒ ${q.title}</div>`;
+    for(const o of q.objs){
+      html += `<div class="qt-obj ${o.done?"done":""}">${o.done?'<span class="chk">✔</span> ':"• "}${o.text}` +
+              (o.max>1 && !o.done ? ` (${o.cur}/${o.max})` : "") + `</div>`;
+    }
+    if(q.reportTo) html += `<div class="qt-obj" style="color:var(--gold-hi)">▸ Report to ${q.reportTo}</div>`;
+    html += `</div>`;
   }
-  if(q.reportTo) html += `<div class="qt-obj" style="color:var(--gold-hi)">▸ Report to ${q.reportTo}</div>`;
-  html += `</div>`;
+  html += boardTrackerHtml();
   box.innerHTML = html;
+}
+// a faint second card for today's noticeboard request — the small, skippable goal of the day
+function boardTrackerHtml(){
+  if(gameMode !== "play" || !state || !state.flags) return "";
+  if(requestFilled()) return "";
+  const r = todaysRequest(); if(!r) return "";
+  const have = state.inv[r.item] || 0, ready = have >= r.qty;
+  return `<div class="qt-card" style="opacity:.82"><div class="qt-title" style="color:#cbb98f">📌 Noticeboard</div>` +
+    `<div class="qt-obj ${ready?"done":""}">${ready?'<span class="chk">✔</span> ':"• "}${r.qty} × ${r.item} — ${NPCDEF[r.who].name}` +
+    (ready ? "" : ` (${have}/${r.qty})`) + `</div>` +
+    (ready ? `<div class="qt-obj" style="color:var(--gold-hi)">▸ Take them to ${NPCDEF[r.who].name}</div>` : "") +
+    `</div>`;
 }
 
 // ---- panels ----
@@ -158,9 +192,16 @@ function renderSkills(){
     html += `<div class="xpRow"><span class="sname"><span class="lvl">${lvl}</span> ${s}</span>` +
       `<span class="xpbarWrap"><span class="xpbar" style="width:${pct}%"></span></span>` +
       `<span class="xpnum">${xp}/${lvl>=99?"MAX":next}</span></div>`;
+    // what mastery you already have, and the one you're working toward
+    const earned = [25,50,75,99].filter(n => lvl >= n);
+    if(earned.length) html += `<div style="margin:-.15em 0 .1em .2em;font-size:.78em;color:var(--gold-hi);">` +
+      earned.map(n => "★ " + MASTERY[s][n].split(" — ")[0]).join(" · ") + `</div>`;
+    const nx = nextMastery(s);
+    if(nx) html += `<div style="margin:-.05em 0 .35em .2em;font-size:.76em;color:var(--ink-soft);">` +
+      `Lv ${nx.at}: ${nx.text}</div>`;
   }
   html += `<div style="margin-top:.6em;text-align:center;color:var(--gold-hi);">Total Level ${total} / ${99*5}</div>`;
-  html += `<div style="margin-top:.2em;text-align:center;color:var(--ink-soft);font-size:.82em;">Real RuneScape XP curve — 92 is halfway to 99.</div>`;
+  html += `<div style="margin-top:.2em;text-align:center;color:var(--ink-soft);font-size:.82em;">Real RuneScape XP curve — 92 is halfway to 99. Mastery at 25 · 50 · 75 · 99.</div>`;
   b.innerHTML = html;
 }
 function renderInv(){
@@ -195,6 +236,105 @@ function renderJournal(){
     html += `</div>`;
   });
   if(state.questIdx >= QUESTS.length) html += `<div style="text-align:center;color:var(--gold-hi);">✦ Every task complete. The valley is yours. ✦</div>`;
+  html += renderPages();
+  html += renderAlmanac();
+  b.innerHTML = html;
+}
+
+// ---- Grandpa's torn pages: found by living, re-readable forever ----
+function renderPages(){
+  const n = pagesFound();
+  let h = `<div class="jq"><h3 style="color:#e8d9a8">📜 Grandpa's Almanac — ${n}/9 pages</h3>`;
+  h += `<div class="desc" style="margin-bottom:.3em;">Torn pages, tucked where he left them. You find them by doing what he did.</div>`;
+  for(const p of JOURNAL_PAGES){
+    const got = !!state.flags["page_"+p.n];
+    if(p.n === 9 && !got){ h += `<div class="obj" style="color:var(--ink-soft)">· · ·</div>`; continue; }
+    h += got
+      ? `<div class="obj" style="color:var(--parch);cursor:pointer" onclick="rereadPage(${p.n})">✔ ${p.title} <span style="color:var(--ink-soft);font-size:.8em;">— read again</span></div>`
+      : `<div class="obj" style="color:var(--ink-soft)">· · ·</div>`;
+  }
+  h += `</div>`;
+  return h;
+}
+function rereadPage(n){
+  const p = PAGE_BY_N[n]; if(!p || !state.flags["page_"+n]) return;
+  closeAllPanels();
+  openLetter(n===9 ? "✒ Slipped under the cottage door" : "✒ A torn page — " + p.title, p.text);
+}
+
+// ---- the almanac: what's coming, and what you've already seen this year ----
+function renderAlmanac(){
+  const today = yearSlot(curSeason(), dayOfSeason());
+  const row = (icon, name, season, day, done, note) => {
+    const slot = yearSlot(season, day);
+    const isToday = slot === today;
+    const col = done ? "var(--ink-soft)" : isToday ? "var(--gold-hi)" : "var(--parch)";
+    return `<div class="obj" style="color:${col}">${done?"✔":icon} ${name}` +
+      `<span style="color:var(--ink-soft);font-size:.85em;"> — ${season} ${day}${isToday?" · today!":""}</span>` +
+      (note?`<div style="color:var(--ink-soft);font-size:.8em;margin-left:1.1em;">${note}</div>`:"") + `</div>`;
+  };
+  // ---- the sky, and what it's offering ----
+  const wNow = weatherInfo(state.weather), wNext = weatherInfo(state.forecast || "clear");
+  let h = `<div class="jq"><h3 style="color:var(--gold-hi)">🌦 The Sky</h3>`;
+  h += `<div class="obj" style="color:${wNow.tone}">${wNow.icon} Today — ${wNow.name}` +
+       `<div style="color:var(--ink-soft);font-size:.82em;margin-left:1.1em;">${wNow.offer}</div></div>`;
+  h += `<div class="obj" style="color:${wNext.tone}">${wNext.icon} Tomorrow — ${wNext.name}` +
+       `<div style="color:var(--ink-soft);font-size:.82em;margin-left:1.1em;">${wNext.offer}</div></div>`;
+  h += `<div class="desc" style="margin-top:.35em;font-size:.85em;">Rain waters your fields. <b>Snow does not</b> — the ground is frozen, and a frostbloom still wants the can.</div>`;
+  h += `</div>`;
+
+  h += `<div class="jq"><h3 style="color:var(--gold-hi)">📅 Almanac — Year ${YEAR()}</h3>`;
+  h += `<div class="desc" style="margin-bottom:.3em;">The valley keeps its own calendar. Be on the coast for a festival; bring a gift on a birthday.</div>`;
+  for(const f of FESTIVALS) h += row("✦", f.name, f.season, f.day, festivalDoneThisYear(f), f.blurb);
+  if(state.flags.anniversaryDay != null){
+    const s = SEASONS[Math.floor((state.flags.anniversaryDay-1)/SEASON_DAYS)];
+    const d = ((state.flags.anniversaryDay-1) % SEASON_DAYS) + 1;
+    h += row("🏮", "The Lantern Festival", s, d, !!state.flags["did_anniversary_"+YEAR()], "The night the valley woke. Every year, on the coast.");
+  }
+  h += `</div><div class="jq"><h3 style="color:var(--rose)">🎂 Birthdays</h3>`;
+  for(const id in BIRTHDAYS){ const b = BIRTHDAYS[id];
+    h += row("🎂", NPCDEF[id].name, b.season, b.day, !!state.flags["bday_"+id+"_"+YEAR()], null); }
+  h += `</div>`;
+
+  // ---- Bram's ledger of legends ----
+  h += `<div class="jq"><h3 style="color:var(--blue)">🎣 Bram's Ledger — ${legendsCaught()}/${LEGENDS.length} landed</h3>`;
+  h += `<div class="desc" style="margin-bottom:.3em;">Five fish that rise only when everything lines up. Bram tells you one for every heart.</div>`;
+  for(const l of LEGENDS){
+    const caught = !!state.flags["caught_"+l.id], known = !!state.flags["clue_"+l.id];
+    if(!known){ h += `<div class="obj" style="color:var(--ink-soft)">· · ·<span style="font-size:.82em;"> — Bram hasn't told you about this one yet</span></div>`; continue; }
+    h += `<div class="obj" style="color:${caught?"var(--gold-hi)":"var(--parch)"}">${caught?"✔":"○"} ${l.name}` +
+      `<div style="color:var(--ink-soft);font-size:.82em;margin-left:1.1em;">${legendConditions(l)}</div></div>`;
+  }
+  h += `</div>`;
+  return h;
+}
+
+// ---- Rowan's ledger: the valley's unfinished work ----
+function openProjects(){ openPanel("projPanel", renderProjects); }
+function renderProjects(){
+  const panel = $("projPanel"); if(panel.classList.contains("hidden")) return;
+  const b = panel.querySelector(".body");
+  let html = `<div class="desc" style="margin-bottom:.5em;color:var(--ink-soft);">` +
+    `“Coin is only stored work, child. Spend it and the valley remembers.” — Rowan</div>`;
+  for(const p of PROJECTS){
+    const done = projectDone(p.id), pending = projectPending(p.id);
+    const cost = Object.entries(p.items).map(([it,n]) =>
+      `<span style="color:${(state.inv[it]||0)>=n?"var(--parch)":"#c98a6a"}">${n}× ${it}</span>`).join(" · ");
+    const goldOk = state.gold >= p.gold;
+    // the .sub spans are inline in the shop; here each wants its own line
+    html += `<div class="row"><span class="lead"><span>` +
+      `<span style="display:block;color:${done?"var(--gold-hi)":"var(--parch)"}">${done?"✔ ":pending?"🔨 ":""}${p.name}</span>` +
+      `<span class="sub" style="display:block;margin:.1em 0;">${done ? p.done : pending ? "The work begins at dawn." : p.blurb}</span>` +
+      (done||pending ? "" : `<span class="sub" style="display:block;">${cost}</span>`) +
+      `</span></span>`;
+    html += done || pending
+      ? `<span><span class="price" style="color:var(--gold-hi)">${done?"built":"pending"}</span></span>`
+      : `<span><span class="price" style="color:${goldOk?"var(--gold-hi)":"#c98a6a"}">${p.gold}g</span> ` +
+        `<button class="buy" ${canFund(p)?"":"disabled"} onclick="fundProject('${p.id}')">fund</button></span>`;
+    html += `</div>`;
+  }
+  const left = PROJECTS.filter(p=>!projectDone(p.id)).length;
+  if(!left) html += `<div style="margin-top:.6em;text-align:center;color:var(--gold-hi);">✦ Every page of the ledger is struck through. ✦</div>`;
   b.innerHTML = html;
 }
 
@@ -214,8 +354,17 @@ function renderShop(){
     const sellables = Object.keys(state.inv).filter(i => ITEM_SELL[i]);
     if(!sellables.length) html += `<div class="locked">Nothing to sell yet — go harvest, chop, mine or fish!</div>`;
     sellables.forEach(i => {
-      html += `<div class="row"><span class="lead" data-icon="item_${i}"><canvas></canvas><span>${i} <span class="sub">×${state.inv[i]}</span></span></span>` +
-        `<span><span class="price">${ITEM_SELL[i]}g</span> <button onclick="sellItem('${jsq(i)}',1)">1</button> <button onclick="sellItem('${jsq(i)}',${state.inv[i]})">all</button></span></div>`;
+      // Tom's demand: show what the NEXT one fetches, and say so plainly when it has slipped
+      const now = nextUnitPrice(i), base = Math.round(baseUnitPrice(i)), lvl = demandLevel(i);
+      const dipped = now < base;
+      const note = dipped
+        ? `<span class="sub" style="color:#c98a6a">demand ${Math.round(lvl*100)}% · ${soldToday(i)} sold today</span>`
+        : `<span class="sub">×${state.inv[i]}</span>`;
+      const priceHtml = dipped
+        ? `<span class="price" style="color:#c98a6a">${now}g</span> <span class="sub" style="text-decoration:line-through;opacity:.55">${base}g</span>`
+        : `<span class="price">${now}g</span>`;
+      html += `<div class="row"><span class="lead" data-icon="item_${i}"><canvas></canvas><span>${i} ${note}</span></span>` +
+        `<span>${priceHtml} <button onclick="sellItem('${jsq(i)}',1)">1</button> <button onclick="sellItem('${jsq(i)}',${state.inv[i]})">all</button></span></div>`;
     });
   } else if(shopTab === "buy"){
     for(const id in CROPS){ const c = CROPS[id]; const ok = skillLvl("Farming") >= c.lvl;
@@ -228,16 +377,36 @@ function renderShop(){
     html += `<div class="row"><span class="lead" data-icon="item_Berry Bun"><canvas></canvas><span>Berry Bun <span class="sub">+34 energy</span></span></span><span><span class="price">30g</span> <button class="buy" ${state.gold>=30?"":"disabled"} onclick="buyFood('Berry Bun',30)">buy</button></span></div>`;
     html += `<div class="row"><span class="lead" data-icon="item_Field Salad"><canvas></canvas><span>Field Salad <span class="sub">+26 energy</span></span></span><span><span class="price">24g</span> <button class="buy" ${state.gold>=24?"":"disabled"} onclick="buyFood('Field Salad',24)">buy</button></span></div>`;
     html += `<div class="row"><span class="lead" data-icon="item_Milk"><canvas></canvas><span>Milk <span class="sub">fresh from the coast dairy · for cooking</span></span></span><span><span class="price">120g</span> <button class="buy" ${state.gold>=120?"":"disabled"} onclick="buyFood('Milk',120)">buy</button></span></div>`;
+    if(anyConfided() && !state.flags.married){
+      const hasBq = (state.inv["Bouquet"]||0)>0;
+      html += `<h2 style="font-size:1em;color:var(--rose);margin:.4em 0 .2em;">COURTSHIP</h2>`;
+      html += `<div class="row"><span class="lead" data-icon="item_Bouquet"><canvas></canvas><span>Willowbrook Bouquet <span class="sub">${hasBq?"you have one — give it to your beloved":"give it to the one who has your heart"}</span></span></span><span><span class="price">500g</span> <button class="buy" ${state.gold>=500&&!hasBq?"":"disabled"} onclick="buyBouquet()">buy</button></span></div>`;
+    }
+    html += `<h2 style="font-size:1em;color:var(--gold-hi);margin:.4em 0 .2em;">ORCHARD &amp; APIARY</h2>`;
+    for(const k in FRUIT_TREES){ const t = FRUIT_TREES[k];
+      html += `<div class="row"><span class="lead" data-icon="item_${t.fruit}"><canvas></canvas><span>${t.name} ` +
+        `<span class="sub">${t.blurb} · ${t.sell}g a fruit</span></span></span>` +
+        `<span><span class="price">${t.cost}g</span> <button class="buy" ${state.gold>=t.cost?"":"disabled"} onclick="buySapling('${k}')">buy</button></span></div>`;
+    }
+    html += `<div class="row"><span class="lead" data-icon="item_Honey"><canvas></canvas><span>Beehive ` +
+      `<span class="sub">honey every morning · more where more is in bloom</span></span></span>` +
+      `<span><span class="price">${HIVE_COST}g</span> <button class="buy" ${state.gold>=HIVE_COST?"":"disabled"} onclick="buyHive()">buy</button></span></div>`;
+
     html += `<h2 style="font-size:1em;color:var(--gold-hi);margin:.4em 0 .2em;">RANCH</h2>`;
     const hens = state.animals.chickens.length;
     html += `<div class="row"><span class="lead" data-icon="item_Egg"><canvas></canvas><span>Chicken <span class="sub">lays an egg daily · lives in your coop · ${hens}/6 hens</span></span></span><span><span class="price">300g</span> <button class="buy" ${state.gold>=300&&hens<6?"":"disabled"} onclick="buyChicken()">buy</button></span></div>`;
+    const cows = (state.animals.cows||[]).length;
+    html += `<div class="row"><span class="lead" data-icon="item_Milk"><canvas></canvas><span>Cow <span class="sub">milk her every morning · lives in your barn · ${cows}/4 cows</span></span></span><span><span class="price">600g</span> <button class="buy" ${state.gold>=600&&cows<4?"":"disabled"} onclick="buyCow()">buy</button></span></div>`;
   } else {
     for(const tool of TOOLS){
       const cur = state.tools[tool];
       if(cur >= 3){ html += `<div class="row"><span class="lead" data-icon="tool_${TOOL_ICON[tool]}"><canvas></canvas><span style="color:${TIER_COL[3]}">${TOOL_TIERS[3]} ${tool} ★ <span class="sub">maxed</span></span></span></div>`; continue; }
       const c = TIER_COST[cur+1];
       const can = state.gold>=c.g && (state.inv[c.ore]||0)>=c.n;
-      const perk = tool==="Can"&&cur+1===3 ? "waters 3×3" : tool==="Rod" ? "faster bites" : "stronger, less energy";
+      const CAN_PERK = ["", "waters a 3-tile row", "waters a 5-tile row", "waters 3×3"];
+      const HOE_PERK = ["", "tills a 3-tile row", "tills a 5-tile row", "tills 3×3"];
+      const perk = tool==="Can" ? CAN_PERK[cur+1] : tool==="Hoe" ? HOE_PERK[cur+1]
+                 : tool==="Rod" ? "faster bites, steadier reel" : "stronger, less energy";
       html += `<div class="row"><span class="lead" data-icon="tool_${TOOL_ICON[tool]}"><canvas></canvas><span style="color:${TIER_COL[cur+1]}">${TOOL_TIERS[cur+1]} ${tool}</span> ` +
         `<span class="sub">${c.g}g + ${c.n} ${c.ore} · ${perk}<br>you have ${state.inv[c.ore]||0} ${c.ore}</span></span>` +
         `<button class="buy" ${can?"":"disabled"} onclick="buyTool('${tool}')">upgrade</button></div>`;
@@ -322,22 +491,33 @@ function showSleepCard(s){
   const seas = SEASONS[Math.floor((state.day-1)/SEASON_DAYS)%4], d = ((state.day-1)%SEASON_DAYS)+1;
   const seasonIcon = { Spring:"🌸", Summer:"☀", Fall:"🍂", Winter:"❄" };
   $("scTitle").textContent = (s.season ? seasonIcon[s.season]+" " : "") + seas + " · Day " + d;
-  $("scSub").textContent = s.season ? `${s.season} has come to Willowbrook.`
-    : s.rain ? "Rain drums on the roof — your crops drink for free."
-    : seas==="Winter" ? "Snow settles quietly over the valley." : "A new day dawns over Willowbrook.";
+  const w = weatherInfo(s.weather || state.weather);
+  $("scSub").textContent = s.season ? `${s.season} has come to Willowbrook.` : w.line;
   const list = $("scList"); list.innerHTML = "";
   const lines = [];
+  if(s.wrack) lines.push(`🐚 The storm has thrown wrack up the beach`);
+  lines.push(`${w.icon} ${w.offer}`);
+  if(s.fruited) lines.push(`🍎 ${s.fruited} tree${s.fruited>1?"s":""} bore fruit`);
+  if(s.honeyed) lines.push(`🍯 ${s.honeyed} hive${s.honeyed>1?"s":""} filled with honey`);
   if(s.grew) lines.push(`🌱 ${s.grew} crop${s.grew>1?"s":""} grew overnight`);
   if(s.ready) lines.push(`✔ ${s.ready} ready to harvest`);
   if(s.withered) lines.push(`🥀 ${s.withered} crop${s.withered>1?"s":""} withered with the season`);
+  if(s.spouse) lines.push(`💕 ${spouseName()} watered ${s.spouse} crop${s.spouse>1?"s":""} for you`);
+  if(s.built) for(const p of s.built) lines.push(`🔨 ${p.done}`);
+  if(s.forecast) lines.push(`${weatherInfo(s.forecast).icon} Tomorrow: ${weatherInfo(s.forecast).name}`);
   lines.push("☕ Energy restored");
   lines.push("💾 Progress saved");
   lines.forEach((t,i) => { const li = document.createElement("li"); li.textContent = t; li.style.animationDelay = (i*0.28+0.3)+"s"; list.appendChild(li); });
   playSfx("wake");
   setTimeout(() => {
-    card.classList.add("hidden"); fadeTo(false);
-    sleeping = false; paused = false;
+    card.classList.add("hidden");
+    sleeping = false;
+    // never unpause into an active cutscene/festival (belt-and-suspenders with doSleep's guard)
+    if(!isCutscene() && !state.flags.festivalActive){ fadeTo(false); paused = false; }
     refreshHUD(); refreshHotbar(); refreshQuestTracker();
+    if(s.rain) queuePage(6, 800);                              // "On Rain"
+    catchUpPages();                                            // re-offer any page that never landed
+    setTimeout(maybeLastPage, 1400);                           // the letter under the door
   }, 2700);
 }
 
@@ -355,6 +535,7 @@ document.addEventListener("keydown", e => {
   firstGesture();
   if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(k)) e.preventDefault();
   if(gameMode === "intro"){
+    if(letterScrollKey(k)){ e.preventDefault(); return; }
     if(k===" " || k==="enter" || k==="e"){ e.preventDefault();
       if(_letterActive) finishLetter(); else { const b=$("btnLetterNext"); if(b.classList.contains("show")) b.click(); } }
     return;
@@ -362,6 +543,7 @@ document.addEventListener("keydown", e => {
   if(gameMode === "title"){
     // if the How-to-Play overlay is up, let Enter dismiss it, not launch the game
     if(!$("intro").classList.contains("hidden")){
+      if(letterScrollKey(k)){ e.preventDefault(); return; }
       if(k==="enter" || k==="e" || k===" "){ e.preventDefault(); $("btnLetterNext").click(); }
       return;
     }
@@ -370,6 +552,7 @@ document.addEventListener("keydown", e => {
   }
   // a letter overlay (used mid-game) takes priority
   if(!$("intro").classList.contains("hidden")){
+    if(letterScrollKey(k)){ e.preventDefault(); return; }
     if(k==="e" || k===" " || k==="enter"){ e.preventDefault();
       if(_letterActive) finishLetter(); else { const b=$("btnLetterNext"); if(b.classList.contains("show")) b.click(); } }
     return;
@@ -380,7 +563,11 @@ document.addEventListener("keydown", e => {
   keys[k] = true;
 
   if(k === "e"){ if(advanceDialog()) return; if(anyPanelOpen()){ closeAllPanels(); return; } interact(); }
-  else if(k === " "){ if(fishing.state!=="idle") reelOrCatch(); else if(!uiBlocking()) useTool(); }
+  else if(k === " "){
+    if(fishing.state === "reel"){ /* held — updateReel reads keys[" "] */ }
+    else if(fishing.state !== "idle") reelOrCatch();
+    else if(!uiBlocking()) useTool();
+  }
   else if(k === "k") togglePanel("skillsPanel", renderSkills);
   else if(k === "i") togglePanel("invPanel", renderInv);
   else if(k === "j") togglePanel("questPanel", renderJournal);
@@ -393,7 +580,10 @@ document.addEventListener("keydown", e => {
   else if("123456".includes(k)) selectSlot(+k-1);
 });
 document.addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
-window.addEventListener("blur", () => { for(const kk in keys) keys[kk] = false; });
+window.addEventListener("blur", () => { for(const kk in keys) keys[kk] = false; fishHold = false; });
+
+// the quest tracker sits where the reel bar draws, so fade it out while you fight a fish
+function setReelUI(on){ $("stage").classList.toggle("reeling", !!on); }
 
 // mouse on canvas
 cv.addEventListener("mousedown", e => {
@@ -403,9 +593,11 @@ cv.addEventListener("mousedown", e => {
   if(!$("intro").classList.contains("hidden")) return;   // letter handles its own clicks
   if(isCutscene()){ cutsceneAdvance(); return; }
   if(e.button === 2){ interact(); return; }
-  if(fishing.state !== "idle") reelOrCatch();
+  if(fishing.state === "reel") fishHold = true;          // held, not tapped
+  else if(fishing.state !== "idle") reelOrCatch();
   else if(!uiBlocking()) useTool();
 });
+window.addEventListener("mouseup", () => { fishHold = false; });
 cv.addEventListener("contextmenu", e => e.preventDefault());
 
 // panel close buttons
@@ -430,11 +622,50 @@ function wireTouch(){
     btn.addEventListener("pointerdown", down); btn.addEventListener("pointerup", up);
     btn.addEventListener("pointerleave", up); btn.addEventListener("pointercancel", up);
   });
-  $("btnUse").addEventListener("pointerdown", e => { e.preventDefault(); firstGesture(); if(fishing.state!=="idle") reelOrCatch(); else if(!uiBlocking()) useTool(); });
+  const useBtn = $("btnUse");
+  useBtn.addEventListener("pointerdown", e => { e.preventDefault(); firstGesture();
+    if(fishing.state === "reel") fishHold = true;        // hold USE to reel the fish in
+    else if(fishing.state !== "idle") reelOrCatch();
+    else if(!uiBlocking()) useTool(); });
+  ["pointerup","pointerleave","pointercancel"].forEach(ev =>
+    useBtn.addEventListener(ev, e => { e.preventDefault(); fishHold = false; }));
   $("btnAct").addEventListener("pointerdown", e => { e.preventDefault(); firstGesture();
     if(!$("intro").classList.contains("hidden")){ if(_letterActive) finishLetter(); else { const b=$("btnLetterNext"); if(b.classList.contains("show")) b.click(); } return; }
     if(isCutscene()){ cutsceneAdvance(); return; }
+    closeTouchMenu();
     if(!advanceDialog()){ if(anyPanelOpen()) closeAllPanels(); else interact(); } });
+
+  // Backpack / Journal / Skills / Settings have no key on a touch device — give them a menu.
+  const RENDER = { invPanel:renderInv, questPanel:renderJournal, skillsPanel:renderSkills, settingsPanel:renderSettings };
+  $("btnMenu").addEventListener("pointerdown", e => { e.preventDefault(); firstGesture();
+    if(isCutscene() || fishing.state === "reel") return;
+    const m = $("touchMenu"); const opening = m.classList.contains("hidden");
+    if(opening && anyPanelOpen()) closeAllPanels();
+    m.classList.toggle("hidden"); playSfx(opening ? "menu" : "menuClose"); });
+  $("touchMenu").querySelectorAll("button").forEach(b => {
+    b.addEventListener("pointerdown", e => { e.preventDefault(); firstGesture();
+      closeTouchMenu(); const id = b.dataset.panel; togglePanel(id, RENDER[id]); });
+  });
+}
+function closeTouchMenu(){ const m = $("touchMenu"); if(m) m.classList.add("hidden"); }
+
+// Arrows / PageUp / PageDown / Home / End scroll a long letter instead of skipping it.
+// Returns true when the key was consumed.
+function letterScrollKey(k){
+  const el = $("letterBody");
+  if(!el || $("intro").classList.contains("hidden")) return false;
+  const page = Math.max(40, el.clientHeight - 24);
+  switch(k){
+    case "arrowdown": el.scrollTop += 40; break;
+    case "arrowup":   el.scrollTop -= 40; break;
+    case "pagedown":  el.scrollTop += page; break;
+    case "pageup":    el.scrollTop -= page; break;
+    case "home":      el.scrollTop = 0; break;
+    case "end":       el.scrollTop = el.scrollHeight; break;
+    default: return false;
+  }
+  updateLetterFade();
+  return true;
 }
 
 window.addEventListener("beforeunload", saveGame);

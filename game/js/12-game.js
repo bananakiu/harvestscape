@@ -24,6 +24,7 @@ function loop(ts){
         updateAnimals(dt);
         updateFishing(dt);
         updateWeather(dt);
+        maybeSeasonalFestival();        // a festival window can open while you stand on the sand
       }
     }
     updateParticles(dt);

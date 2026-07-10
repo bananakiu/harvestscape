@@ -62,8 +62,11 @@ function drawLighting(camX, camY){
     const st = { Summer:"#fff0d8", Fall:"#f2d8a8", Winter:"#e4edf8" }[curSeason()];
     if(st) amb = mixHex(amb, st, 0.20);
     if(state.weather === "rain") amb = mixHex(amb, "#5a6472", 0.4);
+    else if(state.weather === "storm") amb = mixHex(amb, "#3a4052", 0.62);
+    else if(state.weather === "fog") amb = mixHex(amb, "#b8c0cc", 0.42);
     else if(state.weather === "snow") amb = mixHex(amb, "#cad6e4", 0.32);
-    boost = (state.weather === "rain" || state.weather === "snow") ? Math.max(nf, 0.35) : nf;
+    const dim = { rain:0.35, storm:0.55, fog:0.30, snow:0.35 }[state.weather] || 0;
+    boost = dim ? Math.max(nf, dim) : nf;
     showLights = boost > 0.02;
   } else if(curMap.id === "mine"){
     amb = "#39344a"; boost = 1; showLights = true;
@@ -106,26 +109,63 @@ function ensureRain(){
   if(rainDrops.length) return;
   for(let i=0;i<90;i++) rainDrops.push({ x:Math.random()*VIEW_W, y:Math.random()*VIEW_H, len:rand(4,9), sp:rand(240,340) });
 }
+let _flash = 0;              // lightning: a brief white wash, never a hazard
+const fogBanks = [];
+function ensureFog(){
+  if(fogBanks.length) return;
+  for(let i=0;i<9;i++) fogBanks.push({ x:Math.random()*VIEW_W, y:rand(6,VIEW_H-16),
+    w:rand(80,170), h:rand(16,34), sp:rand(3,10), a:rand(0.10,0.24) });
+}
 function drawWeather(){
-  if(!curMap || !curMap.outdoor) return;
-  if(state.weather === "rain"){
+  if(!curMap || !curMap.outdoor){ _flash = 0; return; }
+  // updateWeather is skipped while paused/uiBlocking, so decay the flash here too, or a strike
+  // caught mid-frame would freeze as a full-screen wash behind an open menu.
+  if(paused || uiBlocking()) _flash = 0;
+  if(state.weather === "rain" || state.weather === "storm"){
     ensureRain();
-    ctx.strokeStyle = "rgba(180,205,230,0.5)"; ctx.lineWidth = 1; ctx.beginPath();
-    for(const d of rainDrops){ ctx.moveTo(d.x, d.y); ctx.lineTo(d.x-2, d.y+d.len); }
+    const storm = state.weather === "storm";
+    ctx.strokeStyle = storm ? "rgba(200,215,240,0.62)" : "rgba(180,205,230,0.5)";
+    ctx.lineWidth = 1; ctx.beginPath();
+    for(const d of rainDrops){ const L = storm ? d.len*1.5 : d.len;
+      ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - (storm?5:2), d.y+L); }
     ctx.stroke();
+    if(storm && _flash > 0){
+      ctx.fillStyle = `rgba(220,230,255,${(_flash*0.5).toFixed(3)})`;
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    }
   } else if(state.weather === "snow"){
     ensureRain();
     ctx.fillStyle = "rgba(255,255,255,0.9)";
     for(const d of rainDrops){ const s = d.len>6?2:1; ctx.fillRect(d.x|0, d.y|0, s, s); }
+  } else if(state.weather === "fog"){
+    ensureFog();
+    ctx.fillStyle = "rgba(226,232,240,0.13)";      // the whole valley goes soft
+    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    for(const b of fogBanks){
+      ctx.fillStyle = `rgba(226,232,240,${b.a.toFixed(3)})`;
+      ctx.fillRect(b.x|0, b.y|0, b.w, b.h);
+      ctx.fillStyle = `rgba(240,244,250,${(b.a*0.6).toFixed(3)})`;
+      ctx.fillRect((b.x+8)|0, (b.y+3)|0, b.w-16, b.h-6);
+    }
   }
 }
 function updateWeather(dt){
-  if(!curMap || !curMap.outdoor){ setRainLevel(0); return; }
-  if(state.weather === "rain"){
-    for(const d of rainDrops){ d.y += d.sp*dt; d.x -= 40*dt;
+  if(!curMap || !curMap.outdoor){ setRainLevel(0); _flash = 0; return; }
+  if(state.weather === "rain" || state.weather === "storm"){
+    const storm = state.weather === "storm";
+    const fall = storm ? 1.45 : 1, drift = storm ? 130 : 40;
+    for(const d of rainDrops){ d.y += d.sp*fall*dt; d.x -= drift*dt;
       if(d.y > VIEW_H){ d.y = -d.len; d.x = Math.random()*VIEW_W+40; } if(d.x < -10) d.x = VIEW_W+10; }
-    if(chance(dt*8)){ pSplash(state.px + rand(-90,90), state.py + rand(-40,60), 3); }
-    setRainLevel(1);
+    if(chance(dt*(storm?14:8))){ pSplash(state.px + rand(-90,90), state.py + rand(-40,60), 3); }
+    if(storm){
+      _flash = Math.max(0, _flash - dt*3.2);
+      if(chance(dt*0.16)){ _flash = 1; playSfx("thunder"); }   // light and noise; nothing is harmed
+    }
+    setRainLevel(storm ? 1 : 1);
+  } else if(state.weather === "fog"){
+    ensureFog();
+    for(const b of fogBanks){ b.x -= b.sp*dt; if(b.x + b.w < -10){ b.x = VIEW_W + 10; b.y = rand(10,VIEW_H-20); } }
+    setRainLevel(0);
   } else if(state.weather === "snow"){
     ensureRain();
     for(const d of rainDrops){ d.y += d.sp*0.26*dt; d.x += Math.sin(animT*1.4 + d.y*0.12)*12*dt;
@@ -153,9 +193,43 @@ function updateWeather(dt){
   }
 }
 
-function rollWeather(){
-  const si = seasonIdx();
-  const precipChance = [0.30, 0.24, 0.30, 0.42][si];
-  const precip = si === 3 ? "snow" : "rain";
-  state.weather = (state.day > 1 && chance(precipChance)) ? precip : "clear";
+// ---- THE FORECAST ----
+// state.forecast holds TOMORROW's weather. newDay promotes it into state.weather and rolls a fresh
+// one, so a player can always read tomorrow off the noticeboard tonight and plan the day around it.
+function seasonOf(day){ return SEASONS[Math.floor((day-1)/SEASON_DAYS) % 4]; }
+
+// A festival or a birthday never gets stormed on, and never gets fogged out. The valley wouldn't.
+function isDatedDay(day){
+  const season = seasonOf(day), d = ((day-1) % SEASON_DAYS) + 1;
+  if(FESTIVALS.some(f => f.season===season && f.day===d)) return true;
+  for(const id in BIRTHDAYS){ const b = BIRTHDAYS[id]; if(b.season===season && b.day===d) return true; }
+  if(state.flags && state.flags.anniversaryDay != null
+     && SEASONS.indexOf(season)*SEASON_DAYS + d === state.flags.anniversaryDay) return true;
+  return false;
 }
+
+function rollWeatherFor(day){
+  if(day <= 1) return "clear";                        // the first morning is always kind
+  const odds = WEATHER_ODDS[seasonOf(day)] || { clear:1 };
+  const fair = isDatedDay(day);
+  const skip = k => fair && (k === "storm" || k === "fog");
+  let total = 0;
+  for(const k in odds) if(!skip(k)) total += odds[k];
+  let r = Math.random() * total;
+  for(const k in odds){ if(skip(k)) continue; r -= odds[k]; if(r <= 0) return k; }
+  return "clear";
+}
+
+function rollForecast(){ state.forecast = rollWeatherFor(state.day + 1); }
+
+// Called from newDay AFTER state.day has advanced: today becomes what was forecast last night.
+function rollWeather(){
+  state.weather = state.forecast || rollWeatherFor(state.day);
+  rollForecast();
+}
+
+const weatherInfo = w => WEATHERS[w] || WEATHERS.clear;
+const isStorm = () => state.weather === "storm";
+const isFog   = () => state.weather === "fog";
+const isRain  = () => state.weather === "rain";
+const isSnow  = () => state.weather === "snow";

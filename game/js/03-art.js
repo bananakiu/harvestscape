@@ -247,6 +247,112 @@ function buildDecor(){
     px(g,5,6,3,2,"#6fb04a"); px(g,10,8,2,2,"#6fb04a"); });
   mkSpr("berrybush", 16, 16, g => { g.drawImage(spr.bush,0,0);
     seedRR(4); for(let i=0;i<5;i++){ const x=rr()*11+2|0,y=rr()*8+5|0; px(g,x,y,2,2,"#c03a5a"); px(g,x,y,1,1,"#ff7d9c"); } });
+  // a working cart on re-laid rails
+  mkSpr("railcart", 16, 16, g => {
+    px(g,1,13,14,1,"#6a6256"); px(g,2,14,2,2,"#4a453c"); px(g,12,14,2,2,"#4a453c");   // rail + wheels
+    px(g,2,6,12,7,"#7a4f30"); px(g,2,6,12,1,"#9a6a44"); px(g,2,12,12,1,"#5e3c24");
+    px(g,3,7,10,4,"#4a3020");                                                          // dark interior
+    px(g,4,7,3,2,"#9a9a9a"); px(g,9,8,3,2,"#c77b3f");                                  // ore inside
+    px(g,1,6,1,7,"#8a5f38"); px(g,14,6,1,7,"#8a5f38");
+  });
+  // a plank gate onto the coast boardwalk
+  mkSpr("boardwalk", 16, 18, g => {
+    px(g,1,10,14,8,"#a5763f"); for(let x=1;x<15;x+=3) px(g,x,10,1,8,"#8a5f38");        // planks
+    px(g,1,10,14,1,"#c49a68");
+    px(g,2,2,2,9,"#6e4a2a"); px(g,12,2,2,9,"#6e4a2a");                                 // posts
+    px(g,1,3,14,2,"#8a5f38"); px(g,1,3,14,1,"#a5763f");                                // rail
+    px(g,6,5,4,3,"#e8d9a8"); px(g,7,6,2,1,"#8a7a62");                                  // little sign: ↓ coast
+  });
+  // the town fountain
+  mkSpr("fountain", 16, 18, g => {
+    px(g,1,10,14,7,"#9a9186"); px(g,1,10,14,1,"#b3aa9e"); px(g,1,16,14,1,"#6a6256");   // basin
+    px(g,3,11,10,4,"#4f86b8"); px(g,3,11,10,1,"#6fa8d8");                              // water
+    px(g,5,12,2,1,"#cfe6ff"); px(g,9,13,2,1,"#cfe6ff");
+    px(g,7,3,2,8,"#9a9186"); px(g,6,2,4,2,"#b3aa9e");                                  // spout
+    px(g,7,0,2,2,"#8fd3ff"); px(g,5,4,1,3,"#8fd3ff"); px(g,10,4,1,3,"#8fd3ff");        // arcs of water
+  });
+  // Rowan's ledger of unfinished valley work
+  mkSpr("ledger", 16, 16, g => {
+    px(g,3,4,10,10,"#7a4f30"); px(g,3,4,10,1,"#9a6a44");
+    px(g,4,5,8,8,"#efe6d0"); px(g,5,7,6,1,"#8a7a62"); px(g,5,9,6,1,"#8a7a62"); px(g,5,11,4,1,"#8a7a62");
+    px(g,12,4,1,10,"#5e3c24"); px(g,6,3,4,1,"#c03a3a");
+  });
+
+  // ---- the orchard ----
+  // three stages per tree: a switch in the ground, a young crown, and a bearing tree
+  for(const k in FRUIT_TREES){
+    const t = FRUIT_TREES[k], [dark, leaf, fruit] = t.pal;
+    mkSpr("sapling_"+k, 16, 16, g => {
+      px(g,7,9,2,6,"#6e4a2a"); px(g,7,9,1,6,"#8a5f38");
+      px(g,5,7,3,2,leaf); px(g,8,6,3,2,leaf); px(g,6,5,4,2,dark);
+      px(g,3,14,10,1,"#5e4426");
+    });
+    mkSpr("tree_"+k+"_young", 16, 20, g => {
+      px(g,7,12,2,8,"#6e4a2a"); px(g,7,12,1,8,"#8a5f38");
+      px(g,4,5,8,7,dark); px(g,3,7,10,4,dark); px(g,5,4,6,2,leaf);
+      px(g,5,6,4,3,leaf); px(g,9,8,2,2,leaf);
+    });
+    mkSpr("tree_"+k+"_bare", 16, 20, g => {
+      px(g,7,10,2,10,"#6e4a2a"); px(g,7,10,1,10,"#8a5f38");
+      px(g,4,7,3,1,"#6e4a2a"); px(g,9,6,3,1,"#6e4a2a"); px(g,5,4,2,3,"#6e4a2a"); px(g,10,4,1,3,"#6e4a2a");
+      px(g,3,9,2,1,"#5e3f24"); px(g,11,9,2,1,"#5e3f24");
+    });
+    mkSpr("tree_"+k+"_full", 16, 20, g => {
+      px(g,7,13,2,7,"#6e4a2a"); px(g,7,13,1,7,"#8a5f38");
+      px(g,3,4,10,9,dark); px(g,2,6,12,5,dark); px(g,4,3,8,2,dark);
+      px(g,4,5,5,4,leaf); px(g,9,6,3,3,leaf); px(g,5,4,3,1,leaf);
+      seedRR(k.length*7); for(let i=0;i<6;i++){ const x=rr()*9+3|0, y=rr()*7+4|0;
+        px(g,x,y,2,2,fruit); px(g,x,y,1,1,shade(fruit,1.35)); }
+    });
+  }
+  mkSpr("beehive", 16, 18, g => {
+    px(g,6,14,4,4,"#6e4a2a");                                   // the stand
+    px(g,3,4,10,10,"#d8a83a"); px(g,3,4,10,1,"#e8c05a");        // the box
+    for(let y=6;y<14;y+=3) px(g,3,y,10,1,"#a5793a");
+    px(g,6,11,4,2,"#4a3420"); px(g,7,10,2,1,"#4a3420");         // the entrance
+    px(g,2,3,12,2,"#8a5f38"); px(g,2,3,12,1,"#a5763f");         // the lid
+    px(g,12,7,1,1,"#241a10"); px(g,13,8,1,1,"#ffd75a");         // a bee
+  });
+  mkSpr("item_Honey", 16, 16, g => {
+    px(g,5,3,6,2,"#c9924a"); px(g,4,5,8,9,"#e8a83a"); px(g,4,5,8,1,"#ffd75a");
+    px(g,5,7,6,5,"#f0c05a"); px(g,6,8,2,2,"#fff0b0"); px(g,4,13,8,1,"#a5793a");
+  });
+  for(const k in FRUIT_TREES){ const t = FRUIT_TREES[k], [,leaf,fruit] = t.pal;
+    mkSpr("item_"+t.fruit, 16, 16, g => {
+      px(g,4,5,8,8,fruit); px(g,3,7,10,4,fruit); px(g,5,4,6,2,fruit);
+      px(g,5,6,3,3,shade(fruit,1.35)); px(g,6,11,4,2,shade(fruit,.72));
+      px(g,7,2,2,3,"#6e4a2a"); px(g,9,3,3,2,leaf);
+    }); }
+
+  // storm-wrack: a tangle of weed and rope thrown up the beach, with something glinting in it
+  mkSpr("wrack", 16, 16, g => {
+    px(g,2,10,12,4,"#3f5a3a"); px(g,1,12,14,2,"#33492f");
+    px(g,4,8,3,3,"#4a6a44"); px(g,9,7,4,4,"#42603c"); px(g,6,9,5,2,"#557a4c");
+    px(g,3,11,2,1,"#6a8a5a"); px(g,11,12,3,1,"#6a8a5a");
+    px(g,7,11,2,2,"#e8e0d0"); px(g,7,11,1,1,"#ffffff");        // a shell, or a pearl
+    px(g,12,10,2,1,"#a5763f"); px(g,13,11,1,2,"#8a5f38");      // a splinter of lost tackle
+    px(g,5,13,1,1,"#ffd75a");
+  });
+
+  // the village noticeboard: two posts, a shingled board, pinned papers
+  mkSpr("noticeboard", 16, 20, g => {
+    px(g,2,14,2,6,"#6e4a2a"); px(g,12,14,2,6,"#6e4a2a");        // posts
+    px(g,1,2,14,13,"#8a5f38"); px(g,1,2,14,1,"#a5763f");        // board
+    px(g,1,14,14,1,"#5e3f24");
+    px(g,0,1,16,2,"#6e4a2a"); px(g,0,1,16,1,"#8a6647");         // little roof
+    px(g,3,5,4,5,"#efe6d0"); px(g,4,6,2,1,"#8a7a62"); px(g,4,8,3,1,"#8a7a62");   // pinned notes
+    px(g,9,4,4,6,"#f4ecd8"); px(g,10,6,2,1,"#8a7a62"); px(g,10,8,2,1,"#8a7a62");
+    px(g,3,11,3,3,"#e0d6bc"); px(g,4,4,1,1,"#c03a3a"); px(g,10,3,1,1,"#c03a3a");  // pins
+  });
+
+  // a bare winter bush hung with pale blue berries
+  mkSpr("frostberry", 16, 16, g => {
+    px(g,4,8,8,6,"#4a5a62"); px(g,3,10,10,3,"#54656e"); px(g,5,7,6,2,"#5e7078");
+    px(g,4,8,8,1,"#7a8e98");
+    seedRR(9); for(let i=0;i<6;i++){ const x=rr()*11+2|0,y=rr()*7+6|0;
+      px(g,x,y,2,2,"#7fb8d8"); px(g,x,y,1,1,"#d8f0ff"); }
+    px(g,2,13,12,1,"#ffffff");                       // a rime of frost at the base
+  });
   mkSpr("sign", 16, 16, g => { px(g,7,8,2,7,"#6e4a2a"); px(g,3,3,10,6,"#a0774a"); px(g,3,3,10,1,"#c49a68");
     px(g,4,5,8,1,"#6e4a2a"); px(g,4,7,6,1,"#6e4a2a"); });
   mkSpr("chest", 16, 16, g => { px(g,3,7,10,7,"#8a5f38"); px(g,3,7,10,3,"#a0774a"); px(g,3,9,10,1,"#5e4426");
@@ -286,6 +392,8 @@ const CHAR_SPEC = {
   rowan:  { skin:"#e0bd94", skinSh:"#c49a6a", hair:"#dcdcdc", hairSh:"#b2b2b2", shirt:"#4a3f72", shirtSh:"#352c54", pants:"#3a3352", pantsSh:"#2a2540", shoe:"#3a2a1a" },
   bram:   { skin:"#c99a6a", skinSh:"#a87e50", hair:"#2e2622", hairSh:"#1c1714", shirt:"#3f88a0", shirtSh:"#2c6072", pants:"#4a4238", pantsSh:"#352f28", shoe:"#2a2018" },
   pip:    { skin:"#eec39a", skinSh:"#d8a878", hair:"#c98a3a", hairSh:"#a06a28", shirt:"#c0503a", shirtSh:"#9a3a2a", pants:"#3a5a8a", pantsSh:"#2a466e", shoe:"#3a2a1a" },
+  // Maya's father: her auburn, gone grey at the edges; a ferryman's weathered coat
+  elias:  { skin:"#dcae82", skinSh:"#b98c62", hair:"#8a6250", hairSh:"#66473a", shirt:"#6a7a8a", shirtSh:"#4c5a68", pants:"#413a33", pantsSh:"#2e2924", shoe:"#2a2018" },
 };
 function buildChars(){
   for(const name in CHAR_SPEC){
@@ -369,6 +477,12 @@ function buildItems(){
     px(g,6,8,2,2,oreCols[o]); px(g,9,9,2,2,oreCols[o]); px(g,7,10,1,1,shade(oreCols[o],1.3)); }); }
   FISH.forEach(f => { mkSpr("item_"+f.name, 16, 16, g => drawFish(g, f.pal[0], f.pal[1]));
     mkSpr("item_Cooked "+f.name, 16, 16, g => { drawFish(g, shade(f.pal[0],.85), f.pal[1]); px(g,4,4,8,1,"#ffd08a"); px(g,3,9,3,1,"#c9884a"); }); });
+  // the legends: bigger in the frame, with a glint along the flank
+  LEGENDS.forEach(l => mkSpr("item_"+l.name, 16, 16, g => {
+    drawFish(g, l.pal[0], l.pal[1]);
+    px(g,4,5,7,1,l.pal[1]); px(g,5,4,2,1,"#ffffff");
+    px(g,13,5,1,1,"#ffffff"); px(g,2,8,1,1,l.pal[1]);
+  }));
   mkSpr("item_Berry Bun", 16, 16, g => { px(g,3,6,10,6,"#c9924a"); px(g,3,6,10,2,"#e0aa62"); px(g,4,5,8,2,"#e8b878");
     px(g,5,8,1,1,"#ff5a7a"); px(g,8,9,1,1,"#ff5a7a"); px(g,10,7,1,1,"#ff5a7a"); px(g,3,11,10,1,"#9a6a34"); });
   mkSpr("item_Field Salad", 16, 16, g => { px(g,3,8,10,5,"#e6ddc4"); px(g,3,8,10,1,"#f4ecd6");
@@ -384,7 +498,15 @@ function buildItems(){
   mkSpr("item_Egg", 16, 16, g => { px(g,5,5,6,8,"#f4ecdc"); px(g,4,7,8,5,"#f8f2e4"); px(g,6,6,2,2,"#ffffff"); px(g,5,11,6,2,"#e0d4bc"); });
   mkSpr("item_Large Egg", 16, 16, g => { px(g,4,4,8,9,"#f8f0e0"); px(g,3,6,10,6,"#fbf4e6"); px(g,6,5,3,2,"#ffffff"); px(g,4,11,8,2,"#e4d8c0"); });
   mkSpr("item_Milk", 16, 16, g => { px(g,6,2,4,2,"#e8e8e8"); px(g,5,4,6,10,"#f4f8fb"); px(g,5,7,6,4,"#dfeaf2"); px(g,5,4,6,1,"#ffffff"); px(g,6,9,4,2,"#5a9ad0"); });
+  mkSpr("item_Large Milk", 16, 16, g => { px(g,5,1,6,2,"#e8e8e8"); px(g,4,3,8,12,"#f6fafd"); px(g,4,6,8,5,"#dfeaf2"); px(g,4,3,8,1,"#ffffff");
+    px(g,5,8,6,2,"#5a9ad0"); px(g,11,4,1,9,"#d8e2ea"); px(g,6,12,2,1,"#ffd75a"); });
   mkSpr("item_Wool", 16, 16, g => { px(g,4,5,8,7,"#f0f0f4"); px(g,3,7,10,4,"#f6f6fa"); px(g,5,4,6,3,"#ffffff"); for(let i=0;i<4;i++) px(g,4+i*2,7,1,3,"#dcdce4"); });
+  mkSpr("item_Bouquet", 16, 16, g => { // wrapped flowers
+    px(g,6,8,4,6,"#e6ddc4"); px(g,6,8,4,1,"#f4ecd6");                 // paper wrap
+    px(g,7,9,2,5,"#4f8a34"); px(g,5,10,1,3,"#4f8a34"); px(g,10,10,1,3,"#4f8a34"); // stems
+    px(g,4,4,3,3,"#ff5a7a"); px(g,9,4,3,3,"#ffce5a"); px(g,6,2,3,3,"#b98fd4"); px(g,8,6,2,2,"#6a9aff"); // blooms
+    px(g,5,5,1,1,"#ff9ab0"); px(g,10,5,1,1,"#fff0a0"); px(g,7,3,1,1,"#d8c0f0");
+  });
   // cooked dishes (plate + coloured food)
   for(const r of RECIPES){ mkSpr("item_"+r.name, 16, 16, g => {
     px(g,2,9,12,4,"#e6e0d4"); px(g,2,9,12,1,"#f4efe4"); px(g,3,12,10,1,"#c8bfae");
@@ -424,6 +546,8 @@ function buildPortraits(){
     shirt:"#3f88a0", feature:"beanie", extra:"mustache" });
   portrait("port_pip", { skin:"#eec39a", skinSh:"#d8a878", hair:"#c98a3a", brow:"#a06a28",
     shirt:"#c0503a", feature:"hair", extra:"freckles" });
+  portrait("port_elias", { skin:"#dcae82", skinSh:"#b98c62", hair:"#8a6250", brow:"#66473a",
+    shirt:"#6a7a8a", feature:"hair", extra:"beard" });
   portrait("port_valley", { skin:"#8fd06a", skinSh:"#5fa03e", hair:"#4f8a34", brow:"#3f7a2e",
     shirt:"#6aab46", feature:"none", extra:"leaf" });
   mkSpr("port_sign", 64, 64, g => { px(g,0,0,64,64,"#2a2018"); for(let i=0;i<64;i+=2) px(g,0,i,64,1,"#31251a");
@@ -540,6 +664,37 @@ function buildInteriors(){
     px(g,10,6,4,4,"#f8f4ea"); px(g,11,4,2,2,"#e0455a"); px(g,14,9,2,1,"#e8a83a"); px(g,12,7,1,1,"#241a10");
     px(g,6,13,1,2,"#e8a83a"); px(g,10,13,1,2,"#e8a83a");
   });
+  // a Holstein, facing right; frames differ only in the legs
+  const cowBody = g => {
+    px(g,2,6,1,5,"#2a2622"); px(g,2,10,1,3,"#1a1614");            // tail
+    px(g,3,5,13,7,"#f2f0ea"); px(g,3,5,13,1,"#ffffff");           // body
+    px(g,4,11,11,1,"#dcd6cd");                                    // belly shade
+    px(g,5,6,4,3,"#2a2622"); px(g,11,7,3,4,"#2a2622"); px(g,8,5,2,2,"#2a2622");  // patches
+    px(g,6,12,3,2,"#f0b0b8"); px(g,6,13,1,1,"#e08a96");           // udder
+    px(g,15,6,4,5,"#f2f0ea"); px(g,15,6,4,1,"#ffffff");           // head
+    px(g,16,7,3,2,"#2a2622");                                     // face patch
+    px(g,18,9,2,2,"#f0b0b8"); px(g,18,10,1,1,"#241a10");          // muzzle + nostril
+    px(g,15,4,1,2,"#d8d2c8"); px(g,18,4,1,2,"#d8d2c8");           // ears
+    px(g,16,3,1,1,"#e8e0d0"); px(g,17,3,1,1,"#e8e0d0");           // horn nubs
+  };
+  const cowLegs = (g, a, b) => {
+    px(g,a,12,2,4,"#e6e2da"); px(g,a,15,2,1,"#2a2622");
+    px(g,b,12,2,4,"#e6e2da"); px(g,b,15,2,1,"#2a2622");
+  };
+  // a small standing stone on the Festival Green — two names, and a lantern that never goes out
+  mkSpr("memorial", 16, 20, g => {
+    px(g,3,18,10,2,"#6a6256"); px(g,4,17,8,1,"#7d7466");        // plinth
+    px(g,4,4,8,14,"#9a9186"); px(g,5,3,6,1,"#a9a094");          // stone
+    px(g,4,4,1,14,"#b3aa9e"); px(g,11,4,1,14,"#7d7466");        // light left, shade right
+    px(g,6,2,4,2,"#a9a094"); px(g,7,1,2,1,"#b3aa9e");           // rounded top
+    px(g,5,7,6,1,"#6a6256"); px(g,5,10,6,1,"#6a6256");          // two carved names
+    px(g,6,13,4,1,"#6a6256");
+    px(g,2,14,2,4,"#8a5f38"); px(g,1,12,4,3,"#ffd75a"); px(g,2,13,2,1,"#fff6d0");  // lantern
+  });
+
+  mkSpr("cow_0", 20, 16, g => { cowBody(g); cowLegs(g, 4, 12); });
+  mkSpr("cow_1", 20, 16, g => { cowBody(g); cowLegs(g, 5, 11); });
+
   mkSpr("coop", 16, 24, g => { // exterior building
     px(g,0,10,16,14,"#c9a86a"); px(g,0,10,16,2,"#e0c488"); for(let y=14;y<24;y+=4) px(g,0,y,16,1,"#a5844e");
     px(g,0,2,16,8,"#b7472f"); for(let y=2;y<10;y+=3){ px(g,0,y,16,2,"#9a3a25"); px(g,0,y+2,16,1,"#c85a40"); } px(g,0,1,16,2,"#8a3a25");

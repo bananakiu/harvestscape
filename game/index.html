@@ -7,7 +7,7 @@
 <title>Harvestscape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=1783699252">
 </head>
 <body>
 <div id="frame">
@@ -21,6 +21,7 @@
           <canvas id="clockDial" width="22" height="22"></canvas>
           <div class="clockText"><span id="dateLine">Spring · Day 1</span><span id="timeLine">6:00 am</span></div>
         </div>
+        <div class="pill hidden" id="eventPill"></div>
         <div class="pill" id="goldPill"><span class="coin">◉</span> <span id="goldVal">500</span></div>
       </div>
       <div id="energyWrap" title="Energy">
@@ -55,6 +56,7 @@
       <div class="tabs" id="shopTabs"></div><div class="body"></div></div>
     <div class="panel wide hidden" id="cookPanel"><div class="phead"><h2>KITCHEN</h2><button class="pclose">✕</button></div><div class="body"></div></div>
     <div class="panel hidden" id="giftPanel"><div class="phead"><h2 id="giftHead">A GIFT</h2><button class="pclose">✕</button></div><div class="body"></div></div>
+    <div class="panel wide hidden" id="projPanel"><div class="phead"><h2>THE VALLEY LEDGER</h2><button class="pclose">✕</button></div><div class="body"></div></div>
     <div class="panel hidden" id="settingsPanel"><div class="phead"><h2>SETTINGS</h2><button class="pclose">✕</button></div><div class="body"></div></div>
 
     <!-- ============ CINEMATIC LETTERBOX ============ -->
@@ -72,15 +74,21 @@
         <button class="mbtn" id="btnHowto">How to Play</button>
         <button class="mbtn ghost" id="btnMute">♪ Music: On</button>
       </div>
-      <div id="titleFoot">v1.0 · made with sunlight &amp; code · <span id="clickHint">click to begin</span></div>
+      <div id="titleFoot">v2.0 · made with sunlight &amp; code · <span id="clickHint">click to begin</span></div>
     </div>
 
     <!-- ============ INTRO LETTER CUTSCENE ============ -->
     <div id="intro" class="screen hidden">
       <div id="letter">
         <div class="lhead">✒ A letter, left on the kitchen table</div>
-        <div id="letterBody"></div>
-        <button class="mbtn primary" id="btnLetterNext">Continue ▸</button>
+        <div id="letterScroll">
+          <div id="letterBody"></div>
+          <div id="letterFade" aria-hidden="true"></div>
+        </div>
+        <div id="letterFoot">
+          <button class="mbtn primary" id="btnLetterNext">Continue ▸</button>
+          <span id="letterMore" aria-hidden="true">▾ scroll to read on</span>
+        </div>
       </div>
     </div>
 
@@ -104,8 +112,15 @@
         <button data-dir="down">▼</button>
       </div>
       <div id="touchBtns">
+        <button id="btnMenu" aria-label="Open menu">☰</button>
         <button id="btnUse">USE</button>
         <button id="btnAct">ACT</button>
+      </div>
+      <div id="touchMenu" class="hidden">
+        <button data-panel="invPanel">🎒 Backpack</button>
+        <button data-panel="questPanel">✒ Journal</button>
+        <button data-panel="skillsPanel">★ Skills</button>
+        <button data-panel="settingsPanel">⚙ Settings</button>
       </div>
     </div>
   </div>
@@ -115,20 +130,20 @@
   </div>
 </div>
 
-<script src="js/00-core.js"></script>
-<script src="js/01-data.js"></script>
-<script src="js/02-audio.js"></script>
-<script src="js/03-art.js"></script>
-<script src="js/04-world.js"></script>
-<script src="js/05-particles.js"></script>
-<script src="js/06-weather.js"></script>
-<script src="js/07-entities.js"></script>
-<script src="js/08-actions.js"></script>
-<script src="js/09-quests.js"></script>
-<script src="js/13-content.js"></script>
-<script src="js/10-ui.js"></script>
-<script src="js/11-title.js"></script>
-<script src="js/14-story.js"></script>
-<script src="js/12-game.js"></script>
+<script src="js/00-core.js?v=1783699252"></script>
+<script src="js/01-data.js?v=1783699252"></script>
+<script src="js/02-audio.js?v=1783699252"></script>
+<script src="js/03-art.js?v=1783699252"></script>
+<script src="js/04-world.js?v=1783699252"></script>
+<script src="js/05-particles.js?v=1783699252"></script>
+<script src="js/06-weather.js?v=1783699252"></script>
+<script src="js/07-entities.js?v=1783699252"></script>
+<script src="js/08-actions.js?v=1783699252"></script>
+<script src="js/09-quests.js?v=1783699252"></script>
+<script src="js/13-content.js?v=1783699252"></script>
+<script src="js/10-ui.js?v=1783699252"></script>
+<script src="js/11-title.js?v=1783699252"></script>
+<script src="js/14-story.js?v=1783699252"></script>
+<script src="js/12-game.js?v=1783699252"></script>
 </body>
 </html>

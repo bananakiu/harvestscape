@@ -13,5 +13,6 @@
       "runtimeArgs": ["-m", "http.server", "8642", "--directory", "prototype"],
       "port": 8642
     }
-  ]
+  ],
+  "autoVerify": true
 }

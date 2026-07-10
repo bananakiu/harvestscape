@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HarvestScape — where it is, and where it's going</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#3a2c1e; --ink-soft:#8a7a62; --parch:#f0e2c0; --parch-d:#e2d0a6;
+    --wood:#5a4028; --wood-d:#3a2a1a; --wood-l:#7a5c3a;
+    --gold:#ffce5a; --gold-hi:#ffe6a0; --rose:#ff9ab0; --green:#8fd06a;
+    --red:#e0655a; --blue:#8fd3ff; --bg:#14100c;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; padding:0; background:
+      radial-gradient(1200px 700px at 50% -10%, #241a12 0%, var(--bg) 60%);
+    color:var(--parch); font-family:"VT323", ui-monospace, Menlo, monospace;
+    font-size:20px; line-height:1.55;
+  }
+  .wrap{ max-width:1000px; margin:0 auto; padding:3.5rem 1.25rem 6rem; }
+
+  h1{ font-family:"Press Start 2P", monospace; font-size:clamp(18px,3.1vw,30px); line-height:1.5;
+      color:var(--gold-hi); margin:0 0 .6rem; text-shadow:0 3px 0 #0008; }
+  .sub{ color:var(--ink-soft); font-size:1.05rem; margin:0 0 2.5rem; }
+  h2{ font-family:"Press Start 2P", monospace; font-size:clamp(12px,1.7vw,16px); line-height:1.7;
+      color:var(--gold); margin:3.2rem 0 1rem; border-bottom:2px solid var(--wood); padding-bottom:.7rem; }
+  h3{ font-family:"Press Start 2P", monospace; font-size:12px; line-height:1.7; color:var(--gold-hi); margin:1.6rem 0 .5rem; }
+  p{ margin:.7rem 0; }
+  a{ color:var(--blue); }
+  code{ font-family:ui-monospace,Menlo,monospace; font-size:.72em; background:#0007; color:#cfe6ff;
+        padding:.12em .4em; border-radius:.25em; border:1px solid #ffffff14; }
+  em{ color:var(--gold-hi); font-style:normal; }
+  strong{ color:#fff4d8; }
+
+  .card{ background:linear-gradient(160deg,#2a2016,#231a12); border:2px solid var(--wood);
+         border-radius:.5rem; padding:1.1rem 1.3rem; margin:1rem 0;
+         box-shadow:0 .4rem 0 #0006, inset 0 0 3rem #0003; }
+  .card.warn{ border-color:#7a3a30; }
+  .card.good{ border-color:#4e6f3a; }
+  .card.paper{ background:linear-gradient(160deg,#f6ecd2,#e7d3a8); color:var(--ink); border-color:#b79a68; }
+  .card.paper strong{ color:#2e2214; }
+  .card.paper em{ color:#7a5a20; }
+  .card.paper code{ background:#0000000f; color:#4a3620; border-color:#00000018; }
+
+  .lede{ font-size:1.15rem; color:#fff0cf; }
+  .kicker{ font-family:"Press Start 2P",monospace; font-size:9px; letter-spacing:.1em;
+           color:var(--ink-soft); text-transform:uppercase; margin-bottom:.5rem; }
+
+  table{ width:100%; border-collapse:collapse; margin:1rem 0; font-size:.95rem; }
+  th,td{ text-align:left; padding:.42rem .6rem; border-bottom:1px solid #ffffff12; }
+  th{ color:var(--gold); font-weight:normal; }
+  td.num{ text-align:right; font-variant-numeric:tabular-nums; }
+
+  .bars{ margin:1rem 0; }
+  .bar{ display:grid; grid-template-columns:12.5rem 1fr auto; gap:.7rem; align-items:center; margin:.35rem 0; }
+  .bar .lbl{ color:var(--parch); }
+  .bar .track{ background:#0006; border-radius:.25rem; height:1.15rem; overflow:hidden; border:1px solid #ffffff10; }
+  .bar .fill{ height:100%; border-radius:.2rem; }
+  .bar .val{ color:var(--gold-hi); font-variant-numeric:tabular-nums; min-width:5.5rem; text-align:right; }
+  .f-farm{ background:linear-gradient(90deg,#5aa03c,#8fd06a); }
+  .f-fish{ background:linear-gradient(90deg,#2c6072,#8fd3ff); }
+  .f-mine{ background:linear-gradient(90deg,#7a5c3a,#ffd75a); }
+  .f-pass{ background:linear-gradient(90deg,#8a3a3a,#e0655a); }
+
+  ul{ margin:.5rem 0 .9rem; padding-left:1.3rem; }
+  li{ margin:.3rem 0; }
+  .tag{ display:inline-block; font-family:"Press Start 2P",monospace; font-size:8px; letter-spacing:.06em;
+        padding:.35em .55em; border-radius:.3em; vertical-align:middle; margin-left:.5rem; }
+  .t-new{ background:#3d5c2a; color:#d9f7bc; }
+  .t-cut{ background:#5c2a2a; color:#f7c9c9; }
+  .t-fix{ background:#5c4a1a; color:#ffe6a0; }
+  .t-s{ background:#2a4258; color:#cfe6ff; } .t-m{ background:#3a3a5e; color:#d6d6ff; } .t-l{ background:#5a2a58; color:#f4ccf2; }
+
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  @media (max-width:760px){ .grid2{ grid-template-columns:1fr; } .bar{ grid-template-columns:8rem 1fr auto; } }
+
+  .quote{ border-left:3px solid var(--gold); padding:.2rem 0 .2rem 1rem; margin:1rem 0;
+          color:#ffeec8; font-size:1.05rem; }
+  .foot{ margin-top:4rem; color:var(--ink-soft); font-size:.95rem; border-top:1px solid var(--wood); padding-top:1rem; }
+  .chorecheck{ color:var(--green); }
+  .why{ color:var(--rose); }
+  ol.build{ counter-reset:step; list-style:none; padding-left:0; }
+  ol.build li{ counter-increment:step; padding-left:2.6rem; position:relative; margin:.7rem 0; }
+  ol.build li::before{ content:counter(step); position:absolute; left:0; top:.05rem;
+    width:1.8rem; height:1.8rem; border-radius:50%; background:var(--wood); border:2px solid var(--wood-l);
+    color:var(--gold-hi); display:grid; place-items:center; font-size:.85rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">Design document · v1.5 → v2.0</div>
+  <h1>HarvestScape</h1>
+  <p class="sub">What the game is right now, the one thing that's wrong with it,<br>and the four changes that fix it.</p>
+
+  <div class="card paper">
+    <p class="lede" style="margin-top:0"><strong>The short version.</strong> HarvestScape is a finished, polished, genuinely lovely cozy game. It has a real story, a real cast, a real minigame, and a calendar that makes the year turn. It also has one structural flaw that quietly hollows out the whole thing:</p>
+    <p class="lede" style="margin-bottom:0"><em>Doing nothing with your day is the optimal play.</em></p>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>Part One — What the game is today</h2>
+
+  <p>A cozy farming game in the shape of Stardew Valley, with RuneScape's 1–99 skill curve. Everything is drawn with code — there isn't a single image file in the project — and every sound is synthesised on the fly.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="kicker">The world</div>
+      <ul>
+        <li><strong>9 maps</strong> — farm, cottage, coop, barn, store, Maya's house, the Guild, a procedurally generated mine, and the coast</li>
+        <li><strong>12 crops</strong>, season- and level-gated</li>
+        <li><strong>13 recipes</strong>, cooked at a stove or campfire</li>
+        <li><strong>Chickens and cows</strong> with friendship</li>
+        <li><strong>4 seasons</strong> of 28 days, with weather and seasonal art</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="kicker">The people</div>
+      <ul>
+        <li><strong>6 characters</strong>, each with a full heart arc</li>
+        <li><strong>12 scripted heart events</strong></li>
+        <li><strong>Marriage</strong> — to Maya or to Bram</li>
+        <li><strong>A 14-quest story</strong>: restore the Guild of Nine Crafts, light the lanterns, then bring Maya's father home</li>
+        <li><strong>9 torn journal pages</strong>, found by doing rather than collecting</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="kicker">The systems</div>
+      <ul>
+        <li><strong>A fishing minigame</strong> — hold to raise a bar, keep a darting fish inside it</li>
+        <li><strong>5 skills</strong> with mastery milestones at 25 / 50 / 75 / 99</li>
+        <li><strong>A calendar</strong> — 4 recurring festivals, 5 birthdays, an anniversary</li>
+        <li><strong>A noticeboard</strong> — one villager request each day</li>
+        <li><strong>Rowan's ledger</strong> — ~16,000g of restoration projects that change the world</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="kicker">The day</div>
+      <ul>
+        <li>Runs <strong>6:00 → 26:00</strong>, which is <strong>320 real seconds</strong></li>
+        <li>Energy is 100/day; food is cheap</li>
+        <li>So the real constraint isn't energy — <em>it's time</em></li>
+        <li>Menus and dialogue pause the clock; fieldwork and fishing don't</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>Part Two — The diagnosis</h2>
+
+  <p>I measured an optimal mid-game day, second by second, straight from the code. Here is what it looks like.</p>
+
+  <div class="card">
+    <div class="kicker">One day, played well</div>
+    <table>
+      <tr><th>Time</th><th>What you do</th><th class="num">Real seconds</th></tr>
+      <tr><td>6:00</td><td>Water ~50 tiles with the gold can (3×3 coverage — six presses)</td><td class="num">~40</td></tr>
+      <tr><td>6:20</td><td>Harvest &amp; replant whatever is ready (costs <em>zero</em> energy)</td><td class="num">~0–150</td></tr>
+      <tr><td>6:40</td><td>Six hens, four cows. ~690g. Costs no energy.</td><td class="num">~60</td></tr>
+      <tr><td>7:00</td><td><strong>Nothing is required of you for the remaining four minutes.</strong></td><td class="num">~240</td></tr>
+    </table>
+    <p style="margin-bottom:0">Because crops advance on the <code>newDay()</code> tick regardless of how the day was spent, the highest-value move at 7:00 in the morning is to <strong>walk to the bed and sleep</strong>. The day collapses to ninety seconds of chores. The other four minutes are a sandbox you are actively rewarded for skipping.</p>
+  </div>
+
+  <h3>The economy proves it</h3>
+  <p>Sustained profit, per tile, per day: <code>(sell − seed) / days</code>. A 50-tile plot, held for a season:</p>
+
+  <div class="bars">
+    <div class="bar"><span class="lbl">Starfruit ×50 <em>(passive)</em></span><span class="track"><span class="fill f-pass" style="width:100%"></span></span><span class="val">3,125g</span></div>
+    <div class="bar"><span class="lbl">Pumpkin ×50</span><span class="track"><span class="fill f-farm" style="width:48%"></span></span><span class="val">1,500g</span></div>
+    <div class="bar"><span class="lbl">Cranberry ×50</span><span class="track"><span class="fill f-farm" style="width:35%"></span></span><span class="val">1,100g</span></div>
+    <div class="bar"><span class="lbl">Strawberry ×50</span><span class="track"><span class="fill f-farm" style="width:28%"></span></span><span class="val">875g</span></div>
+    <div class="bar"><span class="lbl">Turnip ×50</span><span class="track"><span class="fill f-farm" style="width:12%"></span></span><span class="val">375g</span></div>
+  </div>
+
+  <p>Starfruit is a <strong>2× outlier</strong> over every other crop. And critically, it costs <em>six energy a day and ninety seconds of attention</em>. Meanwhile:</p>
+
+  <div class="bars">
+    <div class="bar"><span class="lbl">Fishing, all day <em>(active)</em></span><span class="track"><span class="fill f-fish" style="width:100%"></span></span><span class="val">4–10k</span></div>
+    <div class="bar"><span class="lbl">Mining, all day <em>(active)</em></span><span class="track"><span class="fill f-mine" style="width:60%"></span></span><span class="val">4–6k</span></div>
+    <div class="bar"><span class="lbl">Starfruit <em>(passive, 90s)</em></span><span class="track"><span class="fill f-pass" style="width:36%"></span></span><span class="val">3,125g</span></div>
+  </div>
+
+  <div class="card warn">
+    <p style="margin-top:0"><strong>Farming isn't one of three choices. It's a free layer underneath the other two.</strong></p>
+    <p style="margin-bottom:0">The dominant strategy is: keep a starfruit monoculture (passive, ~3,100g), <em>then</em> spend the day fishing or mining on top. Nobody is choosing between them. And the single fastest strategy — scale the plot, sleep immediately — is also the <strong>least interesting thing in the game</strong>.</p>
+  </div>
+
+  <h3>What the day actually asks of you</h3>
+  <p>Being brutal, here is every branch point in a day, and whether it's a real decision:</p>
+  <table>
+    <tr><th>Branch</th><th>Is it a decision?</th></tr>
+    <tr><td>Water, or don't</td><td>No — today's weather already decided, and you can't see it coming</td></tr>
+    <tr><td>Which crop to plant</td><td>No — one crop per season dominates by 2×</td></tr>
+    <tr><td>Fish, mine, or forage</td><td>Barely — nothing about today makes one better than another</td></tr>
+    <tr><td>Do the noticeboard request</td><td><em>Yes</em> — a genuine, optional, one-per-day goal</td></tr>
+    <tr><td>Go to bed at 7am</td><td>Not a decision. It's just correct.</td></tr>
+  </table>
+
+  <h3>And weather, which should be the answer, does nothing</h3>
+  <p>I grepped every read of <code>state.weather</code> in the codebase. There are three weather types (clear / rain / snow) and exactly <strong>one</strong> mechanical effect between them:</p>
+  <ul>
+    <li><strong>Rain</strong> waters your crops for free.</li>
+    <li><strong>Snow</strong> does <em>nothing at all</em> — it isn't <code>"rain"</code>, so <code>wasRain</code> is false and it never waters. A winter blizzard leaves your frostbloom parched. <span class="tag t-fix">bug</span></li>
+    <li><strong>Clear</strong> merely permits fireflies to spawn.</li>
+    <li>Fishing, foraging, the mine and the beach never read the weather at all.</li>
+    <li>There is <strong>no forecast</strong>. You learn today's weather by waking up in it.</li>
+  </ul>
+
+  <div class="card warn">
+    <p style="margin:0"><strong>One more, found while measuring:</strong> upgrading the <em>Hoe</em> does literally nothing. The Hoe branch of <code>useTool()</code> never reads <code>power</code> or a coverage radius — it tills one tile for two energy at Basic, Copper, Iron and Gold alike. You can spend 6,500g and five Gold Ore on an upgrade with zero effect. <span class="tag t-fix">bug</span></p>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>Part Three — What I got wrong</h2>
+
+  <p>My first instinct was to add five features: a forecast, a fishing hunt, an orchard, a mine overhaul, and a Guild endgame. I sent that plan to four independent critics — a game designer, a cozy-genre player, an engineer who'd have to build it, and a loop analyst — and asked them to attack it.</p>
+
+  <p>They converged, unprompted, on the same sentence:</p>
+
+  <div class="quote">"The proposal adds things to <em>do</em> with the afternoon, but never removes the reason to <em>skip</em> the afternoon."</div>
+
+  <p>They were right. Every one of those five features was flavour poured on top of a broken incentive. Ship all five and the optimizer still tends the starfruit and sleeps at seven. So the plan changed. <strong>Two features were cut, one was rewritten, and the actual fix — which wasn't in the original plan at all — moved to the front.</strong></p>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="kicker">Cut <span class="tag t-cut">cut</span></div>
+      <p style="margin-top:.3rem"><strong>The Guild Blessings.</strong> "Each dawn, walk to the Guild and pick a buff." It cannibalised the fishing hunt (a blessing that relaxes a legendary's conditions deletes the thing you just built), and it re-introduced the exact disease — <em>a mandatory ninety-second dawn chore</em>.</p>
+    </div>
+    <div class="card">
+      <div class="kicker">Cut <span class="tag t-cut">cut</span></div>
+      <p style="margin-top:.3rem"><strong>The Deep (mine overhaul).</strong> The most engineering for the least effect on the actual problem. And "you may not descend without the lantern" is a gate, and a gate is friction. In a game about being cared for, the world should not wag its finger at you.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>Part Four — v2.0 · <span style="color:var(--gold-hi)">"A Day Worth Staying Up For"</span></h2>
+
+  <div class="card paper">
+    <p style="margin-top:0"><strong>Thesis.</strong> Make the day itself worth living. Every day should <em>offer</em> something that exists only today; you should be able to <em>see it coming</em>; and no single crop should quietly pay for everything so that none of it matters.</p>
+    <p style="margin-bottom:0"><strong>Rule.</strong> Nothing is ever taken from the player. No crop is destroyed, no day is stolen, no gate is locked. The world gives <em>more</em> on some days than others — and tells you in advance which days those are.</p>
+  </div>
+
+  <h3>1 · Tom's Demand — the market remembers <span class="tag t-new">new</span><span class="tag t-s">S</span></h3>
+  <p><em>This is the fix. It goes first because nothing else matters until it lands.</em></p>
+  <p>Sell many of the same thing in one day and its price slides: the first sells at full price, the tenth at ~70%, the fortieth at the floor. It resets every morning. Tom will tell you plainly: <em>"I can't shift forty starfruit, farmer. Bring me something else."</em></p>
+  <ul>
+    <li><span class="why">Why:</span> a fifty-tile starfruit monoculture drops from ~3,100g/day to roughly ~1,400g. Not by nerfing starfruit — by nerfing <em>sameness</em>. Diversity pays. The noticeboard, cooking, foraging, fishing and the orchard all become economically real overnight.</li>
+    <li><span class="why">Cozy:</span> nothing is lost. You simply get less for the fortieth identical thing, and the shop <em>shows you the price</em> before you sell.</li>
+    <li><span class="chorecheck">Chore check:</span> ignorable entirely. If you never sell in bulk you never see it.</li>
+  </ul>
+
+  <h3>2 · The Forecast &amp; the Day's Offering <span class="tag t-new">new</span><span class="tag t-m">M</span></h3>
+  <p>Five weathers instead of three: <strong>clear · rain · storm · fog · snow</strong>. Tomorrow's weather is rolled tonight and <em>posted on the noticeboard</em>, shown in the HUD, and logged in the Almanac. Each weather makes the world offer something — <strong>today only</strong>:</p>
+  <table>
+    <tr><th>Weather</th><th>What the valley offers</th></tr>
+    <tr><td><span style="color:var(--gold)">Clear</span></td><td>Fireflies. A good day for a festival, or for a wedding.</td></tr>
+    <tr><td><span style="color:var(--blue)">Rain</span></td><td>The fish bite fast. Forage gives double. Your crops water themselves.</td></tr>
+    <tr><td><span style="color:#c9b6ff">Storm</span></td><td>The sea is too rough to fish — but the veins run rich underground. And the <em>next</em> morning the beach is strewn with storm-wrack: pearls, coral, lost tackle.</td></tr>
+    <tr><td><span style="color:#cfd6e0">Fog</span></td><td>The deep seams read richer. Gems come easier. The valley is very quiet.</td></tr>
+    <tr><td><span style="color:#e6f6ff">Snow</span></td><td>Frostberries in the meadow. The cold firms the flesh — winter fish fetch a premium.</td></tr>
+  </table>
+  <ul>
+    <li><span class="why">Why it defeats the sleep-skip:</span> storm-wrack, doubled forage and the legendary bite-windows exist <em>only that day</em>. Sleeping through them loses them. No punishment — just a thing you'd rather not miss.</li>
+    <li><span class="why">The storm is never "closed."</span> Bram says the sea's too rough today. Nothing is taken. The next morning, the sea gives it back.</li>
+    <li>Festivals and birthdays force fair weather. The coast never closes on a dated event.</li>
+    <li><span class="chorecheck">Chore check:</span> you may ignore the forecast forever and play exactly as you do today.</li>
+  </ul>
+
+  <h3>3 · The Hunt — fishing gets places, hours and legends <span class="tag t-new">new</span><span class="tag t-m">M</span></h3>
+  <p>Right now every body of water in the valley contains the same fish. In v2.0 the catch depends on <strong>where you stand, what hour it is, what the weather's doing, and what season it is</strong>.</p>
+  <p>And there are <strong>five legendary fish</strong>, one for each season and one that only rises in a storm. Each has exact conditions. You don't find them in a wiki — <strong>Bram tells you</strong>, one clue per heart, and every clue you learn writes itself into your Almanac as a checklist.</p>
+  <ul>
+    <li><span class="why">Why:</span> it converts a shallow slot-machine into a hunt, using the minigame that already exists. It's the biggest consumer of the forecast — the reason to <em>care</em> that tomorrow is foggy.</li>
+    <li><span class="why">Cozy:</span> a secret whispered by a friend, not homework. Nothing is missable — the seasons come round again.</li>
+    <li><span class="chorecheck">Chore check:</span> entirely optional. The ordinary fish are still there.</li>
+  </ul>
+
+  <h3>4 · The Orchard &amp; the Apiary <span class="tag t-new">new</span><span class="tag t-m">M</span></h3>
+  <p>Buy a sapling. Plant it anywhere on the farm. It takes a <strong>whole season</strong> to mature — and then it fruits every day of its season, forever. A cherry tree is a promise you make to your future self.</p>
+  <p>Beehives produce honey, and the yield scales with <strong>how many flowering tiles lie within four squares of the hive</strong>. Flowers can't be sold. So every flower tile is opportunity cost against a crop tile.</p>
+  <ul>
+    <li><span class="why">Why:</span> it's the only feature that changes what your farm <em>is</em>, rather than what you do on a given afternoon. It gives the shape of the land a meaning, and it gives day 100 something to build toward.</li>
+    <li><span class="why">Balance:</span> fruit yields sit deliberately <em>under</em> starfruit per tile. Trees are diverse income, which — thanks to Tom's Demand — is now worth more than a bigger monoculture.</li>
+    <li><span class="chorecheck">Chore check:</span> a tree you never harvest simply keeps its fruit. Nothing rots, nothing nags.</li>
+  </ul>
+
+  <h3>Two bugs, fixed on the way <span class="tag t-fix">fix</span><span class="tag t-s">S</span></h3>
+  <ul>
+    <li><strong>The Hoe upgrade will do something.</strong> Copper tills a 3-tile row, Iron a 5-tile row, Gold a 3×3 — matching the watering can, for one energy each. 6,500g should buy you something.</li>
+    <li><strong>Snow will be honest.</strong> Snow does <em>not</em> water your crops — the ground is frozen — and the Almanac will say so plainly, so winter reads as a deliberate constraint rather than a bug.</li>
+  </ul>
+
+  <!-- ============================================================ -->
+  <h2>Part Five — Why these four belong together</h2>
+
+  <div class="card good">
+    <p style="margin-top:0"><strong>Tom's Demand</strong> stops one crop from paying for everything, which pushes you out of the farm and into the day.</p>
+    <p><strong>The Forecast</strong> gives that day a character, and tells you its character in advance, so leaving the farm is a <em>plan</em> rather than a wander.</p>
+    <p><strong>The Hunt</strong> is what the forecast is <em>for</em> — the biggest, most specific reason to be somewhere particular, at a particular hour, in particular weather.</p>
+    <p style="margin-bottom:0"><strong>The Orchard</strong> is what you build with the gold you earn out there — and because it pays in <em>variety</em> (apples, cherries, plums, honey), Tom's Demand rewards it more than another row of starfruit ever could.</p>
+  </div>
+
+  <p>Remove any one and the others weaken. Cut Tom's Demand and the optimizer still sleeps at seven. Cut the forecast and the Hunt becomes a lottery. Cut the Hunt and the forecast is a decoration. Cut the Orchard and there's nothing to spend the day's earnings on.</p>
+
+  <p>And once in a while — by design — <strong>two good things happen on the same day and you can't have both</strong>. Fog means the gem seams are rich, and it's also the only weather the Whitefin rises in. That single collision is the cozy-safe version of a hard choice: nothing is lost either way, but you'll think about it.</p>
+
+  <!-- ============================================================ -->
+  <h2>Build order</h2>
+  <ol class="build">
+    <li><strong>Tom's Demand</strong> — the rebalance lands first, because every later feature is measured against it.</li>
+    <li><strong>The two bug fixes</strong> — the Hoe tiers and the honest snow. Cheap, and immediately felt.</li>
+    <li><strong>The Forecast &amp; the Day's Offering</strong> — the spine. Five weathers, tomorrow posted tonight, present-only rewards.</li>
+    <li><strong>The Hunt</strong> — fish tables by place, hour, weather and season; five legends; Bram's clues; the Almanac checklist.</li>
+    <li><strong>The Orchard &amp; the Apiary</strong> — saplings, seasons, honey, and a farm whose shape means something.</li>
+    <li><strong>Adversarial review &amp; regression</strong> — the same discipline as every release: independent reviewers, three-lens verification, and a full pass over every map, every save version, every festival date.</li>
+  </ol>
+
+  <h2>Explicitly not doing</h2>
+  <ul>
+    <li><strong>Combat.</strong> The game ships zero combat and that is an identity, not an oversight.</li>
+    <li><strong>Crop destruction, lightning, dead animals.</strong> Nothing is ever taken from the player.</li>
+    <li><strong>The Guild blessing board.</strong> A dawn chore that eats the Hunt.</li>
+    <li><strong>The mine overhaul.</strong> Most engineering, least effect on the real problem. Weather gives the mine its good days instead. Maybe v2.1.</li>
+    <li><strong>NPC schedules, quality tiers, sprinklers, a greenhouse, children.</strong> All previously considered, all previously cut, all still cut.</li>
+  </ul>
+
+  <h2>Status — <span style="color:var(--green)">shipped</span></h2>
+  <div class="card good">
+    <p style="margin-top:0">All four features plus the two bug fixes are <strong>built, reviewed and live</strong> in v2.0. Verified numbers from the finished code:</p>
+    <ul>
+      <li><strong>Tom's Demand:</strong> bulk-dumping 50 starfruit now nets ~1,100g/day (was 3,125); a staggered daily farmer loses ~4%. The sleep-at-7am optimum is gone.</li>
+      <li><strong>The Forecast:</strong> five weathers, tomorrow chalked on the board tonight, present-only offerings. Zero storms or fog on any festival or birthday.</li>
+      <li><strong>The Hunt:</strong> five legends, each provably catchable (<code>fishDiff</code> hard-clamped so no fish can out-swim the bar); pond and coast hold different fish; Bram drips one clue per heart.</li>
+      <li><strong>The Orchard &amp; Apiary:</strong> trees pay 17–25 g/tile/day averaged over a year vs starfruit's 63; four hives cap at 1,200g/day and honey obeys demand like everything else.</li>
+    </ul>
+    <p style="margin-bottom:0">An adversarial review (six dimensions, three-lens verification) confirmed two real defects — a permanent tree could wall off the cottage door, and a lightning flash could freeze behind a menu. Both fixed; trees and hives can now be dug up, so no placement is ever permanent. Full regression green: 9 maps × 5 weathers × 6 dates, 288 mine floors reachable, Act Two intact, v1.5 saves migrate.</p>
+  </div>
+
+  <div class="foot">
+    HarvestScape · <code>~/repos/harvestscape/game</code> · every pixel and every sound generated by code.<br>
+    Diagnosis measured directly from source; roadmap stress-tested by four independent critics and two rival proposals; build reviewed by six more.
+  </div>
+</div>
+</body>
+</html>

@@ -6,6 +6,26 @@
 
 const SEASONS = ["Spring", "Summer", "Fall", "Winter"];
 const SEASON_DAYS = 28;
+const YEAR_DAYS = SEASON_DAYS * 4;
+
+// ---- THE CALENDAR ----
+// Festivals recur every year on a fixed date, on the coast. `window` is the hour range you must
+// arrive within; arriving on the day outside the window just tells you when to come back.
+const FESTIVALS = [
+  { id:"eggfair",   name:"The Egg Fair",    season:"Spring", day:14, from:9,  to:18, blurb:"Pip hides eggs all over the sand." },
+  { id:"luau",      name:"The Summer Luau", season:"Summer", day:14, from:11, to:19, blurb:"Bring a fish for Bram's pot." },
+  { id:"harvest",   name:"The Harvest Fair",season:"Fall",   day:22, from:9,  to:18, blurb:"Your best crop of the season is judged." },
+  { id:"starwatch", name:"The Star-Watch",  season:"Winter", day:24, from:19, to:26, blurb:"The valley watches the winter sky." },
+];
+
+// Give them each a gift on their day and it counts for far more.
+const BIRTHDAYS = {
+  pip:   { season:"Spring", day:5  },
+  maya:  { season:"Spring", day:19 },
+  tom:   { season:"Summer", day:6  },
+  rowan: { season:"Fall",   day:3  },
+  bram:  { season:"Winter", day:11 },
+};
 
 // ---- CROPS (level- & season-gated) ----
 // pal: [stalk, leaf, fruit, fruitHi]  — used by the sprite generator
@@ -21,6 +41,7 @@ const CROPS = {
   cranberry:  { name:"Cranberry",  lvl:18, days:5, seed:170, sell:280, xp:60,  shape:"bush",   seasons:["Fall"],            pal:["#3f7a2e","#5fa03e","#c02a3a","#ff5a6a"] },
   pumpkin:    { name:"Pumpkin",    lvl:22, days:6, seed:220, sell:400, xp:72,  shape:"gourd",  seasons:["Fall"],            pal:["#3f7a2e","#5fa03e","#ff8a2a","#ffb35a"] },
   starfruit:  { name:"Starfruit",  lvl:24, days:8, seed:450, sell:950, xp:150, shape:"star",   seasons:["Summer"],          pal:["#4f8a34","#7fbe55","#ffe25a","#fff6b0"] },
+  frostbloom: { name:"Frostbloom", lvl:14, days:6, seed:180, sell:330, xp:66,  shape:"bush",   seasons:["Winter"],          pal:["#4a6a7a","#6a94a8","#a8d8f0","#e6f6ff"] },
 };
 
 // ---- TREES ----
@@ -47,9 +68,68 @@ const FISH = [
   { name:"Golden Koi", lvl:32, xp:190, sell:620, pal:["#ffb02a","#ffe27a"] },
 ];
 
+const CROP_NAMES = new Set(Object.keys(CROPS).map(k => CROPS[k].name));
+
+// ---- THE ORCHARD AND THE APIARY ----
+// A sapling takes a whole season to come good, then fruits every day of its season, forever.
+// Yield per tile sits deliberately UNDER a starfruit's — a tree is patience, not a money press.
+// And because it pays in *variety*, Tom's demand rewards it more than another row of the same.
+// Prices are set so that a mature tree pays a shade MORE than a starfruit tile in its own season
+// (~62g/tile/day) and nothing at all in the other three — a year-average well under a worked field.
+// A tree is a slow, gentle, diversified income. It must never become the new passive base layer.
+const FRUIT_TREES = {
+  cherry: { name:"Cherry Tree", fruit:"Cherry", season:"Spring", sell:85,  cost:1000,
+            pal:["#3f7a2e","#57ad57","#e0455a"], blurb:"Bears every day of spring, once it's grown." },
+  plum:   { name:"Plum Tree",   fruit:"Plum",   season:"Summer", sell:100, cost:1300,
+            pal:["#3a6a34","#4e9a4a","#7a4a9a"], blurb:"Bears every day of summer, once it's grown." },
+  apple:  { name:"Apple Tree",  fruit:"Apple",  season:"Fall",   sell:70,  cost:850,
+            pal:["#4a7a34","#69ad50","#d0403a"], blurb:"Bears every day of autumn, once it's grown." },
+};
+const TREE_MATURE_DAYS = 28;      // one full season of waiting
+const TREE_FRUIT_CAP   = 3;       // it holds three days of fruit, then waits for you — never a chore
+
+// A hive yields more where more is in bloom. Wild flowering ground counts, and so do berry bushes,
+// so the meadow is generous and your starfruit rows are not. Four hives is the valley's limit.
+const HIVE_COST = 700, HIVE_RADIUS = 4, HIVE_CAP = 3, HIVE_MAX = 4;
+
+// ---- THE HUNT ----
+// Where a fish lives. The pond and the coast are different water, and the valley knows it.
+const WATER = {
+  pond:  ["Sardine", "Bass", "Trout",  "Golden Koi"],   // trout are a river fish; no salmon inland
+  coast: ["Sardine", "Bass", "Salmon", "Golden Koi"],   // the salmon run comes off the sea
+};
+
+// Five fish that rise only under exact conditions. Bram knows all five, and will tell you one
+// for every heart you earn. Each is caught once, and then it is yours forever.
+// `hours` are raw clock hours (the day runs 6 → 26), so night wraps past midnight.
+const LEGENDS = [
+  { id:"sunfleck", name:"Sunfleck",   lvl:14, sell:700,  xp:220,
+    where:"pond",  from:5,  to:8,  weather:"clear", season:"Spring", chance:0.40,
+    pal:["#e8b23a","#fff0b0"],
+    clue:"There's a fish in your own pond that only shows in the first light of a spring morning. Clear sky. Before eight. Blink and it's gone." },
+  { id:"moonscale", name:"Moonscale", lvl:22, sell:800,  xp:260,
+    where:"coast", from:20, to:26, weather:"clear", season:"Summer", chance:0.40,
+    pal:["#8a9ad0","#dfe6ff"],
+    clue:"Summer nights, clear sky, out on my rocks after eight. Something comes up that takes the moon on its back. I've seen it twice." },
+  { id:"whitefin", name:"Whitefin",   lvl:30, sell:950,  xp:340,
+    where:"coast", from:8,  to:17, weather:"fog",   season:"Fall",   chance:0.38,
+    pal:["#cfd6e0","#ffffff"],
+    clue:"A fall fog on the water, in broad daylight — that's the only time the Whitefin comes in. Everyone else stays home on a fog day. That's rather the point." },
+  { id:"frostjaw", name:"Frostjaw",   lvl:26, sell:850,  xp:300,
+    where:"pond",  from:5,  to:8,  weather:"snow",  season:"Winter", chance:0.40,
+    pal:["#5a8aa8","#cfeaff"],
+    clue:"Winter. Snow falling. Your pond, at first light, when the ice is thin enough to break with a boot. Frostjaw. Ugly thing. Worth a fortune." },
+  { id:"stormrider", name:"Stormrider", lvl:34, sell:1200, xp:480,
+    where:"pond",  from:20, to:26, weather:"storm", season:null,     chance:0.34,
+    pal:["#6a5a9a","#c9b6ff"],
+    clue:"…And one more. When it storms at night, don't go to the sea — go to your own pond. Something comes up the stream ahead of the weather. My father called it the Stormrider. I never believed him. Then I saw it." },
+];
+const LEGEND_BY_ID = {}; LEGENDS.forEach(l => LEGEND_BY_ID[l.id] = l);
+
 // ---- SELL VALUES ----
 const ITEM_SELL = { "Wood":12, "Pine Wood":28, "Maple Wood":52, "Stone":3, "Copper Ore":30, "Iron Ore":68, "Gold Ore":165 };
 FISH.forEach(f => { ITEM_SELL[f.name] = f.sell; ITEM_SELL["Cooked "+f.name] = Math.floor(f.sell*1.75); });
+LEGENDS.forEach(l => { ITEM_SELL[l.name] = l.sell; });   // trophies. You don't cook a Stormrider.
 for(const k in CROPS) ITEM_SELL[CROPS[k].name] = CROPS[k].sell;
 
 // ---- EDIBLES (energy restored) ----
@@ -63,31 +143,169 @@ for(const g in GEM_SELL) ITEM_SELL[g] = GEM_SELL[g];
 const SHORE = { Shell:22, Coral:48, Seaweed:14, Clam:38, Pearl:260 };
 for(const s in SHORE) ITEM_SELL[s] = SHORE[s];
 EDIBLE["Clam"] = 20;
+ITEM_SELL["Frostberry"] = 40;             // winter forage — the valley still gives, just less
+EDIBLE["Frostberry"] = 20;
+for(const k in FRUIT_TREES){ const t = FRUIT_TREES[k];
+  ITEM_SELL[t.fruit] = t.sell; EDIBLE[t.fruit] = 24; }
+ITEM_SELL["Honey"] = 100; EDIBLE["Honey"] = 30;
+const FRUIT_NAMES = new Set(Object.values(FRUIT_TREES).map(t => t.fruit));
+// Shop staples. Both priced below their buy cost (24g / 30g) so there is no buy-low-sell-high
+// loop. Berry Bun previously had no price at all, which quietly made it ungiftable — and it is
+// Pip's favourite thing in the world.
+ITEM_SELL["Field Salad"] = 22;
+ITEM_SELL["Berry Bun"]   = 22;
 ITEM_SELL["Star Metal"] = 0;              // story items, not for sale
 ITEM_SELL["Guild Seal"] = 0;
+ITEM_SELL["Bouquet"] = 0;                 // Willowbrook courtship — give to your beloved
 ITEM_SELL["Grandpa's Guild Pin"] = 0;     // keepsake — grants +10% XP while carried
 
 // ---- ANIMAL PRODUCE ----
-ITEM_SELL["Egg"] = 55; ITEM_SELL["Large Egg"] = 95; ITEM_SELL["Milk"] = 90; ITEM_SELL["Wool"] = 120;
-EDIBLE["Egg"] = 16; EDIBLE["Milk"] = 22;
+ITEM_SELL["Egg"] = 55; ITEM_SELL["Large Egg"] = 95; ITEM_SELL["Milk"] = 90; ITEM_SELL["Large Milk"] = 165; ITEM_SELL["Wool"] = 120;
+EDIBLE["Egg"] = 16; EDIBLE["Milk"] = 22; EDIBLE["Large Milk"] = 40;
 
 // ---- COOKING RECIPES (made at a stove or campfire) ----
 // ing: {item:qty}. Dishes give energy + sell + Cooking XP + are good gifts.
+// Sell values obey one rule: a dish must never be worth LESS than the crops that went into it.
+// Anything that lost money was raised to ~1.30x its ingredient value; anything already above
+// that was left alone. No dish is craftable purely from shop-bought inputs, so there is no loop.
 const RECIPES = [
   { name:"Fried Egg",         ing:{Egg:1},                       energy:45,  sell:90,  xp:16, col:"#ffd75a" },
   { name:"Baked Potato",      ing:{Potato:1},                    energy:42,  sell:95,  xp:16, col:"#caa06a" },
-  { name:"Bread",             ing:{Wheat:2},                     energy:48,  sell:110, xp:22, col:"#e0b46a" },
+  { name:"Bread",             ing:{Wheat:2},                     energy:48,  sell:160, xp:22, col:"#e0b46a" },
   { name:"Garden Salad",      ing:{"Field Salad":1, Carrot:1},   energy:55,  sell:160, xp:28, col:"#7fbe55" },
-  { name:"Berry Jam",         ing:{Strawberry:2},                energy:50,  sell:240, xp:32, col:"#e0455a" },
-  { name:"Corn Bread",        ing:{Corn:1, Wheat:1},             energy:72,  sell:220, xp:36, col:"#ffd94a" },
-  { name:"Tomato Soup",       ing:{Tomato:2},                    energy:66,  sell:230, xp:34, col:"#e0452a" },
-  { name:"Blueberry Tart",    ing:{Blueberry:2, Wheat:1},        energy:80,  sell:320, xp:42, col:"#5a6ad0" },
-  { name:"Pumpkin Soup",      ing:{Pumpkin:1, Milk:1},           energy:95,  sell:400, xp:52, col:"#ff8a2a" },
+  { name:"Berry Jam",         ing:{Strawberry:2},                energy:50,  sell:440, xp:32, col:"#e0455a" },
+  { name:"Corn Bread",        ing:{Corn:1, Wheat:1},             energy:72,  sell:400, xp:36, col:"#ffd94a" },
+  { name:"Tomato Soup",       ing:{Tomato:2},                    energy:66,  sell:470, xp:34, col:"#e0452a" },
+  { name:"Blueberry Tart",    ing:{Blueberry:2, Wheat:1},        energy:80,  sell:470, xp:42, col:"#5a6ad0" },
+  { name:"Pumpkin Soup",      ing:{Pumpkin:1, Milk:1},           energy:95,  sell:680, xp:52, col:"#ff8a2a" },
   { name:"Farmer's Omelette", ing:{Egg:2, Milk:1},               energy:100, sell:360, xp:50, col:"#ffe08a" },
-  { name:"Fish Stew",         ing:{Salmon:1, Carrot:1, Tomato:1},energy:88,  sell:380, xp:48, col:"#d76a4a" },
-  { name:"Cranberry Sauce",   ing:{Cranberry:2},                 energy:60,  sell:300, xp:40, col:"#c02a3a" },
+  { name:"Fish Stew",         ing:{Salmon:1, Carrot:1, Tomato:1},energy:88,  sell:680, xp:48, col:"#d76a4a" },
+  { name:"Cranberry Sauce",   ing:{Cranberry:2},                 energy:60,  sell:730, xp:40, col:"#c02a3a" },
+  { name:"Frostbloom Tea",    ing:{Frostbloom:1, Milk:1},        energy:70,  sell:590, xp:44, col:"#a8d8f0" },
 ];
 RECIPES.forEach(r => { ITEM_SELL[r.name] = r.sell; EDIBLE[r.name] = r.energy; });
+
+// ---- ROWAN'S RESTORATION PROJECTS ----
+// Late-game gold has nowhere to go. These turn a pile of coin into things you can walk on.
+// Fund one, sleep, and it exists. ~16,000g of sinks in total.
+const PROJECTS = [
+  { id:"minecart", name:"The Minecart Line", gold:8000, items:{ "Iron Ore":20, "Wood":30 },
+    blurb:"Re-lay the old rails from the cottage to the mine mouth. No more trudging the ridge.",
+    done:"The rails are re-laid. A cart waits at each end." },
+  { id:"boardwalk", name:"The Coast Boardwalk", gold:5000, items:{ "Wood":40, "Pine Wood":10 },
+    blurb:"Plank the marsh path and hang lanterns. The coast stops being a hike.",
+    done:"The boardwalk is laid, and the lanterns are lit." },
+  { id:"fountain", name:"The Town Fountain", gold:3000, items:{ "Stone":10, "Emerald":2 },
+    blurb:"A fountain by Tom's door, as there was once. Toss a coin; word of your wish gets around.",
+    done:"The fountain runs again. Pip has already fallen in." },
+];
+const PROJECT_BY_ID = {}; PROJECTS.forEach(p => PROJECT_BY_ID[p.id] = p);
+
+// ---- THE WEATHER, AND WHAT EACH DAY OFFERS ----
+// Weather never takes anything from you. It changes what the valley OFFERS, and always for one day
+// only — so a day slept through is a thing missed, not a thing lost. Tomorrow's is posted tonight.
+const WEATHERS = {
+  clear: { name:"Clear",  icon:"☀", tone:"#ffce5a",
+    line:"A clear day. The valley is exactly itself.",
+    offer:"Fireflies at dusk." },
+  rain:  { name:"Rain",   icon:"☔", tone:"#8fd3ff",
+    line:"Rain drums on the roof — your crops drink for free.",
+    offer:"The fish bite fast. Forage gives double. No watering needed." },
+  storm: { name:"Storm",  icon:"⛈", tone:"#c9b6ff",
+    line:"A storm off the sea. Bram won't take the boat out today.",
+    offer:"The coast is too rough to fish — but the veins run rich underground. Tomorrow the beach will be strewn with wrack." },
+  fog:   { name:"Fog",    icon:"🌫", tone:"#cfd6e0",
+    line:"Fog lies in the hollows. The valley has gone very quiet.",
+    offer:"The seams read richer — gems come easier in the dark." },
+  snow:  { name:"Snow",   icon:"❄", tone:"#e6f6ff",
+    line:"Snow settles quietly over the valley.",
+    offer:"Frostberries in the meadow. Winter fish fetch a premium. The ground is frozen — your crops still need the can." },
+};
+// per-season odds; they must sum to 1. Winter trades rain for snow and never storms.
+const WEATHER_ODDS = {
+  Spring: { clear:0.55, rain:0.30, fog:0.10, storm:0.05 },
+  Summer: { clear:0.62, rain:0.22, storm:0.10, fog:0.06 },
+  Fall:   { clear:0.48, rain:0.28, fog:0.16, storm:0.08 },
+  Winter: { clear:0.45, snow:0.42, fog:0.13 },
+};
+
+// ---- TOM'S DEMAND ----
+// A village shop can only shift so much of one thing in a day. The first few of any item sell at
+// full price; after that the price slides, and it resets every morning.
+//
+// This exists to tax SAMENESS, not any particular crop. A farmer who harvests a few tiles each
+// morning never notices it. A farmer who dumps fifty starfruit at once loses about two thirds.
+// Nothing is ever confiscated — you simply get less for the fortieth identical thing.
+const DEMAND = { free:6, decay:0.96, floor:0.55 };
+
+// price multiplier for the (k+1)-th unit of an item sold today, k being how many already went
+function demandMult(k){
+  if(k < DEMAND.free) return 1;
+  return Math.max(DEMAND.floor, Math.pow(DEMAND.decay, k - DEMAND.free + 1));
+}
+
+// ---- MASTERY ----
+// The 1-99 curve promised mastery and paid out nothing past the last content unlock.
+// Four milestones per skill, all small and passive — you feel them, you don't manage them.
+const MASTERY = {
+  Farming: {
+    25: "Deep Roots — watered soil sometimes stays wet overnight",
+    50: "Bountiful — crops sometimes yield twice",
+    75: "Green Thumb — crops sometimes grow two days in one night",
+    99: "Fields of Gold — double yields become common",
+  },
+  Woodcutting: {
+    25: "Easy Swing — some swings cost no energy",
+    50: "Clean Fell — every tree gives an extra log",
+    75: "Steward — the woods grow back faster",
+    99: "One Stroke — an oak falls to a single swing",
+  },
+  Mining: {
+    25: "Sure Grip — some swings cost no energy",
+    50: "Rich Seam — veins sometimes give twice",
+    75: "Gemcutter — gems are worth far more experience",
+    99: "Stonebreaker — no vein takes more than two swings",
+  },
+  Fishing: {
+    25: "Still Water — the fish bite sooner",
+    50: "Steady Hand — a taller catch bar",
+    75: "Angler's Eye — a far more forgiving perfect catch",
+    99: "Deep Caller — your catch sometimes runs bigger",
+  },
+  Cooking: {
+    25: "Second Helping — you sometimes plate two",
+    50: "Hearth Warmth — every dish restores more energy",
+    75: "Comfort Food — a cooked dish is beloved by anyone who likes cooking",
+    99: "Renowned — your cooking fetches a premium",
+  },
+};
+
+// ---- THE VILLAGE NOTICEBOARD ----
+// One request a day, pinned beside Tom's door. Deliver by talking to the villager who asked.
+// `lvl` is the rough skill level at which the item becomes obtainable — the board never asks
+// for something you couldn't plausibly have. Pay is ~1.4x sell + 25 heart points.
+const REQUESTS = [
+  { who:"tom",   item:"Wood",        qty:8,  lvl:1,  line:"Shelves again. Always shelves. The shelves are winning." },
+  { who:"tom",   item:"Stone",       qty:10, lvl:1,  line:"The step outside is cracked and I've tripped on it twice this week. Only twice. Fine, four times." },
+  { who:"tom",   item:"Turnip",      qty:3,  lvl:1,  line:"Somebody asked for turnips. One somebody. I have built an entire order around one somebody." },
+  { who:"pip",   item:"Shell",       qty:4,  lvl:1,  line:"I'm making a CROWN. It needs FOUR. Three is a hat and a hat is NOT the same." },
+  { who:"maya",  item:"Field Salad", qty:3,  lvl:1,  line:"I'm painting greens and I keep eating my references. It's becoming a problem." },
+  { who:"bram",  item:"Sardine",     qty:5,  lvl:1,  line:"Bait. Don't look at me like that — the big ones eat the little ones. That's the arrangement." },
+  { who:"tom",   item:"Potato",      qty:4,  lvl:3,  line:"Potatoes keep. Potatoes always keep. A shopkeeper's favourite word is 'keep'." },
+  { who:"maya",  item:"Egg",         qty:4,  lvl:1,  line:"Gran's sponge takes four and I've got three, and I am NOT walking to the dairy in this wind." },
+  { who:"rowan", item:"Copper Ore",  qty:5,  lvl:1,  line:"The hall's brackets are green with age. Copper for copper. It's what the Guild would have done." },
+  { who:"pip",   item:"Bass",        qty:2,  lvl:5,  line:"Dad says if I catch one I can keep it. Dad did NOT say who has to catch it." },
+  { who:"tom",   item:"Wheat",       qty:5,  lvl:4,  line:"Bread sells. Bread always sells. I'd bake it myself but the last loaf frightened a customer." },
+  { who:"bram",  item:"Pine Wood",   qty:4,  lvl:8,  line:"Pine takes the water. For the boats. Don't bring me oak and don't argue with me about it." },
+  { who:"maya",  item:"Strawberry",  qty:3,  lvl:10, line:"…No reason. No reason at all. Stop smiling like that." },
+  { who:"rowan", item:"Iron Ore",    qty:4,  lvl:12, line:"A hinge on the mining wing. Eleven years it has hung crooked and eleven years it has bothered me." },
+  { who:"tom",   item:"Trout",       qty:2,  lvl:12, line:"A gentleman from the coast is coming and I have promised him river fish. I have promised him a great deal." },
+  { who:"pip",   item:"Amethyst",    qty:1,  lvl:12, line:"Gary needs a FRIEND. It's not for me. It's for Gary. He gets lonely in the box." },
+  { who:"maya",  item:"Carrot",      qty:5,  lvl:6,  line:"Soup for Rowan. He'll say he isn't hungry and then eat the whole pot. He does it every year." },
+  { who:"bram",  item:"Salmon",      qty:2,  lvl:20, line:"Not for me. For the smoker. The smoker doesn't care whose hands did the work — and neither do I." },
+  { who:"rowan", item:"Emerald",     qty:1,  lvl:20, line:"For the Guild seal. Green for growing. Your grandfather chose that stone and I have never told him I agreed." },
+  { who:"tom",   item:"Pumpkin",     qty:2,  lvl:22, line:"Two. Enormous ones. I want them in the window and I want the whole valley to see them." },
+];
 
 // ---- TOOLS ----
 const TOOLS = ["Hoe", "Can", "Axe", "Pick", "Rod"];
@@ -161,7 +379,7 @@ const QUESTS = [
   { id:"the-coast", title:"Salt & Silver", giver:"Bram",
     desc:"Follow the south path to the coast. Bram the fisher tends the Fishing wing.",
     obj:[ {text:"Meet Bram at the coast", talk:"bram"},
-          {text:"Reach Fishing 12", level:{skill:"Fishing",n:12}} ],
+          {text:"Reach Fishing 10", level:{skill:"Fishing",n:10}} ],
     reward:{ gold:300, items:{"Cooked Salmon":2}, msg:"Bram grunts. From him, that's a medal." } },
 
   { id:"into-deep", title:"Into the Deep", giver:"Elder Rowan",
@@ -187,4 +405,27 @@ const QUESTS = [
           {text:"Recover the Star Metal", flag:"foundVault"} ],
     reward:{ gold:2000, msg:"Lanterns rise over the water. The valley is awake — and it's yours." },
     finale:true },
+
+  // ---------- ACT TWO: the empty chair ----------
+  { id:"long-way-home", title:"The Long Way Home", giver:"Elder Rowan",
+    desc:"The lanterns are lit and the valley is whole — save for one empty chair. Rowan would like a word.",
+    obj:[ {text:"Light the lanterns at the Grand Festival", flag:"festivalDone"},
+          {text:"Learn what Bram has been carrying", flag:"knowsElias"} ],
+    reward:{ gold:200, msg:"Rowan asks you to do a hard, kind thing." },
+    act2:true },
+
+  { id:"driftwood", title:"Driftwood & Waxed Paper", giver:"Bram",
+    desc:"“If the festival ever comes back… I'll make them again.” Bring Bram the wood for his water lanterns.",
+    obj:[ {text:"Bring 12 Wood", item:"Wood", n:12},
+          {text:"Bring 3 Pine Wood", item:"Pine Wood", n:3} ],
+    reward:{ gold:250, msg:"Bram's hands remember the folds." },
+    act2:true },
+
+  { id:"coast-road", title:"The Coast Road", giver:"Maya",
+    desc:"Forty miles north, a ferryman has spent eleven years counting the days he didn't come home.",
+    obj:[ {text:"Reach 5 hearts with Maya", heart:5},
+          {text:"Bram folds the water lanterns", flag:"lanternsFolded"} ],
+    reward:{ gold:500, msg:"" },
+    act2:true },
 ];
+const FINALE_IDX = QUESTS.findIndex(q => q.finale);

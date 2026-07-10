@@ -148,21 +148,36 @@ function migrateSave(s){
   for(const t of TOOLS){ if(s.tools[t] === undefined) s.tools[t] = 0; }
   if(s.skills) for(const sk in f.skills){ if(s.skills[sk] === undefined) s.skills[sk] = 0; }
   if(!s.rel) s.rel = {};
-  if(!s.animals) s.animals = { chickens:[] };
+  if(!s.animals) s.animals = { chickens:[], cows:[] };
+  if(!s.animals.chickens) s.animals.chickens = [];
+  if(!s.animals.cows) s.animals.cows = [];      // barns arrived after the first saves
+  if(!s.flags) s.flags = {};
+  if(!s.market) s.market = {};                 // Tom's demand arrived in v2.0
+  if(!WEATHERS[s.weather]) s.weather = "clear"; // old saves may hold a weather we no longer have
+  // courtship was Maya-only before v1.4
+  if(s.flags.mayaConfided) s.flags.confided_maya = true;
+  if(s.flags.married && !s.flags.spouse) s.flags.spouse = "maya";
   if(!s.farm) s.farm = newMap("farm");
 }
 function beginPlay(){
   gameMode = "play"; paused = false; sleeping = false;
+  cutscene = null; $("stage").classList.remove("cine");   // never boot into a stale scene's input lock
   clearMapCache();
   $("title").classList.add("hidden"); $("intro").classList.add("hidden");
   $("hud").classList.remove("hidden"); $("hotbar").classList.remove("hidden");
   if(IS_TOUCH) $("touchUI").classList.remove("hidden");
   setMap("farm", 8*TILE+8, 12*TILE, "down");   // always wake on the farm
   refreshHUD(); refreshHotbar(); refreshQuestTracker(); setControlsHint();
-  // recover a stranded finale (game was reloaded/closed during the festival handoff)
-  if(state.questIdx >= QUESTS.length && !state.flags.festivalDone){
-    state.flags.festivalActive = false;
-    setTimeout(startFestival, 800);
+  // recover a stranded finale: reloaded during the handoff, OR the finale's objectives are
+  // already met but the festival never fired.
+  state.flags.festivalActive = false; state.flags.festivalPending = false; state.flags.seasonalActive = null;
+  state.flags.reunionScene = false; state.flags.turnInPending = false;
+  if(!state.forecast) rollForecast();   // day 1, and every save from before the forecast existed
+  applyProjects(state.farm);    // idempotent — re-lays anything a save already paid for
+  if(!state.flags.festivalDone){
+    // questIdx past the finale but festivalDone unset means the handoff was interrupted
+    if(state.questIdx > FINALE_IDX) setTimeout(startFestival, 800);
+    else checkQuests();   // auto-fires the finale (giver "The Valley") if its objectives are met
   }
 }
 
@@ -175,22 +190,54 @@ const LETTER =
 "Welcome home, kiddo.\nWelcome to Willowbrook.\n            — Grandpa";
 
 let _letterTimer = null, _letterFull = "", _letterEl = null, _letterDone = null, _letterActive = false;
+
+// Long letters (the memorial, Grandpa's last page) overflow the frame, so the body scrolls.
+// Show a fade + chevron only while there is genuinely more text below.
+function updateLetterFade(){
+  const el = $("letterBody"), box = $("letter"), stage = $("stage");
+  if(!el || !box) return;
+  // the letter is capped by the STAGE, not the viewport — a phone's stage is short even
+  // when the page is tall, so measure it and tighten the chrome when there's little room
+  if(stage) box.classList.toggle("tight", stage.clientHeight > 0 && stage.clientHeight < 430);
+  // a hairline overflow isn't "more to read" — don't nag over 5px of leading
+  const more = el.scrollHeight - el.clientHeight - el.scrollTop > 12;
+  box.classList.toggle("more", more);
+}
+function letterAtBottom(){
+  const el = $("letterBody"); if(!el) return true;
+  return el.scrollHeight - el.clientHeight - el.scrollTop < 24;
+}
+
 function typeLetter(el, text, onDone){
   _letterEl = el; _letterFull = text; _letterDone = onDone; _letterActive = true;
   el.innerHTML = "";
-  let i = 0;
+  el.scrollTop = 0;
+  let i = 0, follow = true;                       // the typewriter drags the view along with it
   clearInterval(_letterTimer);
   _letterTimer = setInterval(() => {
     i += 1;
     el.innerHTML = escapeHtml(text.slice(0,i)) + '<span class="cursor">▌</span>';
+    if(follow) el.scrollTop = el.scrollHeight;    // ...unless the reader scrolls up to re-read
+    else if(letterAtBottom()) follow = true;
+    updateLetterFade();
     if(i % 3 === 0) playSfx("blipTalk");
-    if(i >= text.length){ finishLetter(); }
+    if(i >= text.length){ finishLetter(true); }
   }, 34);
+  el.onscroll = () => { if(_letterActive && !letterAtBottom()) follow = false; updateLetterFade(); };
 }
-function finishLetter(){
+
+// `natural` = the text finished typing on its own. If the reader SKIPPED it, drop them back to
+// the top so they can actually read the thing they just revealed.
+function finishLetter(natural){
   clearInterval(_letterTimer);
-  if(_letterEl) _letterEl.innerHTML = escapeHtml(_letterFull);
+  const wasActive = _letterActive;
+  if(_letterEl){
+    _letterEl.innerHTML = escapeHtml(_letterFull);
+    if(wasActive && !natural) _letterEl.scrollTop = 0;
+  }
   _letterActive = false;
+  updateLetterFade();
+  requestAnimationFrame(updateLetterFade);   // once more after layout settles
   if(_letterDone) _letterDone();
 }
 function escapeHtml(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
@@ -221,11 +268,27 @@ function showHowto(){
 "• Hoe tills soil  • Watering Can waters it  • Seeds plant a crop\n" +
 "• Axe chops trees  • Pick mines rock  • Rod fishes water\n\n" +
 "E interacts — harvest crops, talk to folk, open doors, cook, and step inside your cottage to sleep in your bed and pass the night.\n\n" +
-"Explore! Enter the shops and houses in town, descend the old mine (north) for ore and gems, and follow the south path to the coast.\n\n" +
+"Fishing: cast with the Rod, wait for the !, then press Space to hook it. Now HOLD Space to raise the green bar and keep the fish inside it — let it slip and the line goes slack. Land one cleanly for a perfect catch.\n\n" +
+"Explore! Enter the shops and houses in town, descend the old mine (north) for ore and gems, and follow the south path to the coast. Keep hens in the coop and cows in the barn — visit them each morning.\n\n" +
+"Read the sky. Tomorrow's weather is chalked on the noticeboard every evening, and each kind of day offers something the others don't — rain doubles your foraging and brings the fish up; a storm shuts the coast but drives the veins, and leaves wrack on the sand the morning after; fog makes the deep seams read rich. Sleep through a day and you miss what it was offering. Nothing is ever lost.\n\n" +
+"Tom can only shift so much of one thing a day. Sell forty of the same crop and the price slides; bring him variety and it doesn't. Watch the price in his shop before you sell.\n\n" +
+"Bram knows five fish that rise only when everything lines up — the right water, the right hour, the right weather, the right season. He'll tell you about one for every heart you earn, and the Almanac remembers.\n\n" +
+"Saplings and beehives go in open ground (press R to select one, then Space). A tree takes a season to bear, then bears every day of its season, forever. Bees make more honey where more is in bloom.\n\n" +
+"The valley keeps a calendar. Four festivals return every year — be on the coast on the day, and bring something (Bram's Luau wants a fish; the Harvest Fair judges the best crop you've sold that season). Everyone has a birthday, too: a gift on the day is worth three. Check the Almanac in your Journal (J).\n\n" +
+"A noticeboard stands by Tom's door. Each morning someone in the valley wants something small — bring it to them for good coin and warmer feelings. It's never required, and it's gone by dawn.\n\n" +
+"Your grandfather tore up his old almanac and left the pages where he lived. You'll find them by working the way he worked. Nine in all, and the last one isn't a page about farming.\n\n" +
+"Every skill keeps paying past its last unlock: mastery lands at 25, 50, 75 and 99. And when your coin outgrows your needs, read the ledger on Rowan's desk — the valley has unfinished work.\n\n" +
+"Give your neighbours time and gifts and they'll open up — each has scenes of their own. Two of them might one day accept a Willowbrook bouquet.\n\n" +
 "Sell at Tom's stall, buy seeds and upgrade tools. Every action trains a skill from 1 to 99. Follow the tasks in your Journal (J) to wake the valley.\n\n" +
 "R cycles seeds · F eats food · G gifts Maya · K skills · I backpack";
-  $("letterBody").innerHTML = escapeHtml(txt);
+  const body = $("letterBody");
+  body.innerHTML = escapeHtml(txt);
+  body.scrollTop = 0;                                  // no typewriter here — set the fade by hand
+  body.onscroll = updateLetterFade;
+  requestAnimationFrame(updateLetterFade);
   const btn = $("btnLetterNext"); btn.textContent = "◂ Back"; btn.classList.add("show");
   btn.onclick = () => { intro.classList.add("hidden"); gameMode = "title"; };
   intro.onclick = null;
 }
+// the frame is a % of the stage, so a resize changes what fits
+window.addEventListener("resize", () => { if(!$("intro").classList.contains("hidden")) updateLetterFade(); });

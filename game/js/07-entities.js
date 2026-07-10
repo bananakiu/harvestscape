@@ -7,7 +7,11 @@
 let walkCycle = 0, moving = false, swingT = 0;
 let renderSeason = "Spring";
 let touchDir = {x:0,y:0};
-let fishing = { state:"idle", t:0, biteWin:0, bx:0, by:0 };
+// states: idle → wait (cast) → bite (the !) → reel (the minigame)
+let fishing = { state:"idle", t:0, biteWin:0, bx:0, by:0,
+  fish:null, fishY:0.5, fishV:0, fishTarget:0.5, fishTimer:0,
+  barY:0.42, barV:0, barH:0.26, prog:0.36, diff:1, outT:0 };
+let fishHold = false;                  // Space / mouse / USE held during the reel minigame
 let stepTimer = 0;
 
 function facingTile(){
@@ -81,8 +85,9 @@ function drawPrompt(cx, cy){
   ctx.font = '8px "VT323", monospace'; ctx.textAlign = "center";
   ctx.fillStyle = "#ffe6a0"; ctx.fillText("E", cx, y+1); ctx.textAlign = "left";
 }
-const INTERACT_KINDS = new Set(["campfire","stove","counter","stall","shipbin","sign","berrybush","chest",
-  "bed","ladderup","ladderdown","mineentrance","shellnode","coralnode","seaweednode","sealeddoor","desk"]);
+const INTERACT_KINDS = new Set(["campfire","stove","counter","stall","shipbin","sign","berrybush","frostberry","wrack","chest","noticeboard","fruittree","beehive",
+  "ledger","railcart","boardwalk","fountain",
+  "bed","ladderup","ladderdown","mineentrance","shellnode","coralnode","seaweednode","sealeddoor","desk","memorial"]);
 function facingInteractable(fx, fy){
   const w = warpAt(fx,fy); if(w && !w.auto) return true;
   const crop = curMap.crops[key(fx,fy)];
@@ -172,7 +177,7 @@ function renderWorld(){
       nameTag(NPCDEF[n.id].name, n.x, n.y);
     }});
   }
-  for(const a of curMap.animals) ents.push({ y: a.y, draw: () => drawChicken(a) });
+  for(const a of curMap.animals) ents.push({ y: a.y, draw: () => a.species==="cow" ? drawCow(a) : drawChicken(a) });
   ents.sort((a,b) => a.y - b.y).forEach(e => e.draw());
 
   // facing cursor + prompts
@@ -185,9 +190,11 @@ function renderWorld(){
       else { const a = nearestAnimal(20); if(a) drawPrompt(a.x, a.y-18); } }
   }
 
-  // fishing bobber
+  // fishing bobber — it thrashes while something is on the line
   if(fishing.state !== "idle"){
-    const bx = fishing.bx*TILE+8, by = fishing.by*TILE+8 + Math.sin(animT*5)*1.5;
+    const fight = fishing.state === "reel" ? clamp(Math.abs(fishing.fishV)*2.2, 0, 2.5) : 0;
+    const bx = fishing.bx*TILE+8 + Math.sin(animT*23)*fight;
+    const by = fishing.by*TILE+8 + Math.sin(animT*5)*1.5 + fight*0.6;
     ctx.fillStyle = "#e8e8e8"; ctx.fillRect(bx-1, by-2, 2, 4);
     ctx.fillStyle = "#c03030"; ctx.fillRect(bx-1, by-2, 2, 2);
     ctx.strokeStyle = "rgba(255,255,255,0.4)"; ctx.beginPath(); ctx.arc(bx, by+2, 3+Math.sin(animT*4)*1.5, 0, 7); ctx.stroke();
@@ -200,6 +207,45 @@ function renderWorld(){
 
   drawLighting(cam.x - shx, cam.y - shy);
   drawWeather();
+  drawReelBar();
+}
+
+/* ---- the reel-in minigame overlay (screen space, so it ignores the camera) ---- */
+function drawReelBar(){
+  if(fishing.state !== "reel" || !fishing.fish) return;
+  const F = fishing;
+  const x = VIEW_W - 44, y = 30, w = 16, h = 140;
+
+  ctx.fillStyle = "rgba(18,14,11,0.86)"; ctx.fillRect(x-7, y-11, w+30, h+18);
+  ctx.strokeStyle = "#8a6647"; ctx.lineWidth = 1;
+  ctx.strokeRect(x-6.5, y-10.5, w+29, h+17);
+
+  const water = ctx.createLinearGradient(0, y, 0, y+h);
+  water.addColorStop(0, "#3f7096"); water.addColorStop(1, "#1a3350");
+  ctx.fillStyle = water; ctx.fillRect(x, y, w, h);
+
+  // the stretch of line you're holding
+  const bY = y + F.barY*h, bH = F.barH*h;
+  const inside = F.fishY >= F.barY && F.fishY <= F.barY + F.barH;
+  ctx.fillStyle   = inside ? "rgba(150,235,120,0.42)" : "rgba(150,235,120,0.18)";
+  ctx.fillRect(x, bY, w, bH);
+  ctx.strokeStyle = inside ? "#c6ff8a" : "#6f9460";
+  ctx.strokeRect(x+0.5, bY+0.5, w-1, bH-1);
+
+  const s = spr["item_" + F.fish.name];
+  if(s) ctx.drawImage(s, Math.round(x + w/2 - 8), Math.round(y + F.fishY*h - 8));
+
+  // tension meter — empty it and the fish is gone
+  const mx = x + w + 4, ph = F.prog*h;
+  ctx.fillStyle = "#241a14"; ctx.fillRect(mx, y, 6, h);
+  ctx.fillStyle = F.prog > 0.66 ? "#8fd06a" : F.prog > 0.3 ? "#ffce5a" : "#ff7d7a";
+  ctx.fillRect(mx, y + h - ph, 6, ph);
+  ctx.strokeStyle = "#8a6647"; ctx.strokeRect(mx+0.5, y+0.5, 5, h-1);
+
+  ctx.font = '9px "VT323", monospace'; ctx.textAlign = "center";
+  ctx.fillStyle = (keys[" "] || fishHold) ? "#ffe6a0" : "#8a7a66";
+  ctx.fillText("HOLD", x + w/2, y - 2);
+  ctx.textAlign = "left";
 }
 
 function nameTag(text, x, y){
@@ -218,6 +264,22 @@ function drawChicken(a){
   if(a.ref.eggDay !== state.day){                       // egg-ready sparkle
     const ey = a.y-17 + Math.sin(animT*4);
     ctx.fillStyle = "#fff6e0"; ctx.fillRect(a.x-1, ey, 2, 3); ctx.fillStyle = "#e0d4bc"; ctx.fillRect(a.x-1, ey+2, 2, 1);
+  }
+}
+
+function drawCow(a){
+  const frame = a.moving ? (Math.floor(a.walk)%2) : 0;
+  const s = spr["cow_"+frame];
+  const bob = (!a.moving && Math.sin(animT*1.6) > 0.7) ? -1 : 0;   // slow, sleepy breathing
+  const dx = Math.round(a.x-10), dy = Math.round(a.y-15+bob);
+  ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.beginPath(); ctx.ellipse(a.x, a.y+1, 7, 2, 0, 0, 7); ctx.fill();
+  if(a.face==="left"){ ctx.save(); ctx.scale(-1,1); ctx.drawImage(s, -dx-20, dy); ctx.restore(); }
+  else ctx.drawImage(s, dx, dy);
+  if(a.ref.milkDay !== state.day){                      // milk-ready hint
+    const my = a.y-20 + Math.sin(animT*4);
+    ctx.fillStyle = "#f4f8fb"; ctx.fillRect(a.x-2, my, 4, 5);
+    ctx.fillStyle = "#5a9ad0"; ctx.fillRect(a.x-2, my+3, 4, 1);
+    ctx.fillStyle = "#e8e8e8"; ctx.fillRect(a.x-1, my-1, 2, 1);
   }
 }
 
@@ -277,6 +339,32 @@ function drawObject(ox, oy, o, k){
   if(o.kind==="torch"){ ctx.drawImage(spr.torch, bx, by); if(chance(0.25)) pEmber(bx+8, by+3); return; }
   if(o.kind==="wing"){ const lit = wingLit(o.wing); ctx.drawImage(lit ? spr.wingsconce_lit : spr.wingsconce_dark, bx, by);
     if(lit && chance(0.12)) pEmber(bx+8, by+3); return; }
+  // an orchard tree tells you its age and its season at a glance
+  if(o.kind==="fruittree"){
+    const t = FRUIT_TREES[o.type]; if(!t) return;
+    const age = o.age||0;
+    let s;
+    if(age < 8) s = spr["sapling_"+o.type];
+    else if(age < TREE_MATURE_DAYS) s = spr["tree_"+o.type+"_young"];
+    else if(renderSeason === "Winter") s = spr["tree_"+o.type+"_bare"];
+    else if(o.fruit > 0) s = spr["tree_"+o.type+"_full"];
+    else s = spr["tree_"+o.type+"_young"];
+    if(!s) return;
+    if(s.height > 16){ ctx.fillStyle="rgba(0,0,0,0.16)"; ctx.beginPath(); ctx.ellipse(bx+8, by+15, 6, 2.2, 0, 0, 7); ctx.fill(); }
+    ctx.drawImage(s, Math.round(bx+sway), by-(s.height-16));
+    if(o.fruit > 0 && chance(0.02)) pSparkle(bx+8, by-6, t.pal[2], 1);
+    return;
+  }
+  if(o.kind==="beehive"){
+    const s = spr.beehive;
+    ctx.fillStyle="rgba(0,0,0,0.16)"; ctx.beginPath(); ctx.ellipse(bx+8, by+15, 5, 2, 0, 0, 7); ctx.fill();
+    ctx.drawImage(s, bx, by-(s.height-16));
+    if(o.honey > 0 && chance(0.04)) pSparkle(bx+8, by-4, "#ffd75a", 1);
+    if(chance(0.05)){ const a = animT*3 + bx;                     // a bee, doing its rounds
+      ctx.fillStyle="#ffd75a"; ctx.fillRect(bx+8+Math.cos(a)*7|0, by-2+Math.sin(a*1.7)*5|0, 1, 1); }
+    return;
+  }
+  if(o.kind==="memorial"){ ctx.drawImage(spr.memorial, bx, by-4); if(chance(0.03)) pEmber(bx+2, by+8); return; }
   if(o.kind==="lantern"){ ctx.drawImage(spr.lantern, bx, by); if(chance(0.05)) pEmber(bx+8, by+6); return; }
   if(o.kind==="stove" || o.kind==="fireplace"){ const s=spr[o.kind]; ctx.drawImage(s, bx, by-(s.height-16)); if(chance(0.12)) pEmber(bx+8, by+ (o.kind==="fireplace"?-2:4)); return; }
   if(o.kind==="stall"){ ctx.drawImage(spr.stall, bx-4, by-8); return; }

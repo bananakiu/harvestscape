@@ -16,15 +16,18 @@ function freshState(){
     map:"farm", farm:null,
     gold:500, energy:100, day:1, time:6*60,
     inv:{ "Turnip Seeds":6, "Berry Bun":2 },
+    market:{},                            // how much of each item Tom has taken today; cleared at dawn
     seedSel:"turnip",
     skills:{ Farming:0, Woodcutting:0, Mining:0, Fishing:0, Cooking:0 },
     tools:{ Hoe:0, Can:0, Axe:0, Pick:0, Rod:0 },
     rel:{},                               // per-NPC relationship { points, talkedDay, giftedDay }
-    animals:{ chickens:[] },              // each: { friend, eggDay, petDay }
+    animals:{ chickens:[], cows:[] },     // each: { friend, eggDay|milkDay, petDay }
     mineDepth:0, mineBest:0,
-    stats:{ tilled:0, planted:0, watered:0, harvested:0, chopped:0, mined:0, fished:0, cooked:0, earned:0, toolUpgrades:0, sold:0, gems:0, forage:0 },
+    stats:{ legends:0, tilled:0, planted:0, watered:0, harvested:0, chopped:0, mined:0, fished:0, cooked:0, earned:0, toolUpgrades:0, sold:0, gems:0, forage:0,
+            bestCropSold:0, festivals:0, requests:0 },   // bestCropSold resets each season; the Harvest Fair judges it
     questIdx:0, questDone:[], questReady:false,
-    weather:"clear",
+    weather:"clear", forecast:null,        // forecast is rolled on the first newDay
+
     flags:{ introSeen:false },
   };
 }
@@ -69,6 +72,8 @@ function setMap(id, sx, sy, face){
   spawnMapNpcs(curMap);
   spawnAnimals(curMap);
   unstick();                    // never let the player spawn wedged in a wall/door
+  endFishing();                 // no bobber left floating on a map you've left
+  if(typeof onEnterMap === "function") onEnterMap(id);
   rainDrops.length = 0;
   setMusicMode(mapMusicMode(curMap));
   if(curMap.name) banner(curMap.name, curMap.subtitle);
@@ -155,6 +160,11 @@ function genFarm(m){
   rect(14,4,17,4,T.ROOF); rect(14,5,17,6,T.WALL); door(15,6,"coop", 6*TILE+8, 6*TILE); set(16,5,T.WALL);
   obj[key(18,6)] = { kind:"sign", text:"The Coop" };
 
+  // --- barn ---
+  rect(20,3,25,4,T.ROOF); rect(20,5,25,6,T.WALL); door(22,6,"barn", 7*TILE+8, 7*TILE);
+  set(21,5,T.WALL); set(23,5,T.WALL);
+  obj[key(26,6)] = { kind:"sign", text:"The Barn" };
+
   // paths
   for(let x=9;x<=45;x++) set(x,15,T.PATH);
   for(let y=6;y<=15;y++) set(13,y,T.PATH);
@@ -166,6 +176,7 @@ function genFarm(m){
   // General Store
   rect(44,10,48,11,T.ROOF); rect(44,12,48,13,T.WALL); door(46,13,"store", 7*TILE+8, 6*TILE); set(45,12,T.WALL); set(47,12,T.WALL);
   obj[key(43,13)] = { kind:"sign", text:"Tom's General Store" };
+  obj[key(44,14)] = { kind:"noticeboard" };   // pinned beside Tom's door — the valley's small wants
   // Maya's House
   rect(51,10,55,11,T.ROOF); rect(51,12,55,13,T.WALL); door(53,13,"mayahouse", 6*TILE+8, 6*TILE); set(52,12,T.WALL); set(54,12,T.WALL);
   obj[key(56,13)] = { kind:"sign", text:"The Aldermans'" };
@@ -203,6 +214,10 @@ function genFarm(m){
   // meadow (south) — flowery, where folk stroll
   for(let y=32;y<=40;y++) for(let x=24;x<=42;x++){ if(get(x,y)===T.GRASS && rng()<0.35) set(x,y,T.FLOWERGRASS); }
   obj[key(27,36)] = { kind:"sign", text:"Festival Green" };
+
+  // scatter must never wall off a doorway
+  for(const wk in m.warps){ const [dx,dy] = wk.split(",").map(Number);
+    delete obj[key(dx,dy+1)]; delete obj[key(dx,dy+2)]; }
 }
 
 // ---- save / load (only the farm map + meta persist) ----
@@ -211,6 +226,8 @@ function saveGame(){
   if(_wipe || !state) return;
   if(typeof isCutscene === "function" && isCutscene()) return;   // don't persist mid-cutscene state
   if(state.flags && state.flags.festivalActive && !state.flags.festivalDone) return;  // don't persist a half-run festival
+  if(state.flags && state.flags.seasonalActive) return;                                // nor a half-run seasonal one
+  if(state.flags && state.flags.turnInPending) return;                                 // nor a quest advanced but not yet narrated
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
 }
 function loadGame(){

@@ -233,6 +233,12 @@ const SFX = {
   splash(){ const t=T0(); burst(t,0.22,{freq:900,sweep:2400,ftype:"bandpass",q:0.6,gain:0.16}); },
   catch(){ const t=T0(); [64,69,72,76].forEach((m,i)=>blip(midi(m),t+i*0.06,0.18,"triangle",0.13,{rev:true})); },
   bite(){ const t=T0(); blip(880,t,0.08,"square",0.14,{}); blip(1100,t+0.09,0.08,"square",0.12,{}); },
+  escape(){ const t=T0(); blip(560,t,0.22,"triangle",0.12,{glide:150}); burst(t+0.05,0.3,{freq:1400,sweep:400,ftype:"bandpass",q:0.8,gain:0.1}); },
+  // a distant roll — low, long, and entirely harmless
+  thunder(){ const t=T0()+rand(0.1,0.5);
+    burst(t, 1.5, {freq:180, sweep:40, ftype:"lowpass", q:0.6, gain:0.16});
+    burst(t+0.18, 1.1, {freq:90, sweep:30, ftype:"lowpass", q:0.5, gain:0.11});
+    blip(52, t+0.05, 0.9, "triangle", 0.07, {glide:30}); },
   select(){ const t=T0(); blip(587,t,0.05,"square",0.08,{}); },
   upgrade(){ const t=T0(); [55,62,67,74,79].forEach((m,i)=>blip(midi(m),t+i*0.07,0.28,"triangle",0.14,{rev:true,delay:true})); },
 };
