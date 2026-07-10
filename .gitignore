@@ -1,1 +1,6 @@
 .DS_Store
+
+# Experimental scratch kept out of the game history (the game itself is 100% procedural,
+# no asset files). These were untracked by the owner; keep them that way.
+art-exploration/
+game/_music_lab.html
