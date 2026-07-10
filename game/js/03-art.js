@@ -737,6 +737,13 @@ function buildMineArt(){
     px(g,1,7,14,3,"#7a5630"); px(g,0,6,16,2,"#8a6238"); px(g,2,8,2,16,"#6e4a2a"); px(g,12,8,2,16,"#6e4a2a"); });
   mkSpr("item_Guild Seal", 16, 16, g => { px(g,4,4,8,8,"#ffce5a"); px(g,3,6,10,4,"#ffce5a"); px(g,5,5,6,6,"#e8a83a"); px(g,6,6,4,4,"#4a3f72"); px(g,7,6,1,1,"#fff0a0"); });
   mkSpr("item_Grandpa's Guild Pin", 16, 16, g => { px(g,5,4,6,6,"#ffce5a"); px(g,4,5,8,4,"#ffe089"); px(g,6,5,4,4,"#4a3f72"); px(g,7,6,2,2,"#e0455a"); px(g,7,6,1,1,"#ff9ab0"); px(g,8,9,1,4,"#c9922f"); });
+  // a folded oilskin coat, Bram's own teal, weathered by every kind of sea
+  mkSpr("item_Bram's Oilskin", 16, 16, g => {
+    px(g,3,4,10,9,"#3f88a0"); px(g,3,4,10,1,"#5aa5bd"); px(g,3,12,10,1,"#2c6072");
+    px(g,3,7,10,1,"#2c6072"); px(g,7,4,2,9,"#347082");           // the fold
+    px(g,4,5,2,2,"#6ab6cc"); px(g,10,9,2,2,"#2c6072");           // sheen + shadow
+    px(g,5,3,6,1,"#8a5f38"); px(g,7,2,2,2,"#6e4a2a");            // wooden toggle
+  });
 }
 
 /* ---------------- beach ---------------- */

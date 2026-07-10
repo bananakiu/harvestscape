@@ -174,9 +174,13 @@ function setMusicMode(m){
   if(SND.mode === m) return;
   SND.mode = m;
 }
-function setRainLevel(v){ // 0..1
-  if(!SND.rainGain) return;
-  SND.rainGain.gain.setTargetAtTime(v * 0.09 * (SND.enabled?1:0), SND.ctx.currentTime, 0.8);
+function setRainLevel(v){ // 0 = dry, 1 = rain, ~1.6 = storm
+  if(SND.rainGain) SND.rainGain.gain.setTargetAtTime(Math.min(v,1.8) * 0.075 * (SND.enabled?1:0), SND.ctx.currentTime, 0.8);
+  // duck the music so the weather has room to breathe — a storm ducks more than a drizzle
+  if(SND.musicGain && SND.enabled){
+    const duck = v <= 0 ? 1 : v >= 1.3 ? 0.58 : 0.76;
+    SND.musicGain.gain.setTargetAtTime(SND.musicVol * duck, SND.ctx.currentTime, 0.9);
+  }
 }
 function setMusicEnabled(on){
   SND.enabled = on; saveAudioPrefs();
@@ -208,14 +212,18 @@ function blip(freq, t, dur, type, gain, opt={}){
   note(freq, t, dur, { type:type||"square", gain:gain??0.18, atk:0.004, rel:dur*0.7, dest:SND.sfxGain, ...opt });
 }
 
+// a little pitch jitter so repeated tool strikes never sound like a machine gun
+const dj = f => f * (1 + rand(-0.1, 0.1));
 const SFX = {
-  step(){ const t=T0(); burst(t,0.09,{freq:280,sweep:130,ftype:"lowpass",q:1,gain:0.09}); },
-  till(){ const t=T0(); burst(t,0.16,{freq:520,sweep:180,ftype:"lowpass",q:1.2,gain:0.28}); blip(90,t,0.14,"triangle",0.14,{glide:60}); },
+  step(){ const t=T0(); burst(t,0.09,{freq:dj(280),sweep:130,ftype:"lowpass",q:1,gain:0.09}); },
+  till(){ const t=T0(); burst(t,0.16,{freq:dj(520),sweep:180,ftype:"lowpass",q:1.2,gain:0.28}); blip(dj(90),t,0.14,"triangle",0.14,{glide:60}); },
   water(){ const t=T0(); burst(t,0.28,{freq:1200,sweep:2600,ftype:"bandpass",q:0.7,gain:0.16}); for(let i=0;i<3;i++) blip(700+i*180, t+0.04+i*0.05, 0.08,"sine",0.06,{glide:400}); },
   plant(){ const t=T0(); blip(430,t,0.12,"triangle",0.16,{glide:660,rev:true}); },
   harvest(){ const t=T0(); [0,4,7,12].forEach((s,i)=> blip(midi(67+s),t+i*0.045,0.16,"triangle",0.13,{rev:true,delay:true})); },
-  chop(){ const t=T0(); burst(t,0.12,{freq:400,sweep:120,ftype:"lowpass",q:2,gain:0.3}); blip(150,t,0.1,"square",0.14,{glide:70}); },
-  mine(){ const t=T0(); blip(1200,t,0.06,"square",0.14,{glide:1600}); burst(t,0.1,{freq:2600,sweep:900,ftype:"highpass",q:1,gain:0.12}); },
+  chop(){ const t=T0(); burst(t,0.12,{freq:dj(400),sweep:120,ftype:"lowpass",q:2,gain:0.3}); blip(dj(150),t,0.1,"square",0.14,{glide:70}); },
+  mine(){ const t=T0(); blip(dj(1200),t,0.06,"square",0.14,{glide:1600}); burst(t,0.1,{freq:dj(2600),sweep:900,ftype:"highpass",q:1,gain:0.12}); },
+  // a soft wooden latch — travelTo() has been calling this the whole time and it never existed
+  door(){ const t=T0(); burst(t,0.13,{freq:220,sweep:80,ftype:"lowpass",q:1.4,gain:0.15}); blip(120,t+0.02,0.11,"sine",0.09,{glide:70}); },
   ore(){ const t=T0(); [72,76,79].forEach((m,i)=>blip(midi(m),t+i*0.05,0.14,"sine",0.11,{rev:true})); },
   get(){ const t=T0(); blip(midi(76),t,0.09,"sine",0.12,{}); blip(midi(83),t+0.07,0.12,"sine",0.1,{rev:true}); },
   coin(){ const t=T0(); blip(1400,t,0.06,"square",0.1,{glide:1900}); blip(1900,t+0.05,0.08,"square",0.09,{glide:2500,rev:true}); },

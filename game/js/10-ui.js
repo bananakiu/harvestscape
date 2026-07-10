@@ -21,6 +21,35 @@ function toast(msg, col){
   while(box.children.length > 5) box.removeChild(box.firstChild);
   setTimeout(() => d.remove(), 2400);
 }
+
+// ---- item pickup log ---- a fading, stacking notification of what you just collected.
+// Repeat pickups of the same item roll up into one entry (which pulses and its timer resets),
+// so mass-harvesting reads as "+50 Corn" rather than fifty separate lines.
+const _pickups = new Map();          // item name -> { el, amtEl, count, timer }
+function clearPickups(){ const b = $("pickups"); if(b) b.innerHTML = ""; _pickups.clear(); }
+function notePickup(item, n){
+  const box = $("pickups"); if(!box) return;
+  let p = _pickups.get(item);
+  if(p && p.el.isConnected){
+    p.count += n; p.amtEl.textContent = "+" + p.count;
+    p.el.classList.remove("out","bump"); void p.el.offsetWidth; p.el.classList.add("bump");
+  } else {
+    const el = document.createElement("div"); el.className = "pickup";
+    el.appendChild(mkIcon("item_" + item));
+    const amt = document.createElement("span"); amt.className = "amt"; amt.textContent = "+" + n;
+    const nm  = document.createElement("span"); nm.className = "pname"; nm.textContent = item;
+    el.appendChild(amt); el.appendChild(nm);
+    box.appendChild(el);
+    p = { el, amtEl: amt, count: n, timer: 0 };
+    _pickups.set(item, p);
+    while(box.children.length > 6) box.removeChild(box.firstChild);
+  }
+  clearTimeout(p.timer);
+  p.timer = setTimeout(() => {
+    p.el.classList.add("out");
+    setTimeout(() => { p.el.remove(); if(_pickups.get(item) === p) _pickups.delete(item); }, 520);
+  }, 2600);
+}
 function banner(big, small){
   const b = $("banner");
   b.innerHTML = `<div class="big">${big}</div>` + (small ? `<div class="small">${small}</div>` : "");
@@ -192,13 +221,17 @@ function renderSkills(){
     html += `<div class="xpRow"><span class="sname"><span class="lvl">${lvl}</span> ${s}</span>` +
       `<span class="xpbarWrap"><span class="xpbar" style="width:${pct}%"></span></span>` +
       `<span class="xpnum">${xp}/${lvl>=99?"MAX":next}</span></div>`;
-    // what mastery you already have, and the one you're working toward
+    // the next thing this skill will unlock — content first, then mastery, so a level always leads somewhere
+    const un = nextUnlock(s);
+    if(un) html += `<div style="margin:-.1em 0 0 .2em;font-size:.78em;color:var(--blue);">` +
+      `▸ unlocks ${un.label} at Lv ${un.at}</div>`;
     const earned = [25,50,75,99].filter(n => lvl >= n);
-    if(earned.length) html += `<div style="margin:-.15em 0 .1em .2em;font-size:.78em;color:var(--gold-hi);">` +
+    if(earned.length) html += `<div style="margin:.05em 0 .1em .2em;font-size:.78em;color:var(--gold-hi);">` +
       earned.map(n => "★ " + MASTERY[s][n].split(" — ")[0]).join(" · ") + `</div>`;
     const nx = nextMastery(s);
-    if(nx) html += `<div style="margin:-.05em 0 .35em .2em;font-size:.76em;color:var(--ink-soft);">` +
-      `Lv ${nx.at}: ${nx.text}</div>`;
+    if(nx) html += `<div style="margin:0 0 .35em .2em;font-size:.76em;color:var(--ink-soft);">` +
+      `☆ Lv ${nx.at}: ${nx.text}</div>`;
+    else if(!un) html += `<div style="margin:0 0 .35em .2em;font-size:.76em;color:var(--ink-soft);">mastered — every craft learned</div>`;
   }
   html += `<div style="margin-top:.6em;text-align:center;color:var(--gold-hi);">Total Level ${total} / ${99*5}</div>`;
   html += `<div style="margin-top:.2em;text-align:center;color:var(--ink-soft);font-size:.82em;">Real RuneScape XP curve — 92 is halfway to 99. Mastery at 25 · 50 · 75 · 99.</div>`;
@@ -297,8 +330,11 @@ function renderAlmanac(){
   h += `</div>`;
 
   // ---- Bram's ledger of legends ----
+  const allLanded = legendsCaught() >= LEGENDS.length;
   h += `<div class="jq"><h3 style="color:var(--blue)">🎣 Bram's Ledger — ${legendsCaught()}/${LEGENDS.length} landed</h3>`;
-  h += `<div class="desc" style="margin-bottom:.3em;">Five fish that rise only when everything lines up. Bram tells you one for every heart.</div>`;
+  h += allLanded
+    ? `<div class="desc" style="margin-bottom:.3em;color:var(--gold-hi)">All five landed. ${state.flags.huntCrowned ? "Bram's oilskin is yours — the fish come faster, and the storm is yours to fish." : "Go and see Bram."}</div>`
+    : `<div class="desc" style="margin-bottom:.3em;">Five fish that rise only when everything lines up. Bram tells you one for every heart.</div>`;
   for(const l of LEGENDS){
     const caught = !!state.flags["caught_"+l.id], known = !!state.flags["clue_"+l.id];
     if(!known){ h += `<div class="obj" style="color:var(--ink-soft)">· · ·<span style="font-size:.82em;"> — Bram hasn't told you about this one yet</span></div>`; continue; }
@@ -363,8 +399,11 @@ function renderShop(){
       const priceHtml = dipped
         ? `<span class="price" style="color:#c98a6a">${now}g</span> <span class="sub" style="text-decoration:line-through;opacity:.55">${base}g</span>`
         : `<span class="price">${now}g</span>`;
+      // "all" shows the blended total it will actually fetch, not just the next unit's price
+      const allTotal = bundlePrice(i, state.inv[i]);
       html += `<div class="row"><span class="lead" data-icon="item_${i}"><canvas></canvas><span>${i} ${note}</span></span>` +
-        `<span>${priceHtml} <button onclick="sellItem('${jsq(i)}',1)">1</button> <button onclick="sellItem('${jsq(i)}',${state.inv[i]})">all</button></span></div>`;
+        `<span>${priceHtml} <button onclick="sellItem('${jsq(i)}',1)">1</button> ` +
+        `<button onclick="sellItem('${jsq(i)}',${state.inv[i]})" title="${allTotal}g for all ${state.inv[i]}">all · ${allTotal}g</button></span></div>`;
     });
   } else if(shopTab === "buy"){
     for(const id in CROPS){ const c = CROPS[id]; const ok = skillLvl("Farming") >= c.lvl;

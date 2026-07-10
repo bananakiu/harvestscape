@@ -1,243 +1,185 @@
-# HarvestScape Design Scorecard — July 2026
+# HarvestScape Design Scorecard — v2.0 Re-Audit (July 2026)
 
-**Overall grade: B+**
+**Overall grade: A− (was B+)**
 
-The working-tree build graded against `GAME_DESIGN_PRINCIPLES.md` — thirteen dimensions,
-three independent code audits, every grade backed by file-level evidence. Economy claims
-were checked arithmetically. All six DESIGN_V1.5 steps verified shipped.
+Re-audit of the working tree after the v2.0 update ("A Day Worth Staying Up For"),
+graded against `GAME_DESIGN_PRINCIPLES.md` by three independent code audits. Each
+auditor read the July 10 baseline scorecard and graded deltas explicitly. Economy
+claims checked arithmetically. Previous scorecard: git `97f2b8a`.
 
-**Verdict:** HarvestScape is a genuinely cozy, structurally sound Stardew-like with an
-unusually strong story and a near-perfect cozy contract. Its weakest grades sit exactly
-on its stated differentiator: the **RuneScape layer**. The 1–99 curve is faithfully
-implemented but pays out almost nothing past level ~30, the mine is a resource faucet
-rather than an expedition, and the genre's cheapest whimsy and completionism tools —
-examine text and a collection log — are absent. The cozy base has earned an A; the
-RuneScape soul is still mostly promise.
+**Verdict:** v2.0 is a real design leap — **five dimensions rose, none fell**. The
+diagnosis (sleep-skip as dominant strategy) was correct, the four features genuinely
+interlock, and the Hunt is the first feature that is simultaneously progression
+content, a collection log, relationship payoff, and whimsy delivery — the RuneScape
+soul the last audit called "mostly promise" now has a working proof of concept. Two
+things keep it from an A: **Tom's Demand is mis-tuned** (its own constants let a
+drip-seller keep ~96% of the old monoculture income, and the 0.55 floor makes a
+50-plum orchard the new passive meta), and **the presentation debts are now two audits
+old** — zero of eight previous findings fixed.
 
-| Pillar | Dimension | Grade |
-|---|---|---|
-| Cozy base | Day Loop | A− |
-| Cozy base | Interlocking Economy | B+ |
-| Cozy base | Pacing the Year | A− |
-| RuneScape layer | Skill Progression | **C+** |
-| RuneScape layer | Quests & Story | B+ |
-| RuneScape layer | Mine / Expedition | **C+** |
-| RuneScape layer | Psychology | B+ |
-| RuneScape layer | Whimsy & Tone | B+ |
-| Presentation | Visual Coziness | A− |
-| Presentation | Juice / Game Feel | B |
-| Presentation | Audio | B− |
-| Presentation | UI | A |
-| Presentation | Cozy Contract | A |
-
----
-
-## The Cozy Base
-
-### Day Loop — A−
-Ritual → project → wind-down, fully intact.
-- ✓ 5.3-min day (16 real sec/game-hour, `08-actions.js:503`), hard 26:00 end; sleep card
-  banks visible progress (crops grown, ready count, projects finished); menus pause time
-  (`12-game.js:21` gates `updateTime` on `uiBlocking()`).
-- ✓ Tiered watering (`canTiles`, `08-actions.js:64`) preserves the ritual while scaling
-  it — the v1.5 Step-1 fix landed. Budget handoff correct: energy binds early, time forever.
-- ✗ No overwork consequence at 26:00 (collapse is free — BtN's late-wake refinement absent).
-- ✗ Tool upgrades are instant purchases; "delay as redirection" (§5.4) unused.
-
-### Interlocking Economy — B+
-The spine interlocks; the late game still leaks.
-- ✓ Interlock test passes: ore → tool tiers (`TIER_COST`) → watering width / axe power /
-  fishing bar height. Mining output literally changes farming capacity.
-- ✓ F10 fixed: all cooking chains ≥1.25× (Bread 1.33×, Jam 1.29×, Fish Stew 1.31×,
-  Pumpkin Soup 1.39×). Arbitrage guarded deliberately (`01-data.js:91`).
-- ✓ ~55k gold of tiered capability sinks: tools 32.5k + 75 ore, animals, projects
-  (`PROJECTS`, `01-data.js:130`) each buying a visible capability.
-- ✗ No artisan machine layer at all — the §3.3 "30h→300h multiplier" is one cooking verb.
-- ✗ First hen (300g) and cow (600g) are speculative purchases; §3.4 "gift the first
-  machine" unmet.
-- ✗ No absurd vanity sink; post-project gold has no destination — v1.5 problem #5 solved
-  for year 1 only. Gems near-terminal.
-
-### Pacing the Year — A−
-The calendar pulls; winter finally has an identity.
-- ✓ Noticeboard is a textbook daily objective: day-seeded, skill-filtered, pays 1.4× sell
-  + 25 hearts, expires penalty-free, rendered as a *faint* card — proposes, never assigns.
-- ✓ Nine Guild wings (`WINGS`, `14-story.js:8`) = real community-center board with
-  cross-system criteria; no specialist finishes it alone.
-- ✓ Journal pages (9, triggered by doing things in places, with `catchUpPages()` net) fix
-  the v1.5 "muddy middle." Winter shipped: Frostbloom, frostberry forage, winter fish
-  +25%, Star-Watch festival. The player-dated anniversary Lantern Festival is genuinely
-  original.
-- ✗ One festival per season (rubric band: 2–4); winter still thinnest (no winter-only verb).
-- ✗ Wing-lighting pays story but no per-wing capability; year 2+ calendar is sparse.
+| Pillar | Dimension | v1.5 | v2.0 | Δ |
+|---|---|---|---|---|
+| Cozy base | Day Loop | A− | **A** | ▲ |
+| Cozy base | Interlocking Economy | B+ | **A−** | ▲ |
+| Cozy base | Pacing the Year | A− | **A** | ▲ |
+| RuneScape layer | Skill Progression | C+ | **B−** | ▲ |
+| RuneScape layer | Quests & Story | B+ | **B+** | — |
+| RuneScape layer | Mine / Expedition | C+ | **B−** | ▲ |
+| RuneScape layer | Psychology | B+ | **A−** | ▲ |
+| RuneScape layer | Whimsy & Tone | B+ | **A−** | ▲ |
+| Presentation | Visual Coziness | A− | **A−** | — |
+| Presentation | Juice / Game Feel | B | **B** | — |
+| Presentation | Audio | B− | **B−** | — |
+| Presentation | UI | A | **A** | — |
+| Presentation | Cozy Contract | A | **A** | — |
 
 ---
 
-## The RuneScape Layer
+## What v2 verifiably shipped
 
-### Skill Progression — C+ (lowest grade on the board)
-The curve is honest; the payout isn't.
-- ✓ Real OSRS formula ÷4 (`00-core.js:89-92`); masteries at 25/50/75/99 are true verbs
-  ("Clean Fell," "Deep Caller") wired into ~12 mechanical call sites.
-- ✓ Farming onboarding density excellent: unlock every 2 levels to 24.
-- ✗ Content unlocks end at Farming 24 / Mining 28 / Fishing 32 / WC 18; **Cooking has
-  zero level-gated recipes**. Levels 29–49, 51–74, 76–98 change nothing observable —
-  three ~24-level deserts per skill (F9 violation). ÷4 with a 99 cap violates the ~1/20
-  magnitude rule (mastery 50 ≈ 101k XP against a Turnip's 12 XP).
-- ✗ Level-up banner never shows the *next* unlock (§4.3); skills panel shows next mastery
-  but not next content unlock.
-- ✗ No NPC recognition of skill milestones (§4.6); no cap ceremony beyond the banner.
+All four roadmap features + both fixes confirmed in code:
+- **Tom's Demand** — `DEMAND`/`demandMult()` (`01-data.js:239-245`), applied in
+  `sellItem()` (`08-actions.js:776-804`), reset in `newDay()`; honest shop UI shows
+  demand %, next-unit price, strikethrough (`10-ui.js:356-367`); save migration in place.
+- **Forecast, five weathers** — `rollForecast()`/`rollWeather()` (`06-weather.js:196-229`),
+  tomorrow rolled tonight and posted on the noticeboard, Almanac "The Sky," and the
+  sleep card. Festivals/birthdays can never storm or fog (`isDatedDay`); day 1 always clear.
+- **Weather offerings** — storm: coast closed (`08-actions.js:195-198`), mine
+  `oreBoost 1.5`, next-morning beach wrack; rain: double forage, bite time ×0.6,
+  auto-water; fog: `gemBoost 2.2`. "Weather never takes anything from you" stated in
+  code comments and honored by the code.
+- **The Hunt** — five legendary fish (`LEGENDS`, `01-data.js:105-126`) at Fishing
+  14/22/26/30/34 with a 4-level grace ("a clue is never a dead end"); one clue per
+  Bram heart (`bramClueDue()`/`tellClue()`, `14-story.js:299-312`), auto-written into
+  Bram's Ledger in the Almanac.
+- **Orchard & Apiary** — saplings (28-day maturity, fruit cap 3), hives keyed to
+  flowering tiles within radius 4 (`hiveYield`, `08-actions.js:646-717`); flowers
+  unsellable; trees movable via `digUp`.
+- **Hoe row-tilling by tier** (`canTiles` routing, `08-actions.js:109-117`);
+  **honest snow** (only rain waters, `08-actions.js:607`, stated in UI).
 
-### Quests & Story — B+
-A-tier prose, C-tier quest structure.
-- ✓ 14 handcrafted quests + Act 2, zero kill-quests, bespoke turn-in dialogue/cutscenes.
-  Grandpa's letters, Rowan's unsent letter, the memorial, the Elias homecoming are the
-  strongest asset in the repo.
-- ✓ Guild Pin (+10% XP while carried, permanent, daily-use, `08-actions.js:38`) is a
-  textbook Barrows-gloves reward.
-- ✗ Mid-chain objectives are naked grind gates ("Reach Farming 10," "Reach total level
-  60") — the cozy equivalent of kill-ten-boars.
-- ✗ No quest-point aggregation; most quest rewards are gold + consumables that terminate
-  chains (§3.5).
-- ✗ Main chain is sincere-sentimental rather than OSRS-absurd; whimsy lives in the
-  noticeboard/festivals instead.
+## The headline fix, checked arithmetically
 
-### Mine / Expedition — C+
-A resource faucet, not an expedition.
-- ✓ Loot feeds the farm (§6.1/§6.6 fully satisfied); 26:00 clock; short sessions; fully
-  optional; per-day floor seeds give mild variety.
-- ✗ **No checkpoints** — `enterMine()` hard-resets to floor 1 every entry
-  (`13-content.js:195`); `mineBest` persists only as a quest stat. Depth never banks;
-  the rubric calls checkpointed depth "the single most load-bearing coziness mechanic
-  in the genre."
-- ✗ No second risk clock (no HP/hazard — nothing to push luck against except bedtime),
-  no opt-in high-variance tier, no consumable sinks (bombs/staircases).
-- ✗ Ore table recycles "stone" at depth 7+ — no reason to go deep.
+Demand as coded: units 1–6 full price, then `max(0.55, 0.96^(k−5))`. The 10th unit
+pays **85%** (roadmap claimed ~70%); the floor lands at unit 21 (roadmap: 40).
 
-### Psychology — B+
-Variance is clean; completionism is missing.
-- ✓ **Every random roll audited is bonus-only**: double harvests, free swings, second
-  plates, perfect-catch doubles, gift bonuses. Withering is telegraphed foregone-gains.
-  Pass on §5.2.
-- ✓ Goal ladder holds — quest tracker + noticeboard (today), event pill (week), Almanac
-  calendar / wings 9/9 / next-mastery (season/year) — until post-story, where only
-  megamastery grinds remain.
-- ✓ Endpoint & ceremony excellent: staged finale ("Willowbrook is awake, and it's
-  yours"), Act 2 second ending, page 9 coda. Permission-to-feel-done granted.
-- ✗ **No item collection log, museum, or achievement diaries** — the rubric's biggest
-  named completionist tool, absent. (Almanac "· · ·" entries are the right instinct.)
+- **Dump-selling** 50 starfruit: 65.9% of full price → ~1,100g/day net (was ~3,125g). Fixed.
+- **Drip-selling** 6/day from a stockpile (no spoilage, daily reset, value-blind free
+  allowance): full price forever → the monoculture keeps **~96%** of its old income
+  for one shop visit a day. Not fixed.
+- **New passive layer:** mature plums cost zero energy/seeds; at the 0.55 floor,
+  50 plum trees out-earn the old starfruit meta with less daily work — exactly what
+  the `FRUIT_TREES` comment says must never happen. (The code comment at
+  `01-data.js:237` — "loses about two thirds" — is inverted; the dumper *keeps* two thirds.)
 
-### Whimsy & Tone — B+
-The voice is there; the cheapest channel is unused.
-- ✓ Committed motifs: Gary the amethyst (heart event → noticeboard → "if you ever sell
-  him… I'll KNOW"), turnips, lanterns. 20 hand-written OSRS-quality noticeboard lines.
-  Bram's "…" running gag.
-- ✓ Five annual festivals, 2–4 min, cosmetic/small rewards, absence never punished —
-  near-perfect §7 compliance.
-- ✗ **Zero examine text** on items/objects — the rubric's #1 free whimsy channel.
-- ✗ Tone skews warm-sentimental over deadpan-absurd (a choice, but noted).
+Sleep-skip overall: substantially improved. On ~40–55% of days the sky posts a
+today-only project, and night legends (20:00–26:00) literally reward staying up. Clear
+days (45–62% odds) remain thin, and the drip/orchard floor keeps low-effort income
+competitive.
 
 ---
 
-## Presentation & Feel
+## Dimension notes (deltas only — see git 97f2b8a for the v1.5 baseline)
 
-### Visual Coziness — A−
-Warm-light-in-cool-dark, fully realized.
-- ✓ `SKY_STOPS` day/night lerp exactly per doc (dawn pink-gold → dusk orange-purple →
-  deep blue `#0e1130`, never black) with warm lights punched through (`collectLights()`).
-- ✓ Seasonal recolor real (`GRASS_PAL`, `TREE_FOLIAGE`); tile hashing (4 grass variants);
-  idle life: crop/tree sway, fireflies, pollen motes, drifting leaves, cow breathing.
-- ✗ `shade()` (`03-art.js:14`) is value-only — violates the #1 hue-shift ramp rule.
-- ✗ Hundreds of inline ad-hoc hex; no named central palette. No in-game chimney smoke or
-  butterflies.
+### Day Loop A− → A
+Forecast is a textbook go-to-bed-wanting-tomorrow device; the sky now proposes the
+day's project. New morning verbs all cozily capped (fruit 3, honey 3, wrack one-day) —
+no chore inflation. Unchanged: free 26:00 overwork, instant tool upgrades, thin clear days.
 
-### Juice / Game Feel — B
-The skeleton is right; the springs are missing.
-- ✓ 50 ms hit-pause on chop/mine; restrained 1.5–2.4 px shake; rich particle catalogue;
-  item-get arc + sparkle + warm floatText + two-note chime; permanence (tilled/watered
-  persists); fishing engineered unlosable.
-- ✗ **`tween()`/`easeOutBack` (00-core.js:94-106) are built and never called** — dead
-  code. No squash-stretch, no tool wind-up, no apex-hang/vacuum on item-get, no input
-  buffering.
-- ✗ **Forbidden juice**: pulsing red low-energy vignette (`06-weather.js:94-99`) — the
-  doc prescribes gray-out/gentle sag, never red-at-the-player.
+### Interlocking Economy B+ → A−
+New interlocks are real: crop placement changes hive capacity (§3.1 pass), sky couples
+to mine/fishing/forage, ~70k g of new sinks. Capped below A by the drip loophole +
+0.55 floor, §3.4 violated again (first sapling 850–1,300g and hive 700g are
+speculative purchases), still no artisan machines, no vanity sink, gems near-terminal.
 
-### Audio — B−
-Impressive synth engine, missing the cozy signatures.
-- ✓ Fully generative music (pads/bass/pluck/pentatonic walk, convolver reverb), six modes
-  with distinct tempi; ~30 soft SFX; error is a soft low glide, no buzzers; birds by day
-  (silenced in winter), crickets at night.
-- ✗ Rain mixed *under* music (0.09 vs 0.55) — never replaces it (the doc's single
-  strongest cozy audio signal). No seasonal musical identity. No silence-as-rest.
-- ✗ No pitch randomization on the most-repeated verbs (till/water/chop/mine/harvest/step
-  are pitch-identical every trigger); footsteps not material-aware.
-- ✗ Bug: `playSfx("door")` (`04-world.js:103`) references a nonexistent SFX — every
-  building/map transition is silent.
+### Pacing the Year A− → A
+Per-season weather tables, four season legends + one storm legend, season fruits as
+planting puzzles. Remaining: 1 festival/season (band 2–4); hives and trees both go
+dark in winter, deepening its thinness; snow's posted offer mostly re-advertises
+winter-season content (a "numbers must be honest" rub).
 
-### UI — A
-Would pass the rubric verbatim.
-- ✓ Correct bevel light source (inset top highlight + dark drop), parchment letters with
-  ruled lines and −0.6° rotation, dark-brown-on-cream ink, typewriter everywhere (always
-  skippable), menus genuinely pause the world, minimal HUD, event pill self-removes after
-  its 7-day window — no nagging badges. Full touch fallback.
+### Skill Progression C+ → B−
+Fishing now has an unlock every 3–5 levels to 34 — the best curve in the game, proving
+the pattern. Unchanged: Cooking has zero gated recipes; Farming/Mining/WC deserts;
+next content unlock still never shown (`addXP` banners only what just unlocked;
+`renderSkills` shows next mastery only); zero NPC recognition of milestones. New
+problem: Fishing 35–98 is now the longest desert, spotlighted by its own checklist.
 
-### Cozy Contract — A
-Safety + Abundance + Softness, honored.
-- ✓ No combat, no death; staying up past 2am costs nothing; zero energy only blocks with
-  a gentle toast; all randomness upward; noticeboard "never required, gone by dawn";
-  saves on sleep/`beforeunload`/tab-hide; withering telegraphed at purchase and reported
-  softly (🥀).
-- ✗ The single contract rub: the pulsing red low-energy vignette (see Juice).
+### Quests & Story B+ (held)
+The Hunt's delivery is exactly right — clues through relationship, in Bram's voice,
+nothing missable. Held because: legends are sellable trophies, not permanent
+capabilities (Barrows-gloves test failed; Guild Pin still the only pass); 5/5 legends
+pays nothing — no capstone scene; grind-gate objectives and missing quest-point
+aggregation unchanged.
 
----
+### Mine / Expedition C+ → B−
+Weather reaches underground: storm ore ×1.5, fog gems ×2.2, with the forecast making
+§6.4 "picking a good day" real; storm closing the coast is textbook lateral
+redirection. Still unfixed (overhaul was an acknowledged cut): `enterMine()` resets to
+floor 1; stone recycles past depth 7 — so on fog days shallow camping is optimal,
+**inverting** the boost's incentive; no second risk clock, no consumable sinks.
 
-## Cozy-per-Line-of-Code Checklist (§8.5) — 3 full / 5 partial / 2 missing
+### Psychology B+ → A−
+Bram's Ledger is the empty-silhouette collection log verbatim ("· · · — Bram hasn't
+told you about this one yet"), with X/5 counter and condition lines. Goal ladder now
+passes at every horizon (weather offer + forecast + request on the board). Demand is
+deterministic, inspectable, floored, daily-reset — foregone gains only. Soft spots:
+log covers 5 items (crops/gems/dishes still unlogged); legend bites (34–40%/bite)
+lack a pity floor on rare windows.
 
-| # | Technique | Status | What's left |
-|---|---|---|---|
-| 1 | Day/night tint + warm window lights | ✅ Full | — |
-| 2 | Rain visuals + audio replacing music | 🟡 Partial | Duck music under rain |
-| 3 | Item-get arc + sparkle + chime | 🟡 Partial | Apex hang + vacuum-to-player |
-| 4 | Hue-shifted ramps + tile hashing | 🟡 Partial | `shade()` hue rotation |
-| 5 | Ambient bird/wind/cricket bed | 🟡 Partial | Continuous wind floor |
-| 6 | Squash-stretch + eased tweens | ❌ Missing | Wire the existing tween system |
-| 7 | Grass sway + smoke + butterflies | 🟡 Partial | In-game smoke, butterflies |
-| 8 | SFX pitch random + material footsteps | ❌ Missing | ±10% detune, surface steps |
-| 9 | Wooden bevel UI + soft sounds | ✅ Full | — |
-| 10 | Micro hit-pause + tree-shake | ✅ Full | — |
+### Whimsy & Tone B+ → A−
+Whimsy now attached to systems, not just scenes: five weather personalities, Bram's
+clue monologues (best deadpan in the repo), `TOM_GLUT` ("My window looks like a
+starfruit museum"). Still zero examine text — the #1 free channel, two audits running.
 
----
+### Presentation (all held)
+- **Visual A−:** weather grades are the best new work (fog banks, snow drift, storm
+  tint — never black, lamps stay lit). `shade()` still value-only and now propagated
+  into ~62 lines of new art. New borderline item: lightning wash at 50% alpha
+  (`06-weather.js:132-134`) — cap ~0.25 or vignette-shape it. Thunder SFX, by
+  contrast, is exemplary ("a distant roll, entirely harmless").
+- **Juice B:** zero movement; tween system enters its second audit with no call
+  sites; the legendary catch borrows the level-up jingle and exceeds the shake budget.
+- **Audio B−:** rain still never ducks music (missed in the one update where it was
+  cheapest — storm caps at the same 0.09 as drizzle); no pitch variation on tools;
+  the `door` SFX bug now silences more transitions than before. Fog days going quiet
+  (birdsong gated to clear) is a nice accidental hush.
+- **UI A:** forecast surfaced in exactly the right three places. Thin spot: "sell
+  all" previews only the next unit's price, not the blended total.
+- **Cozy Contract A:** the new systems are contract-exemplary. Held from A+ only by
+  the surviving red vignette and the lightning wash.
+
+## Cozy-per-Line-of-Code Checklist — 3 full / 5 partial / 2 missing (unchanged)
+
+Items 1, 9, 10 full; 2, 3, 4, 5, 7 partial (5 and 7 marginally improved via
+thunder/snow-bed/fog-hush and hive bees/orchard sway); 6 and 8 still missing.
 
 ## Ranked Priorities
 
-1. **Make the curve pay out** *(progression · high impact)* — Rescale XP toward the ~1/20
-   rule (or cap at 50 with 25/35/50 masteries), seed a noun/verb unlock every ≤5 levels
-   per skill (Cooking recipes are free inventory), show the *next* unlock on every
-   level-up and in the skills panel, give NPCs one line per mastery tier (Rowan is the
-   obvious voice). Fixes the lowest grade on the board.
-2. **Turn the mine into an expedition** *(high impact)* — Persist depth as an entry-point
-   choice (ladder menu every 5 floors), extend the ore/gem table past depth 7, add one
-   opt-in push-your-luck lever (unstable shaft: energy for floors). Converts the faucet
-   into the genre's most load-bearing coziness mechanic.
-3. **Collection log + examine text** *(pure data · cheapest wins)* — An "Almanac of
-   Things" (every crop/fish/gem/dish/forage, empty silhouettes, tiered ranks)
-   re-monetizes all existing content; a one-line `EXAMINE = {}` table in 01-data.js is
-   the cheapest whimsy multiplier in the codebase. Both respect the v1.5 "texture, not
-   surface area" rule.
-4. **One audio pass** *(~30 lines in 02-audio.js)* — ±10% detune on tool/step SFX, duck
-   `musicGain` toward ~0.15 inside `setRainLevel`, add a low continuous wind floor, add
-   the missing `door` SFX. Three checklist items in one file.
-5. **Wire the dead tween system; retire the red vignette** *(feel · small)* — Apex-hang +
-   ease-in vacuum on `pItemPop`, squash on watered crops, ease-out-back on hotbar
-   selection — machinery already exists in 00-core.js. Replace the red pulse with
-   gray-blue desaturation + soft low tone.
-6. **Close the economy's tail** *(medium)* — One absurd vanity sink (golden statue of
-   Grandpa, ~25k+), a small infinite decor catalogue, gift the first hen via a quest
-   reward, add one artisan machine (cheese churn / preserves pot) as a project payoff.
+1. **Retune Tom's Demand to match its own prose** *(constants patch)* — persist
+   saturation overnight with partial recovery (halve `state.market` at dawn instead
+   of clearing), lower the floor toward ~0.25–0.35, value-scale the free allowance,
+   show the blended total on "sell all." One patch closes the drip loophole and the
+   plum-orchard passive layer.
+2. **Pay out the other four curves** *(carried over; Fishing proves the pattern)* —
+   level-gate 8–10 recipes, show the next content unlock on level-up and in the
+   skills panel, one NPC line per mastery tier.
+3. **Bank mine depth** *(fixes v2's inverted incentive)* — ladder-entry every 5
+   floors + extend the ore/gem table past depth 7 so fog/storm days pull players down.
+4. **The one-file audio pass** *(~30 lines, two audits owed)* — duck music under
+   rain/storm, ±10% tool/step detune, wind floor, define `door`.
+5. **Finish the weather board; gift the first sapling** — one real today-only
+   offering each for snow and clear; route the first hive/sapling through Rowan or
+   the noticeboard (§3.4).
+6. **Crown the Hunt** — a 5/5 capstone scene with Bram paying a permanent keepsake
+   (not gold); bespoke legend fanfare + apex-hang item-pop (wire the dormant tween
+   system); retire the red vignette while in the file.
 
 ---
 
-*Method: three independent auditors each read GAME_DESIGN_PRINCIPLES.md as rubric, then
-the working-tree source. Grades require file-level evidence. Credit where due: all six
-DESIGN_V1.5 steps are verifiably shipped; the remaining gaps are the ones v1.5 explicitly
-deferred — plus the progression payout problem it only half-fixed.*
+*Method: three independent auditors, GAME_DESIGN_PRINCIPLES.md as rubric, file-level
+evidence required, deltas graded against the July 10 baseline (git `97f2b8a`). The
+design thinking behind v2 — diagnose the dominant strategy, fix incentives before
+adding content, cut features that re-introduce chores — is exactly what the
+principles doc prescribes. The remaining work is a numbers pass the design already
+implies, plus the presentation debts that predate both audits.*

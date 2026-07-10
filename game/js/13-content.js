@@ -114,9 +114,12 @@ function genMine(m){
   // scatter ore/gems/props on floor tiles
   const floors = [];
   for(let y=1;y<m.h-1;y++) for(let x=1;x<m.w-1;x++) if(m.tiles[y*W+x]===T.MFLOOR) floors.push([x,y]);
-  const oreTable = depth<3 ? ["stone","copper","copper","iron"]
-                 : depth<6 ? ["copper","iron","iron","gold"]
-                 : ["iron","gold","gold","stone"];
+  // Deeper is always richer — the deep never recycles back to stone, so a fog/storm day rewards
+  // pushing DOWN rather than camping a shallow floor (which used to be the perverse optimum).
+  const oreTable = depth<3  ? ["stone","copper","copper","iron"]
+                 : depth<6  ? ["copper","iron","iron","gold"]
+                 : depth<10 ? ["iron","iron","gold","gold"]
+                 :            ["iron","gold","gold","gold"];
   // The weather above reaches down here. A storm drives the veins, and fog is when the seams
   // "read" — the old miners' word for it. Both make the stone generous, for one day only.
   const oreBoost = isStorm() ? 1.5 : 1;
@@ -198,9 +201,19 @@ function doWarp(w){
   }
   travelTo(w.to, w.sx, w.sy, w.face);
 }
-function enterMine(){ state.mineDepth = 1; travelTo("mine", 2*TILE+8, 3*TILE, "down"); }
+// You bank a checkpoint every fifth floor. Re-entering the mine drops you at the deepest one you've
+// reached, so a good weather day pays off in a real dive instead of a re-trek from the top.
+function mineCheckpoint(){ return Math.max(1, Math.floor((state.mineBest||0) / 5) * 5); }
+function enterMine(){
+  const start = mineCheckpoint();
+  state.mineDepth = start;
+  travelTo("mine", 2*TILE+8, 3*TILE, "down");
+  if(start > 1) setTimeout(() => toast(`The cart drops you at floor ${start}. Climb the ladder up for the shallow seams.`, "#a9b0c0"), 900);
+}
 function mineDown(){ state.mineDepth = (state.mineDepth||1) + 1; state.mineBest = Math.max(state.mineBest||0, state.mineDepth);
-  checkQuests(); travelTo("mine", 2*TILE+8, 3*TILE, "down"); toast("You climb down to floor "+state.mineDepth+"…","#a9b0c0"); }
+  checkQuests(); travelTo("mine", 2*TILE+8, 3*TILE, "down");
+  const banked = state.mineDepth % 5 === 0 ? "  ·  a cart-checkpoint" : "";
+  toast("You climb down to floor "+state.mineDepth+"…"+banked, "#a9b0c0"); }
 function mineUp(){
   if((state.mineDepth||1) > 1){ state.mineDepth--; travelTo("mine", 2*TILE+8, 3*TILE, "down"); }
   else { travelTo("farm", 50*TILE+8, 6*TILE, "down"); }
@@ -541,7 +554,22 @@ function talkNpc(id){
   const ev = heartEventFor(id);
   if(ev){ state.flags[ev.flag] = true; startCutscene(ev.steps); return; }
   // Bram gives up one legend for every heart. It's a secret, not a wiki page.
-  if(id === "bram"){ const c = bramClueDue(); if(c){ tellClue(c); return; } }
+  if(id === "bram"){
+    const c = bramClueDue(); if(c){ tellClue(c); return; }
+    // land all five and the Hunt is crowned — Bram hands over his own oilskin
+    if(legendsCaught() >= LEGENDS.length && !state.flags.huntCrowned){ startHuntCrown(); return; }
+  }
+  // Pip presses your first fruit tree on you — the orchard, learned hands-on before you'd buy one blind.
+  if(id === "pip" && !state.flags.gotFirstSapling && heartsOf("pip") >= 2){
+    state.flags.gotFirstSapling = true;
+    give("Apple Tree", 1, true);
+    playSfx("gift"); pSparkle(state.px, state.py-14, "#d0403a", 12);
+    showDialog("Pip   " + heartStr(heartsOf("pip")),
+      "I grew it from a PIP! Get it — a pip! That's my name AND the thing inside an apple. Best joke ever, nobody agrees.\n\n" +
+      "Plant it on grass — tap R till you've got it, then Space. It takes ALL season, and then it makes apples FOREVER. Mum knows everything about trees.",
+      "port_pip");
+    return;
+  }
   if(tryFulfillRequest(id)) return;           // scripted scenes always outrank the noticeboard
   showDialog(def.name + "   " + heartStr(heartsOf(id)), npcLine(id, heartsOf(id)), def.portrait);
 }

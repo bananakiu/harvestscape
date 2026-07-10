@@ -158,6 +158,7 @@ ITEM_SELL["Star Metal"] = 0;              // story items, not for sale
 ITEM_SELL["Guild Seal"] = 0;
 ITEM_SELL["Bouquet"] = 0;                 // Willowbrook courtship — give to your beloved
 ITEM_SELL["Grandpa's Guild Pin"] = 0;     // keepsake — grants +10% XP while carried
+ITEM_SELL["Bram's Oilskin"] = 0;          // the Hunt's crown — faster bites, and the sea in any weather
 
 // ---- ANIMAL PRODUCE ----
 ITEM_SELL["Egg"] = 55; ITEM_SELL["Large Egg"] = 95; ITEM_SELL["Milk"] = 90; ITEM_SELL["Large Milk"] = 165; ITEM_SELL["Wool"] = 120;
@@ -231,17 +232,26 @@ const WEATHER_ODDS = {
 
 // ---- TOM'S DEMAND ----
 // A village shop can only shift so much of one thing in a day. The first few of any item sell at
-// full price; after that the price slides, and it resets every morning.
+// full price; after that the price slides.
 //
 // This exists to tax SAMENESS, not any particular crop. A farmer who harvests a few tiles each
-// morning never notices it. A farmer who dumps fifty starfruit at once loses about two thirds.
+// morning never notices it. A farmer who DUMPS fifty starfruit at once keeps only about half —
+// and, crucially, a night's sleep does NOT wipe the glut clean (it recovers halfway), so
+// drip-selling a hoard six at a time no longer sidesteps the whole system.
+//
+// The free allowance is value-scaled: Tom can move a great many turnips at full price but only a
+// handful of luxury goods, so the dearer the item, the sooner its price begins to slide.
 // Nothing is ever confiscated — you simply get less for the fortieth identical thing.
-const DEMAND = { free:6, decay:0.96, floor:0.55 };
-
-// price multiplier for the (k+1)-th unit of an item sold today, k being how many already went
-function demandMult(k){
-  if(k < DEMAND.free) return 1;
-  return Math.max(DEMAND.floor, Math.pow(DEMAND.decay, k - DEMAND.free + 1));
+const DEMAND = { decay:0.95, floor:0.35, overnight:0.5 };
+function demandFree(item){
+  const base = ITEM_SELL[item] || 40;
+  return Math.max(3, Math.min(14, Math.round(280 / base) + 3));
+}
+// price multiplier for the (k+1)-th unit of `item` sold today, k = how many already went
+function demandMult(item, k){
+  const free = demandFree(item);
+  if(k < free) return 1;
+  return Math.max(DEMAND.floor, Math.pow(DEMAND.decay, k - free + 1));
 }
 
 // ---- MASTERY ----

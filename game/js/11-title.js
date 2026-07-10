@@ -167,7 +167,7 @@ function beginPlay(){
   $("hud").classList.remove("hidden"); $("hotbar").classList.remove("hidden");
   if(IS_TOUCH) $("touchUI").classList.remove("hidden");
   setMap("farm", 8*TILE+8, 12*TILE, "down");   // always wake on the farm
-  refreshHUD(); refreshHotbar(); refreshQuestTracker(); setControlsHint();
+  refreshHUD(); refreshHotbar(); refreshQuestTracker(); setControlsHint(); clearPickups();
   // recover a stranded finale: reloaded during the handoff, OR the finale's objectives are
   // already met but the festival never fired.
   state.flags.festivalActive = false; state.flags.festivalPending = false; state.flags.seasonalActive = null;

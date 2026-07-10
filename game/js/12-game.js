@@ -34,8 +34,9 @@ function loop(ts){
   // render
   if(gameMode === "title" || gameMode === "intro"){
     drawTitleScene();
+    clearTextLayer();               // no world text on the title/intro screens
   } else {
-    renderWorld();
+    renderWorld();                  // ends by flushing all queued text to the overlay
   }
 
   if(gameMode === "play"){

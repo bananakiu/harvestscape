@@ -310,6 +310,25 @@ function tellClue(l){
   showDialog("Bram   " + heartStr(heartsOf("bram")), l.clue, "port_bram");
   setTimeout(() => toast(`Bram's ledger — ${cluesKnown()}/${LEGENDS.length} legends known`, "#8fd3ff"), 700);
 }
+// The crown of the Hunt. Land all five legends, talk to Bram, and he gives you the one thing he
+// has never given anyone: his oilskin — and with it the sea in any weather. A capability, not gold.
+function startHuntCrown(){
+  if(state.flags.huntCrowned) return;
+  state.flags.huntCrowned = true;
+  startCutscene([
+    { type:"say", who:"Bram", portrait:"port_bram", text:"All five. The Sunfleck, the Moonscale, the Whitefin, the Frostjaw, and the one my father swore he saw off the pond in the storm." },
+    { type:"say", who:"Bram", portrait:"port_bram", text:"I gave you those five secrets one at a time because I wanted to see if you'd chase them, or just nod and forget. You chased them. In the fog. In the snow. Before dawn." },
+    { type:"say", who:"You", portrait:"port_player", text:"You could've caught them yourself." },
+    { type:"say", who:"Bram", portrait:"port_bram", text:"Aye. I never did. Some part of me wanted to leave the valley one thing still worth getting up for. Turns out that thing was you." },
+    { type:"say", who:"Bram", portrait:"port_bram", text:"Here. My oilskin. It's kept the weather off me for thirty years. It'll keep it off you." },
+    { type:"sfx", name:"level" },
+    { type:"run", fn:()=>{ give("Bram's Oilskin", 1, true); pSparkle(state.px, state.py-12, "#5aa5bd", 22);
+                           ensureRel("bram").points = Math.max(state.rel.bram.points, 500); } },
+    { type:"banner", big:"✦ Bram's Oilskin ✦", small:"The fish come faster — and the storm is yours to fish now", t:3.4 },
+    { type:"say", who:"Bram", portrait:"port_bram", text:"When it storms, don't sit at home. Take my boat. The sea knows you now. …Go on. Before I say something we'll both have to live down." },
+  ], () => { saveGame(); });
+}
+
 function legendConditions(l){
   const hrs = h => { const x = Math.floor(h) % 24, ap = x >= 12 ? "pm" : "am"; let t = x % 12; if(!t) t = 12; return t + ap; };
   const where = l.where === "pond" ? "the farm pond" : "the coast";

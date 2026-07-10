@@ -49,8 +49,8 @@ function collectLights(){
     L.push({ x:6*TILE+8, y:5*TILE+12, r:34, c:"255,205,120", i:1 });
     L.push({ x:9*TILE+8, y:5*TILE+12, r:34, c:"255,205,120", i:1 });
   }
-  L.push({ x:state.px, y:state.py-6, r: curMap.id==="mine"?68:52,
-           c: curMap.id==="mine"?"255,215,160":"200,215,255", i: curMap.id==="mine"?1:0.7 });
+  L.push({ x:state.px, y:state.py-6, r: curMap.id==="mine"?98:42,   // wide warm lantern underground; a soft warm aura up top
+           c: curMap.id==="mine"?"255,215,160":"255,226,178", i: curMap.id==="mine"?1:0.55 });
   return L;
 }
 
@@ -65,11 +65,13 @@ function drawLighting(camX, camY){
     else if(state.weather === "storm") amb = mixHex(amb, "#3a4052", 0.62);
     else if(state.weather === "fog") amb = mixHex(amb, "#b8c0cc", 0.42);
     else if(state.weather === "snow") amb = mixHex(amb, "#cad6e4", 0.32);
+    // Deep night shouldn't crush the world to black — lift the floor toward a readable moonlit blue.
+    if(nf > 0) amb = mixHex(amb, "#464c6a", 0.42*nf);
     const dim = { rain:0.35, storm:0.55, fog:0.30, snow:0.35 }[state.weather] || 0;
     boost = dim ? Math.max(nf, dim) : nf;
     showLights = boost > 0.02;
   } else if(curMap.id === "mine"){
-    amb = "#39344a"; boost = 1; showLights = true;
+    amb = "#5b5568"; boost = 1; showLights = true;      // dim but readable — you can see ore to swing at
   } else {
     amb = "#ccb89a"; boost = 0.7; showLights = true;      // cozy interior
   }
@@ -82,23 +84,29 @@ function drawLighting(camX, camY){
       const sx = Lt.x - camX, sy = Lt.y - camY;
       if(sx < -70 || sx > VIEW_W+70 || sy < -70 || sy > VIEW_H+70) continue;
       const g = ctx.createRadialGradient(sx,sy,0,sx,sy,Lt.r);
-      g.addColorStop(0, `rgba(${Lt.c},${0.55*boost*Lt.i})`);
-      g.addColorStop(0.5, `rgba(${Lt.c},${0.22*boost*Lt.i})`);
+      // softer core, fuller mid, quicker tail — a readable pool, not a blooming hotspot
+      g.addColorStop(0,    `rgba(${Lt.c},${0.44*boost*Lt.i})`);
+      g.addColorStop(0.4,  `rgba(${Lt.c},${0.34*boost*Lt.i})`);
+      g.addColorStop(0.78, `rgba(${Lt.c},${0.12*boost*Lt.i})`);
       g.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = g; ctx.fillRect(sx-Lt.r, sy-Lt.r, Lt.r*2, Lt.r*2);
     }
     ctx.restore();
   }
 
+  // a soft frame — eased off underground, where the dark already does the framing
+  const vigA = (curMap && curMap.id === "mine") ? 0.18 : 0.34;
   const vg = ctx.createRadialGradient(VIEW_W/2,VIEW_H/2, VIEW_H*0.45, VIEW_W/2,VIEW_H/2, VIEW_H*0.95);
-  vg.addColorStop(0,"rgba(0,0,0,0)"); vg.addColorStop(1,"rgba(0,0,0,0.34)");
+  vg.addColorStop(0,"rgba(0,0,0,0)"); vg.addColorStop(1,`rgba(0,0,0,${vigA})`);
   ctx.fillStyle = vg; ctx.fillRect(0,0,VIEW_W,VIEW_H);
 
+  // Tired, not hurt. Low energy dims the edges of the world with a warm, slow, sleepy haze —
+  // never the blood-red danger flash it used to be. There is nothing here to be afraid of.
   if(state.energy < 25){
-    const pulse = 0.5 + 0.5*Math.sin(animT*3);
-    const a = (1 - state.energy/25) * 0.22 * pulse;
-    const rv = ctx.createRadialGradient(VIEW_W/2,VIEW_H/2, VIEW_H*0.3, VIEW_W/2,VIEW_H/2, VIEW_H*0.95);
-    rv.addColorStop(0,"rgba(150,10,10,0)"); rv.addColorStop(1,`rgba(150,10,10,${a})`);
+    const pulse = 0.6 + 0.4*Math.sin(animT*1.4);
+    const a = (1 - state.energy/25) * 0.15 * pulse;
+    const rv = ctx.createRadialGradient(VIEW_W/2,VIEW_H/2, VIEW_H*0.38, VIEW_W/2,VIEW_H/2, VIEW_H*0.98);
+    rv.addColorStop(0,"rgba(58,44,28,0)"); rv.addColorStop(1,`rgba(58,44,28,${a})`);
     ctx.fillStyle = rv; ctx.fillRect(0,0,VIEW_W,VIEW_H);
   }
 }
@@ -130,7 +138,7 @@ function drawWeather(){
       ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - (storm?5:2), d.y+L); }
     ctx.stroke();
     if(storm && _flash > 0){
-      ctx.fillStyle = `rgba(220,230,255,${(_flash*0.5).toFixed(3)})`;
+      ctx.fillStyle = `rgba(220,230,255,${(_flash*0.22).toFixed(3)})`;   // a glimmer, never a whiteout
       ctx.fillRect(0, 0, VIEW_W, VIEW_H);
     }
   } else if(state.weather === "snow"){
@@ -161,7 +169,7 @@ function updateWeather(dt){
       _flash = Math.max(0, _flash - dt*3.2);
       if(chance(dt*0.16)){ _flash = 1; playSfx("thunder"); }   // light and noise; nothing is harmed
     }
-    setRainLevel(storm ? 1 : 1);
+    setRainLevel(storm ? 1.6 : 1);   // a storm is louder than a drizzle, and ducks the music more
   } else if(state.weather === "fog"){
     ensureFog();
     for(const b of fogBanks){ b.x -= b.sp*dt; if(b.x + b.w < -10){ b.x = VIEW_W + 10; b.y = rand(10,VIEW_H-20); } }

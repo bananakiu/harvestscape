@@ -4,6 +4,53 @@
    space inside the camera transform.
    ============================================================ */
 
+/* ---- high-resolution text overlay ----
+   The world renders to a 320x208 canvas scaled up ~4x, which turns any text
+   drawn on it to mush. Instead we QUEUE text (in world px) during the frame and
+   stamp it crisp onto a separate canvas sized to the real display (× dpr), the
+   way Stardew keeps its UI text sharp over pixel-art. */
+const gtx  = document.getElementById("gtext");
+const gctx = gtx.getContext("2d");
+let _textScale = 1;
+const _textQ = [];
+
+// wx,wy: WORLD px (or screen px if opt.screen). size is in game px, scaled to the display.
+function queueText(wx, wy, text, opt){ _textQ.push(Object.assign({ wx, wy, text }, opt)); }
+
+function syncTextLayer(){
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const w = cv.clientWidth || VIEW_W, h = cv.clientHeight || VIEW_H;
+  const bw = Math.round(w*dpr), bh = Math.round(h*dpr);
+  if(gtx.width !== bw || gtx.height !== bh){ gtx.width = bw; gtx.height = bh; }
+  gctx.setTransform(dpr, 0, 0, dpr, 0, 0);       // draw in CSS px; the buffer is dpr-dense
+  _textScale = w / VIEW_W;                        // display px per game px
+}
+
+// stamp every queued string crisply. camX/camY is the world origin (cam minus shake).
+function flushText(camX, camY){
+  syncTextLayer();
+  const S = _textScale, wCss = cv.clientWidth || VIEW_W, hCss = cv.clientHeight || VIEW_H;
+  gctx.clearRect(0, 0, wCss, hCss);
+  gctx.textBaseline = "alphabetic";
+  for(const t of _textQ){
+    const sx = (t.screen ? t.wx : t.wx - camX) * S;
+    const sy = (t.screen ? t.wy : t.wy - camY) * S;
+    gctx.font = `${t.weight ? t.weight+" " : ""}${(t.size||8)*S}px "VT323", monospace`;
+    gctx.textAlign = t.align || "center";
+    gctx.globalAlpha = t.alpha == null ? 1 : t.alpha;
+    if(t.shadow !== null){
+      const off = Math.max(1, S*0.45);
+      gctx.fillStyle = t.shadow || "rgba(0,0,0,0.5)";
+      gctx.fillText(t.text, sx + off, sy + off);
+    }
+    gctx.fillStyle = t.color || "#fff";
+    gctx.fillText(t.text, sx, sy);
+  }
+  gctx.globalAlpha = 1;
+  _textQ.length = 0;
+}
+function clearTextLayer(){ syncTextLayer(); gctx.clearRect(0, 0, gtx.width, gtx.height); _textQ.length = 0; }
+
 function addP(p){ if(particles.length < 600) particles.push(p); }
 
 function pPuff(x,y,color,n=6){
@@ -42,6 +89,8 @@ function pLantern(x,y){
 }
 
 function floatText(x,y,text,color="#fff"){
+  // never stamp two fresh floaters on the same spot — nudge a new one clear of any just-spawned one
+  for(const f of floaters){ if(f.life < 0.4 && Math.abs(f.x-x) < 28 && Math.abs(f.y-y) < 11){ y -= 12; } }
   floaters.push({ x, y, text, color, life:0, max:1.1, vy:-18 });
 }
 // an item icon that leaps out and arcs up (harvest/gather payoff)
@@ -88,15 +137,10 @@ function drawParticles(){
 }
 
 function drawFloaters(){
-  ctx.textAlign = "center";
-  ctx.font = 'bold 8px "VT323", monospace';
+  // queued to the high-res overlay so "+1 Corn" reads crisp, not upscaled from 320px
   for(const f of floaters){
     const k = f.life/f.max;
-    ctx.globalAlpha = k < .8 ? 1 : 1 - (k-.8)/.2;
-    ctx.fillStyle = "#000";
-    ctx.fillText(f.text, (f.x|0)+1, (f.y|0)+1);
-    ctx.fillStyle = f.color;
-    ctx.fillText(f.text, f.x|0, f.y|0);
+    const alpha = k < .8 ? 1 : 1 - (k-.8)/.2;
+    queueText(f.x, f.y, f.text, { color:f.color, size:9, weight:"bold", alpha });
   }
-  ctx.globalAlpha = 1; ctx.textAlign = "left";
 }

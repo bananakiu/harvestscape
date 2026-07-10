@@ -48,6 +48,12 @@ body{
   image-rendering:pixelated; image-rendering:crisp-edges;
   display:block;
 }
+/* text overlay: NOT pixelated, sits above the world but below the whole UI stack */
+#gtext{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  z-index:4; pointer-events:none; display:block;
+}
 .hidden{ display:none !important; }
 .overlay{ position:absolute; inset:0; pointer-events:none; }
 
@@ -140,6 +146,29 @@ body{
   75%{opacity:1}
   100%{opacity:0;transform:translateY(-.6em)}
 }
+
+/* ---------- item pickup log ---------- */
+#pickups{
+  position:absolute; left:2.2%; top:32%;
+  display:flex; flex-direction:column; gap:.32em;
+  pointer-events:none; z-index:6; align-items:flex-start;
+}
+.pickup{
+  display:flex; align-items:center; gap:.35em;
+  background:rgba(20,15,10,.82); border:.13em solid var(--wood-d);
+  border-radius:.5em; padding:.14em .5em .14em .28em;
+  box-shadow:0 .18em 0 rgba(0,0,0,.35), inset 0 .1em 0 rgba(255,255,255,.06);
+  animation:pickIn .3s cubic-bezier(.2,1.35,.5,1) both;
+  transition:opacity .5s ease, transform .5s ease;
+  white-space:nowrap;
+}
+.pickup.out{ opacity:0; transform:translateX(-.6em); }
+.pickup canvas{ width:1.7em; height:1.7em; image-rendering:pixelated; flex:0 0 auto; }
+.pickup .amt{ color:var(--gold-hi); font-variant-numeric:tabular-nums; }
+.pickup .pname{ color:var(--parch); }
+.pickup.bump{ animation:pickBump .34s ease; }
+@keyframes pickIn{ 0%{opacity:0;transform:translateX(-1em) scale(.9)} 100%{opacity:1;transform:none} }
+@keyframes pickBump{ 0%{transform:none} 38%{transform:scale(1.14)} 100%{transform:none} }
 
 /* ---------- hotbar ---------- */
 #hotbar{

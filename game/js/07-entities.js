@@ -82,8 +82,7 @@ function drawPrompt(cx, cy){
   const y = cy + Math.sin(animT*4)*1.2;
   ctx.fillStyle = "rgba(20,15,10,0.85)"; ctx.fillRect(cx-5, y-6, 10, 9);
   ctx.fillStyle = "#ffce5a"; ctx.fillRect(cx-5, y-6, 10, 1);
-  ctx.font = '8px "VT323", monospace'; ctx.textAlign = "center";
-  ctx.fillStyle = "#ffe6a0"; ctx.fillText("E", cx, y+1); ctx.textAlign = "left";
+  queueText(cx, y+1.5, "E", { color:"#ffe6a0", size:8, weight:"bold", shadow:null });
 }
 const INTERACT_KINDS = new Set(["campfire","stove","counter","stall","shipbin","sign","berrybush","frostberry","wrack","chest","noticeboard","fruittree","beehive",
   "ledger","railcart","boardwalk","fountain",
@@ -198,8 +197,7 @@ function renderWorld(){
     ctx.fillStyle = "#e8e8e8"; ctx.fillRect(bx-1, by-2, 2, 4);
     ctx.fillStyle = "#c03030"; ctx.fillRect(bx-1, by-2, 2, 2);
     ctx.strokeStyle = "rgba(255,255,255,0.4)"; ctx.beginPath(); ctx.arc(bx, by+2, 3+Math.sin(animT*4)*1.5, 0, 7); ctx.stroke();
-    if(fishing.state === "bite"){ ctx.fillStyle = "#ffd75a"; ctx.font = 'bold 12px "VT323", monospace'; ctx.textAlign="center";
-      ctx.fillText("!", state.px, state.py-24); ctx.textAlign = "left"; }
+    if(fishing.state === "bite"){ queueText(state.px, state.py-24, "!", { color:"#ffd75a", size:13, weight:"bold" }); }
   }
 
   drawParticles(); drawFloaters();
@@ -208,6 +206,7 @@ function renderWorld(){
   drawLighting(cam.x - shx, cam.y - shy);
   drawWeather();
   drawReelBar();
+  flushText(cam.x - shx, cam.y - shy);   // stamp all queued text crisp, matching the shaken world origin
 }
 
 /* ---- the reel-in minigame overlay (screen space, so it ignores the camera) ---- */
@@ -242,16 +241,11 @@ function drawReelBar(){
   ctx.fillRect(mx, y + h - ph, 6, ph);
   ctx.strokeStyle = "#8a6647"; ctx.strokeRect(mx+0.5, y+0.5, 5, h-1);
 
-  ctx.font = '9px "VT323", monospace'; ctx.textAlign = "center";
-  ctx.fillStyle = (keys[" "] || fishHold) ? "#ffe6a0" : "#8a7a66";
-  ctx.fillText("HOLD", x + w/2, y - 2);
-  ctx.textAlign = "left";
+  queueText(x + w/2, y - 2, "HOLD", { color:(keys[" "] || fishHold) ? "#ffe6a0" : "#8a7a66", size:9, weight:"bold", screen:true });
 }
 
 function nameTag(text, x, y){
-  ctx.font = '7px "VT323", monospace'; ctx.textAlign = "center";
-  ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillText(text, x, y-23);
-  ctx.fillStyle = "#ffe6a0"; ctx.fillText(text, x, y-24); ctx.textAlign = "left";
+  queueText(x, y-24, text, { color:"#ffe6a0", size:8 });
 }
 function drawChicken(a){
   const frame = a.moving ? (Math.floor(a.walk)%2) : (Math.floor(animT*2)%2);
@@ -370,8 +364,8 @@ function drawObject(ox, oy, o, k){
   if(o.kind==="stall"){ ctx.drawImage(spr.stall, bx-4, by-8); return; }
   if(o.kind==="ladderup" || o.kind==="ladderdown"){
     ctx.drawImage(spr.ladder, bx, by);
-    ctx.fillStyle="#ffce5a"; ctx.font='8px "VT323", monospace'; ctx.textAlign="center";
-    ctx.fillText(o.kind==="ladderup"?"▲":"▼", bx+8, by+9); ctx.textAlign="left"; return;
+    queueText(bx+8, by+9, o.kind==="ladderup"?"▲":"▼", { color:"#ffce5a", size:8 });
+    return;
   }
   const s = spr[o.kind]; if(!s) return;
   const dw = s.width, dh = s.height;

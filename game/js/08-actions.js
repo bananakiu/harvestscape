@@ -49,6 +49,17 @@ function nextMastery(skill){
   for(const n of [25,50,75,99]) if(lv < n) return { at:n, text:MASTERY[skill][n] };
   return null;
 }
+// the next piece of CONTENT a skill unlocks — so a level is never a blind grind toward nothing
+function nextUnlock(skill){
+  const lv = skillLvl(skill);
+  let best = null;
+  const add = (n, label) => { if(n > lv && (!best || n < best.at)) best = { at:n, label }; };
+  if(skill==="Farming")     for(const k in CROPS) add(CROPS[k].lvl, CROPS[k].name);
+  if(skill==="Woodcutting") for(const k in TREES) add(TREES[k].lvl, TREES[k].name);
+  if(skill==="Mining")      for(const k in ORES)  add(ORES[k].lvl,  ORES[k].name);
+  if(skill==="Fishing"){ FISH.forEach(f=>add(f.lvl, f.name)); LEGENDS.forEach(l=>add(l.lvl, l.name+" (legend)")); }
+  return best;   // Cooking has no level-gated content, so null — honestly nothing to show
+}
 
 function unlocksAt(skill, lvl){
   const u = [];
@@ -74,7 +85,12 @@ function addXP(skill, amt){
 }
 
 // ---- inventory ----
-function give(item, n=1, quiet){ state.inv[item] = (state.inv[item]||0) + n; if(!quiet){ pItemPop(state.px, state.py-12, "item_"+item); floatText(state.px+rand(-4,4), state.py-22, "+"+n+" "+item, "#ffe08a"); } }
+function give(item, n=1, quiet){
+  state.inv[item] = (state.inv[item]||0) + n;
+  // the sprite still pops off the player for juice, but the "+N Item" text now lives in the corner
+  // pickup log — off the head, so it never collides with the XP drop from the same action.
+  if(!quiet){ pItemPop(state.px, state.py-12, "item_"+item); notePickup(item, n); }
+}
 function take(item, n=1){ if((state.inv[item]||0) < n) return false; state.inv[item]-=n; if(state.inv[item]<=0) delete state.inv[item]; return true; }
 function bump(stat, n=1){ state.stats[stat] = (state.stats[stat]||0) + n; checkQuests(); }
 function near(x,y,d){ return dist2(state.px, state.py, x, y) < d; }
@@ -190,9 +206,9 @@ function useTool(){
   }
   else if(tool === "Rod"){
     if(tt !== T.WATER){ toast("Face the water to fish."); return; }
-    // A storm shuts the open sea, never your own pond. Nothing is lost — come back tomorrow
-    // for the wrack it throws up on the sand.
-    if(isStorm() && curMap.id === "beach"){
+    // A storm shuts the open sea, never your own pond — unless you've earned Bram's oilskin, and
+    // with it his trust and his boat. Then the storm is just another kind of fishing weather.
+    if(isStorm() && curMap.id === "beach" && !state.inv["Bram's Oilskin"]){
       showDialog("The Coast", "The swell is up past the rocks and the rain is coming in sideways. Bram has the boat lashed down and no intention of moving it.\n\nCome back when it blows through — the sea always gives something back.", "port_valley");
       return;
     }
@@ -394,6 +410,7 @@ function startFishing(tx,ty){
   fishing.t = 1.1 + Math.random()*(3.2 - rodTier*0.5);
   if(hasMastery("Fishing",25)) fishing.t *= 0.75;              // ★ Still Water
   if(isRain()) fishing.t *= 0.6;                               // rain brings them up
+  if(state.inv["Bram's Oilskin"]) fishing.t *= 0.7;           // the master's touch — the fish come to you
   playSfx("splash"); pSplash(tx*TILE+8, ty*TILE+8, 8); toast("Cast… wait for the !");
 }
 function updateFishing(dt){
@@ -591,7 +608,12 @@ function newDay(){
   clearMapCache();                  // beach/mine refresh once per day
   const oldSeason = SEASONS[Math.floor((state.day-1)/SEASON_DAYS)%4];
   state.day++; state.time = 6*60; state.energy = 100;
-  state.market = {};                // Tom's shelves are empty again; every price is full again
+  // Tom's shelves half-empty overnight — the glut recovers, but not all at once, so you can't
+  // sell out a hoard by dumping and then fully reset with a night's sleep.
+  for(const it in state.market){
+    const left = Math.floor(state.market[it] * DEMAND.overnight);
+    if(left > 0) state.market[it] = left; else delete state.market[it];
+  }
   const newSeason = SEASONS[Math.floor((state.day-1)/SEASON_DAYS)%4];
   let withered = 0, seasonChanged = newSeason !== oldSeason;
   if(seasonChanged){
@@ -769,9 +791,15 @@ function baseUnitPrice(item){
 }
 function soldToday(item){ return (state.market && state.market[item]) || 0; }
 // the price Tom will pay for the very next one
-function nextUnitPrice(item){ return Math.round(baseUnitPrice(item) * demandMult(soldToday(item))); }
+function nextUnitPrice(item){ return Math.round(baseUnitPrice(item) * demandMult(item, soldToday(item))); }
 // 0..1 — how saturated Tom is on this item today (for the shop UI)
-function demandLevel(item){ return demandMult(soldToday(item)); }
+function demandLevel(item){ return demandMult(item, soldToday(item)); }
+// what selling `n` of `item` right now would ACTUALLY fetch, blended across the sliding price
+function bundlePrice(item, n){
+  const base = baseUnitPrice(item), already = soldToday(item);
+  let g = 0; for(let k = 0; k < n; k++) g += base * demandMult(item, already + k);
+  return Math.round(g);
+}
 
 function sellItem(item, n){
   n = Math.min(n, state.inv[item]||0); if(n<=0) return;
@@ -781,7 +809,7 @@ function sellItem(item, n){
   const base = baseUnitPrice(item);
   const already = soldToday(item);
   let gain = 0;
-  for(let k = 0; k < n; k++) gain += base * demandMult(already + k);
+  for(let k = 0; k < n; k++) gain += base * demandMult(item, already + k);
   gain = Math.round(gain);
   state.market[item] = already + n;
 
@@ -798,8 +826,8 @@ function sellItem(item, n){
   let note = winterFish ? " · winter price" : "";
   if(discounted) note += ` · ${Math.round(gain/full*100)}% — the market's full of ${item}`;
   toast(`Sold ${n} ${item} (+${gain}g)` + note, discounted ? "#e0b46a" : "#ffce5a");
-  if(discounted && soldToday(item) >= DEMAND.free + 12 && chance(0.4)) setTimeout(() =>
-    toast(pick(TOM_GLUT).replace("{item}", item), "#e9dcc0"), 700);
+  if(discounted && soldToday(item) >= demandFree(item) + 12 && chance(0.4)) setTimeout(() =>
+    toast(pick(TOM_GLUT).replace(/\{item\}/g, item), "#e9dcc0"), 700);
   playSfx("sell"); refreshHUD(); renderShop();
 }
 
