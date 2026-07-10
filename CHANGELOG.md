@@ -22,6 +22,38 @@
 
 ---
 
+## v2.7.0 — "A Fair Climb" · 2026-07-11 · tag `v2.7.0`
+
+Version code **29**. Replaced RuneScape's XP curve with our own, per the owner's call: *"we don't
+need to strictly follow RuneScape's — it's a little too grindy and punishing. Rewarding, the right
+amount, a feeling of progression that gets harder over time, nothing absurd except maybe the last
+part for completionists."*
+
+### Changed — the XP curve (`XP_TABLE`, `00-core.js`)
+- **Out:** the RS formula ÷4 — cost doubles every ~7 levels, so **99 = ~13,000,000 XP** and the back
+  half is ~130× the first. That's the "grindy and punishing" the owner flagged.
+- **In:** a smooth power ramp `inc(L) = 26 + 0.30·(L−1)^2.4`, with a light completionist steepening on
+  the final four levels (`×(1 + 0.30·(L−95))` for L ≥ 96). Properties, all Node-verified against the
+  real file:
+  - **Gentler than RS at *every* level** (new ÷ old ranges 0.04–0.67) — it is never grindier than the
+    old curve anywhere, and far gentler late.
+  - **Rewarding early:** a level every ~1–3 actions through L10, ~25 actions to L15.
+  - **A real middle:** ~117 actions to L25 (first mastery), ~1,160 to L50.
+  - **Steadily harder, gentle overall:** **L99 ≈ 584k XP (~22× gentler than RS)**; `ratio L99/L50 ≈
+    10×` (RS was 129×); 90→99 is ~a third of the total climb, not half.
+  - **Completionist tail, not a wall:** only 96–99 get the bump (L99's single level ≈ 880 actions);
+    the ramp into it is smooth, not a brick.
+- **Existing saves:** because every threshold is ≤ the old one, a veteran's stored XP now reads as a
+  **higher** level (e.g. old-L50 XP → L60, old-L30 → L33) — levels only rise or hold, never fall, so
+  it's a one-time gift, not a loss (the cozy contract). No retroactive banner spam: leveling is
+  computed lazily via `levelFor`, and the next `addXP` sees the new level as its "before".
+- Everything downstream is derived (`levelFor`, `xpForLevel`, `skillLvl`, mastery, content gates,
+  `totalLevel`) — no hardcoded thresholds, so the whole progression layer just tracks the new curve.
+
+*Verification: the XP table is math with no visual surface, so it's Node-verified end-to-end (the real
+file's table reproduced and asserted: monotonic, `L50=52233`, `L99=584240`, clamps at 99, veteran-XP
+maps upward). No browser needed; the skills panel renders the new thresholds automatically.*
+
 ## v2.6.1 — "Second Look" · 2026-07-11 · tag `v2.6.1`
 
 Version code **28**. Fixes for **all four findings** from an adversarial regression review of this

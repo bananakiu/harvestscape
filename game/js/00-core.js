@@ -85,9 +85,22 @@ function gradHex(stops, t){
   return stops[stops.length-1][1];
 }
 
-// ---- RuneScape XP table (levels 1..99) ----
+// ---- XP table (levels 1..99) — HarvestScape's own curve, tuned for cozy progression ----
+// NOT RuneScape's. RS doubles the per-level cost every ~7 levels, so level 99 costs ~13,000,000 XP —
+// a punishing wall (its back half is ~130× its first). Ours is a smooth power ramp that is GENTLER
+// than RS at EVERY level: rewarding early (a level every few actions), a fair-but-real mid-game
+// (~1,150 actions to 50), and steadily harder — with only the final four levels (96–99) given a light
+// completionist steepening. L99 ≈ 584k XP (~22× gentler than RS), and 90→99 is ~a third of the climb,
+// not half. Because every threshold is ≤ the old one, existing saves' XP simply reads as a higher
+// level — a one-time gift, never a loss (the cozy contract). `XP_TABLE[L]` = total XP to reach level L.
 const XP_TABLE = [0, 0];
-(function(){ let a = 0; for(let l=1; l<99; l++){ a += Math.floor(l + 300*Math.pow(2, l/7)); XP_TABLE.push(Math.floor(a/4)); } })();
+(function(){
+  for(let l=2; l<=99; l++){
+    let inc = 26 + 0.30*Math.pow(l-1, 2.4);   // smooth, always-increasing per-level cost
+    if(l >= 96) inc *= 1 + 0.30*(l-95);        // a gentle completionist push on the last stretch
+    XP_TABLE.push(Math.round(XP_TABLE[l-1] + inc));
+  }
+})();
 const levelFor = xp => { let l = 1; while(l < 99 && XP_TABLE[l+1] <= xp) l++; return l; };
 const xpForLevel = l => XP_TABLE[clamp(l,1,99)];
 
