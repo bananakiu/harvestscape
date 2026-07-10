@@ -28,6 +28,7 @@ Or just open `game/index.html` in any modern browser.
 - **A living world** — day/night color-grading, warm light pools from windows, lamps, campfires, torches and glowing crystals, cozy interior lighting, mine darkness lit by your lantern, weather (rain waters crops for free), and ambient pollen, fireflies, birdsong and crickets.
 - **Juice** — particles and item-pops for every action, hitstop on strikes, floating XP/gold text, screen shake, an animated sun/moon clock, and a typewriter dialogue system with pixel portraits.
 - **Generated audio** — an adaptive WebAudio soundtrack with distinct day, night, cozy-interior, mine and beach themes, plus a full library of synthesized sound effects.
+- **Examine anything** — press **X** to look at whatever you're facing (a crop, a rock, a neighbour, the sea) for a wry little line of flavour, RuneScape-style; your Backpack reads like a museum, every item described.
 - **Save/continue** — auto-saves each night to `localStorage`.
 - **Version history in-game** — a **What's New** panel (click the version on the title screen, or open it from Settings) shows the changelog, and pops up once automatically after you update to a newer build.
 

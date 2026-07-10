@@ -22,6 +22,29 @@
 
 ---
 
+## v2.3.0 — "A Word on Everything" · 2026-07-11 · tag `v2.3.0`
+
+Version code **23**. Examine text — the scorecard's most-repeated free win ("the #1 free channel,
+two audits running"). RuneScape's oldest joy, adapted to the cozy voice.
+
+### Added
+- **Press X to examine.** A `examineFacing()` resolver (`08-actions.js`) reads whatever you face —
+  crop (with a growth line if unripe), NPC, object, or tile — and shows a one-line flavour readout
+  in a calm parchment bar (`#examineBar`, `showExamine()` in `10-ui.js`) that fades on its own.
+  Objects resolve through named lookups (ore veins, trees, fruit trees, ladders, the mine mouth,
+  the sealed vault) with a title map + graceful fallback, so nothing examinable comes up blank.
+- **The Backpack is now a museum.** Every item shows its examine line beneath its name — the
+  collection flavour the Psychology dimension asked for, at the point you already look.
+- **129 hand-tuned flavour lines** (`EXAMINE` / `EXAMINE_OBJ` / `EXAMINE_NPC` / `EXAMINE_TILE`,
+  `01-data.js`): 86 items, 27 objects, 6 neighbours, 10 tiles. *How they were written:* a
+  parallel multi-agent workflow drafted each category in the game's voice (Tom's huckster cheer,
+  Bram's deadpan, Maya's warmth), then a single tone-editor pass unified voice, length, and lore —
+  then hand-checked against the item tables so every key matches.
+
+Controls hint updated (`Examine X`). Verified in-browser: X on grass/ore/tree/NPC, the readout
+bar, and the per-item Backpack lines all render; console clean. Desktop verb for now — a touch
+affordance can follow. Tagged `v2.3.0`; `master` per the standing workflow.
+
 ## v2.2.0 — "First Light" · 2026-07-11 · tag `v2.2.0`
 
 Version code **22**. The New Player Experience beta — the fix for the owner's first playtest

@@ -22,6 +22,18 @@ function toast(msg, col){
   setTimeout(() => d.remove(), 2400);
 }
 
+// The examine readout — a calm parchment line at the bottom, fades on its own. Used by the
+// X-to-look verb and by tapping an item in the Backpack.
+let _examineT = null;
+function showExamine(title, text){
+  const el = $("examineBar"); if(!el) return;
+  el.innerHTML = `<span class="exTitle">${escapeHtml(title)}</span><span class="exText">${escapeHtml(text)}</span>`;
+  el.classList.remove("hidden", "out"); void el.offsetWidth; el.classList.add("show");
+  if(_examineT) clearTimeout(_examineT);
+  _examineT = setTimeout(() => { el.classList.remove("show"); el.classList.add("out");
+    setTimeout(() => { el.classList.add("hidden"); el.classList.remove("out"); }, 400); }, 4200);
+}
+
 // ---- item pickup log ---- a fading, stacking notification of what you just collected.
 // Repeat pickups of the same item roll up into one entry (which pulses and its timer resets),
 // so mass-harvesting reads as "+50 Corn" rather than fifty separate lines.
@@ -245,7 +257,8 @@ function renderInv(){
     const ic = spr["item_"+it] ? `<canvas></canvas>` : "";
     const sell = ITEM_SELL[it];
     const val = sell ? `<span class="sub" style="margin-left:.4em">${sell}g ea</span>` : (EDIBLE[it] ? `<span class="sub" style="margin-left:.4em">+${EDIBLE[it]} energy</span>` : "");
-    return `<div class="row"><span class="lead" data-icon="item_${it}">${ic}<span>${it}${val}</span></span><span>×${state.inv[it]}</span></div>`;
+    const ex = EXAMINE[it] ? `<div class="exline">${escapeHtml(EXAMINE[it])}</div>` : "";
+    return `<div class="row"><span class="lead" data-icon="item_${it}">${ic}<span>${it}${val}</span></span><span>×${state.inv[it]}</span></div>${ex}`;
   }).join("");
   hydrateIcons(b);
 }
@@ -606,7 +619,7 @@ function showSleepCard(s){
 function setControlsHint(){
   $("controlsHint").innerHTML =
     `<b>Move</b> <kbd>WASD</kbd> · <b>Use tool</b> <kbd>Space</kbd> · <b>Interact / harvest / talk</b> <kbd>E</kbd> · <b>Cycle seeds</b> <kbd>R</kbd> · <b>Eat</b> <kbd>F</kbd> · <b>Gift Maya</b> <kbd>G</kbd><br>` +
-    `<b>Skills</b> <kbd>K</kbd> · <b>Backpack</b> <kbd>I</kbd> · <b>Journal</b> <kbd>J</kbd> · Enter buildings, the mine &amp; the coast · <b>Sleep</b> in your bed indoors · slots <kbd>1</kbd>–<kbd>6</kbd>`;
+    `<b>Skills</b> <kbd>K</kbd> · <b>Backpack</b> <kbd>I</kbd> · <b>Journal</b> <kbd>J</kbd> · <b>Examine</b> <kbd>X</kbd> · Enter buildings, the mine &amp; the coast · <b>Sleep</b> in your bed indoors · slots <kbd>1</kbd>–<kbd>6</kbd>`;
 }
 
 // ---- INPUT ----
@@ -656,6 +669,7 @@ document.addEventListener("keydown", e => {
   else if(k === "r"){ if(!uiBlocking()) cycleSeed(); }
   else if(k === "f"){ if(!uiBlocking()) eatFood(); }
   else if(k === "g"){ if(!uiBlocking()) giveGift(); }
+  else if(k === "x"){ examine(); }
   else if(k === "m"){ setMusicEnabled(!SND.enabled); toast("Music "+(SND.enabled?"on":"off")); }
   else if(k === "escape"){ if(dlg.open) closeDialog(); else closeAllPanels(); }
   else if("123456".includes(k)) selectSlot(+k-1);

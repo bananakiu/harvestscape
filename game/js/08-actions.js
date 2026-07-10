@@ -133,6 +133,53 @@ function spendEnergy(n){
   state.energy = Math.max(0, state.energy - n); refreshHUD(); return true;
 }
 
+// ============================== EXAMINE ("look", X) ==============================
+// RuneScape's oldest, cheapest joy: press X to look at whatever you face. Flavour lives in the
+// EXAMINE* maps (01-data.js). Everything examinable also gets quietly logged as "discovered".
+const TILE_NAME  = { 0:"GRASS",1:"DIRT",2:"TILLED",3:"WATERED",4:"WATER",5:"PATH",11:"SAND",12:"FLOWERGRASS",15:"BRIDGE",16:"TALLGRASS" };
+const TILE_TITLE = { GRASS:"Grass", DIRT:"Bare Earth", TILLED:"Tilled Soil", WATERED:"Watered Soil", WATER:"Water",
+                     PATH:"Path", SAND:"Sand", FLOWERGRASS:"Wildflowers", TALLGRASS:"Tall Grass", BRIDGE:"Bridge" };
+const OBJ_TITLE  = { bed:"Bed", campfire:"Campfire", stove:"Stove", fireplace:"Fireplace", counter:"Counter",
+  stall:"Market Stall", shipbin:"Shipping Bin", sign:"Sign", noticeboard:"Noticeboard", ledger:"The Valley Ledger",
+  fountain:"Fountain", boardwalk:"Boardwalk", railcart:"Minecart", memorial:"Standing Stone", berrybush:"Berry Bush",
+  frostberry:"Frostberry Bush", fruittree:"Fruit Tree", beehive:"Beehive", torch:"Torch", lamp:"Lamp", lantern:"Lantern",
+  crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder" };
+function npcAtTile(tx,ty){ if(!curMap||!curMap.npcs) return null;
+  for(const n of curMap.npcs){ if(Math.floor(n.x/TILE)===tx && Math.floor(n.y/TILE)===ty) return n; } return null; }
+function objLook(obj){
+  const k = obj.kind;
+  if(ORES[k])  return { title: ORES[k].name,  text: k==="stone" ? "Plain rock. There's better the deeper you dig." : `A vein of ${ORES[k].drop.replace(" Ore","").toLowerCase()}, waiting on a pick.` };
+  if(TREES[k]) return { title: TREES[k].name + " Tree", text: `Good ${TREES[k].drop.toLowerCase()} in it, for an axe with the patience.` };
+  if(k==="fruittree"){ const t=FRUIT_TREES[obj.type]; return { title: t?t.name:"Fruit Tree", text: EXAMINE_OBJ.fruittree }; }
+  if(k==="ladderdown") return { title:"Ladder Down", text:"Down into the dark, one rung at a time." };
+  if(k==="ladderup")   return { title:"Ladder Up",   text:"Back up toward the daylight." };
+  if(k==="mineentrance") return { title:"The Old Mine", text:"The mouth of the old mine — ore and gems, and the dark that keeps them." };
+  const t = EXAMINE_OBJ[k];
+  if(t) return { title: OBJ_TITLE[k] || k, text: t };
+  return null;
+}
+function examineFacing(){
+  if(!curMap) return null;
+  const [tx,ty] = facingTile(); const k = key(tx,ty), tt = tileAt(tx,ty), obj = objAt(tx,ty);
+  const crop = curMap.crops[k];
+  if(crop){ const c = CROPS[crop.type]; const ripe = crop.days >= c.days;
+    return { title:c.name, text: ripe ? (EXAMINE[c.name]||"Ripe and ready.") : `A ${c.name.toLowerCase()} coming along — day ${crop.days} of ${c.days}.` }; }
+  const npc = npcAtTile(tx,ty);
+  if(npc){ return { title:(NPCDEF[npc.id]&&NPCDEF[npc.id].name)||npc.id, text: EXAMINE_NPC[npc.id]||"One of the valley's own." }; }
+  if(obj){ const o = objLook(obj); if(o) return o; }
+  const nm = TILE_NAME[tt];
+  if(nm) return { title: TILE_TITLE[nm]||nm, text: EXAMINE_TILE[nm]||"" };
+  return null;
+}
+function examine(){
+  if(gameMode!=="play" || paused || uiBlocking() || fishing.state!=="idle") return;
+  const e = examineFacing();
+  if(e && e.text) showExamine(e.title, e.text);
+  else showExamine("Hmm.", "Nothing here worth a second look.");
+  playSfx("select");
+}
+function examineItem(name){ showExamine(name, EXAMINE[name] || "Just what it looks like."); playSfx("select"); }
+
 // ============================== USE TOOL (Space) ==============================
 // Watering can coverage by tier: 0 = one tile, 1 = a 3-tile row, 2 = a 5-tile row, 3 = a 3x3 block.
 // The row is perpendicular to your facing, so you sweep along a bed rather than poking at it.
