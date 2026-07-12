@@ -22,6 +22,56 @@
 
 ---
 
+## [Unreleased] — Grove Depths, Phase 1: rings, deadfalls, waystones, the Pledge Ledger
+
+Implements Phase 1 of [GROVE_DEPTHS.md](GROVE_DEPTHS.md) (owner-approved plan; DEVLOG 2026-07-13:
+the grove is *"not dynamic enough… not fun"* — it had a venue but no loop, while the mine had
+levels, progression, and save points).
+
+### Added
+- **The Deep Grove is nine rings deep.** `genGrove` now generates per `ring+day` exactly the way
+  `genMine` generates per `depth+day` (`state.groveRing`/`state.groveBest` mirror
+  `mineDepth`/`mineBest`; grove map-cache key is `grove:<ring>`). West is always deeper; entering
+  from the farm always starts at Ring 1 (`doWarp` resets, mirroring `enterMine`). The mix of
+  oak/pine/maple ages per ring instead of per x-position, so depth — not walking distance —
+  decides what wood you're in. Ring 9 is **the Heart of the Forest**: the grove *ends* (unlike
+  the mine) at a story-shaped ancient tree, planted now, paid off in a later chapter.
+- **Deadfalls: the door west is itself woodcutting.** Each ring's west trail is sealed by a great
+  fallen trunk with an HP pool and a Woodcutting requirement (`DEADFALL` table, 01-data.js —
+  WC 5 into ring 2 up to WC 78 into ring 9). You chop *through* it and the door pays you (wood +
+  XP). Felled deadfalls stay open for the day (map cache) and regrow overnight — waystones, not
+  deadfalls, are the permanent progress. Design: the gate into depth is the skill being trained,
+  not a staircase, and the WC requirement makes each ring's level assumption safe for future
+  spawn tables (Phase 2). The crossing band (y≈15) stays prop-free on every ring — the grove's
+  version of the mine's guaranteed-corridor rule, so a high-level tree can never wall a
+  low-level player off the trail.
+- **Waystones + the Pledge Ledger.** Guild-era standing stones on rings 1/3/6/9. The mouth stone
+  never slept; the rest wake through the new **Pledge Ledger** (01-data.js), built to the owner's
+  no-wasted-trips rule (DEVLOG): *touching* a dormant stone banks its discovery permanently and
+  free; its cost is a pledge filled **in partial deposits, from anywhere** — at the stone or from
+  a new ❖ Restorations section of the Journal — and the ledger, never the player, remembers the
+  remainder. A filled pledge wakes the stone INSTANTLY (a "come back tomorrow" would be the same
+  frustration smaller). Awake stones teleport between each other free, so home is always one
+  interaction from any funded ring. Costs sink ORE + gold (the grove's stones want ore the way
+  the mine's lift wants wood — the two deep venues feed each other); the deep stone takes a Ruby
+  (the Diamond already belongs to the deep lift stop). Quiet pickup-toast nudges (once per item
+  per pledge per day) when you gain something a discovered pledge still needs.
+  The ledger's ids/helpers are generic (`lift5`… resolve already) so Phase 4 can put the Old
+  Lift's stops on the same system without touching the core.
+- Art: deadfall, dormant/lit waystone (teal runes + cool green light pool after dark, tuned
+  against the additive-glare warning in AGENTS.md), west/east trailheads, the Heart tree
+  (pale bark, faint glow). All procedural, generic bottom-aligned draw path; lit-check special
+  case in `drawObject`.
+
+### Verified
+Full loop in-browser (worktree build, port 8645): ring-1 gen; deadfall chop (level gate, 4 swings
+at tier 2, wood+XP payout, westtrail replacement); ring 2/3 descent with subtitle banners; dormant
+stone discovery banner + pledge record; at-stone partial contribute (800g + 6 Copper + 2 Iron
+banked, remainder shown); remote Journal contribute completing the pledge (instant wake banner);
+riding way1 ⇄ way3; night light pools; console clean.
+
+---
+
 ## v3.2.0 — "The Near Fence" · 2026-07-13 · tag `v3.2.0`
 
 Version code **39**. The farm shrinks: 60×46 → **46×36** (~40% less area). The owner (DEVLOG,

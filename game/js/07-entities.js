@@ -86,7 +86,8 @@ function drawPrompt(cx, cy){
 }
 const INTERACT_KINDS = new Set(["campfire","stove","counter","stall","shipbin","sign","berrybush","frostberry","wrack","chest","noticeboard","fruittree","beehive",
   "ledger","railcart","boardwalk","fountain",
-  "bed","ladderup","ladderdown","mineentrance","shellnode","coralnode","seaweednode","sealeddoor","desk","memorial"]);
+  "bed","ladderup","ladderdown","mineentrance","shellnode","coralnode","seaweednode","sealeddoor","desk","memorial",
+  "waystone","westtrail","easttrail","deadfall","hearttree","lift"]);
 function facingInteractable(fx, fy){
   const w = warpAt(fx,fy); if(w && !w.auto) return true;
   const crop = curMap.crops[key(fx,fy)];
@@ -432,6 +433,15 @@ function drawObject(ox, oy, o, k){
     queueText(bx+8, by+9, o.kind==="ladderup"?"▲":"▼", { color:"#ffce5a", size:8 });
     return;
   }
+  if(o.kind==="waystone"){
+    const lit = o.ws==="way1" || (state.waystones||[]).includes(o.ws);
+    const s = spr[lit ? "waystone_lit" : "waystone"];
+    ctx.fillStyle="rgba(0,0,0,0.16)"; ctx.beginPath(); ctx.ellipse(bx+8, by+15, 6, 2.2, 0, 0, 7); ctx.fill();
+    ctx.drawImage(s, bx, by-(s.height-16));
+    if(lit && chance(0.04)) pSparkle(bx+8, by, "#8fe8c8", 1);
+    return;
+  }
+  if(o.kind==="hearttree" && chance(0.03)) pSparkle(bx+8+((Math.random()*10)|0)-5, by-10, "#8fe8c8", 1);
   const s = spr[o.kind]; if(!s) return;
   const dw = s.width, dh = s.height;
   if(dh > 16){ ctx.fillStyle="rgba(0,0,0,0.16)"; ctx.beginPath(); ctx.ellipse(bx+8, by+15, 6, 2.2, 0, 0, 7); ctx.fill(); }

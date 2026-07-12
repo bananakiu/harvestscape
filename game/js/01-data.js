@@ -515,6 +515,78 @@ function liftStopCost(n){
   return { g: 6000 * Math.pow(2, (n-20)/5), mats:{ "Maple Wood":20, "Gold Ore":10, "Diamond":1 } };
 }
 
+// ---- GROVE DEPTHS ----
+// The grove is the axe's mine: nine RINGS of forest, oldest wood westmost, each ring generated
+// per ring+day like a mine floor. A DEADFALL seals the way west out of every ring — you chop
+// THROUGH it (the door pays you in wood and XP), and its Woodcutting requirement is the ring's
+// soft level gate, which is what lets deep rings assume the level for their spawn tables.
+// Deadfalls regrow overnight with the forest; waystones are what persist.
+const GROVE_RINGS = 9;
+const DEADFALL = {  // keyed by the ring the deadfall opens INTO
+  2:{lvl:5, hp:10}, 3:{lvl:12, hp:14}, 4:{lvl:20, hp:18}, 5:{lvl:30, hp:24},
+  6:{lvl:40, hp:30}, 7:{lvl:52, hp:38}, 8:{lvl:64, hp:46}, 9:{lvl:78, hp:56},
+};
+// Waystones: mossy Guild-era standing stones on rings 1/3/6/9. The mouth stone (way1) never
+// slept — it's free. The rest wake through the Pledge Ledger below. Once awake, stepping
+// between any two awake stones is free, so home is always one interaction from a funded ring.
+const WAYSTONE_RING = { way1:1, way3:3, way6:6, way9:9 };
+function waystoneCost(id){
+  // cross-economy on purpose: the grove's stones want ORE the way the mine's lift wants wood —
+  // the two deep venues feed each other. The deep stone takes a Ruby; the deep lift stop
+  // already owns the Diamond.
+  if(id === "way3") return { g:800,  mats:{ "Copper Ore":10, "Iron Ore":5 } };
+  if(id === "way6") return { g:2500, mats:{ "Iron Ore":10, "Gold Ore":5 } };
+  if(id === "way9") return { g:6000, mats:{ "Gold Ore":10, "Ruby":1 } };
+  return null;   // way1 is already awake
+}
+
+// ---- THE PLEDGE LEDGER ----
+// The owner's no-wasted-trips rule (DEVLOG 2026-07-13): reaching a restorable thing banks its
+// DISCOVERY permanently and for free; the cost is a PLEDGE you fill later, from anywhere, in
+// partial deposits, and the ledger — not the player — remembers the remainder. A pledge id is
+// "way3"/"way6"/"way9" (waystones) or "lift5"/"lift10"/… (Old Lift stops, retrofitted onto the
+// same system). state.pledges[id] = { gPaid, mats:{item:nPaid} }; the record is created on
+// discovery/first deposit and deleted on completion — done-ness lives in state.waystones /
+// state.liftStops, so all pre-ledger code keeps working unchanged.
+function pledgeCost(id){
+  if(id.startsWith("way"))  return waystoneCost(id);
+  if(id.startsWith("lift")) return liftStopCost(parseInt(id.slice(4), 10));
+  return null;
+}
+function pledgeName(id){
+  if(id === "way3") return "the Third-Ring Waystone";
+  if(id === "way6") return "the Sixth-Ring Waystone";
+  if(id === "way9") return "the Heart Waystone";
+  if(id.startsWith("lift")) return "the floor-" + id.slice(4) + " lift stop";
+  return id;
+}
+function pledgePaid(id){ return (state.pledges && state.pledges[id]) || { gPaid:0, mats:{} }; }
+function pledgeRemaining(id){
+  const c = pledgeCost(id); if(!c) return { g:0, mats:{} };
+  const p = pledgePaid(id);
+  const rem = { g: Math.max(0, c.g - (p.gPaid||0)), mats:{} };
+  for(const it in c.mats){ const r = c.mats[it] - ((p.mats||{})[it]||0); if(r > 0) rem.mats[it] = r; }
+  return rem;
+}
+function pledgeFunded(id){ const r = pledgeRemaining(id); return r.g <= 0 && !Object.keys(r.mats).length; }
+function pledgeDone(id){
+  if(id.startsWith("way"))  return id === "way1" || (state.waystones||[]).includes(id);
+  if(id.startsWith("lift")) return (state.liftStops||[]).includes(parseInt(id.slice(4), 10));
+  return false;
+}
+function pledgeDiscovered(id){
+  if(pledgeDone(id)) return true;
+  if(id.startsWith("way"))  return !!(state.pledges && state.pledges[id]);   // touched the stone once
+  if(id.startsWith("lift")) return (state.mineBest||0) >= parseInt(id.slice(4), 10);  // reached the floor once
+  return false;
+}
+// Everything the Journal's Restorations section should list, in display order.
+function ledgerPledges(){
+  const out = [];
+  for(const id of ["way3","way6","way9"]) if(pledgeDiscovered(id)) out.push(id);
+  return out;
+}
+
 // ---- NPCS ----
 const NPCS = {
   maya: { name:"Maya",  loved:["Strawberry","Golden Koi"], likes:["Cooked","Starfruit","Carrot"] },

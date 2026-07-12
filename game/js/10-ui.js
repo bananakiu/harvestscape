@@ -453,6 +453,7 @@ function renderJournal(){
   WINGS.forEach(w => { const on = w.lit();
     html += `<span style="color:${on?"var(--gold-hi)":"var(--ink-soft)"}">${on?"◆":"◇"} ${w.name}</span>`; });
   html += `</div></div>`;
+  html += renderRestorations();   // the Pledge Ledger — every discovered restoration, payable from here
   // Story quests grouped under their act, so a casual player perceives the arc — not a flat list.
   html += `<div class="actHead">${ACT_TITLES[1]}</div>`;
   let act2Open = false;
@@ -730,6 +731,114 @@ function restoreLift(){
   banner("⚙ Lift stop restored", `Floor ${depth} is on the line now — for good.`);
   saveGame();   // a permanent purchase should never be lost to a crash
   renderLift();
+}
+
+// ---- The Pledge Ledger (waystones now; the Old Lift joins it in Phase 4) ----
+// One contribute button per pledge: it deposits EVERYTHING you're carrying that's still owed
+// (gold up to the remainder, each material up to its remainder). Partial progress persists
+// forever; the ledger — never the player — remembers what's left.
+function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+function pledgeRowHtml(id){
+  const rem = pledgeRemaining(id), bits = [];
+  if(rem.g > 0) bits.push(`${rem.g}g <span style="color:${state.gold>=rem.g?'#8fd06a':'#c98a6a'}">(${state.gold})</span>`);
+  for(const it in rem.mats){ const have = state.inv[it]||0;
+    bits.push(`${rem.mats[it]}× ${it} <span style="color:${have>=rem.mats[it]?'#8fd06a':'#c98a6a'}">(${have})</span>`); }
+  const canAny = (rem.g > 0 && state.gold > 0) || Object.keys(rem.mats).some(it => (state.inv[it]||0) > 0);
+  return `<div class="row"><span class="lead"><span>${cap(pledgeName(id))} <span class="sub">owed: ${bits.join(", ")}</span></span></span>` +
+    `<button class="buy" ${canAny?"":"disabled"} onclick="contributePledge('${id}')">contribute</button></div>`;
+}
+function contributePledge(id){
+  if(pledgeDone(id)) return;
+  const rem = pledgeRemaining(id);
+  if(!state.pledges) state.pledges = {};
+  const p = state.pledges[id] || (state.pledges[id] = { gPaid:0, mats:{} });
+  const gave = [];
+  const dg = Math.min(state.gold, rem.g);
+  if(dg > 0){ state.gold -= dg; p.gPaid = (p.gPaid||0) + dg; gave.push(dg + "g"); }
+  for(const it in rem.mats){
+    const d = Math.min(state.inv[it]||0, rem.mats[it]);
+    if(d > 0 && take(it, d)){ if(!p.mats) p.mats = {}; p.mats[it] = (p.mats[it]||0) + d; gave.push(d + "× " + it); }
+  }
+  if(!gave.length){ toast("Nothing on you that it still needs.", "#c98a6a"); playSfx("error"); return; }
+  if(pledgeFunded(id)) completePledge(id);
+  else {
+    const r2 = pledgeRemaining(id), owed = [];
+    if(r2.g > 0) owed.push(r2.g + "g");
+    for(const it in r2.mats) owed.push(r2.mats[it] + "× " + it);
+    toast("Pledged " + gave.join(", ") + ".  Still owed: " + owed.join(", "), "#8fe8c8");
+    playSfx("coin");
+  }
+  saveGame();   // pledge progress is permanent — never lose a deposit to a crash
+  refreshHUD(); refreshPledgeViews();
+}
+// A filled pledge wakes INSTANTLY — "come back tomorrow" would be the trip-wasting frustration
+// this system exists to kill, in a smaller size.
+function completePledge(id){
+  if(state.pledges) delete state.pledges[id];   // done-ness lives in waystones/liftStops
+  if(id.startsWith("way")){
+    if(!state.waystones) state.waystones = [];
+    if(!state.waystones.includes(id)) state.waystones.push(id);
+    banner("❖ Waystone awakened", cap(pledgeName(id)) + " hums with green light. Step between the stones — free, forever.");
+  } else {
+    const n = parseInt(id.slice(4), 10);
+    if(!state.liftStops.includes(n)) state.liftStops.push(n);
+    banner("⚙ Lift stop restored", "Floor " + n + " is on the line now — for good.");
+  }
+  playSfx("upgrade"); pSparkle(state.px, state.py-12, "#8fe8c8", 18);
+  saveGame();
+}
+function refreshPledgeViews(){
+  if(openPanels.has("questPanel")) renderJournal();
+  if(openPanels.has("wayPanel"))   renderWaystone();
+  if(openPanels.has("liftPanel"))  renderLift();
+}
+// The Journal's Restorations block — the ledger itself, readable and payable from anywhere.
+function renderRestorations(){
+  const ids = ledgerPledges();
+  if(!ids.length) return "";
+  let h = `<div class="jq"><h3 style="color:#8fe8c8">❖ Restorations — ${ids.filter(pledgeDone).length}/${ids.length} funded</h3>`;
+  h += `<div class="desc" style="margin-bottom:.3em;">Old Guild works you've found. Pledge what you carry, whenever — the ledger keeps the tally.</div>`;
+  for(const id of ids){
+    if(pledgeDone(id)){ h += `<div class="obj done">✔ ${cap(pledgeName(id))} — restored</div>`; continue; }
+    h += pledgeRowHtml(id);
+  }
+  h += `</div>`;
+  return h;
+}
+
+// ---- Waystones: the panel at the stone ----
+const WAY_LABEL = { way1:"The Grove Mouth  ·  Ring 1", way3:"The Third Ring", way6:"The Sixth Ring", way9:"The Heart  ·  Ring 9" };
+let wayAtId = null;   // which stone the player is standing at
+function openWaystone(id){ wayAtId = id; openPanel("wayPanel", renderWaystone); }
+function renderWaystone(){
+  const b = $("wayPanel").querySelector(".body");
+  let html = `<div class="desc" style="margin-bottom:.5em;color:var(--ink-soft);">` +
+    `Guild-era stones, keyed to one another. An awake stone carries you to any other awake stone — free, forever.</div>`;
+  if(wayAtId && !pledgeDone(wayAtId)){
+    html += pledgeRowHtml(wayAtId);
+    html += `<div class="desc" style="margin-top:.4em;color:var(--ink-soft);">This stone remembers you. Pledge here, or from the Journal (J) — anywhere, any time, a little at a time.</div>`;
+  } else {
+    for(const id of ["way1","way3","way6","way9"]){
+      if(!pledgeDone(id)) continue;
+      const here = id === wayAtId;
+      html += `<div class="row"><span class="lead"><span>${WAY_LABEL[id]}</span></span>` +
+        (here ? `<span class="sub">you are here</span>` : `<button class="buy" onclick="rideWaystone('${id}')">step</button>`) + `</div>`;
+    }
+    const dormant = ["way3","way6","way9"].filter(id => pledgeDiscovered(id) && !pledgeDone(id));
+    for(const id of dormant) html += `<div class="row locked"><span class="lead"><span>${WAY_LABEL[id]} <span class="sub">dormant — pledge in the Journal</span></span></span></div>`;
+  }
+  b.innerHTML = html;
+}
+function rideWaystone(id){
+  const ring = WAYSTONE_RING[id];
+  closeAllPanels();
+  if(state.map === "grove" && (state.groveRing||1) === ring) return;
+  state.groveRing = ring;
+  state.groveBest = Math.max(state.groveBest||0, ring);
+  playSfx("door");
+  const sx = (id === "way1" ? 44-7 : 10) * TILE + 8;
+  travelTo("grove", sx, 14*TILE+8, "up");
+  toast("The stones trade places with the world — Ring " + ring + ".", "#8fe8c8");
 }
 
 // ---- kitchen ----

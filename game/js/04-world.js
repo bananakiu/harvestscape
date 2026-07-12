@@ -23,6 +23,9 @@ function freshState(){
     rel:{},                               // per-NPC relationship { points, talkedDay, giftedDay }
     animals:{ chickens:[], cows:[] },     // each: { friend, eggDay|milkDay, petDay }
     mineDepth:0, mineBest:0,
+    groveRing:0, groveBest:0,              // the Deep Grove's rings — mirrors mineDepth/mineBest
+    pledges:{},                            // the Pledge Ledger: id → { gPaid, mats:{item:n} } (see 01-data.js)
+    waystones:[],                          // awakened waystone ids ("way3"…) — permanent, like liftStops
     stats:{ legends:0, tilled:0, planted:0, watered:0, harvested:0, chopped:0, mined:0, fished:0, cooked:0, earned:0, toolUpgrades:0, sold:0, gems:0, forage:0,
             bestCropSold:0, festivals:0, requests:0 },   // bestCropSold resets each season; the Harvest Fair judges it
     questIdx:0, questDone:[], questReady:false,
@@ -67,7 +70,8 @@ function newMap(id){
 let mapCache = {};
 function getMap(id){
   if(id === "farm"){ if(!state.farm) state.farm = newMap("farm"); return state.farm; }
-  const ck = id === "mine" ? "mine:" + (state.mineDepth||1) : id;
+  const ck = id === "mine"  ? "mine:"  + (state.mineDepth||1)
+           : id === "grove" ? "grove:" + (state.groveRing||1) : id;
   if(mapCache[ck]) return mapCache[ck];
   return (mapCache[ck] = newMap(id));
 }

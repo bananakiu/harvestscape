@@ -24,6 +24,7 @@ function buildArt(){
   buildDecor();
   buildInteriors();
   buildMineArt();
+  buildGroveArt();
   buildBeachArt();
   buildChars();
   buildItems();
@@ -718,6 +719,51 @@ function buildInteriors(){
 }
 
 /* ---------------- mine ---------------- */
+/* ---------------- Grove Depths props ---------------- */
+function buildGroveArt(){
+  // the deadfall: a great mossy trunk down across the trail, branch stubs and all
+  mkSpr("deadfall", 16, 16, g => {
+    px(g,0,7,16,6,"#6e4a2a"); px(g,0,7,16,1,"#8a5f38"); px(g,0,12,16,1,"#4f341c");   // the trunk
+    px(g,2,5,2,3,"#5a3a20"); px(g,9,4,2,4,"#5a3a20"); px(g,13,5,2,3,"#5a3a20");     // branch stubs
+    px(g,0,8,2,4,"#96703f"); px(g,1,9,1,2,"#c9a86a");                                // torn end rings
+    px(g,4,7,3,2,"#4a7a3a"); px(g,10,7,4,2,"#4a7a3a"); px(g,7,12,3,2,"#3a6a2e");     // moss
+    px(g,3,13,10,2,"#2c3a24");                                                       // ground shadow
+  });
+  // waystone: a mossy Guild-era standing stone. Dormant is grey and sleeping; lit hums teal.
+  const wayBase = g => {
+    px(g,4,6,8,17,"#7a8078"); px(g,5,4,6,3,"#8a9088");                               // the stone
+    px(g,4,6,1,17,"#9aa098"); px(g,11,6,1,17,"#5a6058");                             // edge light/shadow
+    px(g,3,21,10,3,"#565c54"); px(g,2,23,12,1,"#3a4038");                            // the footing
+    px(g,5,18,3,3,"#4a7a3a"); px(g,9,8,2,3,"#4a7a3a"); px(g,10,20,2,2,"#3a6a2e");    // moss
+  };
+  mkSpr("waystone", 16, 24, g => { wayBase(g);
+    px(g,7,8,2,2,"#6a7068"); px(g,6,12,4,1,"#6a7068"); px(g,7,14,2,3,"#6a7068"); }); // runes, asleep
+  mkSpr("waystone_lit", 16, 24, g => { wayBase(g);
+    px(g,7,8,2,2,"#8fe8c8"); px(g,6,12,4,1,"#8fe8c8"); px(g,7,14,2,3,"#8fe8c8");     // runes, awake
+    px(g,7,8,1,1,"#d8fff0"); px(g,6,12,1,1,"#d8fff0"); });
+  // the trailheads: a dark gap between old trunks, with a carved marker post
+  const trail = (g, arrowLeft) => {
+    px(g,0,0,4,24,"#2c3a24"); px(g,12,0,4,24,"#2c3a24");                             // flanking trunks
+    px(g,1,0,2,24,"#3a4a2e"); px(g,13,0,2,24,"#3a4a2e");
+    px(g,4,0,8,4,"#1c2618"); px(g,4,4,8,20,"#141c10");                               // the dark way through
+    px(g,5,6,1,1,"#2c3a24"); px(g,9,10,1,1,"#2c3a24");                               // hints of depth
+    const mx = arrowLeft ? 10 : 4;
+    px(g,mx,14,2,10,"#8a5f38"); px(g,mx-1,14,4,3,"#e8d9a8");                         // marker post + plaque
+    px(g,arrowLeft?mx:mx+1,15,2,1,"#6a5a3a");                                        // the carved arrow
+  };
+  mkSpr("westtrail", 16, 24, g => trail(g, false));
+  mkSpr("easttrail", 16, 24, g => trail(g, true));
+  // the Heart of the Forest: pale-barked, older than the road, faintly aglow
+  mkSpr("hearttree", 20, 32, g => {
+    px(g,7,18,6,13,"#c9b8a0"); px(g,7,18,1,13,"#e0d4c0"); px(g,12,18,1,13,"#9a8a70"); // pale trunk
+    px(g,5,29,10,3,"#8a7a62"); px(g,4,16,3,3,"#c9b8a0"); px(g,13,15,3,4,"#c9b8a0");   // roots + boughs
+    px(g,2,4,16,13,"#3a6a52"); px(g,0,8,20,7,"#2f5a44");                              // deep-green crown
+    px(g,4,2,12,5,"#4a8a6a"); px(g,6,1,8,2,"#5aa07a");
+    px(g,5,6,2,2,"#8fe8c8"); px(g,13,9,2,2,"#8fe8c8"); px(g,9,4,2,2,"#b0ffd8");       // the glow in the leaves
+    px(g,9,12,2,1,"#8fe8c8");
+  });
+}
+
 function buildMineArt(){
   mkSpr("mfloor", 16, 16, g => { px(g,0,0,16,16,"#3a3540"); seedRR(41);
     for(let i=0;i<14;i++) px(g,rr()*16|0,rr()*16|0,1,1, rr()<.5?"#453f4c":"#332e38"); });

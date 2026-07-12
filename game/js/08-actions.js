@@ -140,6 +140,22 @@ function give(item, n=1, quiet){
   // the sprite still pops off the player for juice, but the "+N Item" text now lives in the corner
   // pickup log — off the head, so it never collides with the XP drop from the same action.
   if(!quiet){ pItemPop(state.px, state.py-12, "item_"+item); notePickup(item, n); }
+  pledgeHint(item);
+}
+// The ledger does the remembering, the toasts do the reminding: when you gain something a
+// discovered pledge still needs, one quiet nudge — at most once per item per pledge per day.
+function pledgeHint(item){
+  if(!state.pledges) return;
+  for(const id in state.pledges){
+    if(pledgeDone(id)) continue;
+    const rem = pledgeRemaining(id);
+    if(!rem.mats[item]) continue;
+    const fk = "phint_" + id + "_" + item;
+    if(state.flags[fk] === state.day) return;
+    state.flags[fk] = state.day;
+    toast(pledgeName(id).replace(/^t/,"T") + " still wants " + rem.mats[item] + "× " + item + ".", "#8fe8c8");
+    return;
+  }
 }
 function take(item, n=1){ if((state.inv[item]||0) < n) return false; state.inv[item]-=n; if(state.inv[item]<=0) delete state.inv[item]; return true; }
 function bump(stat, n=1){ state.stats[stat] = (state.stats[stat]||0) + n; checkQuests(); }
@@ -159,7 +175,8 @@ const OBJ_TITLE  = { bed:"Bed", campfire:"Campfire", stove:"Stove", fireplace:"F
   stall:"Market Stall", shipbin:"Shipping Bin", sign:"Sign", noticeboard:"Noticeboard", ledger:"The Valley Ledger",
   fountain:"Fountain", boardwalk:"Boardwalk", railcart:"Minecart", memorial:"Standing Stone", berrybush:"Berry Bush",
   frostberry:"Frostberry Bush", fruittree:"Fruit Tree", beehive:"Beehive", torch:"Torch", lamp:"Lamp", lantern:"Lantern",
-  crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift" };
+  crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift",
+  deadfall:"Deadfall", westtrail:"The Trail West", easttrail:"The Trail Back", waystone:"Waystone", hearttree:"The Heart of the Forest" };
 function npcAtTile(tx,ty){ if(!curMap||!curMap.npcs) return null;
   for(const n of curMap.npcs){ if(Math.floor(n.x/TILE)===tx && Math.floor(n.y/TILE)===ty) return n; } return null; }
 function objLook(obj){
@@ -170,6 +187,16 @@ function objLook(obj){
   if(k==="ladderdown") return { title:"Ladder Down", text:"Down into the dark, one rung at a time." };
   if(k==="ladderup")   return { title:"Ladder Up",   text:"Back up toward the daylight." };
   if(k==="mineentrance") return { title:"The Old Mine", text:"The mouth of the old mine — ore and gems, and the dark that keeps them." };
+  if(k==="deadfall")   return { title:"Deadfall", text:`A great trunk down across the trail, dense as iron with age. An axe and Woodcutting ${obj.lvl} would see you through.` };
+  if(k==="westtrail")  return { title:"The Trail West", text:"The deadfall cleared, the old trail runs on into deeper wood." };
+  if(k==="easttrail")  return { title:"The Trail Back", text:"Eastward, toward younger trees and the light of the farm." };
+  if(k==="waystone"){
+    const lit = obj.ws==="way1" || (state.waystones||[]).includes(obj.ws);
+    return { title:"Waystone", text: lit ? "A Guild-era waystone, humming faintly green. Step between the stones, free, forever."
+      : (state.pledges && state.pledges[obj.ws]) ? "Dormant, but it remembers you. Its pledge waits in your Journal."
+      : "A mossy standing stone, carved in the Guild's day. It seems to be waiting for someone." };
+  }
+  if(k==="hearttree")  return { title:"The Heart of the Forest", text:"The oldest tree in the valley. The grove goes no deeper — nothing does." };
   const t = EXAMINE_OBJ[k];
   if(t) return { title: OBJ_TITLE[k] || k, text: t };
   return null;
@@ -257,6 +284,21 @@ function useTool(){
   else if(tool === "Axe"){
     // an orchard tree or a hive can be dug up and carried off — so a misplacement is never forever
     if(obj && (obj.kind === "fruittree" || obj.kind === "beehive")){ digUp(tx, ty, obj); return; }
+    // the deadfall — the grove's door west. Chopping THROUGH it is the way deeper, and the
+    // door pays you: wood and XP on the fell. Its level req is the next ring's soft gate.
+    if(obj && obj.kind === "deadfall"){
+      if(skillLvl("Woodcutting") < obj.lvl){ toast(`Old, iron-dense wood — Woodcutting ${obj.lvl} to clear it.`, "#ff8a7a"); playSfx("error"); return; }
+      if(!spendEnergy(2)) return;
+      obj.hp -= power; obj.shakeT = 0.2; cam.shake = 2.4; hitstop = 0.05; playSfx("chop");
+      pChips(tx*TILE+8, ty*TILE+8, "#6e4a2a", 6);
+      if(obj.hp <= 0){
+        curMap.objects[key(tx,ty)] = { kind:"westtrail" };       // the map is cached per ring+day, so it stays open till dawn
+        give("Wood", 3 + obj.into); addXP("Woodcutting", 15 + 12*obj.into); bump("chopped");
+        toast("The deadfall gives way — the trail west lies open.", "#b6f27a"); playSfx("get");
+        pLeaves(tx*TILE+8, ty*TILE, "#57ad57", 8);
+      }
+      refreshHUD(); return;
+    }
     if(!obj || !TREES[obj.kind]){ toast("Face a tree to chop."); return; }
     const tr = TREES[obj.kind];
     if(skillLvl("Woodcutting") < tr.lvl){ toast(`Need Woodcutting ${tr.lvl} for ${tr.name}.`, "#ff8a7a"); playSfx("error"); return; }
@@ -416,6 +458,12 @@ function interact(){
       case "lift": openLift(); return;
       case "ladderdown": mineDown(); return;
       case "mineentrance": enterMine(); return;
+      case "westtrail": groveDeeper(); return;
+      case "easttrail": groveBack(); return;
+      case "deadfall": toast(`A great deadfall seals the trail west. (Axe — Woodcutting ${obj.lvl})`, "#cbb98f"); return;
+      case "waystone": useWaystone(tx,ty,obj); return;
+      case "hearttree": showDialog("The Heart of the Forest",
+        "The oldest tree in the valley — older than the Guild, older than the road. Its pale bark is warm under your palm, and for a moment the whole wood seems to hold its breath.\n\nSomething sleeps here. Not yet, but someday.", "port_valley"); return;
       case "sealeddoor": openVault(tx,ty); return;
       case "chest": openChest(); return;
       case "desk": showDialog("Rowan's Desk","Ledgers and a map of nine dark wings. The old keeper must be near.","port_rowan"); return;
@@ -459,6 +507,22 @@ function openVault(tx, ty){
   showDialog("The Vault Opens","Cold light spills out. In the hush rests a shard of Star Metal — the Guild's founding gift. Rowan will want to see this.","port_valley");
   queuePage(8, 1600);                                          // "On the Vault"
   checkQuests();
+}
+
+// ---- waystones ----
+// Touching a dormant stone DISCOVERS it — permanently, for free, before any cost talk. The trek
+// is banked the moment you arrive (the owner's no-wasted-trips rule); paying happens whenever,
+// from wherever, through the Pledge Ledger.
+function useWaystone(tx, ty, obj){
+  const id = obj.ws;
+  if(!pledgeDone(id) && !(state.pledges && state.pledges[id])){
+    if(!state.pledges) state.pledges = {};
+    state.pledges[id] = { gPaid:0, mats:{} };
+    playSfx("quest"); pSparkle(tx*TILE+8, ty*TILE, "#8fe8c8", 14);
+    banner("❖ The stone remembers you", "Its pledge is in your Journal — fund it from anywhere, a little at a time.");
+    saveGame();
+  }
+  openWaystone(id);
 }
 
 // ---- cooking ----

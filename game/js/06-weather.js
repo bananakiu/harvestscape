@@ -43,6 +43,9 @@ function collectLights(){
       case "lantern":   L.push({x:cx,y:cy-2,r:30,c:"255,200,110",i:0.85+0.12*Math.sin(animT*3+x)}); break;
       case "stall":     L.push({x:cx,y:cy-4,r:34,c:"255,200,120",i:0.9}); break;
       case "banner":    L.push({x:cx,y:cy-6,r:24,c:"255,210,120",i:0.5}); break;
+      case "waystone":  if(o.ws==="way1" || (state.waystones||[]).includes(o.ws))
+                          L.push({x:cx,y:cy-4,r:36,c:"140,230,200",i:0.7+0.12*Math.sin(animT*2.2)}); break;
+      case "hearttree": L.push({x:cx,y:cy-10,r:52,c:"150,240,205",i:0.55+0.1*Math.sin(animT*1.6)}); break;
     }
   }
   // Every window in the valley glows after dark — the same procedural rule that draws them

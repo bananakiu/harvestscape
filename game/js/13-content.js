@@ -203,6 +203,9 @@ function genMine(m){
 function doWarp(w){
   if(!w) return;
   if(w.mine){ enterMine(); return; }
+  // entering the grove from outside always starts at Ring 1 (mirrors enterMine) — waystones,
+  // not a stale groveRing, are how you skip the walk
+  if(w.to === "grove" && state.map !== "grove") state.groveRing = 1;
   // walking onto the coast during a festival window: let the festival do the fade, not the warp
   if(w.to === "beach" && !isCutscene() && !state.flags.festivalActive && !state.flags.festivalPending){
     const f = festivalNow();
@@ -302,12 +305,15 @@ function genVillage(m){
 }
 
 // ---------------- the Deep Grove ----------------
-// Woodcutting's mine: a dense forest that regrows overnight (mapCache), so the axe has a renewable
-// venue the way the pick has the ore. Deeper (further west) grows older wood — oak thins out and
-// pine/maple take over — so your WC level decides how much of the grove is really "yours" yet.
-// The farm's little southwest stand stays as the starter patch; this is where the skill lives.
+// Woodcutting's mine, for real now (Grove Depths, GROVE_DEPTHS.md): nine RINGS of forest, each
+// a map generated per ring+day the way mine floors generate per depth+day. West is always
+// deeper. A deadfall seals each ring's west trail — you chop through it (see useTool's Axe
+// branch), and it regrows overnight with the forest. Waystones on rings 1/3/6/9 persist once
+// awakened (the Pledge Ledger, 01-data.js) and step you between funded rings for free.
+// Unlike the mine, the grove ENDS: ring 9 is the Heart of the Forest.
 function genGrove(m){
-  const rng = makeRng(777 + state.day*23);   // the forest rearranges itself each night
+  const ring = clamp(state.groveRing||1, 1, GROVE_RINGS);
+  const rng = makeRng(777 + ring*131 + state.day*23);   // the forest rearranges itself each night
   const t = m.tiles;
   for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++){
     const n = rng();
@@ -316,34 +322,84 @@ function genGrove(m){
   // impassable border, like the coast — the forest simply thickens past walking
   for(let x=0;x<m.w;x++){ t[0*W+x]=T.IWALL; t[(m.h-1)*W+x]=T.IWALL; }
   for(let y=0;y<m.h;y++){ t[y*W+0]=T.IWALL; t[y*W+m.w-1]=T.IWALL; }
-  // east-edge exit back to the farm's treeline
-  t[15*W+(m.w-1)] = T.DOOR;
-  m.warps[key(m.w-2, 15)] = { to:"farm", sx:3*TILE+8, sy:26*TILE, face:"right", auto:true };   // the farm's treeline footpath (row 26 since the v3.2 shrink)
-  // a worn footpath from the gate to the old clearing
-  for(let x=11;x<=m.w-2;x++) t[15*W+x]=T.PATH;
-  m.objects[key(m.w-4,13)] = { kind:"sign", text:"→ Back to the Farm" };
-  // the clearing: a rest spot with a campfire (cook what you forage; the light is company)
-  m.objects[key(11,14)] = { kind:"campfire" };
-  // trees — deeper west is older wood. Density leaves walking room but reads as real forest.
+
+  // ---- east side: the way back (shallower) ----
+  if(ring === 1){
+    // ring 1 keeps the farm gate, the footpath, and the campfire clearing
+    t[15*W+(m.w-1)] = T.DOOR;
+    m.warps[key(m.w-2, 15)] = { to:"farm", sx:3*TILE+8, sy:26*TILE, face:"right", auto:true };   // the farm's treeline footpath (row 26 since the v3.2 shrink)
+    for(let x=11;x<=m.w-2;x++) t[15*W+x]=T.PATH;
+    m.objects[key(m.w-4,13)] = { kind:"sign", text:"→ Back to the Farm" };
+    m.objects[key(11,14)] = { kind:"campfire" };
+    // the mouth stone — the one waystone that never slept
+    m.objects[key(m.w-7,13)] = { kind:"waystone", ws:"way1" };
+  } else {
+    // an open trail east, back toward the light (E to walk it — never blocked, never a cost)
+    for(let x=m.w-5;x<=m.w-2;x++) t[15*W+x]=T.PATH;
+    m.objects[key(m.w-2,15)] = { kind:"easttrail" };
+  }
+
+  // ---- west side: the way deeper ----
+  if(ring < GROVE_RINGS){
+    for(let x=1;x<=4;x++) t[15*W+x]=T.PATH;
+    const d = DEADFALL[ring+1];
+    m.objects[key(1,15)] = { kind:"deadfall", into:ring+1, lvl:d.lvl, hp:d.hp };
+  } else {
+    // the Heart of the Forest — the grove ends somewhere, unlike the mine
+    for(let x=1;x<=8;x++) t[15*W+x]=T.PATH;
+    m.objects[key(4,14)] = { kind:"hearttree" };
+  }
+
+  // ---- the ring's waystone (dormant until its pledge is filled) ----
+  const wsId = { 3:"way3", 6:"way6", 9:"way9" }[ring];
+  if(wsId) m.objects[key(10,13)] = { kind:"waystone", ws:wsId };
+
+  // trees — the mix ages with the ring (Phase 2 brings the full rarity tables; for now the
+  // three species shift the way the old west-gradient did, but per RING, so depth means it)
   for(let y=1;y<m.h-1;y++) for(let x=1;x<m.w-1;x++){
-    if(Math.abs(y-15)<=1 && x>=9) continue;                      // keep the path breathable
-    if(Math.hypot(x-11,y-14) < 3.2) continue;                    // and the clearing open
+    // the crossing band (deadfall → east trail) stays tree-free on every ring — the grove's
+    // version of the mine's guaranteed corridor, minus the BFS: a high-level tree must never
+    // wall a low-level player off the trail west.
+    if(Math.abs(y-15)<=1) continue;
+    if(ring===1 && Math.hypot(x-11,y-14) < 3.2) continue;        // the campfire clearing
+    if(wsId && Math.hypot(x-10,y-13) < 2.6) continue;            // the waystone's clearing
+    if(ring===1 && Math.hypot(x-(m.w-7),y-13) < 2.4) continue;   // the mouth stone's clearing
+    if(ring===GROVE_RINGS && Math.hypot(x-4,y-14) < 4.0) continue; // the Heart's hush
     if(t[y*W+x]!==T.GRASS && t[y*W+x]!==T.FLOWERGRASS && t[y*W+x]!==T.TALLGRASS) continue;
-    if(rng() >= 0.34) continue;
+    if(m.objects[key(x,y)]) continue;
+    if(rng() >= 0.34 + ring*0.008) continue;                     // old wood stands a little denser
     const r = rng();
     let kind;
-    if(x > 28)      kind = r<0.72 ? "oak" : r<0.95 ? "pine" : "maple";   // young fringe by the gate
-    else if(x > 14) kind = r<0.42 ? "oak" : r<0.82 ? "pine" : "maple";   // the middle wood
-    else            kind = r<0.25 ? "oak" : r<0.60 ? "pine" : "maple";   // the old deep grove
+    if(ring <= 2)      kind = r<0.70 ? "oak" : r<0.95 ? "pine" : "maple";   // young fringe
+    else if(ring <= 4) kind = r<0.45 ? "oak" : r<0.85 ? "pine" : "maple";   // the middle wood
+    else if(ring <= 6) kind = r<0.25 ? "oak" : r<0.70 ? "pine" : "maple";   // old growth
+    else               kind = r<0.15 ? "oak" : r<0.55 ? "pine" : "maple";   // the deep grove
     m.objects[key(x,y)] = { kind, hp:TREES[kind].hp };
   }
   // undergrowth to forage on the way
   let bushes=0;
   for(let i=0;i<60 && bushes<7;i++){
     const x=randiR(rng,2,m.w-3), y=randiR(rng,2,m.h-3);
+    if(Math.abs(y-15)<=1) continue;                              // never on the crossing band
     const g=t[y*W+x];
     if((g===T.GRASS||g===T.FLOWERGRASS||g===T.TALLGRASS) && !m.objects[key(x,y)]){ m.objects[key(x,y)]={kind: rng()<0.6?"berrybush":"bush"}; bushes++; }
   }
+  m.subtitle = "Ring " + ring +
+    (ring===GROVE_RINGS ? "  ·  the Heart of the Forest" : ring>=5 ? "  ·  the wood grows old here" : "");
+}
+
+// Ring travel — the grove's mineDown/mineUp. Deeper spawns you by the east trail of the new
+// ring; back spawns you by the west trail of the shallower one. checkQuests on descent so
+// future quests can hook "reach ring N" the way mine quests hook depth.
+function groveDeeper(){
+  state.groveRing = Math.min(GROVE_RINGS, (state.groveRing||1)+1);
+  state.groveBest = Math.max(state.groveBest||0, state.groveRing);
+  checkQuests();
+  travelTo("grove", (44-4)*TILE, 15*TILE+8, "left");
+  toast("Deeper into the wood — Ring "+state.groveRing+"…", "#8fd06a");
+}
+function groveBack(){
+  if((state.groveRing||1) > 1){ state.groveRing--; travelTo("grove", 5*TILE, 15*TILE+8, "right"); }
 }
 
 function genBeach(m){
