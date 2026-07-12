@@ -115,24 +115,30 @@ body{
   font-size:.72em; letter-spacing:.22em; color:#173a08; opacity:.75; font-weight:bold;
 }
 
-/* ---- XP orb: circular level-progress ring, docked right of the energy bar ---- */
-#xpOrb{
-  position:absolute; top:9.6%; left:34.8%;
-  width:3.4em; height:3.4em; pointer-events:none; z-index:6;
+/* ---- XP orbs: circular level-progress rings, railed side by side at top-center ----
+   Top-center is the RS placement and the one strip the HUD keeps deliberately clear
+   (clock left, gold right). The rail grows symmetrically from center as more skills train. */
+#xpOrbs{
+  position:absolute; top:2.2%; left:50%; transform:translateX(-50%);
+  display:flex; gap:.55em; align-items:flex-start;
+  pointer-events:none; z-index:6;
+}
+.xpOrbItem{
+  position:relative; width:3.4em; height:3.4em; flex:0 0 auto;
   filter:drop-shadow(0 .14em 0 rgba(0,0,0,.35));
   transition:opacity .35s ease, transform .35s ease;
 }
-#xpOrb canvas{ width:100%; height:100%; display:block; }
-#xpOrb.in{ animation:orbIn .3s cubic-bezier(.2,1.35,.5,1); }
-#xpOrb.out{ opacity:0; transform:translateY(-.3em); }
+.xpOrbItem canvas{ width:100%; height:100%; display:block; }
+.xpOrbItem.in{ animation:orbIn .3s cubic-bezier(.2,1.35,.5,1); }
+.xpOrbItem.out{ opacity:0; transform:translateY(-.3em); }
 @keyframes orbIn{ 0%{ opacity:0; transform:scale(.7); } 100%{ opacity:1; transform:none; } }
-#xpOrbLvl{
+.xpOrbItem .olvl{
   position:absolute; bottom:-.18em; left:50%; transform:translateX(-50%);
   min-width:1.5em; text-align:center; line-height:1.25; padding:0 .2em;
   background:var(--wood-d); border:.1em solid #0006; border-radius:.4em;
   color:var(--gold); font-size:.78em; text-shadow:0 1px 0 #000;
 }
-#xpOrbLvl.bump{ animation:orbLvlBump .5s cubic-bezier(.2,1.35,.5,1); }
+.xpOrbItem .olvl.bump{ animation:orbLvlBump .5s cubic-bezier(.2,1.35,.5,1); }
 @keyframes orbLvlBump{ 0%{ transform:translateX(-50%) scale(1); } 40%{ transform:translateX(-50%) scale(1.35); color:var(--gold-hi); } 100%{ transform:translateX(-50%) scale(1); } }
 
 /* quest tracker (top-right, under gold) */

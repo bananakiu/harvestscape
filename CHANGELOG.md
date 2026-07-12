@@ -22,6 +22,37 @@
 
 ---
 
+## XP orbs — a rail of them, at top-center · 2026-07-13
+
+Unversioned follow-up to the XP orb (`f8b028d`, released in v2.9.0), from direct owner feedback:
+*"If you manage to gain several levels in several XP and different skills, those orbs should show
+side by side. Maybe it's good to have it all the way at the top, like in RuneScape, not off to the
+middle center left. It's weird."* Fold into the next release's player-facing notes.
+
+### Changed
+- **One orb per skill, side by side.** The single mutually-exclusive orb (training a second skill
+  *stole* the orb from the first — the exact case the owner hit: catch a fish, cook it, chop home)
+  is now a rail: `_xpOrbs` Map keyed by skill, each entry owning its element/canvas/badge/arc state
+  and its own 3.2s fade timer, all driven by ONE shared rAF loop that starts when the first orb
+  appears and cancels when the last is removed. Orbs join the rail in the order you train.
+- **Rail docked top-center** (`#xpOrbs`, flex row, `left:50%` translate) — the RS placement, and
+  the one strip this HUD keeps deliberately clear (clock left, gold right — the v2.5.1 de-nag freed
+  it). The old spot ("right of the energy bar") read as *"off to the middle center left — weird"*:
+  it sat inside the vitals cluster but anchored to nothing the eye tracks. Since the rail is
+  transient (only while training), it doesn't violate the empty-top-center principle (§8.4) the
+  way the old permanent event pill did.
+- Per-orb everything preserved: ease-toward-fraction, level-up sweep→flash→reset with badge bump,
+  and the hide guard that postpones fading while that orb's sweep/flash is in flight — now checked
+  per skill, so one skill's fade never waits on another's level-up.
+- Cross-session note: the rail's `index.html` half rode into `3bd2ab9` (v2.9.1) via the parallel
+  session's sweep, briefly leaving HEAD with a rail div but single-orb JS (orbs silently inert —
+  `$("xpOrb")` finds nothing, no crash). This commit lands the JS/CSS half and closes the gap.
+
+*Verified in a sandbox build (the live tree had the parallel session's mid-edit `13-content.js`
+throwing at load — sandbox = working tree + that session's two files at HEAD, served separately):
+three orbs (Wc 7 / Fi 4 / Ck 3) railed side by side at top-center, Fishing's 4→5 sweep + badge
+bump ran while Woodcutting sat untouched, Cooking faded independently, console clean.*
+
 ## v2.9.1 — "The Deep Grove" · 2026-07-12 · tag `v2.9.1`
 
 Version code **34**. Pillar 2 of [ECONOMY_REBALANCE.md](ECONOMY_REBALANCE.md): woodcutting's mine.
