@@ -7,8 +7,10 @@
 > the same ledger, since the owner's critique of "arrive under-resourced, memorize the cost, re-trek"
 > applies to the lift verbatim.
 >
-> **Status.** Owner-approved 2026-07-13 (see `DEVLOG.md`, the two "late evening" entries). Written to
-> be executable by any AI agent with no other context. Phases ship independently, in order.
+> **Status.** SHIPPED — all four phases released as **v3.3.0 "The Wood Remembers"** (2026-07-13,
+> version code 40). This document remains as the design record; `CHANGELOG.md` v3.3.0 records
+> what was actually built (faithful to this plan, with coordinates adjusted for the v3.2.0 farm
+> shrink that landed mid-build).
 >
 > **Owner-decided calls.** Rings capped at 9 (the forest *ends*, unlike the mine). Waystones at
 > rings 3 / 6 / 9 plus a free grove-mouth stone. Charms are small single-slot passives. Waystone

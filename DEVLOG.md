@@ -80,31 +80,10 @@ charms) and Phase 4, the self-contained Old Lift retrofit onto the same Pledge L
 (discovery derived retroactively from `mineBest`, partial deposits from anywhere, completion
 mirrors into `state.liftStops` so existing code is untouched).
 
----
-
-## 2026-07-13 (late evening, cont.) — "the town is built very poorly": exits, doors, and the buried mine
-
-**Owner (near-verbatim):**
-
-> There's a major bug that needs fixing. When I exit the building, let's say Tom Shop, I get
-> teleported into the previous location of Tom Shop, so there are some issues with the mapping
-> here. I wanted to fix all the bugs related to that, as well as the entrance/exit, let's say,
-> to the beach. I always notice that I could go to the bottom of the map and circumvent the
-> active tiles that transport me to the beach, so it gets awkward. I have to walk up a tile
-> from the bottom of the map to hit that active tile that transports me to the beach.
->
-> The town is also built very poorly. Let's say there are buildings that don't have doors.
-> Some doors don't match up with the pathways, and the mine is behind the roof of the Nine
-> Crafts Guild, which blocks the entrance.
-
-**Interpretation.** All of this is v3.0 world-split debt: the town moved off the farm, but the
-*interiors* of the three story buildings still warped back to the farm at the buildings' pre-v3
-coordinates (the "previous location of Tom Shop" — exactly right), the village was laid out with
-the Guild drawn on top of the old north path (burying the mine warp under its roof), and the
-single-tile edge warps could be walked around along the map rim. Fixed as v3.1.1 "Doors & Roads"
-(see CHANGELOG.md): every interior exits to its own village door, the mine mouth moved to open
-ground on the northeast ridge, every door got a connecting path, the ambient houses got real
-(latched) doors, and all map-edge crossings became multi-tile bands.
+**Built:** **v3.3.0 "The Wood Remembers"** (2026-07-13, same night) — all four phases shipped
+in one release, built in a worktree alongside the farm-shrink session and rebased onto its
+v3.2.0 (the grove↔farm warp landed on the coordinates that session left in its changelog merge
+note). Every phase browser-verified before its commit; see `CHANGELOG.md` v3.3.0.
 
 ---
 

@@ -105,9 +105,9 @@ Treat the changelog as non-optional deliverable output, the same as the code its
 - `atlas/` — one atlas snapshot per release (`v<version>.html` + an index), written
   automatically by every generator run. Never edit these by hand; they are the historical
   record of the game's state version by version.
-- `GROVE_DEPTHS.md` — the approved plan for the Deep Grove rework (depth rings, waystones on a
-  pledge ledger, tree rarity, canopy treasure) + the mine lift's ledger retrofit (its Phase 4).
-  Planned, not yet built — build starts on the owner's word.
+- `GROVE_DEPTHS.md` — the Grove Depths plan (depth rings, waystones on a pledge ledger, tree
+  rarity, canopy treasure, + the mine lift's ledger retrofit). **Shipped in v3.3.0** — kept as
+  the design record behind that release.
 - `NEW_PLAYER_EXPERIENCE.md` — the onboarding beta plan (shipped in v2.2.0; polish tier still
   on the roadmap).
 - `GAME_DESIGN_PRINCIPLES.md` — the design bible; the yardstick audits grade against.
