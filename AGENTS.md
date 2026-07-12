@@ -44,6 +44,11 @@ different engine or direction — with full knowledge of *why* each decision was
    pushing (`git push --tags`). Version code + tag are the "relevant information" every push
    must carry so the audit trail is anchored to concrete releases. Keep `VERSION`, the in-game
    `CHANGELOG` array, and `CHANGELOG.md` in lockstep — they must never disagree.
+6. **Snapshot the atlas with every release.** After bumping `VERSION`, run
+   `node tools/build-atlas.mjs` and commit its output **in the release commit**: it refreshes
+   `GAME_ATLAS.html` AND writes `atlas/v<version>.html` — the permanent record of the game's
+   state at that release (the owner's per-version reference; see `atlas/index.html`). A past
+   release can be backfilled with `--src` (see the header of `tools/build-atlas.mjs`).
 
 Treat the changelog as non-optional deliverable output, the same as the code itself.
 
@@ -97,6 +102,9 @@ Treat the changelog as non-optional deliverable output, the same as the code its
   `node tools/build-atlas.mjs`. **Regenerate it whenever game content changes** (quests, crops,
   NPCs, recipes, maps…) and commit it with the change; the generator throws if its few
   hand-written mappings go stale.
+- `atlas/` — one atlas snapshot per release (`v<version>.html` + an index), written
+  automatically by every generator run. Never edit these by hand; they are the historical
+  record of the game's state version by version.
 - `NEW_PLAYER_EXPERIENCE.md` — the onboarding beta plan (shipped in v2.2.0; polish tier still
   on the roadmap).
 - `GAME_DESIGN_PRINCIPLES.md` — the design bible; the yardstick audits grade against.

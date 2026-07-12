@@ -9,12 +9,27 @@
    with browser stubs, extracts every table, and renders the page.
 
    Run after ANY content change:   node tools/build-atlas.mjs
-   Output:                          GAME_ATLAS.html (repo root)
+   Output:                          GAME_ATLAS.html (repo root, the current build)
+                                    atlas/v<version>.html (versioned snapshot)
+                                    atlas/index.html (regenerated list of snapshots)
+
+   Every run also writes a snapshot named after the build's own VERSION,
+   so each release leaves a permanent record of the game's state — the
+   owner's "reference for what the state of the game is" per version.
+   Regenerating within the same version just refreshes that snapshot.
+
+   Retro-generation (backfill a past release):
+     git archive v2.3.0 game/js | tar -x -C /tmp/v230
+     node tools/build-atlas.mjs --src /tmp/v230/game/js
+   With --src, only the atlas/ snapshot is written (the root file keeps
+   tracking the current build), missing data degrades to a note instead
+   of failing, and the footer marks the page as retro-generated.
 
    The few hand-written mappings in here (wing requirements, almanac page
    triggers, map access notes) are guarded by assertions that THROW when
    the game data they describe changes shape — so the generator fails
-   loudly instead of publishing stale prose.
+   loudly instead of publishing stale prose. (With --src they downgrade
+   to warnings: a past release can't be edited to satisfy them.)
    ============================================================ */
 import fs from "node:fs";
 import path from "node:path";
@@ -22,8 +37,13 @@ import vm from "node:vm";
 import url from "node:url";
 
 const ROOT = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), "..");
+const argv = process.argv.slice(2);
+const srcFlag = argv.indexOf("--src");
+const RETRO = srcFlag >= 0;                       // generating a PAST release from --src
+const SRC_DIR = RETRO ? path.resolve(argv[srcFlag + 1]) : path.join(ROOT, "game", "js");
 const GAME_FILES = ["00-core.js", "01-data.js", "04-world.js", "13-content.js", "14-story.js", "11-title.js"]
-  .map(f => path.join(ROOT, "game", "js", f));
+  .map(f => path.join(SRC_DIR, f))
+  .filter(f => fs.existsSync(f));                 // older builds may predate a module
 
 /* ---------------- load the game data in a sandbox ---------------- */
 function makeEl(){
@@ -48,24 +68,28 @@ const sandbox = {
 sandbox.window = sandbox;
 sandbox.window.addEventListener = () => {};
 
+// Every key except VERSION goes through __opt: a past build that predates a system
+// (or a future rename) yields null there, and the renderer degrades to a note.
+const PLAIN_KEYS = ["SEASONS", "SEASON_DAYS", "FESTIVALS", "BIRTHDAYS",
+  "CROPS", "TREES", "ORES", "FISH", "FRUIT_TREES", "TREE_MATURE_DAYS", "TREE_FRUIT_CAP",
+  "HIVE_COST", "HIVE_RADIUS", "HIVE_CAP", "HIVE_MAX",
+  "WATER", "LEGENDS", "ITEM_SELL", "GEM_SELL", "SHORE",
+  "RECIPES", "PROJECTS", "WEATHERS", "WEATHER_ODDS",
+  "MASTERY", "MASTERY_NPC", "REQUESTS", "TOOLS", "TOOL_TIERS", "TIER_POWER", "TIER_COST",
+  "QUESTS", "FINALE_IDX", "XP_TABLE", "NPCDEF", "NPC_LINES",
+  "HEART_EVENTS", "MARRIAGE_SCENES", "FESTIVAL_SCENES", "JOURNAL_PAGES"];
 const src = GAME_FILES.map(f => fs.readFileSync(f, "utf8")).join("\n;\n") + `
-;globalThis.__DATA__ = JSON.stringify({
-  VERSION, SEASONS, SEASON_DAYS, FESTIVALS, BIRTHDAYS,
-  CROPS, TREES, ORES, FISH, FRUIT_TREES, TREE_MATURE_DAYS, TREE_FRUIT_CAP,
-  HIVE_COST, HIVE_RADIUS, HIVE_CAP, HIVE_MAX,
-  WATER, LEGENDS, ITEM_SELL, GEM_SELL, SHORE,
-  RECIPES, PROJECTS, WEATHERS, WEATHER_ODDS,
-  MASTERY, MASTERY_NPC, REQUESTS, TOOLS, TOOL_TIERS, TIER_POWER, TIER_COST,
-  QUESTS, FINALE_IDX, XP_TABLE,
-  MAPS: Object.fromEntries(Object.entries(MAPS).map(([k,v]) =>
+;const __opt = n => { try { return eval(n); } catch(e){ return null; } };
+globalThis.__DATA__ = JSON.stringify({
+  VERSION,
+  ${PLAIN_KEYS.map(k => `${k}: __opt("${k}")`).join(",\n  ")},
+  MAPS: __opt("MAPS") && Object.fromEntries(Object.entries(MAPS).map(([k,v]) =>
     [k, { w:v.w, h:v.h, outdoor:!!v.outdoor, name:v.name, subtitle:v.subtitle||"" }])),
-  NPCDEF, NPC_LINES, HEART_EVENTS, MARRIAGE_SCENES, FESTIVAL_SCENES,
-  WINGS: WINGS.map(w => ({ id:w.id, name:w.name })),
+  WINGS: __opt("WINGS") && WINGS.map(w => ({ id:w.id, name:w.name })),
   LETTERS: {
-    intro: LETTER, chest: LETTER_CHEST, rowan: LETTER_ROWAN,
-    unsent: LETTER_ROWAN_UNSENT, memorial: LETTER_MEMORIAL, festival: LETTER_FESTIVAL,
+    intro: __opt("LETTER"), chest: __opt("LETTER_CHEST"), rowan: __opt("LETTER_ROWAN"),
+    unsent: __opt("LETTER_ROWAN_UNSENT"), memorial: __opt("LETTER_MEMORIAL"), festival: __opt("LETTER_FESTIVAL"),
   },
-  JOURNAL_PAGES,
 });`;
 vm.runInNewContext(src, sandbox, { filename: "harvestscape-data.js" });
 const D = JSON.parse(sandbox.__DATA__);
@@ -78,8 +102,10 @@ const WING_REQ = {
   foraging: "Forage 10 wild finds", smithing: "Upgrade tools twice",
   hearth: "Hold the Grand Festival",
 };
-if (D.WINGS.length !== 9 || !D.WINGS.every(w => WING_REQ[w.id]))
-  throw new Error("WINGS changed — update WING_REQ in build-atlas.mjs");
+// Hard failures for the current build; warnings for retro snapshots (can't edit the past).
+const stale = msg => { if (RETRO) console.warn("  warn: " + msg); else throw new Error(msg); };
+if (D.WINGS && (D.WINGS.length !== 9 || !D.WINGS.every(w => WING_REQ[w.id])))
+  stale("WINGS changed — update WING_REQ in build-atlas.mjs");
 
 // How each almanac page is found (mirrors the queuePage call sites).
 const PAGE_TRIGGER = {
@@ -93,8 +119,8 @@ const PAGE_TRIGGER = {
   8: "Open the vault (Mining 20)",
   9: "The morning after the memorial, with all eight pages found — slipped under the cottage door",
 };
-if (D.JOURNAL_PAGES.length !== 9 || !D.JOURNAL_PAGES.every(p => PAGE_TRIGGER[p.n]))
-  throw new Error("JOURNAL_PAGES changed — update PAGE_TRIGGER in build-atlas.mjs");
+if (D.JOURNAL_PAGES && (D.JOURNAL_PAGES.length !== 9 || !D.JOURNAL_PAGES.every(p => PAGE_TRIGGER[p.n])))
+  stale("JOURNAL_PAGES changed — update PAGE_TRIGGER in build-atlas.mjs");
 
 // How each map is reached (mirrors the warps laid down by the generators).
 const MAP_ACCESS = {
@@ -109,8 +135,8 @@ const MAP_ACCESS = {
   beach: "South path. Bram's coast — salmon water, shore forage, festivals, and every finale.",
   grove: "West, through the farm's treeline. A true forest that regrows overnight — young oak by the gate, old pine and maple deeper in (WC 8 / 18).",
 };
-for (const id of Object.keys(D.MAPS))
-  if (!MAP_ACCESS[id]) throw new Error(`MAPS gained "${id}" — update MAP_ACCESS in build-atlas.mjs`);
+for (const id of Object.keys(D.MAPS || {}))
+  if (!MAP_ACCESS[id]) stale(`MAPS gained "${id}" — update MAP_ACCESS in build-atlas.mjs`);
 
 /* ---------------- tiny html helpers ---------------- */
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -144,27 +170,27 @@ function script(steps){
 }
 
 /* ---------------- derived numbers ---------------- */
-const npcIds = Object.keys(D.NPCDEF);
-const cropList = Object.values(D.CROPS);
-const heartSceneCount = Object.values(D.HEART_EVENTS).reduce((n, a) => n + a.length, 0);
-const letterCount = Object.keys(D.LETTERS).length;
-const masteryCount = Object.values(D.MASTERY).reduce((n, m) => n + Object.keys(m).length, 0);
+const npcIds = Object.keys(D.NPCDEF || {});
+const cropList = Object.values(D.CROPS || {});
+const heartSceneCount = Object.values(D.HEART_EVENTS || {}).reduce((n, a) => n + a.length, 0);
+const letterCount = Object.values(D.LETTERS).filter(Boolean).length;
+const masteryCount = Object.values(D.MASTERY || {}).reduce((n, m) => n + Object.keys(m).length, 0);
 const XP_ROWS = [2, 5, 10, 20, 25, 40, 50, 65, 75, 90, 95, 99];
 
 const STATS = [
-  [D.QUESTS.length, "story quests, two acts"],
-  [9, "Guild wings to light"],
-  [Object.keys(D.MAPS).length, "places (plus endless mine floors)"],
+  [(D.QUESTS || []).length, "story quests, two acts"],
+  [(D.WINGS || []).length || 9, "Guild wings to light"],
+  [Object.keys(D.MAPS || {}).length, "places (plus endless mine floors)"],
   [npcIds.length, "villagers to know"],
   [heartSceneCount, "heart scenes"],
   [letterCount, "letters from the story"],
-  [D.JOURNAL_PAGES.length, "almanac pages hidden in the work"],
+  [(D.JOURNAL_PAGES || []).length, "almanac pages hidden in the work"],
   [cropList.length, "crops"],
-  [D.FISH.length + D.LEGENDS.length, "fish (5 of them legendary)"],
-  [D.RECIPES.length, "recipes"],
-  [D.FESTIVALS.length + 1, "festivals a year (one earned)"],
+  [(D.FISH || []).length + (D.LEGENDS || []).length, "fish (5 of them legendary)"],
+  [(D.RECIPES || []).length, "recipes"],
+  [(D.FESTIVALS || []).length + 1, "festivals a year (one earned)"],
   [masteryCount, "mastery perks across 5 skills"],
-];
+].filter(([n]) => n > 0);
 
 /* ---------------- sections ---------------- */
 const NAV = [
@@ -214,7 +240,7 @@ function storySection(){
     ["✒ The letter Rowan never sent", D.LETTERS.unsent, "Rowan's 6-heart scene — the letter he wrote Grandpa and couldn't deliver."],
     ["✒ Carved into the standing stone", D.LETTERS.memorial, "The memorial raised at the end of Act II."],
     ["✒ One last letter, tucked inside a lantern", D.LETTERS.festival, "Read as the lanterns rise at the Grand Festival."],
-  ];
+  ].filter(([, text]) => text);   // a retro build may predate some letters
 
   return `
 <section id="story"><h2>The Story</h2>
@@ -273,14 +299,18 @@ function skillsSection(){
   const curve = table(["Level", "Total XP", "XP for this level"],
     XP_ROWS.map(l => [l, xp[l].toLocaleString("en-US"), (xp[l] - xp[l - 1]).toLocaleString("en-US")]));
 
-  const masteryRows = lvls => Object.entries(lvls).map(([l, t]) =>
+  // masteries arrived in v2.6.0 — a retro snapshot before that just shows the ladders
+  const masteryRows = lvls => Object.entries(lvls || {}).map(([l, t]) =>
     [`<b class="gold">★ ${l}</b>`, `<i>${esc(t)}</i>`]);
 
-  const ladder = (title, mentor, rows, mastery) => `
+  const ladder = (title, mentor, rows, mastery) => {
+    const mentorNpc = mentor && D.NPCDEF[mentor];
+    return `
     <div class="skill">
-      <h3>${title} <span class="mentor">mastery praised by ${esc(D.NPCDEF[mentor].name)}</span></h3>
+      <h3>${title}${mentorNpc ? ` <span class="mentor">mastery praised by ${esc(mentorNpc.name)}</span>` : ""}</h3>
       ${table(["Lvl", "Unlock"], rows.concat(masteryRows(mastery)))}
     </div>`;
+  };
 
   const farmRows = cropList.map(c => [c.lvl, `${dots(c.pal)} <b>${esc(c.name)}</b> — ${seasonChips(c.seasons)} · ${c.days}d · seed ${c.seed}g → sells ${c.sell}g`]);
   const woodRows = Object.values(D.TREES).map(t => [t.lvl, `${dots(t.pal)} <b>${esc(t.name)}</b> — drops ${t.n} × ${esc(t.drop)} (${D.ITEM_SELL[t.drop]}g each)`]);
@@ -299,11 +329,11 @@ crown. Every skill keeps paying past its last content unlock — <b>mastery perk
 <b>Grandpa's Guild Pin</b> (from the chest letter) grants +10% XP to everything.</p>
 ${curve}
 <p class="prose small">Reaching 99 in one skill ≈ ${(xp[99] / 1000).toFixed(0)}k XP. For scale: a turnip harvest is ${D.CROPS.turnip.xp} XP, a starfruit ${D.CROPS.starfruit.xp}, a Golden Koi ${D.FISH.find(f => f.name === "Golden Koi").xp}.</p>
-${ladder("🌱 Farming", D.MASTERY_NPC.Farming, farmRows, D.MASTERY.Farming)}
-${ladder("🪓 Woodcutting", D.MASTERY_NPC.Woodcutting, woodRows, D.MASTERY.Woodcutting)}
-${ladder("⛏ Mining", D.MASTERY_NPC.Mining, mineRows, D.MASTERY.Mining)}
-${ladder("🎣 Fishing", D.MASTERY_NPC.Fishing, fishRows, D.MASTERY.Fishing)}
-${ladder("🍳 Cooking", D.MASTERY_NPC.Cooking, cookRows, D.MASTERY.Cooking)}
+${ladder("🌱 Farming", D.MASTERY_NPC?.Farming, farmRows, D.MASTERY?.Farming)}
+${ladder("🪓 Woodcutting", D.MASTERY_NPC?.Woodcutting, woodRows, D.MASTERY?.Woodcutting)}
+${ladder("⛏ Mining", D.MASTERY_NPC?.Mining, mineRows, D.MASTERY?.Mining)}
+${ladder("🎣 Fishing", D.MASTERY_NPC?.Fishing, fishRows, D.MASTERY?.Fishing)}
+${ladder("🍳 Cooking", D.MASTERY_NPC?.Cooking, cookRows, D.MASTERY?.Cooking)}
 
 <h3>Tools — four tiers each</h3>
 <p class="prose">Five tools (${D.TOOLS.join(", ")}), upgraded at Tom's forge. Power multiplies the work per swing.</p>
@@ -550,24 +580,73 @@ footer{text-align:center;color:var(--mut);font-size:12.5px;margin-top:70px}
 @media print{nav{position:static}details{page-break-inside:avoid}}
 `;
 
+// One bad section (e.g. a retro build missing a system) must not sink the whole page.
+const section = fn => {
+  try { return fn(); }
+  catch (e) {
+    if (!RETRO) throw e;
+    return `<section><p class="prose small">— this section isn't available for this build (${esc(e.message)}) —</p></section>`;
+  }
+};
+
+const retroNote = RETRO
+  ? ` · <b>retro-generated snapshot</b> — data is this release's; hand-written blurbs reflect the generator's era`
+  : "";
+
 const html = `<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>HarvestScape — Game Atlas v${esc(D.VERSION.name)}</title>
 <style>${CSS}</style></head><body>
-${heroSection()}
+${section(heroSection)}
 <nav>${NAV.map(([id, t]) => `<a href="#${id}">${esc(t)}</a>`).join("")}</nav>
-${storySection()}
-${craftsSection()}
-${skillsSection()}
-${worldSection()}
-${peopleSection()}
-${calendarSection()}
-${economySection()}
-${completionSection()}
-<footer>HarvestScape v${esc(D.VERSION.name)} “${esc(D.VERSION.codename)}” · generated ${esc(D.VERSION.date)} from <code>game/js</code> data · regenerate with <code>node tools/build-atlas.mjs</code></footer>
+${section(storySection)}
+${section(craftsSection)}
+${section(skillsSection)}
+${section(worldSection)}
+${section(peopleSection)}
+${section(calendarSection)}
+${section(economySection)}
+${section(completionSection)}
+<footer>HarvestScape v${esc(D.VERSION.name)} “${esc(D.VERSION.codename)}” · generated ${esc(D.VERSION.date)} from <code>game/js</code> data · regenerate with <code>node tools/build-atlas.mjs</code>${retroNote}</footer>
 </body></html>`;
 
-const out = path.join(ROOT, "GAME_ATLAS.html");
-fs.writeFileSync(out, html);
-console.log(`GAME_ATLAS.html written (${(html.length / 1024).toFixed(0)} KB) — v${D.VERSION.name} "${D.VERSION.codename}", ${D.QUESTS.length} quests, ${Object.keys(D.MAPS).length} maps, ${npcIds.length} NPCs.`);
+/* ---------------- write: snapshot always, root only for the current build ---------------- */
+const ATLAS_DIR = path.join(ROOT, "atlas");
+fs.mkdirSync(ATLAS_DIR, { recursive: true });
+const snapName = `v${D.VERSION.name}.html`;
+fs.writeFileSync(path.join(ATLAS_DIR, snapName), html);
+const wrote = [`atlas/${snapName}`];
+if (!RETRO){
+  fs.writeFileSync(path.join(ROOT, "GAME_ATLAS.html"), html);
+  wrote.unshift("GAME_ATLAS.html");
+}
+
+// Regenerate the snapshot index (newest version first).
+const semver = f => f.slice(1, -5).split(".").map(Number);
+const snaps = fs.readdirSync(ATLAS_DIR)
+  .filter(f => /^v\d+(\.\d+)*\.html$/.test(f))
+  .sort((a, b) => { const x = semver(a), y = semver(b);
+    for (let i = 0; i < 3; i++){ if ((y[i] || 0) !== (x[i] || 0)) return (y[i] || 0) - (x[i] || 0); } return 0; });
+const indexHtml = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HarvestScape — Atlas Archive</title>
+<style>${CSS}</style></head><body>
+<header class="hero">
+  <p class="kicker">Atlas Archive · one snapshot per release</p>
+  <h1>HARVEST<span>SCAPE</span></h1>
+  <p class="lede">The state of the game at every release — each page is the full Game Atlas as
+  generated from that version's data. The newest one matches <code>GAME_ATLAS.html</code> at the
+  repo root.</p>
+</header>
+<section><div class="tw"><table><thead><tr><th>Version</th><th>Snapshot</th></tr></thead><tbody>
+${snaps.map(f => `<tr><td><b>${esc(f.slice(0, -5))}</b>${f === snaps[0] ? " " + chip("newest", "gold") : ""}</td><td><a style="color:var(--sky)" href="${esc(f)}">${esc(f)}</a></td></tr>`).join("\n")}
+</tbody></table></div></section>
+<footer>Regenerated by every <code>node tools/build-atlas.mjs</code> run.</footer>
+</body></html>`;
+fs.writeFileSync(path.join(ATLAS_DIR, "index.html"), indexHtml);
+
+console.log(`${wrote.join(" + ")} written (${(html.length / 1024).toFixed(0)} KB) — v${D.VERSION.name} "${D.VERSION.codename}", ` +
+  `${(D.QUESTS || []).length} quests, ${Object.keys(D.MAPS || {}).length} maps, ${npcIds.length} NPCs. ` +
+  `Archive: ${snaps.length} snapshot${snaps.length === 1 ? "" : "s"}.`);

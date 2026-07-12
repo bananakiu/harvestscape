@@ -14,6 +14,28 @@
 
 ---
 
+## 2026-07-13 — Atlas per release: keep a reference of the game's state at every version
+
+**Owner feedback (near-verbatim):**
+
+> Make sure to generate a version of this for every version, or at least every major version,
+> that gets released so that we have a reference for what the state of the game is.
+
+**Interpretation.** The atlas shouldn't only answer "what is the game now" — it should answer
+"what was the game at v2.4" without archaeology through the changelog. One snapshot per release,
+kept forever, becomes the design-history record: you can watch the XP curve, the map count, and
+the economy change release by release.
+
+**Direction call (ours).** Made the generator self-archiving: every run writes
+`atlas/v<version>.html` (named from the build's own `VERSION`) plus an auto-rebuilt
+`atlas/index.html`, and the release checklist in `AGENTS.md` now includes the regen step — so
+snapshots happen as a side effect of releasing, not as a thing to remember. Added `--src` retro
+mode (soft assertions, graceful degradation for data that didn't exist yet) and backfilled all
+15 existing tags, v2.1.0 → v2.9.2. The archive already reads as history: v2.1.0's atlas shows
+the 13M-XP RuneScape curve, v2.9.1's grows the tenth map (the Deep Grove).
+
+**Produced:** `atlas/` (15 snapshots + index), generator upgrade. See `CHANGELOG.md`, same date.
+
 ## 2026-07-12 (later still) — Owner asks for a Game Atlas: see the whole game without playing it
 
 **Owner feedback (near-verbatim):**

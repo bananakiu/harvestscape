@@ -22,6 +22,28 @@
 
 ---
 
+## The Atlas Archive — one snapshot per release, all history backfilled · 2026-07-13
+
+Docs/tooling only; no game code changed. Owner's ask (DEVLOG, same date): keep an atlas *per
+released version* as a permanent reference for the state of the game.
+
+### Added
+- **`atlas/` archive.** Every `tools/build-atlas.mjs` run now writes `atlas/v<version>.html`
+  (named from the build's own `VERSION`) alongside the root `GAME_ATLAS.html`, and rebuilds
+  `atlas/index.html` (newest first). **Why a side effect, not a step:** a snapshot that has to
+  be remembered gets skipped; one that happens whenever the atlas is regenerated cannot be.
+  The release checklist in `AGENTS.md` (step 6) makes the regen part of cutting a release.
+- **Retro mode (`--src <gameJsDir>`)** for backfilling past releases from `git archive`:
+  assertions downgrade to warnings (the past can't be edited to satisfy them), missing data
+  degrades per-section instead of failing (extraction wraps every constant except `VERSION`
+  in a try/eval guard), and the footer marks the page retro-generated. Used it to **backfill
+  all 15 tags, v2.1.0 → v2.9.2** — the archive now shows the game's history at a glance
+  (v2.1.0's skills page still shows the original 13M-XP RuneScape curve; the tenth map appears
+  in v2.9.1).
+- Robustness that also protects the future: one broken section no longer sinks the whole page
+  on retro runs, and the skills ladder renders without mastery data (which only exists from
+  v2.6.0).
+
 ## v2.9.2 — "Tempered Tools" · 2026-07-13 · tag `v2.9.2`
 
 Version code **35**. Pillar 3 of [ECONOMY_REBALANCE.md](ECONOMY_REBALANCE.md) — the one that

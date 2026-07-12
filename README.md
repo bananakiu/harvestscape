@@ -53,6 +53,7 @@ Sell and upgrade at **Tom's stall**; **sleep at your cottage door** to pass the 
 - `CHANGELOG.md` — the single internal audit trail of every change and the reasoning behind it (mirrored in-game by the `CHANGELOG` array in `game/js/01-data.js`).
 - `DEVLOG.md` — the owner's playtest feedback and direction calls, recorded near-verbatim; the human signal behind the changelog's decisions.
 - `GAME_ATLAS.html` — the whole game on one page (story, quests, unlocks, maps, people, economy, 100% checklist), generated from the live game data by `tools/build-atlas.mjs`; regenerate after any content change.
+- `atlas/` — one atlas snapshot per release (start at `atlas/index.html`): the state of the game at every version, back to v2.1.0. Written automatically by the generator; part of the release checklist.
 - `tools/` — repo tooling (currently just the atlas generator).
 - `NEW_PLAYER_EXPERIENCE.md` — the onboarding beta plan (shipped in v2.2.0 "First Light"; its polish tier remains on the roadmap).
 - `AGENTS.md` — instructions for any AI agent working in this repo (canonical; `CLAUDE.md`, `GEMINI.md`, etc. are symlinks to it).

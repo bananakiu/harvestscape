@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HarvestScape — Game Atlas v2.2.0</title>
+<style>
+:root{--bg:#131019;--card:#1c1723;--card2:#211b2b;--ink:#e9decc;--mut:#a89f8f;--line:#ffffff14;
+--gold:#ffce5a;--green:#8fd06a;--sky:#8fd3ff;--pink:#ff9ab0;--purp:#c9b6ff}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:linear-gradient(#0d0b12,var(--bg) 300px);color:var(--ink);
+font:16px/1.6 Georgia,'Times New Roman',serif;padding-bottom:80px}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px}
+h1,h2,h3,h4,.kicker,summary,.chip,th,.qn,.stat b,nav a{font-family:ui-monospace,Menlo,Consolas,monospace}
+.hero{text-align:center;padding:56px 16px 8px}
+.kicker{color:var(--gold);letter-spacing:.18em;text-transform:uppercase;font-size:12px;margin:0 0 10px}
+h1{font-size:clamp(34px,7vw,58px);letter-spacing:.14em;margin:0;color:#fff}
+h1 span{color:var(--green)}
+.lede{max-width:720px;margin:14px auto 6px;color:var(--ink)}
+.regen{color:var(--mut);font-size:13px}
+.regen code{color:var(--sky)}
+.stats{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:22px 0 8px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:118px}
+.stat b{display:block;font-size:22px;color:var(--gold)}
+.stat span{font-size:12px;color:var(--mut)}
+nav{position:sticky;top:0;z-index:5;background:#0d0b12;
+border-bottom:1px solid var(--line);padding:9px 8px;text-align:center}
+nav a{color:var(--mut);text-decoration:none;font-size:12.5px;margin:0 9px;letter-spacing:.05em}
+nav a:hover{color:var(--gold)}
+section{margin:56px auto;max-width:980px;padding:0 20px}
+h2{color:var(--gold);font-size:24px;letter-spacing:.1em;text-transform:uppercase;
+border-bottom:1px solid var(--line);padding-bottom:10px}
+h3{color:var(--sky);font-size:16px;letter-spacing:.06em;margin-top:34px}
+h4{color:var(--pink);margin:18px 0 6px}
+.prose{max-width:820px}.small{font-size:13.5px;color:var(--mut)}
+.tw{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{color:var(--mut);text-transform:uppercase;font-size:11px;letter-spacing:.08em;text-align:left}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:hover td{background:#ffffff06}
+.g,.gold{color:var(--gold)}
+.chip{display:inline-block;background:#ffffff10;border:1px solid var(--line);border-radius:20px;
+padding:1px 9px;font-size:11px;color:var(--ink);white-space:nowrap}
+.chip.gold{color:var(--gold);border-color:#ffce5a44}.chip.pink{color:var(--pink);border-color:#ff9ab044}
+.chip.sky{color:var(--sky);border-color:#8fd3ff44}
+.chip.sp{color:#a5e08a;border-color:#a5e08a44}.chip.su{color:#ffd94a;border-color:#ffd94a44}
+.chip.fa{color:#ffab6a;border-color:#ffab6a44}.chip.wi{color:#a8d8f0;border-color:#a8d8f044}
+.pal{display:inline-flex;gap:2px;margin-right:6px;vertical-align:middle}
+.pal i{width:9px;height:9px;border-radius:2px;display:inline-block;border:1px solid #0006}
+.quest{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:12px 0}
+.qhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.qn{background:var(--gold);color:#1a1408;border-radius:8px;min-width:26px;text-align:center;font-weight:bold;padding:1px 4px}
+.giver{color:var(--mut);font-size:13px;font-style:italic}
+.qdesc{margin:8px 0 4px;color:var(--ink)}
+.objs{margin:4px 0;color:var(--mut)}.objs li{margin:2px 0}
+.reward{color:var(--green);font-size:14px;margin:6px 0}
+.actbreak{text-align:center;color:var(--gold);font-style:italic;margin:26px 0;letter-spacing:.04em}
+details{background:var(--card2);border:1px solid var(--line);border-radius:10px;margin:8px 0;padding:0 14px}
+summary{cursor:pointer;padding:9px 0;color:var(--sky);font-size:13px;letter-spacing:.03em}
+summary .how{color:var(--mut);font-style:italic;letter-spacing:0}
+.dbody{padding:4px 2px 14px}
+.line{margin:7px 0}.line b{color:var(--gold)}
+.ban{color:var(--purp);text-align:center;font-style:italic}
+.letter{background:#241d15;border:1px solid #ffce5a2b;border-radius:10px;padding:14px 18px;margin:10px 0;
+font-style:italic;color:#f0e6cf}
+.lhead{font-style:normal;color:var(--gold);font-family:ui-monospace,Menlo,monospace;font-size:12.5px;margin-bottom:8px}
+.wings{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:16px 0}
+.wing{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.wing.hearth{border-color:#ffce5a55;background:#251d10}
+.wnum{color:var(--gold);margin-right:8px}
+.wreq{display:block;color:var(--mut);font-size:13px;margin-top:3px}
+.skill{margin:8px 0}
+.mentor{color:var(--mut);font-size:12px;font-style:italic;letter-spacing:0;text-transform:none}
+.maps{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin:14px 0}
+.map{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.map .sub{color:var(--mut)}.map .dims{float:right;color:var(--mut);font-size:11.5px;font-family:ui-monospace,Menlo,monospace}
+.map p{color:var(--mut);font-size:13.5px;margin:6px 0 0}
+.npc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:12px 0}
+.nhead{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.nhead b{font-size:17px}
+.bday{margin-left:auto;color:var(--mut);font-size:12.5px}
+.role{color:var(--mut);font-style:italic;margin:6px 0}
+.gifts{font-size:13.5px}
+.firstline{color:var(--sky);font-size:14px}
+.check{list-style:none;padding:0;max-width:760px}
+.check li{padding:7px 0 7px 30px;border-bottom:1px dashed var(--line);position:relative}
+.check li:before{content:"☐";position:absolute;left:4px;color:var(--gold)}
+footer{text-align:center;color:var(--mut);font-size:12.5px;margin-top:70px}
+@media print{nav{position:static}details{page-break-inside:avoid}}
+</style></head><body>
+
+<header class="hero">
+  <p class="kicker">The Complete Game Atlas · v2.2.0 “First Light” · 2026-07-11</p>
+  <h1>HARVEST<span>SCAPE</span></h1>
+  <p class="lede">A cozy valley that went quiet, and the whole of what it takes to wake it —
+  every quest, letter, unlock, place, person, and perk, laid out so you can see the finished
+  game without playing a minute of it. <b>Spoilers throughout, folded behind ▸ toggles.</b></p>
+  <div class="stats"><div class="stat"><b>14</b><span>story quests, two acts</span></div><div class="stat"><b>9</b><span>Guild wings to light</span></div><div class="stat"><b>9</b><span>places (plus endless mine floors)</span></div><div class="stat"><b>6</b><span>villagers to know</span></div><div class="stat"><b>12</b><span>heart scenes</span></div><div class="stat"><b>6</b><span>letters from the story</span></div><div class="stat"><b>9</b><span>almanac pages hidden in the work</span></div><div class="stat"><b>12</b><span>crops</span></div><div class="stat"><b>10</b><span>fish (5 of them legendary)</span></div><div class="stat"><b>13</b><span>recipes</span></div><div class="stat"><b>5</b><span>festivals a year (one earned)</span></div><div class="stat"><b>20</b><span>mastery perks across 5 skills</span></div></div>
+  <p class="regen">Generated from the live game data by <code>node tools/build-atlas.mjs</code> — rerun it after any content change.</p>
+</header>
+<nav><a href="#story">The Story</a><a href="#crafts">The Nine Crafts</a><a href="#skills">Skills &amp; Unlocks</a><a href="#world">The World</a><a href="#people">The People</a><a href="#calendar">Calendar &amp; Weather</a><a href="#economy">Economy &amp; Collections</a><a href="#completion">100%</a></nav>
+
+<section id="story"><h2>The Story</h2>
+<p class="prose">Willowbrook was once bound together by the <b>Guild of Nine Crafts</b> — nine wings,
+nine trades, and one night a year when the whole valley gathered on the coast under floating
+lanterns. Then Rosa Alderman died, her closest friend — your grandfather Aldous, the
+Festival-Keeper — let the lanterns go dark, and the valley began to forget how to be a valley.
+The Guild closed one craft at a time. Maya's father walked north and didn't come back. Decades
+later, Grandpa leaves you the farm — and, without quite saying so at first, the one thing he
+couldn't do himself.</p>
+<p class="prose"><b>Act I — wake the valley.</b> Prove the crafts still live (farm, chop, mine,
+fish, cook), light the Guild's wings, recover the Star Metal from the sealed vault, and bring
+the Grand Festival back to the coast. The finale plays as a full festival-night cutscene and
+ends the main chain — but not the story.</p>
+<p class="prose"><b>Act II — the empty chair.</b> After the lanterns, Rowan asks a harder, kinder
+thing: the truth about Elias Alderman, eleven years up the coast road, and whether Maya's father
+can be brought home. It ends with two names carved on a standing stone on your own farm.</p>
+<p class="prose"><b>And after:</b> the festival becomes an annual fixture (the anniversary of
+<i>your</i> night), the almanac pages keep arriving through the long middle of the game, and the
+last page — found only after everything else — asks you to do the one thing Grandpa never did:
+write to your mother.</p>
+
+<h3>The quest spine — every mission in order</h3>
+<div class="quest">
+      <div class="qhead"><span class="qn">1</span><b>First Sprout</b> <span class="chip sky">Act I</span> <span class="giver">given by Grandpa's Letter</span></div>
+      <p class="qdesc">“Tend it, and it'll tend to you.” Wake the soil in the plot below your cottage.</p>
+      <ul class="objs"><li>Till a patch of soil</li><li>Plant a seed</li><li>Water your crop</li></ul>
+      <p class="reward">Reward: <b class="g">60g</b> · 4 × Turnip Seeds · <i>Grandpa tucked seeds into the envelope.</i></p>
+      
+    </div><div class="quest">
+      <div class="qhead"><span class="qn">2</span><b>A Good Harvest</b> <span class="chip sky">Act I</span> <span class="giver">given by Grandpa's Letter</span></div>
+      <p class="qdesc">Patience, sun, and water. Bring in your very first crops.</p>
+      <ul class="objs"><li>Harvest 3 crops</li></ul>
+      <p class="reward">Reward: <b class="g">120g</b> · 3 × Carrot Seeds · <i>Word spreads; Tom sends carrot seeds.</i></p>
+      
+    </div><div class="quest">
+      <div class="qhead"><span class="qn">3</span><b>Coin &amp; Company</b> <span class="chip sky">Act I</span> <span class="giver">given by Tom</span></div>
+      <p class="qdesc">A valley is its people. Step inside Tom's store, east down the path, and sell your goods.</p>
+      <ul class="objs"><li>Visit Tom's store &amp; say hello</li><li>Earn 250g from selling</li></ul>
+      <p class="reward">Reward: <b class="g">100g</b> · 3 × Berry Bun · <i>Tom rounds up your total, with a wink.</i></p>
+      
+    </div><div class="quest">
+      <div class="qhead"><span class="qn">4</span><b>The Old Keeper</b> <span class="chip sky">Act I</span> <span class="giver">given by Willowbrook</span></div>
+      <p class="qdesc">An old man keeps the shuttered Guild Hall in the north of town. Go and hear him out.</p>
+      <ul class="objs"><li>Speak with Elder Rowan at the Guild Hall</li></ul>
+      <p class="reward">Reward: <b class="g">80g</b> · 1 × Guild Seal · <i>Rowan presses a worn Guild Seal into your hand.</i></p>
+      
+    </div><div class="quest">
+      <div class="qhead"><span class="qn">5</span><b>Neighborly</b> <span class="chip sky">Act I</span> <span class="giver">given by Maya</span></div>
+      <p class="qdesc">Maya walks the south meadow by day. A valley grows warmer with friends.</p>
+      <ul class="objs"><li>Reach 2 hearts with Maya</li></ul>
+      <p class="reward">Reward: <b class="g">120g</b> · 3 × Strawberry Seeds · <i>Strawberries — her favorite, if you were wondering.</i></p>
+      
+    </div><div class="quest">
+      <div class="qhead"><span class="qn">6</span><b>Prove the Crafts</b> <span class="chip sky">Act I</span> <span class="giver">given by Elder Rowan</span></div>
+      <p class="qdesc">“Show me the crafts still live here.” Light the first three wings of the Guild.</p>
+      <ul class="objs"><li>Reach Farming 10</li><li>Reach Woodcutting 8</li><li>Reach Mining 8</li></ul>
+      <p class="reward">Reward: <b class="g">250g</b> · 4 × Iron Ore · <i>Three wings flicker back to light.</i></p>
+      <details><summary>Turn-in line</summary><div class="dbody"><p class="line"><b>Elder Rowan</b> The Farming wing. The Woodcutting. The Mining. Look at them burn. You did in a season what I could not in thirty years.</p></div></details>
+    </div><div class="quest">
+      <div class="qhead"><span class="qn">7</span><b>Salt &amp; Silver</b> <span class="chip sky">Act I</span> <span class="giver">given by Bram</span></div>
+      <p class="qdesc">Follow the south path to the coast. Bram the fisher tends the Fishing wing.</p>
+      <ul class="objs"><li>Meet Bram at the coast</li><li>Reach Fishing 10</li></ul>
+      <p class="reward">Reward: <b class="g">300g</b> · 2 × Cooked Salmon · <i>Bram grunts. From him, that's a medal.</i></p>
+      <details><summary>Turn-in line</summary><div class="dbody"><p class="line"><b>Bram</b> ...You'll do. The Fishing wing's yours to light. Don't let it go to your head like it did mine.</p></div></details>
+    </div><div class="quest">
+      <div class="qhead"><span class="qn">8</span><b>Into the Deep</b> <span class="chip sky">Act I</span> <span class="giver">given by Elder Rowan</span></div>
+      <p class="qdesc">The old mine north of the ridge runs deep. Rowan whispers of a founding gift below.</p>
+      <ul class="objs"><li>Reach mine floor 5</li><li>Mine 25 rocks</li></ul>
+      <p class="reward">Reward: <b class="g">300g</b> · 3 × Gold Ore · <i>The deep opens to you.</i></p>
+      <details><summary>Turn-in line</summary><div class="dbody"><p class="line"><b>Elder Rowan</b> Floor five and back, lungs intact. Good. The vault runs deeper still — but you're ready for it now.</p></div></details>
+    </div><div class="quest">
+      <div class="qhead"><span class="qn">9</span><b>The Founding Gift</b> <span class="chip sky">Act I</span> <span class="giver">given by Elder Rowan</span></div>
+      <p class="qdesc">Deep in the mine a sealed vault holds Star Metal — the Guild's heart. Break it open (Mining 20) and recover it.</p>
+      <ul class="objs"><li>Recover the Star Metal from the vault</li></ul>
+      <p class="reward">Reward: <b class="g">400g</b> · 1 × Emerald · <i>The Mining wing blazes to life.</i></p>
+      <details><summary>Turn-in scene (spoilers)</summary><div class="dbody"><p class="line"><b>Elder Rowan</b> ...Star Metal. In my hands again, after all these years. Give an old man a moment, child — old men and old metal, we take our time.</p><p class="line"><b>Elder Rowan</b> Your grandfather left something with me — made me swear to hand it over only when the crafts woke again. Stubborn to his last breath. Here. It's yours to read.</p><div class="letter"><div class="lhead">✒ A letter, kept all these years by Elder Rowan</div><div class="lbody">Kiddo,<br><br>If Rowan handed you this, then you've been down to the vault and back, and the Star Metal is in the valley's hands again. He'll pretend he isn't moved. He is.<br><br>Rowan and I didn't speak the last ten years of my life. He thought I'd let the valley die out of self-pity. He was right — and I couldn't stand that he was right. Old men are fools twice: once for the grieving, once for the pride.<br><br>You've a gentler way than I ever had. Use it on him.<br><br>One thing left undone. Light the lanterns. Fill the table. Do the thing I couldn't.<br><br>— Grandpa</div></div></div></details>
+    </div><div class="quest">
+      <div class="qhead"><span class="qn">10</span><b>Master Smith</b> <span class="chip sky">Act I</span> <span class="giver">given by Tom</span></div>
+      <p class="qdesc">Grandpa's basic tools got him by. Forge yourself something worthy of the Guild.</p>
+      <ul class="objs"><li>Upgrade tools 3 times</li></ul>
+      <p class="reward">Reward: <b class="g">250g</b> · 3 × Gold Ore · <i>Tom whistles at your new kit.</i></p>
+      
+    </div><div class="quest">
+      <div class="qhead"><span class="qn">11</span><b>Wake the Valley</b> <span class="chip gold">FINALE</span> <span class="giver">given by The Valley</span></div>
+      <p class="qdesc">They said Willowbrook was finished. Light every wing and bring the Grand Festival back to the coast.</p>
+      <ul class="objs"><li>Reach total level 60</li><li>Reach 4 hearts with Maya</li><li>Recover the Star Metal</li></ul>
+      <p class="reward">Reward: <b class="g">2,000g</b> · <i>Lanterns rise over the water. The valley is awake — and it's yours.</i></p>
+      
+    </div>
+<div class="actbreak">— the Grand Festival plays here: the ninth wing lights, the lanterns rise —</div>
+<div class="quest">
+      <div class="qhead"><span class="qn">12</span><b>The Long Way Home</b> <span class="chip pink">Act II</span> <span class="giver">given by Elder Rowan</span></div>
+      <p class="qdesc">The lanterns are lit and the valley is whole — save for one empty chair. Rowan would like a word.</p>
+      <ul class="objs"><li>Light the lanterns at the Grand Festival</li><li>Learn what Bram has been carrying</li></ul>
+      <p class="reward">Reward: <b class="g">200g</b> · <i>Rowan asks you to do a hard, kind thing.</i></p>
+      <details><summary>Turn-in scene (spoilers)</summary><div class="dbody"><p class="line"><b>Elder Rowan</b> Sit. I watched you at the lanterns. You looked at the long table and you counted the chairs, didn't you. So did I. So did I.</p><p class="line"><b>Elder Rowan</b> Bram has told you. I know because Bram has been unable to look at me for a week, and Bram can out-stare a lighthouse.</p><p class="line"><b>You</b> Marrow Point. Forty miles north.</p><p class="line"><b>Elder Rowan</b> Eleven years. And in eleven years not one of us walked up that road. We told ourselves we were respecting his wishes. We were sparing ourselves an awkward morning.</p><p class="line"><b>Elder Rowan</b> I will not send you. I have no right. I am asking. Bring Elias Alderman home, and let his daughter decide what she wants to say to him.</p><p class="line"><b>Elder Rowan</b> Start with Bram. He owes that man a lantern, and he has owed it a very long time.</p></div></details>
+    </div><div class="quest">
+      <div class="qhead"><span class="qn">13</span><b>Driftwood &amp; Waxed Paper</b> <span class="chip pink">Act II</span> <span class="giver">given by Bram</span></div>
+      <p class="qdesc">“If the festival ever comes back… I'll make them again.” Bring Bram the wood for his water lanterns.</p>
+      <ul class="objs"><li>Bring 12 Wood</li><li>Bring 3 Pine Wood</li></ul>
+      <p class="reward">Reward: <b class="g">250g</b> · <i>Bram's hands remember the folds.</i></p>
+      <details><summary>Turn-in scene (spoilers)</summary><div class="dbody"><p class="line"><b>Bram</b> Twelve of wood and three of pine. …You remembered the pine. Nobody remembers the pine.</p><p class="line"><b>Bram</b> The pine's for the little boats. The wax paper takes the flame and the pine takes the water, and between the two of them a candle crosses a bay.</p><p class="line"><b>Bram</b> …</p><p class="line"><b>Bram</b> My hands still know it. Eleven years and they still know it. Look at that.</p><p class="ban">✦ 🏮 Bram folds the water lanterns — One of them, he sets aside</p><p class="line"><b>Bram</b> This one's spare. Don't ask who it's for. …You know exactly who it's for.</p><p class="line"><b>Bram</b> Go and tell Maya. All of it. She's owed the truth by everyone in this valley, and I'll not have her hear it from a coward twice.</p></div></details>
+    </div><div class="quest">
+      <div class="qhead"><span class="qn">14</span><b>The Coast Road</b> <span class="chip pink">Act II</span> <span class="giver">given by Maya</span></div>
+      <p class="qdesc">Forty miles north, a ferryman has spent eleven years counting the days he didn't come home.</p>
+      <ul class="objs"><li>Reach 5 hearts with Maya</li><li>Bram folds the water lanterns</li></ul>
+      <p class="reward">Reward: <b class="g">500g</b></p>
+      <details><summary>Turn-in scene (spoilers)</summary><div class="dbody"><p class="line"><b>Maya</b> You've been strange all week. You and Bram and Rowan, all three of you, going quiet whenever I walk in.</p><p class="line"><b>You</b> Maya. Your father isn't at the city ports.</p><p class="line"><b>Maya</b> …</p><p class="line"><b>Maya</b> I know.</p><p class="line"><b>Maya</b> The postmark's right and the paper's wrong. It's ferry paper. It's been ferry paper for eleven years. I stopped checking because I couldn't decide which would be worse — that he couldn't come home, or that he wouldn't.</p><p class="line"><b>You</b> Come to the coast with me.</p><p class="line"><b>Maya</b> …</p><p class="line"><b>Maya</b> All right.</p><p class="ban">✦ The Coast Road — Willowbrook · the north path</p><p class="line"><b>Maya</b> Bram. What have you done.</p><p class="line"><b>Bram</b> Kept a promise to the wrong person for eleven years. …I've written to him. He wrote back the same day. Same day, Maya.</p><p class="line"><b>Maya</b> …</p><p class="line"><b>Elias</b> You've your grandmother's stance. Feet planted. Ready to be furious at a man.</p><p class="line"><b>Elias</b> Be furious. I've had forty miles to practise standing still for it.</p><p class="line"><b>Maya</b> Eleven years.</p><p class="line"><b>Elias</b> Eleven years.</p><p class="line"><b>Maya</b> You didn't come to her funeral. You didn't come to MINE — I had one, you know. A small one. Everyone stood in the rain and looked at me like I was the last Alderman left.</p><p class="line"><b>Elias</b> I stood on the ridge. I could see the umbrellas. I told myself I'd walk down when I could do it without shaking, and then it was dark, and then it was a year.</p><p class="line"><b>Elias</b> There isn't a good reason, Maya. I've looked for one every day of eleven years and there simply isn't one down there.</p><p class="line"><b>Maya</b> …Then don't give me one.</p><p class="line"><b>Maya</b> Just don't go back up that road.</p><p class="line"><b>Bram</b> …I've a lantern spare. Been carrying it about like a fool. It wants a name on it.</p><p class="line"><b>Elias</b> Two names, Bram. Put my mother's first. She'd have hated the fuss.</p><p class="line"><b>Elias</b> And Aldous beside her. He wrote to me, once. I never opened it. I think I always knew what it said, and I wasn't ready to be forgiven.</p><p class="ban">✦ The Festival Green — Two names, and a lantern that stays lit</p><div class="letter"><div class="lhead">✒ Carved into the standing stone</div><div class="lbody">ROSA ALDERMAN — who fed the valley<br>ALDOUS — who lit its lanterns<br><br>— and folded into the stone, in a hand you know —<br><br>Kiddo,<br><br>If there's a stone here, then someone finally said the thing out loud, and I'd bet the farm it was you.<br><br>Here is the truth I never wrote down. The festival did not die because I was sad. It died because I was ashamed. Rosa and I planned that last one together at her kitchen table, and she went into the ground three weeks before it, and when the night came I could not walk down to that water and be the man who lit the lanterns without her.<br><br>So I didn't go. And the next year it was easier not to go. And the year after that, there was nothing to not go to.<br><br>Grief you can live alongside. It moves in, it eats your bread, and eventually the two of you come to an arrangement. It's the shame that shuts the doors — shame at the year you missed, and the friend you didn't answer, and the boy who walked north up the coast road because his mother was gone and nobody in this valley, myself first among them, went after him.<br><br>Elias. If you are reading this beside him, then you did the one thing I was too proud and too slow to do.<br><br>Don't put me on this stone alone. Put her name first. She'd have hated the fuss and she'd have stayed for all of it.<br><br>Light them every year, kiddo. Even the year you don't feel like it. Especially that one.<br><br>— Grandpa</div></div><p class="ban">✦ ♥ The Valley Remembers — Read the stone any time — it keeps his letter</p><p class="line"><b>Elder Rowan</b> Nine wings and a stone. …He'd have grumbled about the expense and visited it every single morning. Go home, child. Sleep. You've done a hard, kind thing.</p></div></details>
+    </div>
+
+<h3>Grandpa's letters (6)</h3>
+<p class="prose">The story's spine is epistolary — six letters, each landing at a turning point.</p>
+<details><summary>✒ The letter on the kitchen table (the game's opening) <span class="how">· Read automatically when a new game begins.</span></summary><div class="dbody"><div class="letter"><div class="lhead">✒ The letter on the kitchen table (the game's opening)</div><div class="lbody">My dear grandchild,<br><br>If you're reading this, the old farm is yours now. I know it doesn't look like much — the weeds have had their way, and the valley's gone quiet since the Guild closed its doors.<br><br>But this soil remembers every seed I ever planted. Tend it, and it'll tend to you. Plant a little each day, water what you sow, and rest when the sun goes down.<br><br>I'll not dress up the rest: Willowbrook is fading. The Guild of Nine Crafts stands dark, one craft at a time gone cold, and the Grand Festival that once lit the whole coast hasn't been held in years. I always meant to wake it back up — relight the crafts, put the lanterns back on the water. I ran out of seasons. Maybe you won't.<br><br>The rest, you'll figure out — same as I did. Oh — and do say hello to Maya. She's good people.<br><br>Welcome home, kiddo.<br>Welcome to Willowbrook.<br>            — Grandpa</div></div></div></details><details><summary>✒ The letter in the cottage chest <span class="how">· Found in your cottage chest once the farm feels like a home again.</span></summary><div class="dbody"><div class="letter"><div class="lhead">✒ The letter in the cottage chest</div><div class="lbody">My dear grandchild,<br><br>If you've opened this chest, then you've made the old place a home again — which means you're ready for the rest of it.<br><br>I was the valley's Festival-Keeper, once. The ninth craft of the Guild was never a trade you could sell at Tom's counter. It was the gathering — lanterns on the water, one long table, the whole valley in one place for one night. I kept that flame.<br><br>Then one winter we lost Rosa Alderman — Maya's grandmother, the finest baker Willowbrook ever had, and the truest friend I had in this world. I couldn't light the lanterns without her. 'Next year,' I said. I said it for a great many years.<br><br>A valley that forgets to gather forgets how to be a valley. The Guild's doors closed one craft at a time — and it began with mine.<br><br>The pin was Rosa's, then mine. It's yours now. I broke a thing by grieving too long, kiddo. You'll mend it by living well.<br><br>— Grandpa</div></div></div></details><details><summary>✒ The letter Rowan kept <span class="how">· Handed over when you deliver the Star Metal.</span></summary><div class="dbody"><div class="letter"><div class="lhead">✒ The letter Rowan kept</div><div class="lbody">Kiddo,<br><br>If Rowan handed you this, then you've been down to the vault and back, and the Star Metal is in the valley's hands again. He'll pretend he isn't moved. He is.<br><br>Rowan and I didn't speak the last ten years of my life. He thought I'd let the valley die out of self-pity. He was right — and I couldn't stand that he was right. Old men are fools twice: once for the grieving, once for the pride.<br><br>You've a gentler way than I ever had. Use it on him.<br><br>One thing left undone. Light the lanterns. Fill the table. Do the thing I couldn't.<br><br>— Grandpa</div></div></div></details><details><summary>✒ The letter Rowan never sent <span class="how">· Rowan's 6-heart scene — the letter he wrote Grandpa and couldn't deliver.</span></summary><div class="dbody"><div class="letter"><div class="lhead">✒ The letter Rowan never sent</div><div class="lbody">Old friend,<br><br>You will not open your door to me, so I will put it under it.<br><br>I called you a coward in front of the whole Guild. I have turned that hour over every night since, and it never once comes out differently: I was standing in a hall you built, wearing a pin you gave me, telling a man who had just buried the woman he loved that he owed the valley a festival.<br><br>I did not know how to say I miss her too. So I said you were failing us. It was the cruellest available sentence and I reached for it because it was the only one that did not require me to weep in front of you.<br><br>Rosa used to say the two of us were the same man, poured into different weather.<br><br>The wings can stay dark, Aldous. Come and sit in the dark hall with me. I will not say one word about the crafts. I will not say one word at all, if that is what it takes.<br><br>Only open the door.<br><br>— Rowan</div></div></div></details><details><summary>✒ Carved into the standing stone <span class="how">· The memorial raised at the end of Act II.</span></summary><div class="dbody"><div class="letter"><div class="lhead">✒ Carved into the standing stone</div><div class="lbody">ROSA ALDERMAN — who fed the valley<br>ALDOUS — who lit its lanterns<br><br>— and folded into the stone, in a hand you know —<br><br>Kiddo,<br><br>If there's a stone here, then someone finally said the thing out loud, and I'd bet the farm it was you.<br><br>Here is the truth I never wrote down. The festival did not die because I was sad. It died because I was ashamed. Rosa and I planned that last one together at her kitchen table, and she went into the ground three weeks before it, and when the night came I could not walk down to that water and be the man who lit the lanterns without her.<br><br>So I didn't go. And the next year it was easier not to go. And the year after that, there was nothing to not go to.<br><br>Grief you can live alongside. It moves in, it eats your bread, and eventually the two of you come to an arrangement. It's the shame that shuts the doors — shame at the year you missed, and the friend you didn't answer, and the boy who walked north up the coast road because his mother was gone and nobody in this valley, myself first among them, went after him.<br><br>Elias. If you are reading this beside him, then you did the one thing I was too proud and too slow to do.<br><br>Don't put me on this stone alone. Put her name first. She'd have hated the fuss and she'd have stayed for all of it.<br><br>Light them every year, kiddo. Even the year you don't feel like it. Especially that one.<br><br>— Grandpa</div></div></div></details><details><summary>✒ One last letter, tucked inside a lantern <span class="how">· Read as the lanterns rise at the Grand Festival.</span></summary><div class="dbody"><div class="letter"><div class="lhead">✒ One last letter, tucked inside a lantern</div><div class="lbody">My dear grandchild,<br><br>I'm not there tonight — but I know exactly how it looks, because I saw it a hundred times before I let it go dark. The lanterns doubling on the black water. The Aldermans laughing. Tom giving away more than he sells. Some child eating far too much.<br><br>You did the one thing I never could: you let the valley gather again. That was always the ninth craft. Not farming, not fishing — the making of a place people want to stay.<br><br>Look up when the lanterns rise. That one's mine. Rosa's is the one beside it.<br><br>Welcome home, kiddo. You always were.<br><br>— Grandpa</div></div></div></details>
+
+<h3>Grandpa's Almanac — nine torn pages</h3>
+<p class="prose">Found by <i>doing things in the places he lived</i>, not by hunting collectibles.
+They carry the story through the long middle where the quest chain goes quiet.</p>
+<div class="tw"><table><thead><tr><th>#</th><th>Page</th><th>How it's found</th></tr></thead><tbody><tr><td>1</td><td><b>On Soil</b></td><td>Till your first patch of soil</td></tr><tr><td>2</td><td><b>On the Deep</b></td><td>Reach mine floor 3</td></tr><tr><td>3</td><td><b>On Pine</b></td><td>Chop down a pine</td></tr><tr><td>4</td><td><b>On Salmon</b></td><td>Catch a salmon</td></tr><tr><td>5</td><td><b>On the Nine</b></td><td>Visit the Guild with five wings lit</td></tr><tr><td>6</td><td><b>On Rain</b></td><td>Wake to a rainy morning</td></tr><tr><td>7</td><td><b>On Giving</b></td><td>Give a neighbour a gift</td></tr><tr><td>8</td><td><b>On the Vault</b></td><td>Open the vault (Mining 20)</td></tr><tr><td>9</td><td><b>The Last Page</b></td><td>The morning after the memorial, with all eight pages found — slipped under the cottage door</td></tr></tbody></table></div>
+<details><summary>Page 1 — On Soil</summary><div class="dbody"><div class="letter"><div class="lhead">✒ A torn page — On Soil</div><div class="lbody">Spring, some year or other.<br><br>The first cut of the season and the ground still argues with me. It always does. Rosa says a field is a conversation you have once a year with something that does not speak your language and does not intend to learn it.<br><br>She is, as usual, right, and I shall not be telling her so.<br><br>Turn it, water it, and let it be. The soil has never once needed my opinion.</div></div></div></details><details><summary>Page 2 — On the Deep</summary><div class="dbody"><div class="letter"><div class="lhead">✒ A torn page — On the Deep</div><div class="lbody">Third floor down, and the lamp guttering.<br><br>Rowan swears the old Guild cut these tunnels looking for star metal, and I swear they cut them looking for a reason not to go home. Both can be true of a man with a pick.<br><br>The deep is honest, at least. It gives you exactly what you are willing to swing for, and it never once pretends to like you.<br><br>Come up before your light does. Always.</div></div></div></details><details><summary>Page 3 — On Pine</summary><div class="dbody"><div class="letter"><div class="lhead">✒ A torn page — On Pine</div><div class="lbody">Cut the big pine on the ridge today. I was sixty-one and wept like a child, and I have no explanation I care to offer.<br><br>Rosa planted it the year we opened the Guild. She'd have called me a sentimental old fool and then she'd have kept a piece of it on the mantel, so I have kept a piece of it on the mantel.<br><br>Pine takes the water. That is what it is for. Remember that.</div></div></div></details><details><summary>Page 4 — On Salmon</summary><div class="dbody"><div class="letter"><div class="lhead">✒ A torn page — On Salmon</div><div class="lbody">The run came late this year and Bram's father sat on those rocks for eleven days waiting for it, and on the twelfth he caught more fish than his boat could carry, and he gave every one of them away.<br><br>I asked him why. He looked at me as if I had asked why the tide.<br><br>'They came back,' he said. 'So I gave them back.'<br><br>I have thought about that sentence for thirty years.</div></div></div></details><details><summary>Page 5 — On the Nine</summary><div class="dbody"><div class="letter"><div class="lhead">✒ A torn page — On the Nine</div><div class="lbody">Five wings lit tonight. Five! I sat in the hall until the lamps burned down just to look at it.<br><br>A craft is not a job, whatever Tom's ledger says. A craft is a promise that you will still be here tomorrow, doing the thing badly, until one day you are doing it well.<br><br>Nine promises. That was all the Guild ever was. Nine people saying: I'll be here.<br><br>I meant mine. For a while, I meant mine.</div></div></div></details><details><summary>Page 6 — On Rain</summary><div class="dbody"><div class="letter"><div class="lhead">✒ A torn page — On Rain</div><div class="lbody">Rain, and nothing to do about it, which is the finest gift the sky gives a farmer.<br><br>Rosa is baking. The whole house smells of it. She has flour on her wrist and she is arguing with the oven and losing, and I am sitting here writing about rain because I do not have the words for the other thing.<br><br>If you are reading this on a wet morning: don't work. Sit down. Look at whoever is in the room.</div></div></div></details><details><summary>Page 7 — On Giving</summary><div class="dbody"><div class="letter"><div class="lhead">✒ A torn page — On Giving</div><div class="lbody">You cannot buy your way into a valley. I have watched men try.<br><br>But give a man a turnip he did not ask for, on a day he did not expect it, and you have done something a shop cannot do. It is not the turnip.<br><br>Tom knows this and pretends he doesn't. Rowan doesn't know it and pretends he does.<br><br>Give things away, kiddo. It is the only reliable interest rate I have ever found.</div></div></div></details><details><summary>Page 8 — On the Vault</summary><div class="dbody"><div class="letter"><div class="lhead">✒ A torn page — On the Vault</div><div class="lbody">It is behind the seal, and it will still be behind the seal when I am gone, because I have not got the arm for it any more and I have not got the heart to ask Rowan.<br><br>The metal isn't the founding gift. That's the joke of it. The gift was nine fools agreeing to meet on a beach once a year.<br><br>Whoever opens this door: the metal is heavy and it is not the point. Bring it up anyway. Rowan will pretend not to weep.</div></div></div></details><details><summary>Page 9 — The Last Page</summary><div class="dbody"><div class="letter"><div class="lhead">✒ A torn page — The Last Page</div><div class="lbody">My dear grandchild,<br><br>There is one thing I have not written down anywhere, and I find I can only write it on the last page of a book nobody was ever meant to finish.<br><br>Your mother left this valley at nineteen and she was right to. I told her so at the gate, and then I went inside and did not come out for two days.<br><br>She wrote every month. I answered perhaps one letter in three, because I am a coward with a pen, and because every letter I did not answer was a small proof that I was still angry about something I could not name.<br><br>She was not running from me. She was running from a place that had decided to stop.<br><br>And here you are, standing in the same kitchen, having done the one thing that would have brought her home.<br><br>Tell her. Don't wait as I waited. Sit down tonight and write the letter I never wrote, and put her name on it, and post it in the morning before you can talk yourself out of it.<br><br>That is the whole of my estate, kiddo. The farm is just where I kept it.<br><br>— Grandpa</div></div></div></details>
+</section>
+
+<section id="crafts"><h2>The Nine Crafts</h2>
+<p class="prose">The Guild Hall's nine wings are the game's macro-progress bar: each lights when
+the valley proves that craft lives again. The ninth was never a trade at all.</p>
+<div class="wings">
+  <div class="wing">
+    <span class="wnum">1</span><b>Farming</b>
+    <span class="wreq">Reach Farming 10</span>
+  </div>
+  <div class="wing">
+    <span class="wnum">2</span><b>Woodcutting</b>
+    <span class="wreq">Reach Woodcutting 8</span>
+  </div>
+  <div class="wing">
+    <span class="wnum">3</span><b>Mining</b>
+    <span class="wreq">Reach Mining 8</span>
+  </div>
+  <div class="wing">
+    <span class="wnum">4</span><b>Fishing</b>
+    <span class="wreq">Reach Fishing 8</span>
+  </div>
+  <div class="wing">
+    <span class="wnum">5</span><b>Cooking</b>
+    <span class="wreq">Cook 8 dishes</span>
+  </div>
+  <div class="wing">
+    <span class="wnum">6</span><b>Ranching</b>
+    <span class="wreq">Keep at least one hen</span>
+  </div>
+  <div class="wing">
+    <span class="wnum">7</span><b>Foraging</b>
+    <span class="wreq">Forage 10 wild finds</span>
+  </div>
+  <div class="wing">
+    <span class="wnum">8</span><b>Smithing</b>
+    <span class="wreq">Upgrade tools twice</span>
+  </div>
+  <div class="wing hearth">
+    <span class="wnum">9</span><b>Hearthcraft</b>
+    <span class="wreq">Hold the Grand Festival</span>
+  </div></div>
+</section>
+
+<section id="skills"><h2>Skills & Unlocks</h2>
+<p class="prose">Five skills, each 1–99 on the game's own curve (v2.8 “Earned”): the first levels
+are earned, the middle is a long steady climb, and only 95–99 steepen into the completionist
+crown. Every skill keeps paying past its last content unlock — <b>mastery perks land at
+25 / 50 / 75 / 99</b>, each announced by the villager who cares most. Carrying
+<b>Grandpa's Guild Pin</b> (from the chest letter) grants +10% XP to everything.</p>
+<div class="tw"><table><thead><tr><th>Level</th><th>Total XP</th><th>XP for this level</th></tr></thead><tbody><tr><td>2</td><td>83</td><td>83</td></tr><tr><td>5</td><td>388</td><td>112</td></tr><tr><td>10</td><td>1,154</td><td>185</td></tr><tr><td>20</td><td>4,470</td><td>497</td></tr><tr><td>25</td><td>7,842</td><td>814</td></tr><tr><td>40</td><td>37,224</td><td>3,576</td></tr><tr><td>50</td><td>101,333</td><td>9,612</td></tr><tr><td>65</td><td>449,428</td><td>42,413</td></tr><tr><td>75</td><td>1,210,421</td><td>114,143</td></tr><tr><td>90</td><td>5,346,332</td><td>504,037</td></tr><tr><td>95</td><td>8,771,558</td><td>826,944</td></tr><tr><td>99</td><td>13,034,431</td><td>1,228,825</td></tr></tbody></table></div>
+<p class="prose small">Reaching 99 in one skill ≈ 13034k XP. For scale: a turnip harvest is 12 XP, a starfruit 150, a Golden Koi 190.</p>
+
+    <div class="skill">
+      <h3>🌱 Farming</h3>
+      <div class="tw"><table><thead><tr><th>Lvl</th><th>Unlock</th></tr></thead><tbody><tr><td>1</td><td><span class="pal"><i style="background:#4f8a34"></i><i style="background:#6fb04a"></i><i style="background:#e8d5ef"></i><i style="background:#ffffff"></i></span> <b>Turnip</b> — <span class="chip sp">Spring</span> · 2d · seed 20g → sells 35g</td></tr><tr><td>3</td><td><span class="pal"><i style="background:#4f8a34"></i><i style="background:#6fb04a"></i><i style="background:#caa06a"></i><i style="background:#e6c793"></i></span> <b>Potato</b> — <span class="chip sp">Spring</span> · 3d · seed 40g → sells 70g</td></tr><tr><td>4</td><td><span class="pal"><i style="background:#7a8a3a"></i><i style="background:#a0b055"></i><i style="background:#e8d94a"></i><i style="background:#fff0a0"></i></span> <b>Wheat</b> — <span class="chip su">Summer</span> <span class="chip fa">Fall</span> · 4d · seed 35g → sells 60g</td></tr><tr><td>6</td><td><span class="pal"><i style="background:#4f8a34"></i><i style="background:#7fbe55"></i><i style="background:#ff9438"></i><i style="background:#ffbe6a"></i></span> <b>Carrot</b> — <span class="chip sp">Spring</span> <span class="chip fa">Fall</span> · 3d · seed 60g → sells 100g</td></tr><tr><td>10</td><td><span class="pal"><i style="background:#3f7a2e"></i><i style="background:#5fa03e"></i><i style="background:#ff4d55"></i><i style="background:#ff9aa0"></i></span> <b>Strawberry</b> — <span class="chip sp">Spring</span> <span class="chip su">Summer</span> · 4d · seed 100g → sells 170g</td></tr><tr><td>8</td><td><span class="pal"><i style="background:#3f7a2e"></i><i style="background:#5fa03e"></i><i style="background:#5a6ad0"></i><i style="background:#9aa8ea"></i></span> <b>Blueberry</b> — <span class="chip su">Summer</span> · 4d · seed 90g → sells 150g</td></tr><tr><td>12</td><td><span class="pal"><i style="background:#3f7a2e"></i><i style="background:#5fa03e"></i><i style="background:#e0452a"></i><i style="background:#ff8a6a"></i></span> <b>Tomato</b> — <span class="chip su">Summer</span> · 4d · seed 110g → sells 180g</td></tr><tr><td>16</td><td><span class="pal"><i style="background:#4f8a34"></i><i style="background:#7fbe55"></i><i style="background:#ffd94a"></i><i style="background:#fff0a0"></i></span> <b>Corn</b> — <span class="chip su">Summer</span> <span class="chip fa">Fall</span> · 5d · seed 150g → sells 250g</td></tr><tr><td>18</td><td><span class="pal"><i style="background:#3f7a2e"></i><i style="background:#5fa03e"></i><i style="background:#c02a3a"></i><i style="background:#ff5a6a"></i></span> <b>Cranberry</b> — <span class="chip fa">Fall</span> · 5d · seed 170g → sells 280g</td></tr><tr><td>22</td><td><span class="pal"><i style="background:#3f7a2e"></i><i style="background:#5fa03e"></i><i style="background:#ff8a2a"></i><i style="background:#ffb35a"></i></span> <b>Pumpkin</b> — <span class="chip fa">Fall</span> · 6d · seed 220g → sells 400g</td></tr><tr><td>24</td><td><span class="pal"><i style="background:#4f8a34"></i><i style="background:#7fbe55"></i><i style="background:#ffe25a"></i><i style="background:#fff6b0"></i></span> <b>Starfruit</b> — <span class="chip su">Summer</span> · 8d · seed 450g → sells 950g</td></tr><tr><td>14</td><td><span class="pal"><i style="background:#4a6a7a"></i><i style="background:#6a94a8"></i><i style="background:#a8d8f0"></i><i style="background:#e6f6ff"></i></span> <b>Frostbloom</b> — <span class="chip wi">Winter</span> · 6d · seed 180g → sells 330g</td></tr><tr><td><b class="gold">★ 25</b></td><td><i>Deep Roots — watered soil sometimes stays wet overnight</i></td></tr><tr><td><b class="gold">★ 50</b></td><td><i>Bountiful — crops sometimes yield twice</i></td></tr><tr><td><b class="gold">★ 75</b></td><td><i>Green Thumb — crops sometimes grow two days in one night</i></td></tr><tr><td><b class="gold">★ 99</b></td><td><i>Fields of Gold — double yields become common</i></td></tr></tbody></table></div>
+    </div>
+
+    <div class="skill">
+      <h3>🪓 Woodcutting</h3>
+      <div class="tw"><table><thead><tr><th>Lvl</th><th>Unlock</th></tr></thead><tbody><tr><td>1</td><td><span class="pal"><i style="background:#3f8a3f"></i><i style="background:#57ad57"></i><i style="background:#2f6a2f"></i></span> <b>Oak</b> — drops 2 × Wood (12g each)</td></tr><tr><td>8</td><td><span class="pal"><i style="background:#2f6a52"></i><i style="background:#3f8f6a"></i><i style="background:#204a3a"></i></span> <b>Pine</b> — drops 2 × Pine Wood (28g each)</td></tr><tr><td>18</td><td><span class="pal"><i style="background:#b8683a"></i><i style="background:#d68a52"></i><i style="background:#8a4a28"></i></span> <b>Maple</b> — drops 2 × Maple Wood (52g each)</td></tr><tr><td><b class="gold">★ 25</b></td><td><i>Easy Swing — some swings cost no energy</i></td></tr><tr><td><b class="gold">★ 50</b></td><td><i>Clean Fell — every tree gives an extra log</i></td></tr><tr><td><b class="gold">★ 75</b></td><td><i>Steward — the woods grow back faster</i></td></tr><tr><td><b class="gold">★ 99</b></td><td><i>One Stroke — an oak falls to a single swing</i></td></tr></tbody></table></div>
+    </div>
+
+    <div class="skill">
+      <h3>⛏ Mining</h3>
+      <div class="tw"><table><thead><tr><th>Lvl</th><th>Unlock</th></tr></thead><tbody><tr><td>1</td><td><b>Stone Rock</b> — drops Stone (3g)</td></tr><tr><td>1</td><td><b>Copper Vein</b> — drops Copper Ore (30g) · can hold a gem</td></tr><tr><td>12</td><td><b>Iron Vein</b> — drops Iron Ore (68g) · can hold a gem</td></tr><tr><td>28</td><td><b>Gold Vein</b> — drops Gold Ore (165g) · can hold a gem</td></tr><tr><td>20</td><td><b>The sealed vault</b> — break the seal on the deep floor and recover the Star Metal (story)</td></tr><tr><td><b class="gold">★ 25</b></td><td><i>Sure Grip — some swings cost no energy</i></td></tr><tr><td><b class="gold">★ 50</b></td><td><i>Rich Seam — veins sometimes give twice</i></td></tr><tr><td><b class="gold">★ 75</b></td><td><i>Gemcutter — gems are worth far more experience</i></td></tr><tr><td><b class="gold">★ 99</b></td><td><i>Stonebreaker — no vein takes more than two swings</i></td></tr></tbody></table></div>
+    </div>
+
+    <div class="skill">
+      <h3>🎣 Fishing</h3>
+      <div class="tw"><table><thead><tr><th>Lvl</th><th>Unlock</th></tr></thead><tbody><tr><td>1</td><td><span class="pal"><i style="background:#8fb0c0"></i><i style="background:#d8e6ee"></i></span> <b>Sardine</b> — 30g · lives in pond & coast</td></tr><tr><td>5</td><td><span class="pal"><i style="background:#5f7a4a"></i><i style="background:#a9c98a"></i></span> <b>Bass</b> — 65g · lives in pond & coast</td></tr><tr><td>12</td><td><span class="pal"><i style="background:#7a6a9a"></i><i style="background:#c9b0e0"></i></span> <b>Trout</b> — 120g · lives in pond</td></tr><tr><td>20</td><td><span class="pal"><i style="background:#d76a4a"></i><i style="background:#ffb090"></i></span> <b>Salmon</b> — 240g · lives in coast</td></tr><tr><td>32</td><td><span class="pal"><i style="background:#ffb02a"></i><i style="background:#ffe27a"></i></span> <b>Golden Koi</b> — 620g · lives in pond & coast</td></tr><tr><td>14</td><td><span class="pal"><i style="background:#e8b23a"></i><i style="background:#fff0b0"></i></span> <b class="gold">★ Sunfleck</b> — legendary, 700g (see The Hunt)</td></tr><tr><td>22</td><td><span class="pal"><i style="background:#8a9ad0"></i><i style="background:#dfe6ff"></i></span> <b class="gold">★ Moonscale</b> — legendary, 800g (see The Hunt)</td></tr><tr><td>30</td><td><span class="pal"><i style="background:#cfd6e0"></i><i style="background:#ffffff"></i></span> <b class="gold">★ Whitefin</b> — legendary, 950g (see The Hunt)</td></tr><tr><td>26</td><td><span class="pal"><i style="background:#5a8aa8"></i><i style="background:#cfeaff"></i></span> <b class="gold">★ Frostjaw</b> — legendary, 850g (see The Hunt)</td></tr><tr><td>34</td><td><span class="pal"><i style="background:#6a5a9a"></i><i style="background:#c9b6ff"></i></span> <b class="gold">★ Stormrider</b> — legendary, 1200g (see The Hunt)</td></tr><tr><td><b class="gold">★ 25</b></td><td><i>Still Water — the fish bite sooner</i></td></tr><tr><td><b class="gold">★ 50</b></td><td><i>Steady Hand — a taller catch bar</i></td></tr><tr><td><b class="gold">★ 75</b></td><td><i>Angler's Eye — a far more forgiving perfect catch</i></td></tr><tr><td><b class="gold">★ 99</b></td><td><i>Deep Caller — your catch sometimes runs bigger</i></td></tr></tbody></table></div>
+    </div>
+
+    <div class="skill">
+      <h3>🍳 Cooking</h3>
+      <div class="tw"><table><thead><tr><th>Lvl</th><th>Unlock</th></tr></thead><tbody><tr><td>undefined</td><td><b>Fried Egg</b> — 1× Egg · 45 energy · 90g</td></tr><tr><td>undefined</td><td><b>Baked Potato</b> — 1× Potato · 42 energy · 95g</td></tr><tr><td>undefined</td><td><b>Bread</b> — 2× Wheat · 48 energy · 160g</td></tr><tr><td>undefined</td><td><b>Garden Salad</b> — 1× Field Salad + 1× Carrot · 55 energy · 160g</td></tr><tr><td>undefined</td><td><b>Berry Jam</b> — 2× Strawberry · 50 energy · 440g</td></tr><tr><td>undefined</td><td><b>Corn Bread</b> — 1× Corn + 1× Wheat · 72 energy · 400g</td></tr><tr><td>undefined</td><td><b>Tomato Soup</b> — 2× Tomato · 66 energy · 470g</td></tr><tr><td>undefined</td><td><b>Blueberry Tart</b> — 2× Blueberry + 1× Wheat · 80 energy · 470g</td></tr><tr><td>undefined</td><td><b>Pumpkin Soup</b> — 1× Pumpkin + 1× Milk · 95 energy · 680g</td></tr><tr><td>undefined</td><td><b>Farmer's Omelette</b> — 2× Egg + 1× Milk · 100 energy · 360g</td></tr><tr><td>undefined</td><td><b>Fish Stew</b> — 1× Salmon + 1× Carrot + 1× Tomato · 88 energy · 680g</td></tr><tr><td>undefined</td><td><b>Cranberry Sauce</b> — 2× Cranberry · 60 energy · 730g</td></tr><tr><td>undefined</td><td><b>Frostbloom Tea</b> — 1× Frostbloom + 1× Milk · 70 energy · 590g</td></tr><tr><td><b class="gold">★ 25</b></td><td><i>Second Helping — you sometimes plate two</i></td></tr><tr><td><b class="gold">★ 50</b></td><td><i>Hearth Warmth — every dish restores more energy</i></td></tr><tr><td><b class="gold">★ 75</b></td><td><i>Comfort Food — a cooked dish is beloved by anyone who likes cooking</i></td></tr><tr><td><b class="gold">★ 99</b></td><td><i>Renowned — your cooking fetches a premium</i></td></tr></tbody></table></div>
+    </div>
+
+<h3>Tools — four tiers each</h3>
+<p class="prose">Five tools (Hoe, Can, Axe, Pick, Rod), upgraded at Tom's forge. Power multiplies the work per swing.</p>
+<div class="tw"><table><thead><tr><th>Tier</th><th>Power</th><th>Cost</th></tr></thead><tbody><tr><td><b>Basic</b></td><td>×1</td><td>— (starting kit)</td></tr><tr><td><b>Copper</b></td><td>×2</td><td>300g + 5 × Copper Ore</td></tr><tr><td><b>Iron</b></td><td>×3</td><td>1,200g + 5 × Iron Ore</td></tr><tr><td><b>Gold</b></td><td>×5</td><td>5,000g + 5 × Gold Ore</td></tr></tbody></table></div>
+</section>
+
+<section id="world"><h2>The World</h2>
+<p class="prose">One valley, 9 places. Only the farm persists between
+days — interiors, the mine, and the coast regenerate each morning, which is why the mine can be
+endless and the beach can be storm-strewn. Late-game gold buys back three pieces of the old
+valley (Rowan's ledger), which then exist in the world forever.</p>
+<div class="maps">
+  <div class="map">
+    <b>Willowbrook Farm</b>
+    <span class="dims">outdoor · 60×46</span>
+    <p>Where you wake on day 1. Fields, the pond, the meadow, the orchard ground, and every door below leads off it.</p>
+  </div>
+  <div class="map">
+    <b>Your Cottage</b> <i class="sub">· home sweet home</i>
+    <span class="dims">interior · 11×9</span>
+    <p>Your front door, on the farm. Sleep here to pass the night; the chest holds a letter, later.</p>
+  </div>
+  <div class="map">
+    <b>The Coop</b> <i class="sub">· cluck, cluck</i>
+    <span class="dims">interior · 12×9</span>
+    <p>On the farm — houses up to 6 hens (300g each at Tom's).</p>
+  </div>
+  <div class="map">
+    <b>The Barn</b> <i class="sub">· warm straw, slow breathing</i>
+    <span class="dims">interior · 14×10</span>
+    <p>On the farm — houses up to 4 cows (600g each at Tom's).</p>
+  </div>
+  <div class="map">
+    <b>Tom's General Store</b> <i class="sub">· coin for goods</i>
+    <span class="dims">interior · 14×9</span>
+    <p>East path, in town. Selling, seeds, tools, animals, saplings, hives — and the noticeboard by the door.</p>
+  </div>
+  <div class="map">
+    <b>The Alderman House</b>
+    <span class="dims">interior · 12×9</span>
+    <p>In town. Maya's home (and later, Elias's tea by the pond).</p>
+  </div>
+  <div class="map">
+    <b>Guild of Nine Crafts</b> <i class="sub">· once, the heart of the valley</i>
+    <span class="dims">interior · 17×11</span>
+    <p>North of town. Elder Rowan keeps the nine dark wings; the story's heart.</p>
+  </div>
+  <div class="map">
+    <b>The Old Mine</b>
+    <span class="dims">interior · 34×22</span>
+    <p>North ridge. Endless floors, regenerated daily. The Old Lift beside each floor's ladder rides to the surface free; every 5th floor's stop can be restored (wood + ore + gold) to skip down forever. Time stands still underground. The sealed vault waits below (Mining 20).</p>
+  </div>
+  <div class="map">
+    <b>Willowbrook Coast</b> <i class="sub">· salt on the breeze</i>
+    <span class="dims">outdoor · 46×24</span>
+    <p>South path. Bram's coast — salmon water, shore forage, festivals, and every finale.</p>
+  </div></div>
+
+<h3>Rowan's restoration projects — ~16,000g of world-changing sinks</h3>
+<div class="tw"><table><thead><tr><th>Project</th><th>Costs</th><th>What it changes</th></tr></thead><tbody><tr><td><b>The Minecart Line</b></td><td>8,000g + 20× Iron Ore + 30× Wood</td><td>Re-lay the old rails from the cottage to the mine mouth. No more trudging the ridge. <i>(The rails are re-laid. A cart waits at each end.)</i></td></tr><tr><td><b>The Coast Boardwalk</b></td><td>5,000g + 40× Wood + 10× Pine Wood</td><td>Plank the marsh path and hang lanterns. The coast stops being a hike. <i>(The boardwalk is laid, and the lanterns are lit.)</i></td></tr><tr><td><b>The Town Fountain</b></td><td>3,000g + 10× Stone + 2× Emerald</td><td>A fountain by Tom's door, as there was once. Toss a coin; word of your wish gets around. <i>(The fountain runs again. Pip has already fallen in.)</i></td></tr></tbody></table></div>
+<p class="prose small">The fountain adds a daily ritual: toss 10g and someone in the valley hears you were thinking of them (+10 hearts).</p>
+</section>
+
+<section id="people"><h2>The People</h2>
+<p class="prose">Six villagers, each with a dialogue ladder that deepens by heart tier (0–6 ♥,
+100 points per heart; talking daily and gifting build it, a birthday gift counts triple). The
+scripted heart scenes below are where the backstory actually lives.</p>
+
+  <div class="npc">
+    <div class="nhead"><b>Maya</b><span class="chip pink">romanceable ♥</span><span class="bday">birthday: Spring 19</span></div>
+    <p class="role">Painter of the festival that was; the story's heart, and Act II's reason.</p>
+    <p class="gifts"><b>Loves</b> <span class="chip gold">Strawberry</span> <span class="chip gold">Golden Koi</span> <span class="chip gold">Diamond</span> <span class="chip gold">Pearl</span> · <b>likes</b> <span class="chip ">Cooked</span> <span class="chip ">Starfruit</span> <span class="chip ">Carrot</span> <span class="chip ">Coral</span></p>
+    <p class="firstline">“Oh! You must be the one who took over the old farm. I'm Maya Alderman. It's... good to have someone here again. The valley's been so quiet.”</p>
+    <details><summary>Heart scene at 2 ♥</summary><div class="dbody"><p class="line"><b>Maya</b> Oh — hey. Can I show you something? I don't usually show people this.</p><p class="line"><b>Maya</b> My sketchbook. The valley the way it was — the festival, the lanterns doubled on the black water, the long table. I was small, but I remember the light.</p><p class="line"><b>Maya</b> Grandma Rosa baked for the whole valley that night. Then she was gone… and it just never happened again. I keep drawing it anyway. Silly, right?</p><p class="line"><b>You</b> …Not silly at all.</p><p class="line"><b>Maya</b> …Thank you. For listening. Most people change the subject.</p></div></details><details><summary>Heart scene at 4 ♥</summary><div class="dbody"><p class="line"><b>Maya</b> You're always working. Come here — just for a minute. Watch the water with me.</p><p class="line"><b>Maya</b> Papa fished the Golden Koi right here at dusk. He said the valley talks to you, if you're quiet enough to hear it.</p><p class="line"><b>Maya</b> For years it only said sad things. Lately… it's been saying your name. …Forget I said that.</p><p class="line"><b>Maya</b> Here — I packed you lunch. Now go, before I say something I can't take back.</p></div></details><details><summary>Heart scene at 6 ♥</summary><div class="dbody"><p class="line"><b>Maya</b> Can I be honest? When you first turned up, I told myself not to hope. This valley taught me that lesson well.</p><p class="line"><b>Maya</b> But you woke it up. The fields, the Guild, the folk drifting home… and me. You woke me up too.</p><p class="line"><b>Maya</b> I won't say the rest yet. But I wanted you to know it's there, waiting. …Okay. That's — that's quite enough of that.</p><p class="ban">✦ ♥ Maya, 6 hearts — There's a bouquet at Tom's, if you're ready.</p></div></details>
+    
+  </div>
+  <div class="npc">
+    <div class="nhead"><b>Tom</b><span class="bday">birthday: Summer 6</span></div>
+    <p class="role">Shopkeeper who kept the lights on out of stubbornness. Runs the forge, the stock, and the demand ledger.</p>
+    <p class="gifts"><b>Loves</b> <span class="chip gold">Pumpkin</span> <span class="chip gold">Gold Ore</span> · <b>likes</b> <span class="chip ">Wood</span> <span class="chip ">Copper Ore</span> <span class="chip ">Iron Ore</span></p>
+    <p class="firstline">“Welcome, welcome! Coin for goods, goods for coin — that's the Tom guarantee. Counter's right here.”</p>
+    <details><summary>Heart scene at 3 ♥</summary><div class="dbody"><p class="line"><b>Tom</b> Between us? I overstock on purpose. A full shop looks like a busy town. Busy towns don't close.</p><p class="line"><b>Tom</b> When the Guild shut and folks left for the coast cities, I kept the lights on out of pure stubbornness. Sold to nobody for years.</p><p class="line"><b>Tom</b> Then you turn up hauling crops and ore like it's nothing. First real customer I've had in a decade. …Don't make it weird. Here.</p></div></details><details><summary>Heart scene at 5 ♥</summary><div class="dbody"><p class="line"><b>Tom</b> See this ledger? Don't read it. …Fine. Read it.</p><p class="line"><b>Tom</b> Every name in this valley's in there, and every one's got a line through it. Bram, that winter the boats couldn't go out. Rowan's coal, four years running. Half the folk who left still owe me and I struck them out too.</p><p class="line"><b>Tom</b> Your grandfather's on page one. Biggest debt in the book. He came in the spring after Rosa died and bought seed he never planted, just so I'd have a sale that week.</p><p class="line"><b>You</b> …Tom. How much did he owe you?</p><p class="line"><b>Tom</b> Nothing. Never did. Take it — his credit, and it's yours now. Don't argue with a shopkeeper about his own books.</p><p class="line"><b>Tom</b> Now get out of my shop before I get sentimental in front of the turnips.</p></div></details>
+    
+  </div>
+  <div class="npc">
+    <div class="nhead"><b>Elder Rowan</b><span class="bday">birthday: Fall 3</span></div>
+    <p class="role">Last keeper of the Guild. Gives the story its spine, its projects, and its hardest apology.</p>
+    <p class="gifts"><b>Loves</b> <span class="chip gold">Star Metal</span> <span class="chip gold">Diamond</span> · <b>likes</b> <span class="chip ">Emerald</span> <span class="chip ">Ruby</span> <span class="chip ">Starfruit</span> <span class="chip ">Guild Seal</span></p>
+    <p class="firstline">“Ah. A new hand on old soil. I am Rowan — last keeper of the Guild of Nine Crafts. Look around: nine wings, all gone dark.”</p>
+    <details><summary>Heart scene at 4 ♥</summary><div class="dbody"><p class="line"><b>Elder Rowan</b> You remind me of him, you know. Your grandfather. The same stubborn kindness.</p><p class="line"><b>Elder Rowan</b> We didn't speak the last ten years of his life. I called him a coward for letting the festival die. He called me a fossil for clinging to it. We were both right.</p><p class="line"><b>Elder Rowan</b> Grief made a fool of a good man; pride made one of me. Don't wait as long as we did to say the thing, child. Whoever it is you're not saying it to.</p></div></details><details><summary>Heart scene at 6 ♥</summary><div class="dbody"><p class="line"><b>Elder Rowan</b> Sit. There's a thing in this desk I've moved from drawer to drawer for eleven years, and I am too old to keep carrying it.</p><p class="line"><b>Elder Rowan</b> I wrote it the winter he stopped answering his door. I never sent it. Every year I told myself I'd walk it up the hill in the spring.</p><p class="line"><b>Elder Rowan</b> He's past reading it. You're not. Go on.</p><div class="letter"><div class="lhead">✒ A letter Rowan never sent</div><div class="lbody">Old friend,<br><br>You will not open your door to me, so I will put it under it.<br><br>I called you a coward in front of the whole Guild. I have turned that hour over every night since, and it never once comes out differently: I was standing in a hall you built, wearing a pin you gave me, telling a man who had just buried the woman he loved that he owed the valley a festival.<br><br>I did not know how to say I miss her too. So I said you were failing us. It was the cruellest available sentence and I reached for it because it was the only one that did not require me to weep in front of you.<br><br>Rosa used to say the two of us were the same man, poured into different weather.<br><br>The wings can stay dark, Aldous. Come and sit in the dark hall with me. I will not say one word about the crafts. I will not say one word at all, if that is what it takes.<br><br>Only open the door.<br><br>— Rowan</div></div><p class="line"><b>Elder Rowan</b> …Well. That's that.</p><p class="line"><b>Elder Rowan</b> Keep it. It was always going to end up in his family's hands. It simply took the long way round.</p></div></details>
+    
+  </div>
+  <div class="npc">
+    <div class="nhead"><b>Bram</b><span class="chip pink">romanceable ♥</span><span class="bday">birthday: Winter 11</span></div>
+    <p class="role">The coast's quiet fisherman. Keeper of the Hunt's five secrets — and of one much heavier.</p>
+    <p class="gifts"><b>Loves</b> <span class="chip gold">Golden Koi</span> <span class="chip gold">Pearl</span> · <b>likes</b> <span class="chip ">Salmon</span> <span class="chip ">Coral</span> <span class="chip ">Cooked Salmon</span></p>
+    <p class="firstline">“Careful on the rocks. Name's Bram — I fish this coast dawn to dusk. Quieter company than people, fish.”</p>
+    <details><summary>Heart scene at 3 ♥</summary><div class="dbody"><p class="line"><b>Bram</b> …Still here. Most folk get bored of a quiet man and wander off. Sit, if you like. The fish don't mind company.</p><p class="line"><b>Bram</b> My family made the water lanterns. Every year. Waxed paper, a little wood boat, a candle. The whole coast would glow. …My hands still remember the folds.</p><p class="line"><b>Bram</b> If the festival ever comes back… I'll make them again. Don't go telling folk I said I'd enjoy it.</p></div></details><details><summary>Heart scene at 5 ♥</summary><div class="dbody"><p class="line"><b>Bram</b> You've heard Maya speak of her father. Elias. Off at the city ports, she says. Writes when he remembers.</p><p class="line"><b>Bram</b> He isn't at the ports. Hasn't been, not once in eleven years. He's at Marrow Point — forty miles up the coast — working a ferry for a man half his age.</p><p class="line"><b>You</b> …You've seen him.</p><p class="line"><b>Bram</b> Twice. He posts his letters from the port town so the mark's right. He asked me not to tell her. I gave my word, and I have kept it, and it has sat on my chest like a stone every day since.</p><p class="line"><b>You</b> Why would he stay away?</p><p class="line"><b>Bram</b> He left the week they buried his mother. Couldn't say why, not even to himself. And every year he didn't come back made coming back harder.</p><p class="line"><b>Bram</b> That's all shame is, in the end. Arithmetic.</p><p class="line"><b>Bram</b> …I've told you now. I'm tired of keeping it. Do what you're going to do.</p></div></details><details><summary>Heart scene at 6 ♥</summary><div class="dbody"><p class="line"><b>Bram</b> Tide's out. Sit a while. …No, don't fish. Just sit.</p><p class="line"><b>Bram</b> I've had a great deal of quiet in my life. Chose most of it. It stopped being a choice somewhere along the way and just became the shape of me.</p><p class="line"><b>Bram</b> Then you started turning up. Saying nothing. Sitting badly on cold rocks. And the quiet went from a thing I kept to a thing I share.</p><p class="line"><b>Bram</b> I'm no good at the next part. I've watched folk in this valley say what they mean far too late — Rowan, your grandfather, me. So: I'd like you to know where I stand. That's all.</p><p class="ban">✦ ♥ Bram, 6 hearts — There's a bouquet at Tom's, if you're ready.</p><p class="line"><b>Bram</b> …That's the most I've said in a year. Go on. Catch something.</p></div></details>
+    <p class="small prose">Bram also hands over one legendary-fish clue per heart earned — five in all (see The Hunt).</p>
+  </div>
+  <div class="npc">
+    <div class="nhead"><b>Pip</b><span class="bday">birthday: Spring 5</span></div>
+    <p class="role">Tom's kid. Has never seen a festival. The game's best questions.</p>
+    <p class="gifts"><b>Loves</b> <span class="chip gold">Amethyst</span> <span class="chip gold">Berry Bun</span> · <b>likes</b> <span class="chip ">Shell</span> <span class="chip ">Starfruit</span> <span class="chip ">Topaz</span></p>
+    <p class="firstline">“You're the new farmer! My dad's Tom — he runs the store. Mum runs the dairy down the coast, that's where the milk comes from! Are the crops magic? Can I have one? What's your favorite rock?”</p>
+    <details><summary>Heart scene at 2 ♥</summary><div class="dbody"><p class="line"><b>Pip</b> You're my BEST friend now, okay? I decided. You don't get a vote.</p><p class="line"><b>Pip</b> Best friends share treasure. So — here. My SHINIEST one. I found it myself! Rowan says it's an amethyst but I call him 'Gary.'</p><p class="line"><b>Pip</b> Take good care of Gary. If you ever sell him… I'll KNOW.</p></div></details><details><summary>Heart scene at 4 ♥</summary><div class="dbody"><p class="line"><b>Pip</b> Can I tell you a secret? I've never actually SEEN a festival. Not once. I just know all about them.</p><p class="line"><b>Pip</b> Mum describes it every single year. The lanterns. The long table. A man who juggled fish — FISH! And I nod like I remember, 'cause it makes her happy.</p><p class="line"><b>Pip</b> …Do you think I'll get to see one? A real one? With the lanterns and everything?</p><p class="line"><b>You</b> I'm working on it.</p><p class="line"><b>Pip</b> THAT'S WHAT I TOLD MUM YOU'D SAY. Here, take a shell. It's for luck. It's very lucky. Probably.</p></div></details>
+    
+  </div>
+  <div class="npc">
+    <div class="nhead"><b>Elias</b><span class="bday">birthday: —</span></div>
+    <p class="role">Maya's father, eleven years up the coast road. Joins the valley only if Act II brings him home.</p>
+    <p class="gifts"><b>Loves</b> <span class="chip gold">Golden Koi</span> <span class="chip gold">Pearl</span> · <b>likes</b> <span class="chip ">Trout</span> <span class="chip ">Salmon</span> <span class="chip ">Coral</span> <span class="chip ">Cooked</span></p>
+    <p class="firstline">“So you're the one. Aldous's grandchild. …He wrote to me once, you know. Eleven years ago. I never opened it. I have it still.”</p>
+    
+    
+  </div>
+
+<h3>Courtship & marriage</h3>
+<p class="prose">Two villagers can be wooed: <b>Maya and Bram</b>. At 6 ♥ each confides
+where they stand — which puts a <b>Willowbrook Bouquet</b> (500g) on Tom's shelf. Hand it to your
+beloved to propose; the wedding plays on the coast. A spouse tends a few crops overnight,
+sometimes leaves breakfast, and gets a whole new voice.</p>
+
+</section>
+
+<section id="calendar"><h2>Calendar & Weather</h2>
+<p class="prose">Four seasons of 28 days. Four festivals return every year on the
+coast — and after the finale, a fifth: <b>the Lantern Festival</b>, held forever on the
+anniversary of <i>your</i> festival night. Weather never takes anything away; each day
+<i>offers</i> something, posted on the noticeboard the evening before.</p>
+<h3>Festivals</h3>
+<div class="tw"><table><thead><tr><th>Festival</th><th>Date</th><th>Hours</th><th>What happens</th></tr></thead><tbody><tr><td><b>The Egg Fair</b></td><td>Spring 14</td><td>9am–6pm</td><td>Pip hides eggs all over the sand.</td></tr><tr><td><b>The Summer Luau</b></td><td>Summer 14</td><td>11am–7pm</td><td>Bring a fish for Bram's pot.</td></tr><tr><td><b>The Harvest Fair</b></td><td>Fall 22</td><td>9am–6pm</td><td>Your best crop of the season is judged.</td></tr><tr><td><b>The Star-Watch</b></td><td>Winter 24</td><td>7pm–2am</td><td>The valley watches the winter sky.</td></tr><tr><td><b>The Lantern Festival</b> <span class="chip gold">earned</span></td><td>the night you woke the valley</td><td>evening</td><td>The whole valley gathers again, every year after the finale.</td></tr></tbody></table></div>
+
+<h3>Birthdays</h3>
+<div class="tw"><table><thead><tr><th>Villager</th><th>Day</th></tr></thead><tbody><tr><td>Pip</td><td>Spring 5</td></tr><tr><td>Maya</td><td>Spring 19</td></tr><tr><td>Tom</td><td>Summer 6</td></tr><tr><td>Elder Rowan</td><td>Fall 3</td></tr><tr><td>Bram</td><td>Winter 11</td></tr></tbody></table></div>
+<h3>Weather — what each day offers</h3>
+<div class="tw"><table><thead><tr><th>Weather</th><th>The offer</th><th>Odds by season</th></tr></thead><tbody><tr><td>☀ <b>Clear</b></td><td>Fireflies at dusk.</td><td>Spring 55% · Summer 62% · Fall 48% · Winter 45%</td></tr><tr><td>☔ <b>Rain</b></td><td>The fish bite fast. Forage gives double. No watering needed.</td><td>Spring 30% · Summer 22% · Fall 28%</td></tr><tr><td>⛈ <b>Storm</b></td><td>The coast is too rough to fish — but the veins run rich underground. Tomorrow the beach will be strewn with wrack.</td><td>Spring 5% · Summer 10% · Fall 8%</td></tr><tr><td>🌫 <b>Fog</b></td><td>The seams read richer — gems come easier in the dark.</td><td>Spring 10% · Summer 6% · Fall 16% · Winter 13%</td></tr><tr><td>❄ <b>Snow</b></td><td>Frostberries in the meadow. Winter fish fetch a premium. The ground is frozen — your crops still need the can.</td><td>Winter 42%</td></tr></tbody></table></div>
+</section>
+
+<section id="economy"><h2>Economy & Collections</h2>
+<p class="prose"><b>Tom's demand:</b> the first few of any item sell at full price, then the price
+slides (never below 35%), recovering halfway overnight — a tax on <i>sameness</i>, not on any
+crop. Variety is the strategy the whole economy points at.</p>
+
+<h3>Crops (12)</h3>
+<div class="tw"><table><thead><tr><th>Lvl</th><th>Crop</th><th>Seasons</th><th>Grows</th><th>Seed</th><th>Sells</th><th>≈g/day</th></tr></thead><tbody><tr><td>1</td><td><span class="pal"><i style="background:#4f8a34"></i><i style="background:#6fb04a"></i><i style="background:#e8d5ef"></i><i style="background:#ffffff"></i></span> <b>Turnip</b></td><td><span class="chip sp">Spring</span></td><td>2d</td><td>20g</td><td>35g</td><td>8g</td></tr><tr><td>3</td><td><span class="pal"><i style="background:#4f8a34"></i><i style="background:#6fb04a"></i><i style="background:#caa06a"></i><i style="background:#e6c793"></i></span> <b>Potato</b></td><td><span class="chip sp">Spring</span></td><td>3d</td><td>40g</td><td>70g</td><td>10g</td></tr><tr><td>4</td><td><span class="pal"><i style="background:#7a8a3a"></i><i style="background:#a0b055"></i><i style="background:#e8d94a"></i><i style="background:#fff0a0"></i></span> <b>Wheat</b></td><td><span class="chip su">Summer</span> <span class="chip fa">Fall</span></td><td>4d</td><td>35g</td><td>60g</td><td>6g</td></tr><tr><td>6</td><td><span class="pal"><i style="background:#4f8a34"></i><i style="background:#7fbe55"></i><i style="background:#ff9438"></i><i style="background:#ffbe6a"></i></span> <b>Carrot</b></td><td><span class="chip sp">Spring</span> <span class="chip fa">Fall</span></td><td>3d</td><td>60g</td><td>100g</td><td>13g</td></tr><tr><td>8</td><td><span class="pal"><i style="background:#3f7a2e"></i><i style="background:#5fa03e"></i><i style="background:#5a6ad0"></i><i style="background:#9aa8ea"></i></span> <b>Blueberry</b></td><td><span class="chip su">Summer</span></td><td>4d</td><td>90g</td><td>150g</td><td>15g</td></tr><tr><td>10</td><td><span class="pal"><i style="background:#3f7a2e"></i><i style="background:#5fa03e"></i><i style="background:#ff4d55"></i><i style="background:#ff9aa0"></i></span> <b>Strawberry</b></td><td><span class="chip sp">Spring</span> <span class="chip su">Summer</span></td><td>4d</td><td>100g</td><td>170g</td><td>18g</td></tr><tr><td>12</td><td><span class="pal"><i style="background:#3f7a2e"></i><i style="background:#5fa03e"></i><i style="background:#e0452a"></i><i style="background:#ff8a6a"></i></span> <b>Tomato</b></td><td><span class="chip su">Summer</span></td><td>4d</td><td>110g</td><td>180g</td><td>18g</td></tr><tr><td>14</td><td><span class="pal"><i style="background:#4a6a7a"></i><i style="background:#6a94a8"></i><i style="background:#a8d8f0"></i><i style="background:#e6f6ff"></i></span> <b>Frostbloom</b></td><td><span class="chip wi">Winter</span></td><td>6d</td><td>180g</td><td>330g</td><td>25g</td></tr><tr><td>16</td><td><span class="pal"><i style="background:#4f8a34"></i><i style="background:#7fbe55"></i><i style="background:#ffd94a"></i><i style="background:#fff0a0"></i></span> <b>Corn</b></td><td><span class="chip su">Summer</span> <span class="chip fa">Fall</span></td><td>5d</td><td>150g</td><td>250g</td><td>20g</td></tr><tr><td>18</td><td><span class="pal"><i style="background:#3f7a2e"></i><i style="background:#5fa03e"></i><i style="background:#c02a3a"></i><i style="background:#ff5a6a"></i></span> <b>Cranberry</b></td><td><span class="chip fa">Fall</span></td><td>5d</td><td>170g</td><td>280g</td><td>22g</td></tr><tr><td>22</td><td><span class="pal"><i style="background:#3f7a2e"></i><i style="background:#5fa03e"></i><i style="background:#ff8a2a"></i><i style="background:#ffb35a"></i></span> <b>Pumpkin</b></td><td><span class="chip fa">Fall</span></td><td>6d</td><td>220g</td><td>400g</td><td>30g</td></tr><tr><td>24</td><td><span class="pal"><i style="background:#4f8a34"></i><i style="background:#7fbe55"></i><i style="background:#ffe25a"></i><i style="background:#fff6b0"></i></span> <b>Starfruit</b></td><td><span class="chip su">Summer</span></td><td>8d</td><td>450g</td><td>950g</td><td>63g</td></tr></tbody></table></div>
+
+<h3>The orchard & the apiary</h3>
+<div class="tw"><table><thead><tr><th>Tree</th><th>Season</th><th>Sapling</th><th>Fruit sells</th></tr></thead><tbody><tr><td><span class="pal"><i style="background:#3f7a2e"></i><i style="background:#57ad57"></i><i style="background:#e0455a"></i></span> <b>Cherry Tree</b></td><td><span class="chip sp">Spring</span></td><td>1,000g</td><td>85g</td></tr><tr><td><span class="pal"><i style="background:#3a6a34"></i><i style="background:#4e9a4a"></i><i style="background:#7a4a9a"></i></span> <b>Plum Tree</b></td><td><span class="chip su">Summer</span></td><td>1,300g</td><td>100g</td></tr><tr><td><span class="pal"><i style="background:#4a7a34"></i><i style="background:#69ad50"></i><i style="background:#d0403a"></i></span> <b>Apple Tree</b></td><td><span class="chip fa">Fall</span></td><td>850g</td><td>70g</td></tr></tbody></table></div>
+<p class="prose small">A sapling takes a full season (28 days) to mature, then bears daily in
+its season forever, holding up to 3 days of fruit. Beehives (700g, max 4) make
+honey (100g) faster where more blooms nearby.</p>
+
+<h3>Animals</h3>
+<p class="prose">Hens 300g (coop holds 6) → eggs 55g, large eggs 95g with friendship. Cows 600g
+(barn holds 4) → milk 90g, large milk 165g. Visit each morning; pet for friendship.</p>
+
+<h3>The Hunt — five legendary fish</h3>
+<p class="prose">Bram tells one clue per heart. Each legend rises only under exact conditions,
+is caught once, and is yours forever. Landing all five earns <b>Bram's Oilskin</b> — faster
+bites, and the sea fishable in any storm.</p>
+<div class="tw"><table><thead><tr><th>Legend</th><th>Lvl</th><th>Conditions</th><th>Worth</th></tr></thead><tbody><tr><td><span class="pal"><i style="background:#e8b23a"></i><i style="background:#fff0b0"></i></span> <b class="gold">Sunfleck</b></td><td>14</td><td>farm pond · 5am–8am · Clear · Spring</td><td>700g</td></tr><tr><td><span class="pal"><i style="background:#8a9ad0"></i><i style="background:#dfe6ff"></i></span> <b class="gold">Moonscale</b></td><td>22</td><td>the coast · 8pm–2am · Clear · Summer</td><td>800g</td></tr><tr><td><span class="pal"><i style="background:#cfd6e0"></i><i style="background:#ffffff"></i></span> <b class="gold">Whitefin</b></td><td>30</td><td>the coast · 8am–5pm · Fog · Fall</td><td>950g</td></tr><tr><td><span class="pal"><i style="background:#5a8aa8"></i><i style="background:#cfeaff"></i></span> <b class="gold">Frostjaw</b></td><td>26</td><td>farm pond · 5am–8am · Snow · Winter</td><td>850g</td></tr><tr><td><span class="pal"><i style="background:#6a5a9a"></i><i style="background:#c9b6ff"></i></span> <b class="gold">Stormrider</b></td><td>34</td><td>farm pond · 8pm–2am · Storm · any season</td><td>1200g</td></tr></tbody></table></div>
+
+<h3>From the deep & the shore</h3>
+<div class="tw"><table><thead><tr><th>Find</th><th>Sells</th></tr></thead><tbody><tr><td>💎 Amethyst</td><td>120g</td></tr><tr><td>💎 Topaz</td><td>160g</td></tr><tr><td>💎 Emerald</td><td>280g</td></tr><tr><td>💎 Ruby</td><td>360g</td></tr><tr><td>💎 Diamond</td><td>640g</td></tr><tr><td>🐚 Shell</td><td>22g</td></tr><tr><td>🐚 Coral</td><td>48g</td></tr><tr><td>🐚 Seaweed</td><td>14g</td></tr><tr><td>🐚 Clam</td><td>38g</td></tr><tr><td>🐚 Pearl</td><td>260g</td></tr></tbody></table></div>
+
+<h3>The noticeboard</h3>
+<p class="prose">One request a day, drawn from a pool of 20, always fillable at
+your level. Pays ~1.4× value plus 25 heart points with the asker. Never required; gone by dawn.</p>
+</section>
+
+<section id="completion"><h2>What 100% looks like</h2>
+<ul class="check"><li>Finish <b>Act I</b> (11 quests) and hold the Grand Festival</li><li>Finish <b>Act II</b> (3 quests) — bring Elias home, raise the memorial</li><li>Light all <b>9 Guild wings</b></li><li>Find all <b>9 almanac pages</b> (the last one only comes after the memorial)</li><li>Catch all <b>5 legendary fish</b> → Bram's Oilskin</li><li>Reach <b>level 99</b> in all 5 skills — 20 mastery perks along the way</li><li><b>6 hearts</b> with all 6 villagers; see every heart scene (12)</li><li>Marry <b>Maya or Bram</b></li><li>Fund all <b>3 restoration projects</b> (~16,000g)</li><li><b>Gold-tier</b> all 5 tools</li><li>Attend all <b>4 seasonal festivals</b> and the Lantern Festival anniversary</li><li>Read all <b>6 letters</b> — and then write the one Grandpa never did</li><li>Fill the coop (6 hens), the barn (4 cows), the meadow (4 hives), and the orchard</li></ul>
+<p class="prose">And the one thing the game will never ask: nothing here can be failed, lost,
+or taken away. That's the cozy contract.</p>
+</section>
+<footer>HarvestScape v2.2.0 “First Light” · generated 2026-07-11 from <code>game/js</code> data · regenerate with <code>node tools/build-atlas.mjs</code> · <b>retro-generated snapshot</b> — data is this release's; hand-written blurbs reflect the generator's era</footer>
+</body></html>
