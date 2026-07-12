@@ -152,9 +152,10 @@ function genFarm(m){
   for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++){ const n=rng();
     if(n<0.05) set(x,y,T.FLOWERGRASS); else if(n<0.08) set(x,y,T.TALLGRASS); }
 
-  // ponds (kept clear of town & buildings)
+  // ponds (kept clear of buildings & paths). v3.2 shrink: the east pond (Elias's) moved in from
+  // the old town's edge to the meadow; the west pond sits a little higher in the tightened woods.
   for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++){
-    const d1 = Math.hypot((x-53)/4.6,(y-31)/3.8), d2 = Math.hypot((x-9)/4.0,(y-39)/3.0);
+    const d1 = Math.hypot((x-38)/4.6,(y-25)/3.8), d2 = Math.hypot((x-9)/4.0,(y-30)/3.0);
     if(d1<1||d2<1) set(x,y,T.WATER); else if(d1<1.22||d2<1.25) set(x,y,T.SAND);
   }
 
@@ -176,14 +177,14 @@ function genFarm(m){
   obj[key(26,6)] = { kind:"sign", text:"The Barn" };
 
   // paths — the farm's lane runs from the buildings out to the east road (the way to the village)
-  for(let x=9;x<=59;x++) set(x,15,T.PATH);
+  for(let x=9;x<=45;x++) set(x,15,T.PATH);
   for(let y=6;y<=15;y++) set(13,y,T.PATH);
-  for(let y=15;y<=40;y++) set(30,y,T.PATH);
+  for(let y=15;y<=28;y++) set(30,y,T.PATH);
 
   // --- the road to the village (v3: the town moved off the farm and became its own map) ---
   // a 3-tall warp band: hugging the map edge above or below the road must still catch it
-  for(const wy of [14,15,16]) m.warps[key(59,wy)] = { to:"village", sx:2*TILE, sy:14*TILE+8, face:"right", auto:true };
-  obj[key(57,14)] = { kind:"sign", text:"→ The Village" };
+  for(const wy of [14,15,16]) m.warps[key(45,wy)] = { to:"village", sx:2*TILE, sy:14*TILE+8, face:"right", auto:true };
+  obj[key(43,14)] = { kind:"sign", text:"→ The Village" };
 
   // farm props
   obj[key(12,8)] = { kind:"shipbin" };
@@ -192,28 +193,28 @@ function genFarm(m){
   place(2,12,"bush"); place(15,11,"bush"); place(3,13,"berrybush");
 
   // forest (southwest)
-  for(let i=0;i<40;i++){ const x=randiR(rng,2,22), y=randiR(rng,27,44);
+  for(let i=0;i<40;i++){ const x=randiR(rng,2,22), y=randiR(rng,19,34);
     const r=rng(), kind=r<0.55?"oak":r<0.82?"pine":"maple"; place(x,y,kind,{hp:TREES[kind].hp}); }
-  for(let i=0;i<10;i++) place(randiR(rng,2,22),randiR(rng,27,44), rng()<0.5?"bush":"berrybush");
+  for(let i=0;i<10;i++) place(randiR(rng,2,22),randiR(rng,19,34), rng()<0.5?"bush":"berrybush");
   // --- the Deep Grove (west, through the treeline) ---
   // a footpath out of the little forest into woodcutting's real venue; carved AFTER the tree
   // scatter so nothing can seal it (objects on the path rows are cleared).
-  for(let x=1;x<=6;x++) set(x,34,T.PATH);
-  for(let x=0;x<=6;x++) for(let dy=-1;dy<=1;dy++) delete obj[key(x,34+dy)];
+  for(let x=1;x<=6;x++) set(x,26,T.PATH);
+  for(let x=0;x<=6;x++) for(let dy=-1;dy<=1;dy++) delete obj[key(x,26+dy)];
   // a 2×3 warp pad: walking the map's west edge past the footpath must still catch it
-  for(const wx of [0,1]) for(const wy of [33,34,35])
+  for(const wx of [0,1]) for(const wy of [25,26,27])
     m.warps[key(wx,wy)] = { to:"grove", sx:(44-3)*TILE, sy:15*TILE, face:"left", auto:true };
-  obj[key(5,33)] = { kind:"sign", text:"← The Deep Grove" };
+  obj[key(5,25)] = { kind:"sign", text:"← The Deep Grove" };
 
   // ore ridge (north) — early mining above ground
-  for(let i=0;i<24;i++){ const x=randiR(rng,26,49), y=randiR(rng,1,4);
+  for(let i=0;i<24;i++){ const x=randiR(rng,26,43), y=randiR(rng,1,4);
     const r=rng(), kind=r<0.4?"stone":r<0.75?"copper":r<0.92?"iron":"gold"; place(x,y,kind,{hp:ORES[kind].hp}); }
   place(17,12,"oak",{hp:3}); place(19,13,"oak",{hp:3}); place(21,17,"pine",{hp:6});
   place(23,17,"copper",{hp:4}); place(25,18,"stone",{hp:2});
 
   // meadow (south) — flowery, where folk stroll
-  for(let y=32;y<=40;y++) for(let x=24;x<=42;x++){ if(get(x,y)===T.GRASS && rng()<0.35) set(x,y,T.FLOWERGRASS); }
-  obj[key(27,36)] = { kind:"sign", text:"Festival Green" };
+  for(let y=24;y<=32;y++) for(let x=24;x<=42;x++){ if(get(x,y)===T.GRASS && rng()<0.35) set(x,y,T.FLOWERGRASS); }
+  obj[key(27,28)] = { kind:"sign", text:"Festival Green" };
 
   // scatter must never wall off a doorway
   for(const wk in m.warps){ const [dx,dy] = wk.split(",").map(Number);
@@ -232,7 +233,10 @@ function saveGame(){
 }
 function loadGame(){
   try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY));
-    if(s && s.farm && s.farm.tiles && s.farm.tiles.length === W*H) return s;
+    // accept the current canvas OR any self-consistent older one (e.g. the pre-v3.2 60×46 farm) —
+    // migrateSave rebuilds legacy farms onto the current layout.
+    if(s && s.farm && s.farm.tiles &&
+       (s.farm.tiles.length === W*H || s.farm.tiles.length === (s.farm.w||0)*(s.farm.h||0))) return s;
   }catch(e){}
   return null;
 }

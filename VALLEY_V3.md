@@ -52,3 +52,15 @@ not sufficient — the *world* has to point at the story):
 ## Explicitly still deferred
 Per-NPC daily schedules with pathing, a second village district, interiors for the ambient
 houses, and the art'd prologue (NPX §6) — the split makes room for all of them later.
+
+**Land Deeds — farm expansion (owner-requested, 2026-07-13, explicitly "not right now").**
+After the v3.2 shrink (60×46 → 46×36; the owner: "it's just too big… a lot of empty space
+because everything was moved around"), the farm should be able to *grow back* as a mechanic:
+buy or fund adjacent parcels — say a south woodland acre, an east roadside field, a north
+ridge extension — and the fence moves outward. Sketch: sold as deeds at Tom's or funded as
+Rowan-style projects (gold + materials, built overnight); each deed appends a fixed band to
+the farm map. Purely *additive* generation means no coordinate migration pain (the v3.2
+lesson: shrinking needs per-item carry-over; growing needs none — new ground is just new).
+Starting tight is the setup: expansion only feels like a reward if the baseline isn't
+already oversized. Pairs naturally with a late-game gold sink, which the economy audits keep
+asking for.

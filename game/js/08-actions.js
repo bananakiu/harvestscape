@@ -853,20 +853,20 @@ function respawnNodes(m){
   else {
     const bushes = Object.values(m.objects).filter(o=>o.kind==="frostberry").length;
     for(let i=0;i<3 && bushes+i<10;i++){
-      const x=2+Math.floor(rng()*46), y=24+Math.floor(rng()*18), k=key(x,y), g=m.tiles[y*W+x];
-      if(isReservedFarmTile(x,y)) continue;    // the memorial and the boardwalk live in this band
+      const x=2+Math.floor(rng()*42), y=17+Math.floor(rng()*17), k=key(x,y), g=m.tiles[y*W+x];
+      if(isReservedFarmTile(x,y)) continue;    // the memorial (and its lanterns) live in this band
       if((g===T.GRASS||g===T.FLOWERGRASS||g===T.TALLGRASS)&&!m.objects[k]&&!m.crops[k]) m.objects[k]={kind:"frostberry"};
     }
   }
   const regrow = 5 + (hasMastery("Woodcutting",75) ? 2 : 0);   // ★ Steward
   for(let i=0;i<regrow && trees+i<44;i++){
-    const x=2+Math.floor(rng()*20), y=27+Math.floor(rng()*16), k=key(x,y), g=m.tiles[y*W+x];
+    const x=2+Math.floor(rng()*20), y=19+Math.floor(rng()*16), k=key(x,y), g=m.tiles[y*W+x];
     if((g===T.GRASS||g===T.FLOWERGRASS||g===T.TALLGRASS)&&!m.objects[k]&&!m.crops[k]){
       const r=rng(), kind=r<.55?"oak":r<.82?"pine":"maple"; m.objects[k]={kind,hp:TREES[kind].hp};
     }
   }
   for(let i=0;i<4 && rocks+i<24;i++){
-    const x=26+Math.floor(rng()*23), y=1+Math.floor(rng()*4), k=key(x,y), g=m.tiles[y*W+x];
+    const x=26+Math.floor(rng()*18), y=1+Math.floor(rng()*4), k=key(x,y), g=m.tiles[y*W+x];
     if((g===T.GRASS||g===T.FLOWERGRASS||g===T.TALLGRASS)&&!m.objects[k]){
       const r=rng(), kind=r<.4?"stone":r<.75?"copper":r<.92?"iron":"gold"; m.objects[k]={kind,hp:ORES[kind].hp};
     }

@@ -209,34 +209,66 @@ function migrateSave(s){
   if(s.flags.mayaConfided) s.flags.confided_maya = true;
   if(s.flags.married && !s.flags.spouse) s.flags.spouse = "maya";
   if(!s.farm) s.farm = newMap("farm");
-  // v3 world split: farms saved before the village existed still have the town baked into their
-  // tiles. Rebuild the layout and carry the player's own work over coordinate-for-coordinate —
-  // every kept landmark (cottage, plot, ponds, woods) stayed at its old coordinates, and nothing
-  // could ever be planted inside the old town, so positions remain valid by construction.
-  // Nothing the player made is lost: the cozy contract, applied to a map.
-  if(s.farm && !s.farm.warps[key(59,15)]){
-    const old = s.farm, fresh = newMap("farm");
-    fresh.crops = old.crops || {};
-    for(const k in fresh.crops){                     // re-till (and re-wet) the ground under every crop
+  // v3.2 farm shrink — subsumes BOTH the v3 world-split rebuild and the v3.1.1 warp-band
+  // backfill that used to live here (a full regeneration lays the current warps by construction).
+  // Any saved farm that doesn't match the current canvas — the pre-v3 town-on-farm 60×46, the
+  // v3.0–v3.1.1 open 60×46, or a farm missing the village road — is rebuilt on the 46×36 layout.
+  // Unlike the v3 migration, a SHRINK can't be coordinate-for-coordinate everywhere: ground east
+  // of x=45 and the old south rows no longer exist, and the woods/meadow/ponds moved up 8 rows.
+  // So the carry-over is per-item: everything tries its exact old coordinates first (valid for
+  // the whole kept region — the buildings, plot, and every field north of the treeline), and
+  // whatever sat on vanished or now-occupied ground settles on the NEAREST open ground instead.
+  // Crops (growth intact), orchard trees (age+fruit), and hives (honey) are never dropped — the
+  // cozy contract, applied to a map. Bare tilled-but-empty soil outside the new fence is the one
+  // thing let go: it's free to re-till, and "the movers couldn't carry dirt".
+  if(s.farm && (s.farm.w !== W || s.farm.h !== H || !s.farm.warps[key(45,15)])){
+    const old = s.farm, ow = old.w || 60;            // the OLD map's stride — pre-v3.2 saves are 60 wide
+    const fresh = newMap("farm");
+    const open = (x,y) => {                          // ground a carried item may occupy
+      if(x<1||y<1||x>=W-1||y>=H-1) return false;
+      const g = fresh.tiles[y*W+x], k = key(x,y);
+      if(!(TILLABLE.has(g) || g===T.TILLED || g===T.WATERED)) return false;
+      if(fresh.objects[k] || fresh.crops[k] || fresh.warps[k]) return false;
+      if(isReservedFarmTile(x,y)) return false;      // the memorial band and the cart end
+      for(const wk in fresh.warps){ const [dx,dy] = wk.split(",").map(Number);
+        if(x===dx && (y===dy+1 || y===dy+2)) return false; }   // never wall off a doorway
+      return true;
+    };
+    const settle = (px,py) => {                      // the old spot if it still works, else the nearest that does
+      px = clamp(px,1,W-2); py = clamp(py,1,H-2);
+      for(let r=0; r<Math.max(W,H); r++)
+        for(let dy=-r; dy<=r; dy++) for(let dx=-r; dx<=r; dx++){
+          if(Math.max(Math.abs(dx),Math.abs(dy))!==r) continue;   // ring only
+          if(open(px+dx,py+dy)) return [px+dx,py+dy];
+        }
+      return null;
+    };
+    for(const k in (old.crops||{})){                 // every crop survives, growth intact
       const [x,y] = k.split(",").map(Number);
-      fresh.tiles[y*W+x] = old.tiles[y*W+x] === T.WATERED ? T.WATERED : T.TILLED;
+      const spot = settle(x,y); if(!spot) continue;
+      fresh.crops[key(spot[0],spot[1])] = old.crops[k];
+      fresh.tiles[spot[1]*W+spot[0]] = old.tiles[y*ow+x]===T.WATERED ? T.WATERED : T.TILLED;
     }
-    for(let i=0;i<old.tiles.length;i++){             // preserve the shape of worked-but-empty fields
-      if((old.tiles[i]===T.TILLED || old.tiles[i]===T.WATERED) && fresh.tiles[i]===T.GRASS)
-        fresh.tiles[i] = old.tiles[i];
+    for(let y=0;y<Math.min(old.h||46,H);y++) for(let x=0;x<Math.min(ow,W);x++){
+      const g = old.tiles[y*ow+x];                   // worked-but-empty soil keeps its shape where it still fits
+      if((g===T.TILLED||g===T.WATERED) && !old.crops[key(x,y)]
+         && TILLABLE.has(fresh.tiles[y*W+x]) && !fresh.objects[key(x,y)] && !fresh.crops[key(x,y)])
+        fresh.tiles[y*W+x] = g;
     }
     for(const k in (old.objects||{})){               // orchard trees and hives are the player's, not the map's
       const o = old.objects[k];
-      if((o.kind==="fruittree" || o.kind==="beehive") && !fresh.objects[k]) fresh.objects[k] = o;
+      if(o.kind!=="fruittree" && o.kind!=="beehive") continue;
+      const [x,y] = k.split(",").map(Number);
+      const spot = settle(x,y); if(!spot) continue;
+      fresh.objects[key(spot[0],spot[1])] = o;
+      fresh.tiles[spot[1]*W+spot[0]] = T.GRASS;      // matches plantPermanent's ground rule
     }
     s.farm = fresh;
-  }
-  // v3.1.1 edge-warp bands: the farm's road/footpath exits were single tiles, so hugging the map
-  // edge walked right past them. The farm persists, so older saves get the widened bands here
-  // (the other maps regenerate and pick theirs up for free). Additive and idempotent.
-  if(s.farm && s.farm.warps && !s.farm.warps[key(59,14)]){
-    for(const wy of [14,15,16]) s.farm.warps[key(59,wy)] = { to:"village", sx:2*TILE, sy:14*TILE+8, face:"right", auto:true };
-    for(const wx of [0,1]) for(const wy of [33,34,35]) s.farm.warps[key(wx,wy)] = { to:"grove", sx:(44-3)*TILE, sy:15*TILE, face:"left", auto:true };
+    if(s.flags && s.flags.act2Done){                 // the standing stone is re-raised on the new Green
+      const keep = state; state = s;
+      try{ raiseMemorial(); }catch(e){}
+      state = keep;
+    }
   }
 }
 function beginPlay(){

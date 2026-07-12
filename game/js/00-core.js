@@ -13,7 +13,9 @@ const VIEW_W = 320, VIEW_H = 208;      // logical pixels; CSS scales up
 const TILE = 16;
 const VW = VIEW_W / TILE;              // 20 tiles wide
 const VH = VIEW_H / TILE;              // 13 tiles tall
-const W = 60, H = 46;                  // world size in tiles
+const W = 46, H = 36;                  // tile-array stride/height for EVERY map — must stay ≥ the
+                                       // widest (beach, 46) and tallest (farm, 36) map. Also the
+                                       // farm's own size since v3.2's shrink.
 
 // ---- tile ids ----
 const T = {

@@ -14,6 +14,31 @@
 
 ---
 
+## 2026-07-13 (late evening, cont.) — "the farm is now too big": shrink it; expansion goes on the roadmap
+
+**Owner (near-verbatim):**
+
+> Because the farm is separated from the rest of the village, it's now too big. I'd like you to
+> shrink it and maybe have a mechanism where you could build and expand your farm in the future,
+> something like that. You could add that to the roadmap instead of building it out, but not
+> right now. Just shrink the farm a bit. It's just too big. There's a lot of empty space because
+> everything was moved around.
+
+**Interpretation.** The v3.0 world split moved the town, the mine mouth, and the beach path off
+the farm but kept the 60×46 canvas, and framed the vacated ground as "more farmable space — a
+feature, not a loss." The owner's read is the opposite: with nothing standing there, the old town
+footprint (the whole east half, plus the empty middle band) plays as dead walking, not as land.
+Two directives, cleanly separated by the owner himself: (1) **shrink now** — done as v3.2.0
+(46×36, ~40% less area; every landmark kept, the south block pulled 8 rows up, saves migrated
+per-item so nothing the player made is lost); (2) **farm expansion later** — a mechanism to buy
+or build the farm bigger over time. Explicitly roadmap-only for now ("not right now"), recorded
+in [VALLEY_V3.md](VALLEY_V3.md)'s deferred list as *Land Deeds*. Starting tighter actually sets
+that mechanic up: expansion is only a reward if the baseline doesn't already feel oversized.
+
+**Produced:** v3.2.0 "The Near Fence" (see CHANGELOG.md); Land Deeds roadmap entry.
+
+---
+
 ## 2026-07-13 (late evening, cont.) — "the town is built very poorly": exits, doors, and the buried mine
 
 **Owner (near-verbatim):**

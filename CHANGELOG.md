@@ -22,7 +22,49 @@
 
 ---
 
-## [Unreleased]
+## v3.2.0 — "The Near Fence" · 2026-07-13 · tag `v3.2.0`
+
+Version code **39**. The farm shrinks: 60×46 → **46×36** (~40% less area). The owner (DEVLOG,
+this date): *"Because the farm is separated from the rest of the village, it's now too big…
+a lot of empty space because everything was moved around. Just shrink the farm a bit."* v3.0
+called the vacated town ground "more farmable space — a feature"; in play it was dead walking.
+The companion ask — a build-out/expansion mechanism — is **deliberately not built**: it's on the
+roadmap as *Land Deeds* (VALLEY_V3.md, deferred list), per the owner's "not right now".
+
+### Changed
+- **The farm is 46×36** (`W`/`H` in `00-core.js`, `MAPS.farm`, `genFarm`). Design of the cut:
+  everything **north of the treeline keeps its exact coordinates** (cottage, coop, barn, starter
+  plot, shipbin, campfire, cart end, lane y=15, ore ridge) — the farm you learned stays the farm
+  you know; the **east half goes** (the old town footprint: the road now exits at x=45, band
+  y14–16, sign at (43,14)); the **south block moves up 8 rows** (forest scatter y19–34, meadow
+  y24–32, Festival Green sign (27,28), memorial (27,26) + lanterns, grove footpath row 26 with
+  its 2×3 warp pad at x0–1/y25–27); the **east pond** (Elias's) comes in from the town edge to
+  the meadow at (38,25) — he fishes at (32,25) now; the **west pond** rises to (9,30) inside the
+  tightened woods. ~1300 open farmable tiles remain — the middle band is field, not void.
+  - **Note for the Grove Depths branch (merge point):** the grove's return warp must target the
+    farm at `sx:3*TILE+8, sy:26*TILE` (footpath row 26); the farm-side pad is x0–1, y25–27.
+    Already updated in `genGrove` here.
+- Every consumer of the old coordinates moved with it: `respawnNodes` daily bands (frostberries
+  y17–33/x2–43, tree regrowth y19–34, ridge rocks x26–43, `08-actions.js`), Elias's spawn
+  (`13-content.js`), the village's west-road warp target (x=43), `raiseMemorial` +
+  `RESERVED_FARM_TILES` + the homecoming cutscene's farm placement (`14-story.js`).
+- `W`/`H` (the global tile stride) shrink with it, which is safe because the farm was the widest
+  and tallest map; the new floor is the beach (46 wide) and the farm itself (36 tall) — noted in
+  the `00-core.js` comment so the next resize checks it.
+
+### Save migration (the shrink can't be coordinate-for-coordinate — so it's per-item)
+One rebuild block in `migrateSave` now **subsumes** the v3 world-split rebuild and the v3.1.1
+warp-band backfill (a full regeneration lays current warps by construction; both old blocks
+removed). Trigger: any saved farm whose `w/h` differ from the canvas or that lacks the `(45,15)`
+road warp — this catches pre-v3, v3.0–v3.1.1, all of them, reading the old map at **its own
+stride** (`old.w`, 60). Carry-over: every crop, orchard tree (age+fruit), and hive (honey) tries
+its exact old coordinates first — valid for the whole kept region — and anything that sat on
+vanished or now-occupied ground **settles on the nearest open ground** (ring search; respects
+objects, water, reserved story tiles, doorway approaches). Nothing the player made is dropped;
+the one concession is bare tilled-but-empty soil outside the new fence (free to re-till). If
+`act2Done`, the standing stone is re-raised on the new Green rather than copied — it's map
+furniture, not player property. `loadGame` accepts any self-consistent legacy size instead of
+hard-rejecting non-current tile counts (which would have silently discarded every old save).
 
 ### Fixed
 - **Night window glow read tiles at the wrong stride** (`collectLights`, `06-weather.js`): every
@@ -31,7 +73,15 @@
   than `W` — the village (40), every interior — rows past the first were read from the wrong
   offsets, so windows glowed on the wrong tiles or not at all. Harmless on the farm only because
   the farm happened to be exactly `W` wide. Found while auditing every consumer of the farm's
-  dimensions ahead of the farm-shrink work.
+  dimensions ahead of the farm-shrink work. (Shipped ahead of the release as its own commit.)
+
+*Verified live: fresh farm generates 46×36 with all paths, warps, signs, and both ponds placed
+(scripted tile/warp assertions, zero issues); a fabricated v3.1.1-era 60×46 save migrated with —
+kept-region crop and watered soil at their exact tiles, out-of-fence crop (50,20)→(44,20) and
+hive (52,33)→(44,33) settled with growth/honey intact, old-south crop (10,40)→(10,34), memorial +
+4 lanterns re-raised at the new Green, old (59,x) warps gone, day/gold untouched; live warp
+round-trips farm⇄village and farm⇄grove land on the right tiles; Elias fishes at (32,25);
+screenshots of the farmstead and the Green; console clean.*
 
 ---
 

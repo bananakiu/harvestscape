@@ -646,9 +646,9 @@ function festivalLaunch(dur, fx){ _festLaunch = dur; _festFx = fx || "lanterns";
 function raiseMemorial(){
   const F = state.farm;                       // the farm persists, so the stone stays raised
   const clear = (x,y) => { const k = key(x,y); delete F.objects[k]; delete F.crops[k]; };
-  clear(27,34);
-  F.objects[key(27,34)] = { kind:"memorial" };
-  for(const [x,y] of [[25,34],[29,34],[25,36],[29,36]]){
+  clear(27,26);
+  F.objects[key(27,26)] = { kind:"memorial" };
+  for(const [x,y] of [[25,26],[29,26],[25,28],[29,28]]){
     const k = key(x,y);
     if(!F.objects[k] && !F.crops[k]) F.objects[k] = { kind:"lantern" };
   }
@@ -658,7 +658,7 @@ function raiseMemorial(){
 // Tiles the world reserves for story and funded work. Nothing may be scattered onto them, or the
 // thing that belongs there later gets silently skipped.
 const RESERVED_FARM_TILES = new Set([
-  key(27,34), key(25,34), key(29,34), key(25,36), key(29,36),      // the memorial + its lanterns
+  key(27,26), key(25,26), key(29,26), key(25,28), key(29,28),      // the memorial + its lanterns (Festival Green, v3.2 coords)
   key(14,7),                                                       // the farm's cart end (v3: the rest moved to the village)
 ]);
 function isReservedFarmTile(x,y){ return RESERVED_FARM_TILES.has(key(x,y)); }
@@ -714,12 +714,12 @@ function buildHomecomingSteps(){
         state.time = 19.4*60;
         clearMapCache();
         // tile-centre y, or the feet bbox reaches up into the stone's tile and unstick shoves you aside
-        setMap("farm", 27*TILE+8, 35*TILE+8, "up");   // standing before the stone
+        setMap("farm", 27*TILE+8, 27*TILE+8, "up");   // standing before the stone
       } },
     { type:"fade", on:false },
     { type:"wait", t:1.0 },
     { type:"banner", big:"The Festival Green", small:"Two names, and a lantern that stays lit", t:2.8 },
-    { type:"sparkle", x:27, y:34, color:"#ffd75a", n:22 },
+    { type:"sparkle", x:27, y:26, color:"#ffd75a", n:22 },
     { type:"wait", t:0.8 },
     { type:"letter", head:"✒ Carved into the standing stone", text: LETTER_MEMORIAL },
     { type:"run", fn:()=>{ festivalWarmth(40); ensureRel("elias").points = 200; } },

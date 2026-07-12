@@ -6,7 +6,7 @@
 
 // ---------------- map registry ----------------
 const MAPS = {
-  farm:      { w:60, h:46, outdoor:true,  name:"Willowbrook Farm", music:"auto",  gen:genFarm },
+  farm:      { w:46, h:36, outdoor:true,  name:"Willowbrook Farm", music:"auto",  gen:genFarm },
   cottage:   { w:11, h:9,  name:"Your Cottage",          subtitle:"home sweet home", music:"cozy", bg:"#171009", gen:genCottage },
   coop:      { w:12, h:9,  name:"The Coop",              subtitle:"cluck, cluck",    music:"cozy", bg:"#1a1208", gen:genCoop },
   barn:      { w:14, h:10, name:"The Barn",              subtitle:"warm straw, slow breathing", music:"cozy", bg:"#1a1208", gen:genBarn },
@@ -259,7 +259,7 @@ function genVillage(m){
   for(let x=6;x<=34;x++) set2(x,24,T.PATH);          // south lane — the neighbours' street
   set2(6,23,T.PATH); set2(34,23,T.PATH);             // stubs to the neighbours' doors
   // west: the road home. A 3-tall warp band — hugging the map edge must still catch it.
-  for(const y of [13,14,15]) m.warps[key(0,y)] = { to:"farm", sx:57*TILE, sy:15*TILE+8, face:"left", auto:true };
+  for(const y of [13,14,15]) m.warps[key(0,y)] = { to:"farm", sx:43*TILE, sy:15*TILE+8, face:"left", auto:true };
   m.objects[key(2,13)] = { kind:"sign", text:"← Willowbrook Farm" };
   // northeast: the Old Mine (moved off the Guild's back in v3.1.1 — its mouth is on open ridge now)
   m.objects[key(33,3)] = { kind:"mineentrance" };
@@ -318,7 +318,7 @@ function genGrove(m){
   for(let y=0;y<m.h;y++){ t[y*W+0]=T.IWALL; t[y*W+m.w-1]=T.IWALL; }
   // east-edge exit back to the farm's treeline
   t[15*W+(m.w-1)] = T.DOOR;
-  m.warps[key(m.w-2, 15)] = { to:"farm", sx:3*TILE+8, sy:34*TILE, face:"right", auto:true };
+  m.warps[key(m.w-2, 15)] = { to:"farm", sx:3*TILE+8, sy:26*TILE, face:"right", auto:true };   // the farm's treeline footpath (row 26 since the v3.2 shrink)
   // a worn footpath from the gate to the old clearing
   for(let x=11;x<=m.w-2;x++) t[15*W+x]=T.PATH;
   m.objects[key(m.w-4,13)] = { kind:"sign", text:"→ Back to the Farm" };
@@ -531,7 +531,7 @@ function spawnMapNpcs(m){
   if(m.id==="farm"){
     // v3: the neighbours stroll their own plaza now, not your field. The farm keeps only Elias —
     // he came home, and he fishes the pond his daughter grew up beside.
-    if(state.flags.act2Done && h>=7 && h<19) m.npcs.push(mkNpc("elias", 47*TILE, 31*TILE, {face:"right"}));
+    if(state.flags.act2Done && h>=7 && h<19) m.npcs.push(mkNpc("elias", 32*TILE, 25*TILE, {face:"right"}));
   } else if(m.id==="village"){
     if(h>=7 && h<18.5) m.npcs.push(mkNpc("maya", 24*TILE, 12*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));
     if(h>=8 && h<19)   m.npcs.push(mkNpc("pip",  17*TILE, 16*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));
