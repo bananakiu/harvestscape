@@ -110,6 +110,12 @@ function unlocksAt(skill, lvl){
 }
 function addXP(skill, amt){
   if(state.inv["Grandpa's Guild Pin"]) amt = Math.round(amt * 1.1);   // keepsake luck
+  // canopy charms — one worn at a time, effects deliberately tiny (the gem lesson)
+  if(skill === "Woodcutting"){
+    if(charmActive("Wren Feather Charm"))  amt = Math.round(amt * 1.05);
+    if(charmActive("The Forester's Band")) amt = Math.round(amt * 1.08);
+  }
+  if(skill === "Mining" && charmActive("Amber Beetle")) amt = Math.round(amt * 1.05);
   const before = levelFor(state.skills[skill]);
   state.skills[skill] += amt;
   floatText(state.px + rand(-4,4), state.py - 22, "+"+amt+" "+skill.slice(0,4).toLowerCase(), "#9fd8ff");
@@ -314,6 +320,7 @@ function useTool(){
         give(sp.drop, sp.n*2 + 1); addXP("Woodcutting", sp.xp*2); bump("chopped");
         floatText(tx*TILE+8, ty*TILE-6, "ancient timber!", "#ffd75a");
         pSparkle(tx*TILE+8, ty*TILE, "#ffd75a", 16); playSfx("get");
+        maybeNest(tx, ty, true);                              // an ancient always gives its nest up
       }
       refreshHUD(); return;
     }
@@ -328,9 +335,12 @@ function useTool(){
     obj.hp -= hit; obj.shakeT = 0.2; cam.shake = 2; hitstop = 0.05; playSfx("chop");
     pChips(tx*TILE+8, ty*TILE+6, "#8a5f38", 5); pLeaves(tx*TILE+8, ty*TILE, TREES[obj.kind].pal[1], 4);
     if(obj.hp <= 0){ delete curMap.objects[key(tx,ty)];
-      give(tr.drop, tr.n + (hasMastery("Woodcutting",50) ? 1 : 0));     // ★ Clean Fell
+      const charmLog = (charmActive("Acorn Ring") && chance(0.08)) || (charmActive("The Forester's Band") && chance(0.10)) ? 1 : 0;
+      if(charmLog) floatText(tx*TILE+8, ty*TILE-6, "one more", "#8fe8c8");
+      give(tr.drop, tr.n + (hasMastery("Woodcutting",50) ? 1 : 0) + charmLog);   // ★ Clean Fell + the ring's favour
       addXP("Woodcutting", tr.xp); bump("chopped"); playSfx("get");
       if(obj.kind === "pine") queuePage(3, 700);              // "On Pine"
+      maybeNest(tx, ty, false);                               // the canopy sometimes answers
     }
   }
   else if(tool === "Pick"){
@@ -500,10 +510,66 @@ function interact(){
 function forageNode(x, y, obj, item, skill, xp){
   if(obj.pickedDay === state.day){ toast("Already gathered here today."); return; }
   obj.pickedDay = state.day;
-  const n = isRain() ? 2 : 1;                     // rain swells everything that grows wild — today only
+  let n = isRain() ? 2 : 1;                       // rain swells everything that grows wild — today only
+  if(charmActive("Moss Locket") && chance(0.2)){ n++; floatText(x*TILE+8, y*TILE-10, "the moss approves", "#8fe8c8"); }
   give(item, n); addXP(skill, xp); bump("forage", n); playSfx("get");
-  if(n > 1) floatText(x*TILE+8, y*TILE-4, "the rain was kind", "#8fd3ff");
+  if(isRain() && n > 1) floatText(x*TILE+8, y*TILE-4, "the rain was kind", "#8fd3ff");
   pSparkle(x*TILE+8, y*TILE+6, "#8fd06a", n>1 ? 10 : 6);
+}
+
+// ---- canopy nests (Grove Depths Phase 3) ----
+// Felling a grove tree sometimes shakes a nest loose — RS's birds' nests, in forest language.
+// Tiers: seeds/food (most), a charm (uncommon), a fruit sapling (rare), and once per valley,
+// the old Forester's Band. Ancients always drop one, never from the common tier.
+function maybeNest(tx, ty, guaranteed){
+  if(curMap.id !== "grove") return;
+  const ring = state.groveRing || 1;
+  if(!guaranteed && Math.random() >= nestChance(ring)) return;
+  // weighted tier roll — deeper rings tilt away from the common tier
+  const w = [
+    ["common", guaranteed ? 0 : 78 - ring*2],
+    ["charm",  16 + ring*1.5],
+    ["rare",   5 + ring*0.5],
+    ["band",   state.flags.foundBand ? 0 : 0.4],
+  ];
+  let t = 0; for(const [,x] of w) t += x;
+  let r = Math.random()*t, tier = "common";
+  for(const [k,x] of w){ if((r -= x) < 0){ tier = k; break; } }
+  // the band and charms fall through sensibly when already owned
+  if(tier === "band" && state.flags.foundBand) tier = "charm";
+  if(tier === "charm"){
+    const unowned = Object.keys(CHARMS).filter(c => c !== "The Forester's Band" && !state.discovered[c]);
+    if(!unowned.length) tier = "rare";
+  }
+  playSfx("get"); pLeaves(tx*TILE+8, ty*TILE-4, "#8a9a5a", 8);
+  if(tier === "common"){
+    if(chance(0.6)){
+      const seasonal = Object.values(CROPS).filter(c => c.seasons.includes(curSeason()));
+      const c = seasonal[Math.floor(Math.random()*seasonal.length)];
+      if(c){ give(c.name+" Seeds", 3); toast("A nest tumbles down — someone was hoarding seeds.", "#cbb98f"); }
+    } else { give("Berry Bun", 2); toast("A nest tumbles down — berries, baked hard by the sun. Pip would approve.", "#cbb98f"); }
+    return;
+  }
+  if(tier === "charm"){
+    const unowned = Object.keys(CHARMS).filter(c => c !== "The Forester's Band" && !state.discovered[c]);
+    const c = unowned[Math.floor(Math.random()*unowned.length)];
+    give(c, 1);
+    banner("🪺 Something glints in the nest", c + " — " + CHARMS[c].effect + ". Wear it from your Backpack (I).");
+    playSfx("quest"); pSparkle(tx*TILE+8, ty*TILE-6, "#8fe8c8", 14);
+    return;
+  }
+  if(tier === "rare"){
+    const keys = Object.keys(FRUIT_TREES), k = keys[Math.floor(Math.random()*keys.length)];
+    give(FRUIT_TREES[k].name, 1);
+    banner("🪺 A living nest", "A " + FRUIT_TREES[k].name.toLowerCase() + " sapling, canopy-grown. The orchard just got bigger.");
+    playSfx("quest"); pSparkle(tx*TILE+8, ty*TILE-6, "#8fd06a", 14);
+    return;
+  }
+  // the band — once, ever
+  state.flags.foundBand = true;
+  give("The Forester's Band", 1, true);
+  banner("✦ The Forester's Band ✦", "The old forester's ring, kept safe by generations of wrens. The whole wood remembers.");
+  playSfx("legend"); pSparkle(tx*TILE+8, ty*TILE-6, "#ffd75a", 24);
 }
 
 function openChest(){

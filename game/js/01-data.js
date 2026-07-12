@@ -627,6 +627,29 @@ function ledgerPledges(){
   return out;
 }
 
+// ---- CANOPY NESTS & CHARMS (Grove Depths Phase 3) ----
+// RuneScape's birds' nests, grown here: felling a grove tree sometimes shakes something loose.
+// The gem lesson (2026-07-12) applies with teeth — treasure must have USES, not resale value,
+// or it's another economy faucet. So a charm's value is a SMALL passive while worn (one worn at
+// a time, the Grandpa's-Pin pattern), sell prices stay modest, and the common tier feeds
+// farming (seeds), not the wallet.
+const CHARMS = {
+  "Wren Feather Charm":  { sell:120, effect:"+5% Woodcutting XP while worn" },
+  "Acorn Ring":          { sell:120, effect:"an extra log, now and then" },
+  "Moss Locket":         { sell:120, effect:"forage sometimes comes up double" },
+  "Amber Beetle":        { sell:150, effect:"+5% Mining XP while worn" },
+  "Lantern Charm":       { sell:100, effect:"your light reaches a little farther" },
+  "The Forester's Band": { sell:0,   effect:"+8% Woodcutting XP and an extra log, now and then" },  // once per valley
+};
+for(const c in CHARMS) ITEM_SELL[c] = CHARMS[c].sell;
+function charmActive(name){ return state.charm === name && (state.inv[name]||0) > 0; }
+// Nest odds: ~4.5% base, deeper rings a touch kinder, and the canopy answers the weather the
+// way the seams do (fog reads rich here too).
+function nestChance(ring){
+  const wx = isFog() ? 1.6 : isStorm() ? 1.3 : 1;
+  return Math.min(0.12, (0.045 + ring*0.004) * wx);
+}
+
 // ---- NPCS ----
 const NPCS = {
   maya: { name:"Maya",  loved:["Strawberry","Golden Koi"], likes:["Cooked","Starfruit","Carrot"] },
@@ -853,6 +876,15 @@ const EXAMINE = {
   "Bouquet": "A Willowbrook bouquet, carried straight to one particular door.",
   "Grandpa's Guild Pin": "Grandpa's old pin, worn smooth by a thumb that hoped.",
   "Bram's Oilskin": "Bram's coat: thirty years of weather it simply refused to let in.",
+  "Willow Wood": "Quick-grown and kind to the axe. The foresters trained on willow.",
+  "Elder Wood": "Blue-grained timber from the old grove. The deep works were built of this.",
+  "Heartwood": "Dense, pale, and faintly warm. A tree carries this for a hundred years.",
+  "Wren Feather Charm": "A wren's tail-feather in a twist of copper wire. Wear it and the axe listens.",
+  "Acorn Ring": "An acorn cap ringed in silver. Every so often, the tree gives one more.",
+  "Moss Locket": "Old moss pressed under glass. The undergrowth treats you as a friend.",
+  "Amber Beetle": "A beetle older than the Guild, asleep in amber. It dreams of deep stone.",
+  "Lantern Charm": "A firefly's worth of glass. Your light carries a little farther.",
+  "The Forester's Band": "The old forester's own ring, willow-leaf worked in gold. The whole wood remembers it.",
 };
 const EXAMINE_OBJ = {
   "bed": "The quilt is worn thin and warmer for it.",

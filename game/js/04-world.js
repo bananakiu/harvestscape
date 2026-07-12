@@ -26,6 +26,7 @@ function freshState(){
     groveRing:0, groveBest:0,              // the Deep Grove's rings — mirrors mineDepth/mineBest
     pledges:{},                            // the Pledge Ledger: id → { gPaid, mats:{item:n} } (see 01-data.js)
     waystones:[],                          // awakened waystone ids ("way3"…) — permanent, like liftStops
+    charm:null,                            // the one canopy charm worn (its item must also be in inv)
     stats:{ legends:0, tilled:0, planted:0, watered:0, harvested:0, chopped:0, mined:0, fished:0, cooked:0, earned:0, toolUpgrades:0, sold:0, gems:0, forage:0,
             bestCropSold:0, festivals:0, requests:0 },   // bestCropSold resets each season; the Harvest Fair judges it
     questIdx:0, questDone:[], questReady:false,

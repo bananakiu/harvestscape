@@ -57,7 +57,8 @@ function collectLights(){
     if(curMap.tiles[wy*W+wx] === T.WALL && isWindowTile(wx, wy))
       L.push({ x:wx*TILE+8, y:wy*TILE+11, r:28, c:"255,208,128", i:0.8 });
   }
-  L.push({ x:state.px, y:state.py-6, r: curMap.id==="mine"?98:42,   // wide warm lantern underground; a soft warm aura up top
+  const charmR = charmActive("Lantern Charm") ? 12 : 0;   // a firefly's worth farther
+  L.push({ x:state.px, y:state.py-6, r: (curMap.id==="mine"?98:42) + charmR,   // wide warm lantern underground; a soft warm aura up top
            c: curMap.id==="mine"?"255,215,160":"255,226,178", i: curMap.id==="mine"?1:0.55 });
   return L;
 }

@@ -774,6 +774,25 @@ function buildGroveArt(){
     px(g,5,7,2,2,"#ffd75a"); px(g,12,10,2,2,"#ffce5a"); px(g,8,4,2,2,"#ffe89a");       // gold in the leaves
     px(g,14,14,2,2,"#ffd75a"); px(g,7,12,1,1,"#fff0b0");
   });
+  // charm icons — small trinkets, each readable at 16px
+  mkSpr("item_Wren Feather Charm", 16, 16, g => {
+    px(g,7,2,2,10,"#8a7a62"); px(g,6,3,4,7,"#a89a80"); px(g,7,3,1,8,"#c9bda2");     // the feather
+    px(g,5,11,6,2,"#c77b3f"); px(g,7,12,2,2,"#e08a45"); });                          // copper twist
+  mkSpr("item_Acorn Ring", 16, 16, g => {
+    px(g,4,6,8,7,"#c8d0e0"); g.clearRect(6,8,4,3);                                   // silver ring
+    px(g,5,3,6,4,"#8a5f38"); px(g,5,3,6,1,"#a5763f"); px(g,7,2,2,1,"#6e4a2a"); });   // acorn cap
+  mkSpr("item_Moss Locket", 16, 16, g => {
+    px(g,5,4,6,8,"#b3aa9e"); px(g,6,5,4,6,"#4a7a3a"); px(g,7,6,2,2,"#6fb04a");       // moss under glass
+    px(g,7,2,2,2,"#8a8478"); });
+  mkSpr("item_Amber Beetle", 16, 16, g => {
+    px(g,4,4,8,9,"#e8a83a"); px(g,5,3,6,2,"#f0c05a"); px(g,5,12,6,1,"#c9922f");      // the amber
+    px(g,7,7,2,3,"#3a2c1a"); px(g,6,8,1,1,"#3a2c1a"); px(g,9,8,1,1,"#3a2c1a"); });   // the sleeper
+  mkSpr("item_Lantern Charm", 16, 16, g => {
+    px(g,6,3,4,2,"#6a6256"); px(g,5,5,6,8,"#d8ecf5"); px(g,6,6,4,5,"#fff0b0");       // glass + glow
+    px(g,7,7,2,2,"#ffd75a"); px(g,7,2,2,1,"#8a8478"); });
+  mkSpr("item_The Forester's Band", 16, 16, g => {
+    px(g,4,5,8,8,"#ffce5a"); g.clearRect(6,7,4,4); px(g,4,5,8,1,"#ffe089");          // the gold band
+    px(g,6,3,4,3,"#57ad57"); px(g,7,2,2,2,"#6ab86a"); px(g,7,4,1,1,"#b6f27a"); });   // the willow leaf
   // the Heart of the Forest: pale-barked, older than the road, faintly aglow
   mkSpr("hearttree", 20, 32, g => {
     px(g,7,18,6,13,"#c9b8a0"); px(g,7,18,1,13,"#e0d4c0"); px(g,12,18,1,13,"#9a8a70"); // pale trunk

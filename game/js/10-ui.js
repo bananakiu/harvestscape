@@ -410,9 +410,21 @@ function renderInv(){
     const sell = ITEM_SELL[it];
     const val = sell ? `<span class="sub" style="margin-left:.4em">${sell}g ea</span>` : (EDIBLE[it] ? `<span class="sub" style="margin-left:.4em">+${EDIBLE[it]} energy</span>` : "");
     const ex = EXAMINE[it] ? `<div class="exline">${escapeHtml(EXAMINE[it])}</div>` : "";
-    return `<div class="row"><span class="lead" data-icon="item_${it}">${ic}<span>${it}${val}</span></span><span>×${state.inv[it]}</span></div>${ex}`;
+    // a canopy charm can be WORN — one at a time, the single slot doing the balancing
+    const worn = state.charm === it;
+    const charmBtn = CHARMS[it]
+      ? (worn ? `<button class="buy" onclick="wearCharm(null)">worn ✓</button>` : `<button onclick="wearCharm('${jsq(it)}')">wear</button>`)
+      : "";
+    const eff = CHARMS[it] ? `<span class="sub" style="margin-left:.4em">${CHARMS[it].effect}</span>` : "";
+    return `<div class="row"><span class="lead" data-icon="item_${it}">${ic}<span>${it}${val}${eff}</span></span><span>${charmBtn} ×${state.inv[it]}</span></div>${ex}`;
   }).join("");
   hydrateIcons(b);
+}
+function wearCharm(name){
+  state.charm = name;
+  if(name){ toast("You put on the " + name + ".", "#8fe8c8"); playSfx("gift"); }
+  else playSfx("select");
+  saveGame(); renderInv();
 }
 // ---- The Collection: a museum of everything you've ever found, with its examine flavour ----
 const MUSEUM = [
@@ -424,7 +436,8 @@ const MUSEUM = [
   { name:"The Shore",     items:()=>Object.keys(SHORE) },
   { name:"Farm & Forage", items:()=>["Field Salad","Frostberry","Berry Bun","Honey","Egg","Large Egg","Milk","Large Milk"] },   // no Wool: there are no sheep, so it can never be discovered (would cap the Collection one short)
   { name:"The Kitchen",   items:()=>RECIPES.map(r=>r.name) },
-  { name:"Materials",     items:()=>["Wood","Pine Wood","Maple Wood","Stone","Copper Ore","Iron Ore","Gold Ore"] },
+  { name:"Materials",     items:()=>["Wood","Pine Wood","Maple Wood","Willow Wood","Elder Wood","Heartwood","Stone","Copper Ore","Iron Ore","Gold Ore"] },
+  { name:"The Canopy",    items:()=>Object.keys(CHARMS) },
 ];
 function renderMuseum(){
   const disc = state.discovered || {};

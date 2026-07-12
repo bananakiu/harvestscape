@@ -22,6 +22,33 @@
 
 ---
 
+## [Unreleased] — Grove Depths, Phase 3: canopy nests and charms
+
+Phase 3 of [GROVE_DEPTHS.md](GROVE_DEPTHS.md) — the birds'-nest reward layer the owner asked for
+("jewelry, rings, trinkets, or unlocks"), built under the gem-lesson constraint: treasure has
+USES, not resale value.
+
+### Added
+- **Canopy nests.** Felling any grove tree has a ~4.5% chance (deeper rings a touch kinder; fog
+  ×1.6 / storm ×1.3 — the canopy answers the weather like the mine's seams) of shaking a nest
+  loose. Ancient trees ALWAYS drop one, and theirs skips the common tier. Tiers: seasonal seeds
+  or berry buns (most — the grove feeds the farm, not the wallet); a **charm** (uncommon); a
+  fruit-tree sapling (rare — canopy-grown orchard stock); and once per valley, **The Forester's
+  Band** (event-rare, RS's Diamond-moment in forest language).
+- **Charms: the single-slot keepsake system.** Six trinkets (`CHARMS`, 01-data.js), each a tiny
+  passive: Wren Feather (+5% WC XP), Acorn Ring (an extra log now and then), Moss Locket (forage
+  sometimes doubles), Amber Beetle (+5% Mining XP), Lantern Charm (a little more light), and the
+  Band (+8% WC XP + extra-log chance). Exactly ONE worn at a time (`state.charm`, a wear/worn ✓
+  button in the Backpack) — the single slot is the power-creep governor, per the plan's owner
+  call. Sell prices modest on purpose; each charm drops once per save (rolls check the
+  Collection), so a nest charm is an event, not a stack.
+- The Collection gains "The Canopy" (charms) and the three new woods under Materials.
+
+### Verified
+In-browser: guaranteed nest (ancient path) rolled a charm; wear/worn toggle renders in the
+Backpack with icons and effect text; XP multipliers measured exact (+5% WC with Wren worn,
+Mining unaffected; swap to Beetle flips it); single-slot swap works; console clean.
+
 ## [Unreleased] — Grove Depths, Phase 2: three new trees, rarity-by-depth, and sinks
 
 Phase 2 of [GROVE_DEPTHS.md](GROVE_DEPTHS.md) — the fix for Woodcutting's 18→99 desert (three
