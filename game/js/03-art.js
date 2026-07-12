@@ -208,6 +208,9 @@ const TREE_FOLIAGE = {
   oak:   { Spring:["#3f8a3f","#57ad57","#2f6a2f"], Summer:["#37803a","#4fa050","#286028"], Fall:["#c07030","#e0a048","#9a5220"], Winter:null },
   pine:  { Spring:["#2f6a52","#3f8f6a","#204a3a"], Summer:["#2f6a52","#3f8f6a","#204a3a"], Fall:["#356a4a","#4a8a62","#244a34"], Winter:["#2f6a52","#3f8f6a","#204a3a"] },
   maple: { Spring:["#b8683a","#d68a52","#8a4a28"], Summer:["#4a8a3a","#66b052","#367028"], Fall:["#d05a2a","#f08a3a","#a03a1a"], Winter:null },
+  willow:    { Spring:["#4a8a4a","#6ab86a","#3a6a3a"], Summer:["#428242","#5cac5c","#326232"], Fall:["#a89a3a","#c8ba52","#7a6e28"], Winter:null },
+  elderwood: { Spring:["#2c5a6a","#3f7a8a","#1e4250"], Summer:["#2c5a6a","#3f7a8a","#1e4250"], Fall:["#2c5a6a","#3f7a8a","#1e4250"], Winter:["#2c5a6a","#3f7a8a","#1e4250"] },   // evergreen, like pine
+  heartwood: { Spring:["#5a9a7a","#7ac8a0","#3f7a5c"], Summer:["#5a9a7a","#7ac8a0","#3f7a5c"], Fall:["#5a9a7a","#7ac8a0","#3f7a5c"], Winter:["#5a9a7a","#7ac8a0","#3f7a5c"] },   // it doesn't sleep
 };
 function buildTrees(){
   for(const id in TREES){
@@ -226,14 +229,22 @@ function drawTree(g, id, pal, season){
     return;
   }
   const [c1,c2,c3] = pal;
-  if(id === "pine"){
+  if(id === "pine" || id === "elderwood"){
     px(g,4,12,12,9,c1); px(g,2,17,16,5,c3); px(g,6,6,8,9,c1); px(g,7,2,6,7,c2); px(g,9,0,2,4,c2);
     px(g,7,8,2,2,shade(c1,1.2)); px(g,10,14,2,2,shade(c1,1.2));
-    if(season==="Winter"){ px(g,6,6,8,2,"#eef4fb"); px(g,4,12,12,2,"#e2ecf5"); px(g,8,2,4,2,"#ffffff"); }
+    if(id === "elderwood"){ px(g,5,15,2,1,"#8ab8c8"); px(g,12,10,2,1,"#8ab8c8"); px(g,8,5,1,1,"#a8d0e0"); }   // silver-blue needle sheen
+    if(season==="Winter" && id==="pine"){ px(g,6,6,8,2,"#eef4fb"); px(g,4,12,12,2,"#e2ecf5"); px(g,8,2,4,2,"#ffffff"); }
+  } else if(id === "willow"){
+    // the weeper: a high crown that spills in strands past the trunk
+    px(g,4,4,12,7,c2); px(g,2,7,16,5,c1);
+    for(let i=0;i<6;i++){ const x=2+i*3; px(g,x,10,2,7+((i*7)%4),c1); px(g,x,10,1,5,c3); }
+    px(g,6,5,4,2,shade(c2,1.15)); px(g,13,8,2,2,shade(c1,1.2));
   } else {
     px(g,3,7,14,14,c1); px(g,1,10,18,8,c1); px(g,5,3,10,7,c2); px(g,4,16,12,5,c3);
     px(g,6,5,4,3,c2); px(g,12,8,3,3,shade(c1,1.2)); px(g,5,12,3,3,shade(c1,1.2));
     if(id === "maple" && season !== "Winter"){ px(g,4,9,2,2,"#ffd75a"); px(g,13,13,2,2,"#ffb04a"); px(g,9,6,2,2,"#ffd75a"); }
+    if(id === "heartwood"){ px(g,8,20,4,11,"#c9b8a0"); px(g,8,20,1,11,"#e0d4c0");   // repaint the trunk pale
+      px(g,5,8,2,2,"#b0ffd8"); px(g,12,12,2,2,"#b0ffd8"); px(g,8,5,2,2,"#d8fff0"); }  // the glints
   }
 }
 
@@ -477,7 +488,8 @@ function buildItems(){
     mkSpr("item_"+c.name, 16, 16, g => drawProduce(g, c));
   }
   // wood, ores, stone, fish
-  const woodCols = { "Wood":"#a0774a", "Pine Wood":"#8a9a7a", "Maple Wood":"#c08a5a" };
+  const woodCols = { "Wood":"#a0774a", "Pine Wood":"#8a9a7a", "Maple Wood":"#c08a5a",
+    "Willow Wood":"#8ab06a", "Elder Wood":"#5a8a9a", "Heartwood":"#9ac8ae" };
   for(const w in woodCols){ mkSpr("item_"+w, 16, 16, g => {
     px(g,3,7,10,4,woodCols[w]); px(g,3,7,10,1,shade(woodCols[w],1.2)); px(g,3,10,10,1,shade(woodCols[w],.7));
     px(g,3,8,1,2,shade(woodCols[w],.6)); px(g,12,8,1,2,shade(woodCols[w],.6)); px(g,4,4,10,4,woodCols[w]); px(g,4,4,10,1,shade(woodCols[w],1.2)); }); }
@@ -753,6 +765,15 @@ function buildGroveArt(){
   };
   mkSpr("westtrail", 16, 24, g => trail(g, false));
   mkSpr("easttrail", 16, 24, g => trail(g, true));
+  // the Ancient tree: one per deep ring per day — a golden-crowned elder, double timber
+  mkSpr("ancient", 20, 32, g => {
+    px(g,8,20,4,11,"#7a5a34"); px(g,8,20,1,11,"#96703f"); px(g,11,20,1,11,"#5e4426");
+    px(g,6,30,8,2,"#5e4426"); px(g,5,18,3,3,"#7a5a34"); px(g,12,17,3,4,"#7a5a34");     // wide old boughs
+    px(g,3,6,14,14,"#4a7a3a"); px(g,1,9,18,8,"#3f6a30"); px(g,5,3,10,6,"#5c9448");     // the crown
+    px(g,4,15,12,5,"#356028");
+    px(g,5,7,2,2,"#ffd75a"); px(g,12,10,2,2,"#ffce5a"); px(g,8,4,2,2,"#ffe89a");       // gold in the leaves
+    px(g,14,14,2,2,"#ffd75a"); px(g,7,12,1,1,"#fff0b0");
+  });
   // the Heart of the Forest: pale-barked, older than the road, faintly aglow
   mkSpr("hearttree", 20, 32, g => {
     px(g,7,18,6,13,"#c9b8a0"); px(g,7,18,1,13,"#e0d4c0"); px(g,12,18,1,13,"#9a8a70"); // pale trunk

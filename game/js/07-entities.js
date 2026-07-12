@@ -101,7 +101,7 @@ function toolActValid(fx, fy){
   if(tool==="Hoe")   return !o && TILLABLE.has(tt);
   if(tool==="Can")   return tt===T.TILLED;
   if(tool==="Seeds") return (tt===T.TILLED||tt===T.WATERED) && !curMap.crops[k];
-  if(tool==="Axe")   return !!(o && TREES[o.kind]);
+  if(tool==="Axe")   return !!(o && (TREES[o.kind] || o.kind==="deadfall" || o.kind==="ancient"));
   if(tool==="Pick")  return !!(o && (ORES[o.kind] || o.kind==="gemrock" || o.kind==="crystal"));
   if(tool==="Rod")   return tt===T.WATER;
   return false;
@@ -442,6 +442,7 @@ function drawObject(ox, oy, o, k){
     return;
   }
   if(o.kind==="hearttree" && chance(0.03)) pSparkle(bx+8+((Math.random()*10)|0)-5, by-10, "#8fe8c8", 1);
+  if(o.kind==="ancient" && chance(0.03)) pSparkle(bx+8+((Math.random()*10)|0)-5, by-8, "#ffd75a", 1);
   const s = spr[o.kind]; if(!s) return;
   const dw = s.width, dh = s.height;
   if(dh > 16){ ctx.fillStyle="rgba(0,0,0,0.16)"; ctx.beginPath(); ctx.ellipse(bx+8, by+15, 6, 2.2, 0, 0, 7); ctx.fill(); }

@@ -22,6 +22,38 @@
 
 ---
 
+## [Unreleased] — Grove Depths, Phase 2: three new trees, rarity-by-depth, and sinks
+
+Phase 2 of [GROVE_DEPTHS.md](GROVE_DEPTHS.md) — the fix for Woodcutting's 18→99 desert (three
+species can't carry a 99-level skill).
+
+### Added
+- **Willow (WC 30), Elderwood (WC 45), Heartwood (WC 70)** join `TREES`, each with a distinct
+  silhouette (weeping strands / silver-blue evergreen / pale trunk with glints), seasonal
+  foliage (willow sleeps bare in winter; elderwood is evergreen; heartwood never sleeps), and
+  wood item icons. Willow is the fast-XP tree — quick chop (8 hp), *deliberately cheap* wood
+  (34g, well under the g-per-level trend) so the RS willow-camp playstyle trains the skill
+  without printing money. Elderwood is the premium timber sinks ask for. Heartwood (24 hp,
+  520 xp, 210g) is the slow rare event wood.
+- **Rarity by depth, for real:** `RING_TREES` (01-data.js) gives each ring a weighted species
+  table — ring 1 is 70% oak; ring 9 has no oak or pine at all and is 30% heartwood. Every ring
+  keeps at least one species at/under its own gate level, so no ring is uniformly unchoppable
+  on arrival; everything above your level standing right there is the point (desire ahead of
+  ability). The skill guide picks the new species up automatically (it iterates `TREES`).
+- **The Ancient tree:** one per ring 5+ per day — an elder of the ring's rarest species, gold
+  in its leaves and a soft gold light after dark. Double hp, double XP, `n*2+1` timber, and
+  (Phase 3) a guaranteed canopy drop. The grove's "something glimmers below."
+- **Sinks shipped with the wood** (new resources with nowhere to go are inventory noise):
+  the floor-20+ lift stops now want **Elder Wood 12** (was a second helping of maple) — the
+  deep venues feed each other; and Rowan gained **The Grove Arbor** (4000g + Elder Wood 10 +
+  Willow Wood 15) — lantern-posts along ring 1's footpath, lit after dark. Waystone costs
+  (Phase 1) already sink ore + gold + a Ruby.
+
+### Verified
+Ring 7 in-browser: species mix reads old (elderwood/willow dominant, heartwood present, no
+oak), one ancient heartwood spawned; felling it paid 5 Heartwood + 1040 XP exactly; willow
+strand silhouette and heartwood pale trunks render distinctly; console clean.
+
 ## [Unreleased] — Grove Depths, Phase 1: rings, deadfalls, waystones, the Pledge Ledger
 
 Implements Phase 1 of [GROVE_DEPTHS.md](GROVE_DEPTHS.md) (owner-approved plan; DEVLOG 2026-07-13:

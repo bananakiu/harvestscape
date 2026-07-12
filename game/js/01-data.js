@@ -193,10 +193,18 @@ const CROPS = {
 };
 
 // ---- TREES ----
+// Willow/Elderwood/Heartwood (Grove Depths Phase 2) fill what was a dead skill from 18 to 99 —
+// three species couldn't carry a 99-level grind. Willow is the RS-style fast-XP tree (quick
+// chop, cheap wood); Elderwood is the premium timber the late-game sinks ask for; Heartwood is
+// the yew/magic analog — slow, sparse, an event to find. Sell prices sit BELOW the g-per-level
+// trend on purpose (the gem lesson, 2026-07-12): wood value must never outrun the money crops.
 const TREES = {
-  oak:   { name:"Oak",   lvl:1,  hp:3,  xp:25,  drop:"Wood",       n:2, pal:["#3f8a3f","#57ad57","#2f6a2f"] },
-  pine:  { name:"Pine",  lvl:8,  hp:6,  xp:60,  drop:"Pine Wood",  n:2, pal:["#2f6a52","#3f8f6a","#204a3a"] },
-  maple: { name:"Maple", lvl:18, hp:11, xp:115, drop:"Maple Wood", n:2, pal:["#b8683a","#d68a52","#8a4a28"] },
+  oak:       { name:"Oak",       lvl:1,  hp:3,  xp:25,  drop:"Wood",        n:2, pal:["#3f8a3f","#57ad57","#2f6a2f"] },
+  pine:      { name:"Pine",      lvl:8,  hp:6,  xp:60,  drop:"Pine Wood",   n:2, pal:["#2f6a52","#3f8f6a","#204a3a"] },
+  maple:     { name:"Maple",     lvl:18, hp:11, xp:115, drop:"Maple Wood",  n:2, pal:["#b8683a","#d68a52","#8a4a28"] },
+  willow:    { name:"Willow",    lvl:30, hp:8,  xp:150, drop:"Willow Wood", n:2, pal:["#4a8a4a","#6ab86a","#3a6a3a"] },
+  elderwood: { name:"Elderwood", lvl:45, hp:16, xp:260, drop:"Elder Wood",  n:2, pal:["#2c5a6a","#3f7a8a","#1e4250"] },
+  heartwood: { name:"Heartwood", lvl:70, hp:24, xp:520, drop:"Heartwood",   n:2, pal:["#5a9a7a","#7ac8a0","#3f7a5c"] },
 };
 
 // ---- ORES / ROCKS ----
@@ -275,7 +283,8 @@ const LEGENDS = [
 const LEGEND_BY_ID = {}; LEGENDS.forEach(l => LEGEND_BY_ID[l.id] = l);
 
 // ---- SELL VALUES ----
-const ITEM_SELL = { "Wood":12, "Pine Wood":28, "Maple Wood":52, "Stone":3, "Copper Ore":30, "Iron Ore":68, "Gold Ore":165 };
+const ITEM_SELL = { "Wood":12, "Pine Wood":28, "Maple Wood":52, "Willow Wood":34, "Elder Wood":95, "Heartwood":210,
+  "Stone":3, "Copper Ore":30, "Iron Ore":68, "Gold Ore":165 };
 FISH.forEach(f => { ITEM_SELL[f.name] = f.sell; ITEM_SELL["Cooked "+f.name] = Math.floor(f.sell*1.75); });
 LEGENDS.forEach(l => { ITEM_SELL[l.name] = l.sell; });   // trophies. You don't cook a Stormrider.
 for(const k in CROPS) ITEM_SELL[CROPS[k].name] = CROPS[k].sell;
@@ -360,6 +369,10 @@ const PROJECTS = [
   { id:"fountain", name:"The Town Fountain", gold:3000, items:{ "Stone":10, "Emerald":2 },
     blurb:"A fountain by Tom's door, as there was once. Toss a coin; word of your wish gets around.",
     done:"The fountain runs again. Pip has already fallen in." },
+  // the deep grove's timber gets a civic home — Elderwood's first sink outside the lift
+  { id:"arbor", name:"The Grove Arbor", gold:4000, items:{ "Elder Wood":10, "Willow Wood":15 },
+    blurb:"Lantern-posts of elder and willow along the Deep Grove's footpath, the way the foresters kept it.",
+    done:"The arbor stands. The grove's first ring glows kindly after dark." },
 ];
 const PROJECT_BY_ID = {}; PROJECTS.forEach(p => PROJECT_BY_ID[p.id] = p);
 
@@ -510,9 +523,11 @@ function liftStopCost(n){
   if(n === 5)  return { g:500,  mats:{ "Wood":20, "Copper Ore":5 } };
   if(n === 10) return { g:1500, mats:{ "Pine Wood":15, "Iron Ore":5 } };
   if(n === 15) return { g:3000, mats:{ "Maple Wood":10, "Gold Ore":5 } };
-  if(n === 20) return { g:6000, mats:{ "Maple Wood":20, "Gold Ore":10, "Diamond":1 } };
+  // the deep stops want the deep grove's timber — Elderwood replacing a second helping of maple
+  // (Grove Depths Phase 2: the two deep venues feed each other)
+  if(n === 20) return { g:6000, mats:{ "Elder Wood":12, "Gold Ore":10, "Diamond":1 } };
   // past 20 the shaft is old beyond reckoning — each deeper stop doubles the 20-cost in gold
-  return { g: 6000 * Math.pow(2, (n-20)/5), mats:{ "Maple Wood":20, "Gold Ore":10, "Diamond":1 } };
+  return { g: 6000 * Math.pow(2, (n-20)/5), mats:{ "Elder Wood":12, "Gold Ore":10, "Diamond":1 } };
 }
 
 // ---- GROVE DEPTHS ----
@@ -526,6 +541,31 @@ const DEADFALL = {  // keyed by the ring the deadfall opens INTO
   2:{lvl:5, hp:10}, 3:{lvl:12, hp:14}, 4:{lvl:20, hp:18}, 5:{lvl:30, hp:24},
   6:{lvl:40, hp:30}, 7:{lvl:52, hp:38}, 8:{lvl:64, hp:46}, 9:{lvl:78, hp:56},
 };
+// Ring spawn tables — the rarity system the owner asked for: shallow rings are commons,
+// deep rings phase them out and rares in. Every ring keeps SOME tree at or under its own
+// deadfall gate's level, so nothing you walk into is uniformly unchoppable. A species you
+// can't cut yet standing right there IS the design (desire ahead of ability).
+const RING_TREES = {
+  1:[["oak",.70],["pine",.27],["maple",.03]],
+  2:[["oak",.55],["pine",.35],["maple",.10]],
+  3:[["oak",.35],["pine",.40],["maple",.17],["willow",.08]],
+  4:[["oak",.22],["pine",.34],["maple",.26],["willow",.18]],
+  5:[["oak",.12],["pine",.24],["maple",.28],["willow",.26],["elderwood",.10]],
+  6:[["oak",.06],["pine",.16],["maple",.26],["willow",.30],["elderwood",.22]],
+  7:[["pine",.10],["maple",.20],["willow",.28],["elderwood",.30],["heartwood",.12]],
+  8:[["pine",.06],["maple",.14],["willow",.26],["elderwood",.34],["heartwood",.20]],
+  9:[["maple",.10],["willow",.22],["elderwood",.38],["heartwood",.30]],
+};
+function pickRingTree(ring, r){
+  const tbl = RING_TREES[clamp(ring,1,GROVE_RINGS)] || RING_TREES[1];
+  for(const [k,w] of tbl){ if((r -= w) < 0) return k; }
+  return tbl[tbl.length-1][0];
+}
+// One ANCIENT tree per ring 5+, per day: a glowing elder of the ring's rarest species — double
+// timber, double XP, and (Phase 3) a guaranteed canopy drop. The grove's "something glimmers".
+const ANCIENT_MIN_RING = 5;
+function ringTopSpecies(ring){ const tbl = RING_TREES[clamp(ring,1,GROVE_RINGS)]; return tbl[tbl.length-1][0]; }
+
 // Waystones: mossy Guild-era standing stones on rings 1/3/6/9. The mouth stone (way1) never
 // slept — it's free. The rest wake through the Pledge Ledger below. Once awake, stepping
 // between any two awake stones is free, so home is always one interaction from a funded ring.

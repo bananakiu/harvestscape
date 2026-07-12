@@ -368,13 +368,25 @@ function genGrove(m){
     if(t[y*W+x]!==T.GRASS && t[y*W+x]!==T.FLOWERGRASS && t[y*W+x]!==T.TALLGRASS) continue;
     if(m.objects[key(x,y)]) continue;
     if(rng() >= 0.34 + ring*0.008) continue;                     // old wood stands a little denser
-    const r = rng();
-    let kind;
-    if(ring <= 2)      kind = r<0.70 ? "oak" : r<0.95 ? "pine" : "maple";   // young fringe
-    else if(ring <= 4) kind = r<0.45 ? "oak" : r<0.85 ? "pine" : "maple";   // the middle wood
-    else if(ring <= 6) kind = r<0.25 ? "oak" : r<0.70 ? "pine" : "maple";   // old growth
-    else               kind = r<0.15 ? "oak" : r<0.55 ? "pine" : "maple";   // the deep grove
+    const kind = pickRingTree(ring, rng());                      // the rarity tables (01-data.js)
     m.objects[key(x,y)] = { kind, hp:TREES[kind].hp };
+  }
+  // one Ancient tree per deep ring per day — the ring's rarest species, grown old and golden
+  if(ring >= ANCIENT_MIN_RING){
+    const sp = ringTopSpecies(ring);
+    for(let i=0;i<80;i++){
+      const x=randiR(rng,4,m.w-8), y=randiR(rng,3,m.h-4);
+      if(Math.abs(y-15)<=2) continue;                            // never on or crowding the band
+      const g=t[y*W+x];
+      if((g===T.GRASS||g===T.FLOWERGRASS||g===T.TALLGRASS) && !m.objects[key(x,y)]){
+        m.objects[key(x,y)] = { kind:"ancient", species:sp, hp:TREES[sp].hp*2 };
+        break;
+      }
+    }
+  }
+  // the Grove Arbor (Rowan's project): lantern-posts along ring 1's footpath
+  if(ring === 1 && state.flags && state.flags.proj_arbor){
+    for(let x=13;x<=m.w-4;x+=4) if(!m.objects[key(x,14)]) m.objects[key(x,14)] = { kind:"lantern" };
   }
   // undergrowth to forage on the way
   let bushes=0;

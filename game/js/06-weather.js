@@ -46,6 +46,7 @@ function collectLights(){
       case "waystone":  if(o.ws==="way1" || (state.waystones||[]).includes(o.ws))
                           L.push({x:cx,y:cy-4,r:36,c:"140,230,200",i:0.7+0.12*Math.sin(animT*2.2)}); break;
       case "hearttree": L.push({x:cx,y:cy-10,r:52,c:"150,240,205",i:0.55+0.1*Math.sin(animT*1.6)}); break;
+      case "ancient":   L.push({x:cx,y:cy-8,r:40,c:"255,215,120",i:0.45+0.1*Math.sin(animT*1.9)}); break;
     }
   }
   // Every window in the valley glows after dark — the same procedural rule that draws them

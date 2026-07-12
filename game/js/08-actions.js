@@ -176,7 +176,8 @@ const OBJ_TITLE  = { bed:"Bed", campfire:"Campfire", stove:"Stove", fireplace:"F
   fountain:"Fountain", boardwalk:"Boardwalk", railcart:"Minecart", memorial:"Standing Stone", berrybush:"Berry Bush",
   frostberry:"Frostberry Bush", fruittree:"Fruit Tree", beehive:"Beehive", torch:"Torch", lamp:"Lamp", lantern:"Lantern",
   crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift",
-  deadfall:"Deadfall", westtrail:"The Trail West", easttrail:"The Trail Back", waystone:"Waystone", hearttree:"The Heart of the Forest" };
+  deadfall:"Deadfall", westtrail:"The Trail West", easttrail:"The Trail Back", waystone:"Waystone", hearttree:"The Heart of the Forest",
+  ancient:"Ancient Tree" };
 function npcAtTile(tx,ty){ if(!curMap||!curMap.npcs) return null;
   for(const n of curMap.npcs){ if(Math.floor(n.x/TILE)===tx && Math.floor(n.y/TILE)===ty) return n; } return null; }
 function objLook(obj){
@@ -197,6 +198,8 @@ function objLook(obj){
       : "A mossy standing stone, carved in the Guild's day. It seems to be waiting for someone." };
   }
   if(k==="hearttree")  return { title:"The Heart of the Forest", text:"The oldest tree in the valley. The grove goes no deeper — nothing does." };
+  if(k==="ancient"){ const sp=TREES[obj.species]; return { title:"Ancient "+(sp?sp.name:"Tree"),
+    text:"An elder of the deep wood, gold threading its leaves. Twice the timber, for an axe that's earned it." }; }
   const t = EXAMINE_OBJ[k];
   if(t) return { title: OBJ_TITLE[k] || k, text: t };
   return null;
@@ -296,6 +299,21 @@ function useTool(){
         give("Wood", 3 + obj.into); addXP("Woodcutting", 15 + 12*obj.into); bump("chopped");
         toast("The deadfall gives way — the trail west lies open.", "#b6f27a"); playSfx("get");
         pLeaves(tx*TILE+8, ty*TILE, "#57ad57", 8);
+      }
+      refreshHUD(); return;
+    }
+    // the Ancient tree — one per deep ring per day. An elder of the ring's rarest species:
+    // double hp, double timber, double XP (and, from Phase 3, a guaranteed canopy drop).
+    if(obj && obj.kind === "ancient"){
+      const sp = TREES[obj.species] || TREES.elderwood;
+      if(skillLvl("Woodcutting") < sp.lvl){ toast(`This elder is ${sp.name.toLowerCase()} grown old — Woodcutting ${sp.lvl} to touch it.`, "#ff8a7a"); playSfx("error"); return; }
+      if(!spendEnergy(2)) return;
+      obj.hp -= power; obj.shakeT = 0.2; cam.shake = 2.4; hitstop = 0.05; playSfx("chop");
+      pChips(tx*TILE+8, ty*TILE+6, "#7a5a34", 5); pLeaves(tx*TILE+8, ty*TILE, "#ffd75a", 4);
+      if(obj.hp <= 0){ delete curMap.objects[key(tx,ty)];
+        give(sp.drop, sp.n*2 + 1); addXP("Woodcutting", sp.xp*2); bump("chopped");
+        floatText(tx*TILE+8, ty*TILE-6, "ancient timber!", "#ffd75a");
+        pSparkle(tx*TILE+8, ty*TILE, "#ffd75a", 16); playSfx("get");
       }
       refreshHUD(); return;
     }
