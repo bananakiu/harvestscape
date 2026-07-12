@@ -963,7 +963,8 @@ const HEART_EVENTS = {
       { type:"say", who:"Maya", portrait:"port_maya", text:"Oh — hey. Can I show you something? I don't usually show people this." },
       { type:"say", who:"Maya", portrait:"port_maya", text:"My sketchbook. The valley the way it was — the festival, the lanterns doubled on the black water, the long table. I was small, but I remember the light." },
       { type:"say", who:"Maya", portrait:"port_maya", text:"Grandma Rosa baked for the whole valley that night. Then she was gone… and it just never happened again. I keep drawing it anyway. Silly, right?" },
-      { type:"say", who:"You", portrait:"port_player", text:"…Not silly at all." },
+      { type:"say", who:"You", portrait:"port_player", text:"…Not silly at all. — Who's this, at the end of the table? The one that's… scribbled out?" },
+      { type:"say", who:"Maya", portrait:"port_maya", text:"…Nobody. The pencil slipped." },
       { type:"say", who:"Maya", portrait:"port_maya", text:"…Thank you. For listening. Most people change the subject." },
     ]},
     { hearts:4, flag:"he_maya_4", steps:[

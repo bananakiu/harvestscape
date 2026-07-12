@@ -22,6 +22,40 @@
 
 ---
 
+## v3.4.0 — "What the Valley Lost" · 2026-07-13 · tag `v3.4.0`
+
+Version code **41**. First release of the story overhaul ([STORY_OVERHAUL.md](STORY_OVERHAUL.md),
+from the owner's verdict: *"the story kind of falls flat"*). Attacks the two biggest of the five
+diagnosed causes: the Guild's darkness was a **checklist, not a felt absence**, and **Act I never
+seeded a question** for Act II's reveal to answer.
+
+### Added — healing is physical
+- **Every lit wing lays its mark on the village** (`genVillage`, reading `wingLit()` live — the
+  village regenerates daily, so zero new persistence): Farming → market stall + crate by Tom's ·
+  Woodcutting → fresh timber on the west road · Mining → lanterns up the mine path · Fishing →
+  the day's catch barreled by the coast path · Cooking → a communal cook-fire on the plaza ·
+  Ranching → a trough by the Wrens' · Foraging → berrybushes on the lanes · Smithing → an anvil
+  outside the store · Hearthcraft → lanterns strung across the plaza. The story's progress bar is
+  now the *place waking up*. (The Guild hall already brightens per lit wing via `collectLights` —
+  interior props were tried and rejected: they'd block the row players stand on to face the wings.)
+- **The shuttered years show first:** under three lit wings, rubble sits by the ambient houses and
+  their signs read "(shuttered)" — the healing engine needs a *before*.
+
+### Added — three planted questions (paying off EXISTING Act II lore; no new plot)
+- **A planked-shut door** in the Guild's back wall (`olddoor`: new sprite, examine text, E-prompt).
+  Rowan, without looking up: *"Not that one. Not yet."* — and the examine line does the real work:
+  *"The dust is old; the nails aren't."* After Act II names Elias, it reads as quiet closure.
+- **Maya's sketchbook** (existing 2-heart scene) gains a scribbled-out fourth figure at the
+  festival table: *"…Nobody. The pencil slipped."*
+- **Tom's unfinished name** — once, after meeting Rowan (`hook_tomSlip`, suppressed once
+  `knowsElias`): *"Him and El— …and everyone else, back in the day. Anyway! Coin for goods!"*
+
+*Verified live: 0 wings → rubble ×2 + shuttered signs and no healing props; 6 wings → stall,
+barrels ×2, cook-fire, bushes ×2, mine-path lanterns, rubble gone, signs healed; olddoor present
+with both dialogue phases (deflection pre-, workroom reveal post-knowsElias); Tom's slip fires
+exactly once; Maya's scene carries the hook; healed-plaza screenshot (during which the test state
+organically triggered Grandpa's "On the Nine" page — the story systems compose); console clean.*
+
 ## v3.3.0 — "The Wood Remembers" · 2026-07-13 · tag `v3.3.0`
 
 Version code **40**. Grove Depths ships whole — all four phases of [GROVE_DEPTHS.md](GROVE_DEPTHS.md), built from the owner's 2026-07-13 verdict (DEVLOG): *"the forest… is not dynamic enough. It's not fun. The mine has levels, progression, and save points."* The grove is now the axe's mine — and the mine's own lift stops learn the grove's no-wasted-trips lesson right back.

@@ -833,6 +833,13 @@ function buildMineArt(){
   });
   mkSpr("sealeddoor", 16, 24, g => { px(g,2,2,12,22,"#4a4550"); px(g,3,3,10,20,"#3a3540"); px(g,7,3,2,20,"#2c2833");
     px(g,4,10,8,4,"#8fd3ff"); px(g,5,11,6,2,"#c8ecff"); px(g,2,2,12,1,"#565060"); px(g,6,7,4,1,"#a877e0"); });
+  // the Guild's planked-shut door: an ordinary door someone nailed boards across, years ago
+  mkSpr("olddoor", 16, 24, g => {
+    px(g,3,3,10,20,"#5f4630"); px(g,4,4,8,18,"#6e5238"); px(g,8,4,1,18,"#503a26");   // the door itself, dust-dark
+    px(g,2,8,12,3,"#8a6647"); px(g,2,8,12,1,"#a0774a");                              // board one
+    px(g,2,15,12,3,"#8a6647"); px(g,2,17,12,1,"#503a26");                            // board two
+    px(g,3,9,1,1,"#3a2c1c"); px(g,12,9,1,1,"#3a2c1c"); px(g,3,16,1,1,"#3a2c1c"); px(g,12,16,1,1,"#3a2c1c");  // nail heads
+  });
   // gem item icons
   for(const gm in GEMS){ mkSpr("item_"+gm, 16, 16, g => { const c=GEMS[gm];
     px(g,6,3,4,2,c); px(g,5,5,6,5,c); px(g,7,10,2,3,c); px(g,6,4,1,5,shade(c,1.4)); px(g,9,5,1,4,shade(c,.7)); px(g,7,3,1,1,"#ffffff"); }); }

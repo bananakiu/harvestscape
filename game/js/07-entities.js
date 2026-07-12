@@ -87,7 +87,7 @@ function drawPrompt(cx, cy){
 const INTERACT_KINDS = new Set(["campfire","stove","counter","stall","shipbin","sign","berrybush","frostberry","wrack","chest","noticeboard","fruittree","beehive",
   "ledger","railcart","boardwalk","fountain",
   "bed","ladderup","ladderdown","mineentrance","shellnode","coralnode","seaweednode","sealeddoor","desk","memorial",
-  "waystone","westtrail","easttrail","deadfall","hearttree","lift"]);
+  "waystone","westtrail","easttrail","deadfall","hearttree","lift","olddoor"]);
 function facingInteractable(fx, fy){
   const w = warpAt(fx,fy); if(w && !w.auto) return true;
   const crop = curMap.crops[key(fx,fy)];
@@ -376,7 +376,7 @@ function drawGroundTile(x, y, tt, nf){
   }
 }
 
-const TALL = new Set(["oak","pine","maple","bookshelf","lamp","fireplace","banner","sealeddoor","palm","mineentrance","lift"]);
+const TALL = new Set(["oak","pine","maple","bookshelf","lamp","fireplace","banner","sealeddoor","palm","mineentrance","lift","olddoor"]);
 function drawObject(ox, oy, o, k){
   const bx = ox*TILE, by = oy*TILE;
   let sway = 0;

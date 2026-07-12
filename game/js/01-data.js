@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.3.0", code: 40, codename: "The Wood Remembers", date: "2026-07-13" };
+const VERSION = { name: "3.4.0", code: 41, codename: "What the Valley Lost", date: "2026-07-13" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.4.0", code:41, date:"2026-07-13", name:"What the Valley Lost", notes:[
+    { t:"new",   s:"Every Guild wing you relight now changes the village itself — a market stall appears, barrels of the day's catch, a cook-fire on the plaza, lanterns up the mine path… the valley visibly wakes as you work." },
+    { t:"new",   s:"Until three wings are lit, the shuttered years still show: rubble by the neighbours' doors, and their signs say so." },
+    { t:"new",   s:"Small questions have appeared, for those who look closely — a door in the Guild nailed shut with suspiciously new nails, a figure scribbled out of an old sketch, a name Tom doesn't finish saying." },
+  ]},
   { v:"3.3.0", code:40, date:"2026-07-13", name:"The Wood Remembers", notes:[
     { t:"new",   s:"The Deep Grove goes DEEP now: nine rings of forest, each older than the last. A great deadfall seals every trail west — chop through it (the door pays you in wood and XP) and the way stays open till dawn." },
     { t:"new",   s:"Guild-era waystones stand on rings 1, 3, 6 and 9. Touch a dormant stone once and it remembers you forever — then fund its pledge from ANYWHERE, a little at a time, in the Journal's new ❖ Restorations page. A woken stone carries you between stones, free, always." },
@@ -927,6 +932,7 @@ const EXAMINE_OBJ = {
   "banner": "The Guild's colours, hung out again at last.",
   "ladder": "Down into the dark, one rung at a time.",
   "lift": "The Guild's old lift. The counterweight still works; the stops are what rusted.",
+  "olddoor": "Nailed shut. The dust is old; the nails aren't.",
 };
 const EXAMINE_NPC = {
   "maya": "Always paints the valley greener than it is; lately it obliges.",

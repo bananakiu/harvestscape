@@ -181,7 +181,7 @@ const OBJ_TITLE  = { bed:"Bed", campfire:"Campfire", stove:"Stove", fireplace:"F
   stall:"Market Stall", shipbin:"Shipping Bin", sign:"Sign", noticeboard:"Noticeboard", ledger:"The Valley Ledger",
   fountain:"Fountain", boardwalk:"Boardwalk", railcart:"Minecart", memorial:"Standing Stone", berrybush:"Berry Bush",
   frostberry:"Frostberry Bush", fruittree:"Fruit Tree", beehive:"Beehive", torch:"Torch", lamp:"Lamp", lantern:"Lantern",
-  crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift",
+  crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift", olddoor:"A Planked Door",
   deadfall:"Deadfall", westtrail:"The Trail West", easttrail:"The Trail Back", waystone:"Waystone", hearttree:"The Heart of the Forest",
   ancient:"Ancient Tree" };
 function npcAtTile(tx,ty){ if(!curMap||!curMap.npcs) return null;
@@ -493,6 +493,19 @@ function interact(){
       case "hearttree": showDialog("The Heart of the Forest",
         "The oldest tree in the valley — older than the Guild, older than the road. Its pale bark is warm under your palm, and for a moment the whole wood seems to hold its breath.\n\nSomething sleeps here. Not yet, but someday.", "port_valley"); return;
       case "sealeddoor": openVault(tx,ty); return;
+      case "olddoor": {
+        // The first planted question (STORY_OVERHAUL.md): a door someone nailed shut years ago.
+        // Rowan deflects until Act II has told you why; afterwards it reads as quiet closure.
+        if(state.flags.knowsElias)
+          showDialog("A door, planked shut",
+            "Elias's old workroom. Rowan never had the heart to open it, and now there's no need — the boards can come down any day they choose. There's no hurry left in it.",
+            "port_valley");
+        else
+          showDialog("Elder Rowan",
+            "“Not that one.” Rowan doesn't look up from his desk. “Not yet.”\n\nThe boards are old, but the nails… the nails look newer than the dust says they should.",
+            "port_rowan");
+        return;
+      }
       case "chest": openChest(); return;
       case "desk": showDialog("Rowan's Desk","Ledgers and a map of nine dark wings. The old keeper must be near.","port_rowan"); return;
       case "bush": toast("A tidy little bush."); return;

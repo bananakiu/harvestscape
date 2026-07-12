@@ -77,9 +77,13 @@ function genMayaHouse(m){
 function genGuild(m){
   genRoom(m, T.PLANK, T.IWALL);
   for(let x=1;x<m.w-1;x++) m.tiles[1*W+x]=T.IWALL;   // back wall band
-  // nine craft wings, lit or dark along the back wall
+  // nine craft wings, lit or dark along the back wall. (Lit wings already glow via collectLights —
+  // the hall genuinely brightens with the count, no extra props needed.)
   const wingX = [3,4,6,7,8,9,11,12,13];
   WINGS.forEach((w,i) => put(m, wingX[i], 1, "wing", { wing:w.id }));
+  // The planked-shut door at the far end of the back wall — the first thing that makes you ask
+  // what actually happened here. Rowan won't discuss it. (It pays off in Act II.)
+  put(m, 15, 1, "olddoor");
   // Rowan's desk area
   put(m,7,3,"desk"); put(m,8,3,"desk"); put(m,6,3,"bookshelf"); put(m,10,3,"bookshelf");
   put(m,9,3,"ledger");                    // the valley's unfinished work, in Rowan's hand
@@ -313,6 +317,33 @@ function genVillage(m){
     for(const [x,y] of [[18,24],[22,24],[18,26],[22,26]]) if(!m.objects[key(x,y)]) m.objects[key(x,y)] = { kind:"lantern" };
   }
   if(state.flags && state.flags.proj_minecart) m.objects[key(35,14)] = { kind:"railcart", to:"farm" };
+
+  // --- WHAT THE VALLEY LOST: the wings heal the village, visibly (STORY_OVERHAUL.md) ---
+  // Each lit Guild wing lays its mark on the town, so the story's progress bar is the PLACE
+  // waking up — not a panel. The village regenerates daily, so this is stateless and live.
+  const putIf = (cond, x, y, o) => { if(cond && !m.objects[key(x,y)]) m.objects[key(x,y)] = o; };
+  putIf(wingLit("farming"),  11,12, { kind:"stall" });                  // market stall by Tom's
+  putIf(wingLit("farming"),  12,13, { kind:"crate" });
+  putIf(wingLit("woodcutting"), 5,13, { kind:"crate" });                // fresh timber on the west road
+  putIf(wingLit("woodcutting"), 7,15, { kind:"beam" });
+  putIf(wingLit("mining"),   32,5,  { kind:"lantern" });                // the mine path, lit at last
+  putIf(wingLit("mining"),   34,8,  { kind:"lantern" });
+  putIf(wingLit("fishing"),  19,23, { kind:"barrel" });                 // the day's catch, coast path
+  putIf(wingLit("fishing"),  21,23, { kind:"barrel" });
+  putIf(wingLit("cooking"),  24,16, { kind:"campfire" });               // a communal cook-fire on the plaza
+  putIf(wingLit("ranching"),  5,23, { kind:"trough" });                 // hay by the Wrens'
+  putIf(wingLit("foraging"),  3,15, { kind:"berrybush" });              // the lanes fruit again
+  putIf(wingLit("foraging"), 36,12, { kind:"berrybush" });
+  putIf(wingLit("smithing"),  7,11, { kind:"anvil" });                  // an anvil rings outside the store
+  if(wingLit("hearth")) for(const [x,y] of [[16,11],[24,11],[16,17],[24,17]])
+    putIf(true, x, y, { kind:"lantern" });                              // lanterns strung across the plaza
+  // …and until three wings are lit, the shuttered years still show
+  const lit = wingsLit();
+  if(lit < 3){
+    putIf(true, 5,23, { kind:"rubble" }); putIf(true, 33,23, { kind:"rubble" });
+    m.objects[key(9,22)]  = { kind:"sign", text:"The Wrens' (shuttered)" };
+    m.objects[key(31,22)] = { kind:"sign", text:"The Harrows' (shuttered)" };
+  }
 }
 
 // ---------------- the Deep Grove ----------------
@@ -556,6 +587,11 @@ function npcStory(id){
   if(id==="tom"){
     if(state.flags.festivalDone) return "Best festival in twenty years — and I'm counting the year the cake caught fire.";
     if(near) return "Whole town's whispering 'festival' again. I've ordered lanterns I can't afford. Don't you dare not pull this off.";
+    // the slipped name (STORY_OVERHAUL.md hook 3): once, after you've met Rowan, before Act II names it
+    if(state.questIdx >= 4 && !state.flags.hook_tomSlip && !state.flags.knowsElias){
+      state.flags.hook_tomSlip = true;
+      return "So you've met old Rowan! Hard man to know, that one. Him and El— …and everyone else, back in the day. Anyway! Coin for goods, that's the Tom guarantee.";
+    }
   } else if(id==="maya"){
     if(spouseId()==="maya") return pick([
       "Morning, love — I watered the east rows before you woke. Don't you dare argue about it. ♥",
