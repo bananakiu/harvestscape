@@ -22,92 +22,11 @@
 
 ---
 
-## [Unreleased] — Grove Depths, Phase 4: the Old Lift joins the Pledge Ledger
+## v3.3.0 — "The Wood Remembers" · 2026-07-13 · tag `v3.3.0`
 
-Phase 4 of [GROVE_DEPTHS.md](GROVE_DEPTHS.md) — the owner's waystone critique applied verbatim
-to the mine: the old lift-stop flow (pay in full, standing at the stop) wasted the trek when you
-arrived under-resourced and made you memorize costs between trips.
+Version code **40**. Grove Depths ships whole — all four phases of [GROVE_DEPTHS.md](GROVE_DEPTHS.md), built from the owner's 2026-07-13 verdict (DEVLOG): *"the forest… is not dynamic enough. It's not fun. The mine has levels, progression, and save points."* The grove is now the axe's mine — and the mine's own lift stops learn the grove's no-wasted-trips lesson right back.
 
-### Changed
-- **Lift stops now fund like waystones.** Discovery is *derived*: `mineBest ≥ n` means you once
-  stood on floor n, so every such stop appears in the Journal's Restorations ledger — including
-  **retroactively on old saves, with zero migration** (listing stops at `mineBest`, so the
-  doubling series past 20 never renders to infinity). Deposits are partial and payable anywhere
-  (Journal or at the lift); the panel's all-or-nothing "restore" button (disabled until you
-  carried everything at once) is replaced by the ledger's contribute row, which always accepts
-  *something*. Completion still lands in `state.liftStops`, so ride logic, `enterMine`'s
-  hum-toast, and existing saves are untouched. `restoreLift` deleted — one funding path now.
-- `mineDown`'s landing toast now reads the ledger: an untouched stop says "a lift stop waits
-  here"; a part-funded one says exactly what it's short ("the lift stop here is 600g, 6× Pine
-  Wood short"). The ledger remembers; the toasts remind.
-
-### Verified
-Acceptance case from the plan, in-browser: save with `mineBest=17`, `liftStops=[5]` → ledger
-lists floors 5 (restored) / 10 / 15, nothing past 20; remote partial deposit from the farm
-(900g + 9 pine + 2 iron); rode to floor 10; contributed the remainder at the lift; stop woke
-instantly and the panel re-rendered to "restored stop · you are here"; `liftStops=[5,10]`;
-pledge record cleaned up.
-
-## [Unreleased] — Grove Depths, Phase 3: canopy nests and charms
-
-Phase 3 of [GROVE_DEPTHS.md](GROVE_DEPTHS.md) — the birds'-nest reward layer the owner asked for
-("jewelry, rings, trinkets, or unlocks"), built under the gem-lesson constraint: treasure has
-USES, not resale value.
-
-### Added
-- **Canopy nests.** Felling any grove tree has a ~4.5% chance (deeper rings a touch kinder; fog
-  ×1.6 / storm ×1.3 — the canopy answers the weather like the mine's seams) of shaking a nest
-  loose. Ancient trees ALWAYS drop one, and theirs skips the common tier. Tiers: seasonal seeds
-  or berry buns (most — the grove feeds the farm, not the wallet); a **charm** (uncommon); a
-  fruit-tree sapling (rare — canopy-grown orchard stock); and once per valley, **The Forester's
-  Band** (event-rare, RS's Diamond-moment in forest language).
-- **Charms: the single-slot keepsake system.** Six trinkets (`CHARMS`, 01-data.js), each a tiny
-  passive: Wren Feather (+5% WC XP), Acorn Ring (an extra log now and then), Moss Locket (forage
-  sometimes doubles), Amber Beetle (+5% Mining XP), Lantern Charm (a little more light), and the
-  Band (+8% WC XP + extra-log chance). Exactly ONE worn at a time (`state.charm`, a wear/worn ✓
-  button in the Backpack) — the single slot is the power-creep governor, per the plan's owner
-  call. Sell prices modest on purpose; each charm drops once per save (rolls check the
-  Collection), so a nest charm is an event, not a stack.
-- The Collection gains "The Canopy" (charms) and the three new woods under Materials.
-
-### Verified
-In-browser: guaranteed nest (ancient path) rolled a charm; wear/worn toggle renders in the
-Backpack with icons and effect text; XP multipliers measured exact (+5% WC with Wren worn,
-Mining unaffected; swap to Beetle flips it); single-slot swap works; console clean.
-
-## [Unreleased] — Grove Depths, Phase 2: three new trees, rarity-by-depth, and sinks
-
-Phase 2 of [GROVE_DEPTHS.md](GROVE_DEPTHS.md) — the fix for Woodcutting's 18→99 desert (three
-species can't carry a 99-level skill).
-
-### Added
-- **Willow (WC 30), Elderwood (WC 45), Heartwood (WC 70)** join `TREES`, each with a distinct
-  silhouette (weeping strands / silver-blue evergreen / pale trunk with glints), seasonal
-  foliage (willow sleeps bare in winter; elderwood is evergreen; heartwood never sleeps), and
-  wood item icons. Willow is the fast-XP tree — quick chop (8 hp), *deliberately cheap* wood
-  (34g, well under the g-per-level trend) so the RS willow-camp playstyle trains the skill
-  without printing money. Elderwood is the premium timber sinks ask for. Heartwood (24 hp,
-  520 xp, 210g) is the slow rare event wood.
-- **Rarity by depth, for real:** `RING_TREES` (01-data.js) gives each ring a weighted species
-  table — ring 1 is 70% oak; ring 9 has no oak or pine at all and is 30% heartwood. Every ring
-  keeps at least one species at/under its own gate level, so no ring is uniformly unchoppable
-  on arrival; everything above your level standing right there is the point (desire ahead of
-  ability). The skill guide picks the new species up automatically (it iterates `TREES`).
-- **The Ancient tree:** one per ring 5+ per day — an elder of the ring's rarest species, gold
-  in its leaves and a soft gold light after dark. Double hp, double XP, `n*2+1` timber, and
-  (Phase 3) a guaranteed canopy drop. The grove's "something glimmers below."
-- **Sinks shipped with the wood** (new resources with nowhere to go are inventory noise):
-  the floor-20+ lift stops now want **Elder Wood 12** (was a second helping of maple) — the
-  deep venues feed each other; and Rowan gained **The Grove Arbor** (4000g + Elder Wood 10 +
-  Willow Wood 15) — lantern-posts along ring 1's footpath, lit after dark. Waystone costs
-  (Phase 1) already sink ore + gold + a Ruby.
-
-### Verified
-Ring 7 in-browser: species mix reads old (elderwood/willow dominant, heartwood present, no
-oak), one ancient heartwood spawned; felling it paid 5 Heartwood + 1040 XP exactly; willow
-strand silhouette and heartwood pale trunks render distinctly; console clean.
-
-## [Unreleased] — Grove Depths, Phase 1: rings, deadfalls, waystones, the Pledge Ledger
+### Phase 1: rings, deadfalls, waystones, the Pledge Ledger
 
 Implements Phase 1 of [GROVE_DEPTHS.md](GROVE_DEPTHS.md) (owner-approved plan; DEVLOG 2026-07-13:
 the grove is *"not dynamic enough… not fun"* — it had a venue but no loop, while the mine had
@@ -155,6 +74,92 @@ stone discovery banner + pledge record; at-stone partial contribute (800g + 6 Co
 banked, remainder shown); remote Journal contribute completing the pledge (instant wake banner);
 riding way1 ⇄ way3; night light pools; console clean.
 
+### Phase 2: three new trees, rarity-by-depth, and sinks
+
+Phase 2 of [GROVE_DEPTHS.md](GROVE_DEPTHS.md) — the fix for Woodcutting's 18→99 desert (three
+species can't carry a 99-level skill).
+
+### Added
+- **Willow (WC 30), Elderwood (WC 45), Heartwood (WC 70)** join `TREES`, each with a distinct
+  silhouette (weeping strands / silver-blue evergreen / pale trunk with glints), seasonal
+  foliage (willow sleeps bare in winter; elderwood is evergreen; heartwood never sleeps), and
+  wood item icons. Willow is the fast-XP tree — quick chop (8 hp), *deliberately cheap* wood
+  (34g, well under the g-per-level trend) so the RS willow-camp playstyle trains the skill
+  without printing money. Elderwood is the premium timber sinks ask for. Heartwood (24 hp,
+  520 xp, 210g) is the slow rare event wood.
+- **Rarity by depth, for real:** `RING_TREES` (01-data.js) gives each ring a weighted species
+  table — ring 1 is 70% oak; ring 9 has no oak or pine at all and is 30% heartwood. Every ring
+  keeps at least one species at/under its own gate level, so no ring is uniformly unchoppable
+  on arrival; everything above your level standing right there is the point (desire ahead of
+  ability). The skill guide picks the new species up automatically (it iterates `TREES`).
+- **The Ancient tree:** one per ring 5+ per day — an elder of the ring's rarest species, gold
+  in its leaves and a soft gold light after dark. Double hp, double XP, `n*2+1` timber, and
+  (Phase 3) a guaranteed canopy drop. The grove's "something glimmers below."
+- **Sinks shipped with the wood** (new resources with nowhere to go are inventory noise):
+  the floor-20+ lift stops now want **Elder Wood 12** (was a second helping of maple) — the
+  deep venues feed each other; and Rowan gained **The Grove Arbor** (4000g + Elder Wood 10 +
+  Willow Wood 15) — lantern-posts along ring 1's footpath, lit after dark. Waystone costs
+  (Phase 1) already sink ore + gold + a Ruby.
+
+### Verified
+Ring 7 in-browser: species mix reads old (elderwood/willow dominant, heartwood present, no
+oak), one ancient heartwood spawned; felling it paid 5 Heartwood + 1040 XP exactly; willow
+strand silhouette and heartwood pale trunks render distinctly; console clean.
+
+### Phase 3: canopy nests and charms
+
+Phase 3 of [GROVE_DEPTHS.md](GROVE_DEPTHS.md) — the birds'-nest reward layer the owner asked for
+("jewelry, rings, trinkets, or unlocks"), built under the gem-lesson constraint: treasure has
+USES, not resale value.
+
+### Added
+- **Canopy nests.** Felling any grove tree has a ~4.5% chance (deeper rings a touch kinder; fog
+  ×1.6 / storm ×1.3 — the canopy answers the weather like the mine's seams) of shaking a nest
+  loose. Ancient trees ALWAYS drop one, and theirs skips the common tier. Tiers: seasonal seeds
+  or berry buns (most — the grove feeds the farm, not the wallet); a **charm** (uncommon); a
+  fruit-tree sapling (rare — canopy-grown orchard stock); and once per valley, **The Forester's
+  Band** (event-rare, RS's Diamond-moment in forest language).
+- **Charms: the single-slot keepsake system.** Six trinkets (`CHARMS`, 01-data.js), each a tiny
+  passive: Wren Feather (+5% WC XP), Acorn Ring (an extra log now and then), Moss Locket (forage
+  sometimes doubles), Amber Beetle (+5% Mining XP), Lantern Charm (a little more light), and the
+  Band (+8% WC XP + extra-log chance). Exactly ONE worn at a time (`state.charm`, a wear/worn ✓
+  button in the Backpack) — the single slot is the power-creep governor, per the plan's owner
+  call. Sell prices modest on purpose; each charm drops once per save (rolls check the
+  Collection), so a nest charm is an event, not a stack.
+- The Collection gains "The Canopy" (charms) and the three new woods under Materials.
+
+### Verified
+In-browser: guaranteed nest (ancient path) rolled a charm; wear/worn toggle renders in the
+Backpack with icons and effect text; XP multipliers measured exact (+5% WC with Wren worn,
+Mining unaffected; swap to Beetle flips it); single-slot swap works; console clean.
+
+### Phase 4: the Old Lift joins the Pledge Ledger
+
+Phase 4 of [GROVE_DEPTHS.md](GROVE_DEPTHS.md) — the owner's waystone critique applied verbatim
+to the mine: the old lift-stop flow (pay in full, standing at the stop) wasted the trek when you
+arrived under-resourced and made you memorize costs between trips.
+
+### Changed
+- **Lift stops now fund like waystones.** Discovery is *derived*: `mineBest ≥ n` means you once
+  stood on floor n, so every such stop appears in the Journal's Restorations ledger — including
+  **retroactively on old saves, with zero migration** (listing stops at `mineBest`, so the
+  doubling series past 20 never renders to infinity). Deposits are partial and payable anywhere
+  (Journal or at the lift); the panel's all-or-nothing "restore" button (disabled until you
+  carried everything at once) is replaced by the ledger's contribute row, which always accepts
+  *something*. Completion still lands in `state.liftStops`, so ride logic, `enterMine`'s
+  hum-toast, and existing saves are untouched. `restoreLift` deleted — one funding path now.
+- `mineDown`'s landing toast now reads the ledger: an untouched stop says "a lift stop waits
+  here"; a part-funded one says exactly what it's short ("the lift stop here is 600g, 6× Pine
+  Wood short"). The ledger remembers; the toasts remind.
+
+### Verified
+Acceptance case from the plan, in-browser: save with `mineBest=17`, `liftStops=[5]` → ledger
+lists floors 5 (restored) / 10 / 15, nothing past 20; remote partial deposit from the farm
+(900g + 9 pine + 2 iron); rode to floor 10; contributed the remainder at the lift; stop woke
+instantly and the panel re-rendered to "restored stop · you are here"; `liftStops=[5,10]`;
+pledge record cleaned up.
+
+---
 ---
 
 ## v3.2.0 — "The Near Fence" · 2026-07-13 · tag `v3.2.0`
