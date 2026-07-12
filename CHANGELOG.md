@@ -22,6 +22,24 @@
 
 ---
 
+## v3.6.0 — "The Lantern Test" · 2026-07-13 · tag `v3.6.0`
+
+Version code **43**. Story overhaul 3/3 ([STORY_OVERHAUL.md](STORY_OVERHAUL.md)): the arc was
+opening → long grind → finale, with no middle beat. Now, at **five of nine wings**, entering the
+village fires one scene (`maybeLanternTest`, `14-story.js`, ticked from the main loop beside
+`maybeSeasonalFestival`): Rowan strings the old lanterns across the plaza and **half the line
+lights** — a taste of the finale, years early, with a flicker of doubt in it ("The blue one always
+guttered. Rosa never could fix that either."). Tom half-remembers a promise; Maya names the
+feeling; Rowan closes it: *"Not yet. But nearer than I've been in eleven years."* The **two
+lanterns that lit stay up** (`lanternTest` flag; laid by `genVillage` so they survive the daily
+regen and merge cleanly with Hearthcraft's full string later). Actors are staged temporarily and
+cleaned up after (the day-1 arrival pattern); the flag is set before the scene starts so re-entry
+during the fade can't double-fire, and saved at scene end. *(The pitch's Star-Metal choice stays
+deferred — it wants a choice UI the dialogue system doesn't have; noted in the plan doc.)*
+
+*Verified live: fires exactly once at 5 wings with Rowan/Tom/Maya staged; plays through; both
+lanterns persist across `clearMapCache` regen; no refire; console clean.*
+
 ## v3.5.0 — "Neighbours" · 2026-07-13 · tag `v3.5.0`
 
 Version code **42**. Story overhaul 2/3 ([STORY_OVERHAUL.md](STORY_OVERHAUL.md)): the

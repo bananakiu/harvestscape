@@ -337,6 +337,10 @@ function genVillage(m){
   putIf(wingLit("smithing"),  7,11, { kind:"anvil" });                  // an anvil rings outside the store
   if(wingLit("hearth")) for(const [x,y] of [[16,11],[24,11],[16,17],[24,17]])
     putIf(true, x, y, { kind:"lantern" });                              // lanterns strung across the plaza
+  // the Lantern Test's two survivors stay up after the midpoint scene (14-story.js)
+  if(state.flags && state.flags.lanternTest){
+    putIf(true, 18,11, { kind:"lantern" }); putIf(true, 22,11, { kind:"lantern" });
+  }
   // …and until three wings are lit, the shuttered years still show
   const lit = wingsLit();
   if(lit < 3){

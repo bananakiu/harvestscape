@@ -26,6 +26,7 @@ function loop(ts){
         updateFishing(dt);
         updateWeather(dt);
         maybeSeasonalFestival();        // a festival window can open while you stand on the sand
+        maybeLanternTest();             // the midpoint beat fires the first time you enter the village at 5 wings
       }
     }
     updateParticles(dt);

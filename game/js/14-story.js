@@ -194,6 +194,39 @@ function maybeArrival(){
   ]);
 }
 
+// ===================== THE LANTERN TEST (the midpoint) =====================
+// At five of nine wings, the story takes one audible breath before the finale: Rowan risks
+// stringing the old lanterns across the plaza, and they HALF work. A taste of the ending with a
+// flicker of doubt in it — the arc's missing middle beat (STORY_OVERHAUL.md, v3.6.0). Fires once,
+// on entering the village; the two test lanterns stay up afterwards (genVillage, lanternTest flag).
+function maybeLanternTest(){
+  if(!state || state.flags.lanternTest || state.flags.festivalActive) return;
+  if(gameMode!=="play" || paused || isCutscene() || uiBlocking() || sleeping) return;
+  if(!curMap || curMap.id !== "village") return;
+  if(typeof wingsLit !== "function" || wingsLit() < 5) return;
+  state.flags.lanternTest = true;   // set FIRST — re-entry during the fade must not double-fire
+  const temp = [];
+  const ensure = (id, x, y, face) => {
+    let n = curMap.npcs.find(v => v.id === id);
+    if(!n){ n = mkNpc(id, x*TILE, y*TILE, {face}); curMap.npcs.push(n); temp.push(n); }
+    return n;
+  };
+  ensure("rowan", 18, 13, "right"); ensure("tom", 22, 13, "left"); ensure("maya", 19, 12, "down");
+  startCutscene([
+    { type:"wait", t:0.4 },
+    { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"Ah. Good — another pair of hands. Hold this end and don't ask questions yet." },
+    { type:"run", fn:()=>{ curMap.objects[key(18,11)]={kind:"lantern"}; curMap.objects[key(22,11)]={kind:"lantern"}; pSparkle(20*TILE, 11*TILE, "#ffd98a", 16); playSfx("gift"); } },
+    { type:"say", who:"Tom", portrait:"port_tom", text:"Five wings. I said I'd string the lanterns at five, didn't I? …I remember saying that. Years ago, to somebody." },
+    { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"Half the line, lit on the first try. The blue one guttered." },
+    { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"…The blue one always guttered. Rosa never could fix that either." },
+    { type:"wait", t:1.0 },
+    { type:"say", who:"Maya", portrait:"port_maya", text:"It's not the festival. But from the right angle… it isn't nothing, is it?" },
+    { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"Not yet. But nearer than I've been in eleven years. Back to work, the lot of us." },
+    { type:"run", fn:()=>{ saveGame(); const h=curHour(); for(const n of temp){ if(n.id==="maya" && h>=7 && h<18.5) continue; const i=curMap.npcs.indexOf(n); if(i>=0) curMap.npcs.splice(i,1); } } },
+    { type:"banner", big:"✦ The Lantern Test", small:"Half the line lit. Nearer than in eleven years.", t:3 },
+  ]);
+}
+
 // ===================== GRANDPA'S LETTERS =====================
 let _letterCb = null;
 function openLetter(head, text, onClose){
