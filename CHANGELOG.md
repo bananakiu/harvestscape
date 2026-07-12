@@ -22,6 +22,19 @@
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- **Night window glow read tiles at the wrong stride** (`collectLights`, `06-weather.js`): every
+  map's tile array is stored at the *global* stride `W` (`newMap` allocates `W*H`; all reads and
+  writes index `y*W+x`), but the window-light scan indexed `y*curMap.w+x`. On any map narrower
+  than `W` — the village (40), every interior — rows past the first were read from the wrong
+  offsets, so windows glowed on the wrong tiles or not at all. Harmless on the farm only because
+  the farm happened to be exactly `W` wide. Found while auditing every consumer of the farm's
+  dimensions ahead of the farm-shrink work.
+
+---
+
 ## v3.1.1 — "Doors & Roads" · 2026-07-13 · tag `v3.1.1`
 
 Version code **38**. The v3.0 world-split left a layer of mapping debt the owner hit all at once

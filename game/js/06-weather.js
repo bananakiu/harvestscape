@@ -50,7 +50,7 @@ function collectLights(){
   // point of having windows: a town that looks lived-in at night. Cheap: collectLights only runs
   // when lights show, and the scan is a few thousand array reads on a 320×208 game.
   for(let wy=0; wy<curMap.h; wy++) for(let wx=0; wx<curMap.w; wx++){
-    if(curMap.tiles[wy*curMap.w+wx] === T.WALL && isWindowTile(wx, wy))
+    if(curMap.tiles[wy*W+wx] === T.WALL && isWindowTile(wx, wy))
       L.push({ x:wx*TILE+8, y:wy*TILE+11, r:28, c:"255,208,128", i:0.8 });
   }
   L.push({ x:state.px, y:state.py-6, r: curMap.id==="mine"?98:42,   // wide warm lantern underground; a soft warm aura up top
