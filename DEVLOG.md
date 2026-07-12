@@ -14,6 +14,37 @@
 
 ---
 
+## 2026-07-12 — Progression verdict: v2.7 curve overshot; early levels must be earned
+
+**Owner feedback (near-verbatim):**
+
+> I think it was a little too rewarding in the beginning. It doesn't have to mirror RuneScape's
+> XP curve; it just has to feel the right amount of rewarding.
+>
+> Actually having slower levels in the beginning could be useful, allowing us to enjoy the game
+> and progress at a healthy pace. This way, the first few levels won't just feel like junk
+> levels. They don't need to follow RuneScape's XP curve in any way; it's just the idea of
+> having a long progression that helps, followed by a sort of mastery award in the end, you know?
+>
+> So, I just want you to fix the gameplay experience regarding the progression system and spend
+> time addressing everything else this game has issues with, like the UI, sprites, or anything
+> else. Make it just nice. Take your time.
+
+**Interpretation.** Two directives:
+
+1. **The v2.7 curve fixed the wrong end.** v2.7 ("A Fair Climb") was tuned to be gentler than RS
+   *everywhere*, which made the opening trivial — a level every 1–3 actions to L10. That cheapens
+   the very levels a new player feels first: they become "junk levels" that arrive before they're
+   noticed. What the owner actually wants isn't "gentle" — it's **paced**: early levels slow enough
+   to be *earned* and savored, a long steady climb (the RS *idea* of long progression, minus its
+   punishing math), and a genuine completionist crown at the end. Reward density should feel
+   roughly even across the journey, not front-loaded.
+2. **A general quality pass** — UI, sprites, "anything else… make it just nice." Open-ended polish
+   mandate: play the build, find what's rough, fix it, verify visually.
+
+**Produced:** v2.8.0 curve retune (level-preserving for existing saves — the cozy contract means a
+recalibration must never demote anyone), then a rolling polish pass. See `CHANGELOG.md`.
+
 ## 2026-07-11 — First full playtest verdict: fun core, cold open
 
 **Owner feedback (near-verbatim):**

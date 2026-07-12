@@ -22,6 +22,38 @@
 
 ---
 
+## v2.8.0 — "Earned" · 2026-07-12 · tag `v2.8.0`
+
+Version code **30**. Third calibration of the XP curve, from the owner's playtest of v2.7 (see
+[DEVLOG.md](DEVLOG.md) 2026-07-12): *"a little too rewarding in the beginning… slower levels in the
+beginning could be useful… the first few levels won't just feel like junk levels… long progression…
+a sort of mastery award in the end."* v2.7 optimized for "gentler than RS everywhere," which made
+the opening trivial (a level every 1–3 actions to L10) — it fixed the late-game wall but cheapened
+the start. The design goal is **pacing**, not gentleness: roughly even reward density across the
+whole journey.
+
+### Changed — the XP curve (`XP_TABLE`, `00-core.js`)
+- **New shape:** `inc(L) = 62 + 1.00·(L−1)^2.18`, completionist steepening only on 95–99
+  (`×(1 + 0.28·(L−94))`). Tuned in Node with era-adjusted action costs (early actions ≈ 12–26 XP,
+  mid ≈ 45, late ≈ 95):
+  - **Earned early levels:** L2 ≈ 3–4 actions (was ~1), L5 ≈ 4–5 per level, L10 ≈ 10 per level —
+    the first levels are noticed, not skipped past.
+  - **Long, steady middle:** ~24 actions/level at 25, ~70 at 50, ~145 at 80 — smooth stretch,
+    no wall.
+  - **Mastery award:** only 95–99 steepen; the final level alone ≈ 550 actions; 90→99 ≈ 35% of the
+    total. L99 ≈ 782k XP — 1.3× v2.7's climb, still ~17× gentler than RS's 13M.
+- **Level-preserving migration** (`migrateSave`, `11-title.js` + `xpCurve` save field): slower early
+  thresholds would otherwise *demote* existing saves — the cozy contract forbids it. Stored XP is
+  translated from the v2.7 table (kept as `XP_TABLE_V27` in `00-core.js`, used nowhere else) onto
+  the new table, preserving level AND fractional progress. The conversion runs **before**
+  `migrateSave`'s generic backfill — placed after it, the freshState `xpCurve:3` stamp would make
+  the check dead code (the exact v2.6.1 Collection-seeding trap). Because levels are preserved
+  exactly, no level banners or mastery praise can spuriously fire.
+
+*Verified: Node sweep of 548 XP values across the full range — zero level mismatches, boundaries
+exact, L99 caps; live-browser check confirms the runtime table and a real `migrateSave` call
+(Cooking 25→25, Farming 10→10, XP translated to the precise new thresholds).*
+
 ## v2.7.0 — "A Fair Climb" · 2026-07-11 · tag `v2.7.0`
 
 Version code **29**. Replaced RuneScape's XP curve with our own, per the owner's call: *"we don't

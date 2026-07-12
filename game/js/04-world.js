@@ -28,6 +28,7 @@ function freshState(){
     questIdx:0, questDone:[], questReady:false,
     weather:"clear", forecast:null,        // forecast is rolled on the first newDay
     discovered:{ "Turnip Seeds":true, "Berry Bun":true },   // everything you've ever held — the Collection remembers
+    xpCurve:3,                             // which XP table this save's XP is expressed in (see migrateSave)
 
     flags:{ introSeen:false },
   };

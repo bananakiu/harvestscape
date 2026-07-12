@@ -159,6 +159,22 @@ function storySoFar(){
   setTimeout(() => toast(`${actInfo().title} · ${where}`, "#e8d18a"), 1400);
 }
 function migrateSave(s){
+  // XP-curve recalibration (v2.8): translate stored XP onto the current table LEVEL-PRESERVINGLY —
+  // a repaced curve must never demote a save (the cozy contract). Runs BEFORE the generic backfill
+  // below, which would otherwise stamp freshState's xpCurve and make this check dead code (the same
+  // trap as the v2.6.1 Collection-seeding bug). Pre-v2.7 saves convert via the v2.7 reading of their
+  // XP, which is ≥ what they last saw — a small one-time gift, never a loss.
+  if((s.xpCurve||0) < 3 && s.skills){
+    const lvlIn = (T,xp) => { let l=1; while(l<99 && T[l+1]<=xp) l++; return l; };
+    for(const sk in s.skills){
+      const xp = s.skills[sk]||0;
+      const L = lvlIn(XP_TABLE_V27, xp);
+      const lo = XP_TABLE_V27[L], hi = XP_TABLE_V27[Math.min(L+1,99)];
+      const frac = (L>=99 || hi<=lo) ? 0 : (xp-lo)/(hi-lo);   // progress within the level, carried over
+      s.skills[sk] = Math.round(XP_TABLE[L] + frac*(XP_TABLE[Math.min(L+1,99)] - XP_TABLE[L]));
+    }
+  }
+  s.xpCurve = 3;
   const f = freshState();
   for(const k in f){ if(s[k] === undefined) s[k] = f[k]; }
   for(const k in f.stats){ if(s.stats[k] === undefined) s.stats[k] = 0; }

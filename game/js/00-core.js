@@ -85,20 +85,35 @@ function gradHex(stops, t){
   return stops[stops.length-1][1];
 }
 
-// ---- XP table (levels 1..99) — HarvestScape's own curve, tuned for cozy progression ----
-// NOT RuneScape's. RS doubles the per-level cost every ~7 levels, so level 99 costs ~13,000,000 XP —
-// a punishing wall (its back half is ~130× its first). Ours is a smooth power ramp that is GENTLER
-// than RS at EVERY level: rewarding early (a level every few actions), a fair-but-real mid-game
-// (~1,150 actions to 50), and steadily harder — with only the final four levels (96–99) given a light
-// completionist steepening. L99 ≈ 584k XP (~22× gentler than RS), and 90→99 is ~a third of the climb,
-// not half. Because every threshold is ≤ the old one, existing saves' XP simply reads as a higher
-// level — a one-time gift, never a loss (the cozy contract). `XP_TABLE[L]` = total XP to reach level L.
+// ---- XP table (levels 1..99) — HarvestScape's own curve, third calibration ----
+// The design brief (owner, 2026-07-12): early levels must be EARNED — slow enough to be noticed
+// and enjoyed, never "junk levels" that arrive before you look up; then a long, steady climb (the
+// RuneScape *idea* of long progression without its punishing math); and a genuine completionist
+// crown at the very end. The v2.7 curve was gentler-than-RS everywhere, which made the opening
+// trivial (a level every 1–3 actions to L10) — it fixed the late-game wall but cheapened the start.
+// This curve paces reward density roughly evenly across the whole journey:
+//   · L2 lands after ~3–4 early actions, L10 after ~50 — the first morning teaches, day one rewards.
+//   · Mid-game stretches smoothly (~25 actions/level at 25, ~70 at 50, ~150 at 80).
+//   · Only levels 95–99 steepen (the final level alone ≈ 550 actions) — the mastery award.
+//   · L99 ≈ 782k XP total: ~17× gentler than RS's 13M, but 1.3× longer than v2.7's climb.
+// Existing saves are converted LEVEL-PRESERVINGLY in migrateSave (via XP_TABLE_V27 below) — a
+// recalibration must never demote anyone (the cozy contract). `XP_TABLE[L]` = total XP for level L.
 const XP_TABLE = [0, 0];
 (function(){
   for(let l=2; l<=99; l++){
-    let inc = 26 + 0.30*Math.pow(l-1, 2.4);   // smooth, always-increasing per-level cost
-    if(l >= 96) inc *= 1 + 0.30*(l-95);        // a gentle completionist push on the last stretch
+    let inc = 62 + 1.00*Math.pow(l-1, 2.18);  // smooth, always-increasing per-level cost
+    if(l >= 95) inc *= 1 + 0.28*(l-94);        // the completionist crown: only the last five steepen
     XP_TABLE.push(Math.round(XP_TABLE[l-1] + inc));
+  }
+})();
+// The v2.7 curve, kept ONLY so migrateSave can translate a save's stored XP onto the new table
+// without changing the level the player last saw. Not used anywhere else.
+const XP_TABLE_V27 = [0, 0];
+(function(){
+  for(let l=2; l<=99; l++){
+    let inc = 26 + 0.30*Math.pow(l-1, 2.4);
+    if(l >= 96) inc *= 1 + 0.30*(l-95);
+    XP_TABLE_V27.push(Math.round(XP_TABLE_V27[l-1] + inc));
   }
 })();
 const levelFor = xp => { let l = 1; while(l < 99 && XP_TABLE[l+1] <= xp) l++; return l; };
