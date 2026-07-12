@@ -55,6 +55,7 @@ Sell and upgrade at **Tom's stall**; **sleep at your cottage door** to pass the 
 - `GAME_ATLAS.html` — the whole game on one page (story, quests, unlocks, maps, people, economy, 100% checklist), generated from the live game data by `tools/build-atlas.mjs`; regenerate after any content change.
 - `atlas/` — one atlas snapshot per release (start at `atlas/index.html`): the state of the game at every version, back to v2.1.0. Written automatically by the generator; part of the release checklist.
 - `tools/` — repo tooling (currently just the atlas generator).
+- `GROVE_DEPTHS.md` — the approved plan for the Deep Grove rework (depth rings, waystones on a pledge ledger, tree rarity, canopy treasure) plus the mine lift's ledger retrofit. Planned, not yet built.
 - `NEW_PLAYER_EXPERIENCE.md` — the onboarding beta plan (shipped in v2.2.0 "First Light"; its polish tier remains on the roadmap).
 - `AGENTS.md` — instructions for any AI agent working in this repo (canonical; `CLAUDE.md`, `GEMINI.md`, etc. are symlinks to it).
 - `GAME_SCOPE.md` — the original design vision (the larger Godot ambition this browser build is the vertical slice of).
