@@ -14,6 +14,32 @@
 
 ---
 
+## 2026-07-13 (late evening, cont.) — Grove Depths plan review: waystones must never waste the trip
+
+**Owner (near-verbatim), reviewing the Grove Depths pitch:**
+
+> Okay, this is good, except that it will be quite frustrating to reach a waypoint and not
+> have the resources to build it. So, I want some other alternative system that still costs
+> you something. You still have to earn it; you still have to earn the rights to use the
+> waypoint. It shouldn't be an in-the-moment situation where you reach the waypoint, and you
+> don't have the resources. Then, you have to do it all over again, and you don't even
+> remember what resources you need. Things like that.
+>
+> The rest of the proposal looks good, so we could do that.
+
+**Interpretation.** The lift-stop pattern (pay the full cost while standing at the stop) has a
+hidden UX tax the owner won't accept in the grove: the *trip* and the *payment* are coupled, so
+arriving under-resourced wastes the trek, and the cost lives only in the player's memory between
+trips. The fix isn't to remove the cost ("you still have to earn it") — it's to decouple
+discovery from payment: reaching a stone must bank something permanent by itself, and paying
+must be possible later, from anywhere, in partial amounts, with the ledger doing the
+remembering. Note this critique applies verbatim to the mine's lift stops too — flagged as a
+possible follow-up retrofit, not in Grove Depths scope.
+
+**Direction call.** Rest of the plan approved as pitched (rings capped ~9, waystones every 3
+rings, charms as small single-slot passives — our recommended picks stand). Revise the waystone
+system per the above, present revisions before building.
+
 ## 2026-07-13 (late evening) — The forest verdict: "cool, but not dynamic enough. Not fun."
 
 **Owner (near-verbatim):**
