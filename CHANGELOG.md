@@ -22,6 +22,29 @@
 
 ---
 
+## v3.1.0 — "The Thread" · 2026-07-13 · tag `v3.1.0`
+
+Version code **37**. The story-visibility pass ([VALLEY_V3.md](VALLEY_V3.md) part 2) — the owner:
+*"it's kind of hard to see the point of the story… the main mission doesn't shine through."* The
+act-aware journal (v2.2) framed the story; these three make the *world* point at it.
+
+### Added
+- **Quest markers** (`storyMarkerNpc()`, `09-quests.js`; drawn in the NPC loop, `07-entities.js`):
+  a gold ✦ bobs over whoever the main quest needs — the giver awaiting your report, or the person
+  behind an unmet `{talk:}` objective. Crisp on the text overlay, gone when no one's needed.
+- **Wings light out loud** (`checkWings()`, riding `checkQuests`' triggers): crossing a wing's
+  threshold now fires a banner ("✦ The Farming wing glows again — 1 of 9 crafts relit"), a warm
+  line from Rowan (three rotating voices), and the quest jingle. The story's central progress bar
+  used to tick over *silently inside a panel*. New save field `state.wingsLit` counts celebrated
+  wings; `migrateSave` seeds it to the already-lit count **before** the generic backfill (the
+  v2.6.1 dead-code trap, dodged again) so old saves get no retro fanfare burst.
+- **The morning names the mission**: the sleep card's last story line points at the next step
+  ("✒ Tom is waiting to hear from you" / "✒ The story waits: Coin & Company").
+
+*Verified live: marker null on the letter quest, "tom" on Coin & Company, ✦ visible over Tom in
+the store (screenshot); Farming→10 fired the wing banner and advanced wingsLit 0→1; a mock old
+save with two lit wings seeded to 2 with no fanfare; morning line renders; console clean.*
+
 ## v3.0.0 — "The Valley Opens" · 2026-07-13 · tag `v3.0.0`
 
 Version code **36**. The world split — the owner's deferred 2026-07-12 item, green-lit today

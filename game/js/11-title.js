@@ -175,6 +175,14 @@ function migrateSave(s){
     }
   }
   s.xpCurve = 3;
+  // wingsLit counts CELEBRATED wings — an old save's already-lit wings must not throw a burst of
+  // retro fanfare on load. Seed it to the current count BEFORE the generic backfill below would
+  // stamp freshState's 0 (the v2.6.1 dead-code trap, again).
+  if(s.wingsLit === undefined && s.skills){
+    const keep = state; state = s;
+    try { s.wingsLit = wingsLit(); } catch(e){ s.wingsLit = 0; }
+    state = keep;
+  }
   const f = freshState();
   for(const k in f){ if(s[k] === undefined) s[k] = f[k]; }
   for(const k in f.stats){ if(s.stats[k] === undefined) s.stats[k] = 0; }

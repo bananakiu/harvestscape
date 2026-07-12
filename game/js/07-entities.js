@@ -180,6 +180,12 @@ function renderWorld(){
     ents.push({ y: n.y, draw: () => {
       drawChar(NPCDEF[n.id].spr, n.x, n.y, n.face, poseFor(n.walk, n.moving, false), bobFor(n.walk, n.moving));
       nameTag(NPCDEF[n.id].name, n.x, n.y);
+      // the story's thread: a gold ✦ bobs over whoever the main quest needs right now, so the
+      // mission is never lost in the day's chores (owner: "the main mission doesn't shine through")
+      if(typeof storyMarkerNpc === "function" && storyMarkerNpc() === n.id){
+        const bobM = Math.sin(animT*3)*1.6;
+        queueText(n.x, n.y - 30 + bobM, "✦", { color:"#ffce5a", size:12, weight:"bold" });
+      }
     }});
   }
   for(const a of curMap.animals) ents.push({ y: a.y, draw: () => a.species==="cow" ? drawCow(a) : drawChicken(a) });

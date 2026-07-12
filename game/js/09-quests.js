@@ -41,10 +41,41 @@ function objProgress(o){
   return [0,1];
 }
 
+// Who the main quest needs right now — the neighbour under the gold ✦ (drawn in renderWorld).
+// Report-in beats everything; otherwise an unmet {talk:} objective points at its person.
+function storyMarkerNpc(){
+  const q = curQuest(); if(!q) return null;
+  if(state.questReady) return QUEST_GIVER_NPC[q.giver] || null;
+  for(const o of q.obj) if(o.talk && !objDone(o)) return o.talk;
+  return null;
+}
+
+// The Guild's heartbeat: celebrate the moment a wing crosses to lit, instead of letting the
+// story's central progress bar tick over silently inside a panel. state.wingsLit remembers how
+// many were already celebrated (backfilled for old saves in migrateSave — no retro fanfare).
+const WING_LINES = [
+  "Rowan: “The %s wing… lit. I'd all but stopped believing.”",
+  "Rowan: “%s, awake again. The hall remembers, you know.”",
+  "Rowan: “Another window burning in the Guild tonight — %s. Thank you.”",
+];
+function checkWings(){
+  if(!state || typeof wingsLit !== "function") return;
+  const now = wingsLit();
+  if(now <= (state.wingsLit||0)){ state.wingsLit = now; return; }
+  const newly = WINGS.filter(w => w.lit()).slice(state.wingsLit||0);
+  for(const w of newly){
+    const line = WING_LINES[(state.wingsLit||0) % WING_LINES.length].replace("%s", w.name);
+    banner("✦ The " + w.name + " wing glows again", (state.wingsLit+1) + " of 9 crafts relit.");
+    setTimeout(() => { toast(line, "#ffe6a0"); playSfx("quest"); }, 1600);
+    state.wingsLit = (state.wingsLit||0) + 1;
+  }
+}
+
 let _questGuard = false;
 function checkQuests(){
   if(_questGuard) return;             // avoid re-entrancy from give()/bump()
   _questGuard = true;
+  checkWings();                       // wing-lighting rides the same triggers as quest progress
   let safety = 0;
   while(state.questIdx < QUESTS.length && !state.questReady){
     const q = QUESTS[state.questIdx];

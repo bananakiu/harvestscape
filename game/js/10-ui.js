@@ -852,6 +852,11 @@ function showSleepCard(s){
     else
       lines.push(`${icon} ${ev.name} is tomorrow`);
   }
+  // the morning names the mission — every day starts with the story's thread in hand
+  if(state.questIdx < QUESTS.length){
+    const t = trackerData();
+    if(t) lines.push(t.reportTo ? `✒ ${t.reportTo} is waiting to hear from you` : `✒ The story waits: ${t.title}`);
+  }
   lines.push("☕ Energy restored");
   lines.push("💾 Progress saved");
   lines.forEach((t,i) => { const li = document.createElement("li"); li.textContent = t; li.style.animationDelay = (i*0.28+0.3)+"s"; list.appendChild(li); });
