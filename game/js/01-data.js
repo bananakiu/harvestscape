@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "2.8.2", code: 32, codename: "Turned Earth", date: "2026-07-12" };
+const VERSION = { name: "2.9.0", code: 33, codename: "The Old Lift", date: "2026-07-12" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"2.9.0", code:33, date:"2026-07-12", name:"The Old Lift", notes:[
+    { t:"new",   s:"The Guild's old lift stands beside every mine floor's ladder — riding up to the surface is always free, and every 5th floor's stop can be restored (wood, ore, and coin) to skip straight down, forever." },
+    { t:"new",   s:"Time now stands still underground, like the old farming games — no more being yanked to bed mid-vein. Your energy is the mine's honest limit." },
+    { t:"new",   s:"An XP orb appears by your energy bar while you train — a little ring that fills toward your next level, with your level on it." },
+  ]},
   { v:"2.8.2", code:32, date:"2026-07-12", name:"Turned Earth", notes:[
     { t:"polish",s:"Tilled soil finally looks like soil — broken furrows and clods instead of what used to read as wooden decking. Watered earth darkens the same rows." },
   ]},
@@ -440,6 +445,21 @@ const TIER_POWER = [1, 2, 3, 5];
 const TIER_COST  = [null, {g:300, ore:"Copper Ore", n:5}, {g:1200, ore:"Iron Ore", n:5}, {g:5000, ore:"Gold Ore", n:5}];
 const TIER_COL   = ["#b7a48c", "#c77b3f", "#d8c4bc", "#ffd75a"];
 
+// ---- THE OLD LIFT ----
+// A rusted lift shaft stands by the entry ladder of every mine floor. Riding UP is always free —
+// the counterweight still works; it's the STOPS that rusted. Every 5th floor's stop can be restored
+// once, permanently (state.liftStops), with a resource dump made while standing at it. The costs
+// deliberately sink wood + ore + gold together — the multi-skill economy in miniature — and the
+// deepest stops want a gem, giving gems a life beyond Tom's counter.
+function liftStopCost(n){
+  if(n === 5)  return { g:500,  mats:{ "Wood":20, "Copper Ore":5 } };
+  if(n === 10) return { g:1500, mats:{ "Pine Wood":15, "Iron Ore":5 } };
+  if(n === 15) return { g:3000, mats:{ "Maple Wood":10, "Gold Ore":5 } };
+  if(n === 20) return { g:6000, mats:{ "Maple Wood":20, "Gold Ore":10, "Diamond":1 } };
+  // past 20 the shaft is old beyond reckoning — each deeper stop doubles the 20-cost in gold
+  return { g: 6000 * Math.pow(2, (n-20)/5), mats:{ "Maple Wood":20, "Gold Ore":10, "Diamond":1 } };
+}
+
 // ---- NPCS ----
 const NPCS = {
   maya: { name:"Maya",  loved:["Strawberry","Golden Koi"], likes:["Cooked","Starfruit","Carrot"] },
@@ -695,6 +715,7 @@ const EXAMINE_OBJ = {
   "wing": "One of the Guild's nine craft-halls, patient and proud.",
   "banner": "The Guild's colours, hung out again at last.",
   "ladder": "Down into the dark, one rung at a time.",
+  "lift": "The Guild's old lift. The counterweight still works; the stops are what rusted.",
 };
 const EXAMINE_NPC = {
   "maya": "Always paints the valley greener than it is; lately it obliges.",

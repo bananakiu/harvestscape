@@ -735,6 +735,16 @@ function buildMineArt(){
   mkSpr("minecart", 16, 16, g => { px(g,2,6,12,6,"#5f5f5f"); px(g,2,6,12,2,"#7a7a7a"); px(g,3,8,10,3,"#3a3a42");
     px(g,4,12,3,3,"#2a2a30"); px(g,9,12,3,3,"#2a2a30"); px(g,4,7,3,2,"#c77b3f"); px(g,8,7,4,2,"#ffd75a"); });
   mkSpr("rubble", 16, 16, g => { seedRR(17); for(let i=0;i<6;i++){ const x=rr()*11+1|0,y=rr()*7+7|0; px(g,x,y,3,2,"#4a4550"); px(g,x,y,1,1,"#565060"); } });
+  // the Old Lift: a rusted cage frame with a crossbar pulley and a warm brass call-lever
+  mkSpr("lift", 16, 24, g => {
+    px(g,2,2,2,22,"#5a5560"); px(g,12,2,2,22,"#5a5560");        // side rails
+    px(g,2,2,12,2,"#6a6472"); px(g,2,3,12,1,"#7a7484");         // headframe
+    px(g,7,0,2,3,"#3a3540"); px(g,6,4,4,2,"#8a8494");           // pulley + hanger
+    px(g,4,8,8,1,"#5a5560"); px(g,4,14,8,1,"#5a5560");          // cage bars
+    px(g,4,20,8,2,"#4a4550");                                    // floor plate
+    px(g,3,6,1,2,"#a06a3a"); px(g,12,12,1,3,"#a06a3a");          // rust
+    px(g,13,9,2,3,"#ffd75a"); px(g,13,9,2,1,"#fff0b0");          // the brass call-lever
+  });
   mkSpr("sealeddoor", 16, 24, g => { px(g,2,2,12,22,"#4a4550"); px(g,3,3,10,20,"#3a3540"); px(g,7,3,2,20,"#2c2833");
     px(g,4,10,8,4,"#8fd3ff"); px(g,5,11,6,2,"#c8ecff"); px(g,2,2,12,1,"#565060"); px(g,6,7,4,1,"#a877e0"); });
   // gem item icons

@@ -111,6 +111,8 @@ function genMine(m){
   carve(ux,uy, m.w>>1, m.h>>1); carve(m.w>>1, m.h>>1, dx, dy);
   floor(ux,uy); floor(ux,uy+1); floor(ux+1,uy); put(m,ux,uy,"ladderup");
   floor(dx,dy); floor(dx-1,dy); floor(dx,dy-1); put(m,dx,dy,"ladderdown");
+  // the Old Lift stands by the entry ladder on every floor — the way out is never a climb
+  floor(ux+2,uy); floor(ux+2,uy+1); floor(ux+3,uy); put(m,ux+2,uy,"lift");
   // scatter ore/gems/props on floor tiles
   const floors = [];
   for(let y=1;y<m.h-1;y++) for(let x=1;x<m.w-1;x++) if(m.tiles[y*W+x]===T.MFLOOR) floors.push([x,y]);
@@ -126,7 +128,7 @@ function genMine(m){
   const gemBoost = isFog() ? 2.2 : isStorm() ? 1.4 : 1;
   let placed=0;
   for(const [x,y] of floors){
-    if(x===ux&&y===uy || x===dx&&y===dy) continue;
+    if(x===ux&&y===uy || x===dx&&y===dy || (x===ux+2&&y===uy)) continue;   // ladders + the lift are sacred
     const r = rng();
     const oreP = 0.10 * oreBoost;
     const gemP = 0.018 * Math.min(depth,6) * gemBoost;
@@ -143,7 +145,9 @@ function genMine(m){
   // Unclearable props (rubble/minecart/beam) could otherwise seal a ladder pocket, and since the mine
   // is cached per depth+day, a sealed floor stays sealed all day.
   const nbrs = (x,y) => [[x+1,y],[x-1,y],[x,y+1],[x,y-1]];
-  for(const [ax,ay] of [...nbrs(ux,uy), ...nbrs(dx,dy)]) delete m.objects[key(ax,ay)];
+  for(const [ax,ay] of [...nbrs(ux,uy), ...nbrs(dx,dy), ...nbrs(ux+2,uy)]){
+    const o = m.objects[key(ax,ay)]; if(o && o.kind !== "lift" && o.kind !== "ladderup" && o.kind !== "ladderdown") delete m.objects[key(ax,ay)];
+  }
 
   const minable = k => !!ORES[k] || k==="crystal" || k==="gemrock";   // a pick clears these
   const open = (x,y,thruProps) => {
@@ -203,17 +207,18 @@ function doWarp(w){
 }
 // You bank a checkpoint every fifth floor. Re-entering the mine drops you at the deepest one you've
 // reached, so a good weather day pays off in a real dive instead of a re-trek from the top.
-function mineCheckpoint(){ return Math.max(1, Math.floor((state.mineBest||0) / 5) * 5); }
+// Entry is always floor 1 now — the Old Lift beside the ladder is how you skip floors, and unlike
+// the old invisible "cart checkpoint" (which banked your best-depth silently and no player ever
+// noticed), restored lift stops are a thing you SEE, paid for, and keep forever.
 function enterMine(){
-  const start = mineCheckpoint();
-  state.mineDepth = start;
+  state.mineDepth = 1;
   travelTo("mine", 2*TILE+8, 3*TILE, "down");
-  if(start > 1) setTimeout(() => toast(`The cart drops you at floor ${start}. Climb the ladder up for the shallow seams.`, "#a9b0c0"), 900);
+  if((state.liftStops||[]).length) setTimeout(() => toast("The Old Lift hums beside the ladder — ride it to any restored stop.", "#a9b0c0"), 900);
 }
 function mineDown(){ state.mineDepth = (state.mineDepth||1) + 1; state.mineBest = Math.max(state.mineBest||0, state.mineDepth);
   checkQuests(); travelTo("mine", 2*TILE+8, 3*TILE, "down");
-  const banked = state.mineDepth % 5 === 0 ? "  ·  a cart-checkpoint" : "";
-  toast("You climb down to floor "+state.mineDepth+"…"+banked, "#a9b0c0"); }
+  const stop = state.mineDepth % 5 === 0 && !(state.liftStops||[]).includes(state.mineDepth) ? "  ·  a lift stop waits here" : "";
+  toast("You climb down to floor "+state.mineDepth+"…"+stop, "#a9b0c0"); }
 function mineUp(){
   if((state.mineDepth||1) > 1){ state.mineDepth--; travelTo("mine", 2*TILE+8, 3*TILE, "down"); }
   else { travelTo("farm", 50*TILE+8, 6*TILE, "down"); }

@@ -22,6 +22,40 @@
 
 ---
 
+## v2.9.0 — "The Old Lift" · 2026-07-12 · tag `v2.9.0`
+
+Version code **33**. Pillar 1 of the economy rebalance ([ECONOMY_REBALANCE.md](ECONOMY_REBALANCE.md),
+from the owner's second playtest — see DEVLOG): the mine's QoL debt. This release also **cuts the
+XP orb** (below, committed unversioned by the parallel UI session) into a player release.
+
+### Added
+- **The Old Lift** — a rusted lift cage stands beside the entry ladder of *every* mine floor
+  (`genMine`, protected from ore-scatter and prop-sealing like the ladders). Interacting opens the
+  lift panel (`renderLift`, `10-ui.js`):
+  - **Riding UP is always free** — "the counterweight still works; the stops are what rusted."
+    Surface from any floor in one action. The owner's "climbing 10 flights isn't economical" is gone.
+  - **Every 5th floor has a restorable stop**: a one-time, permanent resource dump
+    (`liftStopCost`, `01-data.js` — wood + ore + gold scaling with depth; floor 20 wants a Diamond)
+    unlocks riding *down* to it forever (`state.liftStops`, saved immediately on restore).
+    **Why resources, not just gold:** the costs sink wood + ore + coin together — the multi-skill
+    economy (pillar 3) arriving early, and gems' first non-sell use.
+  - Replaces the old **invisible** "cart checkpoint" (silent best-depth banking on entry, which the
+    owner never perceived — a lesson in visible mechanics). `enterMine` now always starts at
+    floor 1; `mineCheckpoint()` removed.
+- **Time stands still underground** (`updateTime`, `08-actions.js`) — the Harvest Moon rule. Getting
+  yanked to bed mid-vein was the playtest's least satisfying moment. Energy still drains per swing;
+  that's the mine's honest limiter. (The clock resumes the moment you surface.)
+
+### Audit note
+The parallel UI session's XP-orb commit (`f8b028d`) inadvertently swept up this release's two
+in-flight `08-actions.js` edits (the time-freeze and the lift interact case) — so those two changes
+physically live in that commit, not this one. Documented here so the trail stays honest.
+
+*Verified live end-to-end: lift present on floors 1 and 5 (and un-stompable by ore/prop scatter);
+time frozen across 100 updateTime ticks in the mine, flowing on the farm; restore consumed exactly
+500g + 20 Wood + 5 Copper Ore and persisted stop 5; floor 1's panel then offered the ride down;
+panel screenshot verified; console clean. Atlas regenerated per the new standing rule.*
+
 ## The Game Atlas — the whole game on one page, generated from the data · 2026-07-12
 
 Docs/tooling only; no game code changed. Owner's ask (DEVLOG, same date): a poster/HTML "game

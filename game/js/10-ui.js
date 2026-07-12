@@ -673,6 +673,54 @@ function renderGift(id, items){
   b.innerHTML = html; hydrateIcons(b);
 }
 
+// ---- The Old Lift: ride between the surface and any restored stop; restore this floor's stop ----
+function openLift(){ openPanel("liftPanel", renderLift); }
+function renderLift(){
+  const b = $("liftPanel").querySelector(".body");
+  const depth = state.mineDepth||1, stops = (state.liftStops||[]).slice().sort((a,b)=>a-b);
+  let html = `<div class="desc" style="margin-bottom:.5em;color:var(--ink-soft);">` +
+    `The counterweight still works — riding UP is free. The deeper stops rusted shut; restore one and it's yours forever.</div>`;
+  html += `<div class="row"><span class="lead"><span>☀ The Surface</span></span>` +
+    `<button class="buy" onclick="rideLift(0)">ride</button></div>`;
+  for(const s of stops){
+    html += `<div class="row"><span class="lead"><span>Floor ${s} <span class="sub">restored stop</span></span></span>` +
+      (s===depth ? `<span class="sub">you are here</span>` : `<button class="buy" onclick="rideLift(${s})">ride</button>`) + `</div>`;
+  }
+  if(depth % 5 === 0 && !stops.includes(depth)){
+    const c = liftStopCost(depth);
+    const matStr = Object.keys(c.mats).map(it => { const have=state.inv[it]||0, need=c.mats[it];
+      return `${need}× ${it} <span style="color:${have>=need?'#8fd06a':'#c98a6a'}">(${have})</span>`; }).join(", ");
+    const can = state.gold >= c.g && Object.keys(c.mats).every(it => (state.inv[it]||0) >= c.mats[it]);
+    html += `<div class="row ${can?'':'locked'}"><span class="lead"><span>Restore this stop <span class="sub">${c.g}g · ${matStr}</span></span></span>` +
+      `<button class="buy" ${can?'':'disabled'} onclick="restoreLift()">restore</button></div>`;
+  } else if(depth % 5 !== 0){
+    const next = Math.ceil(depth/5)*5;
+    html += `<div class="desc" style="margin-top:.4em;color:var(--ink-soft);">The next restorable stop is at floor ${next}.</div>`;
+  }
+  b.innerHTML = html;
+}
+function rideLift(target){
+  closeAllPanels();
+  playSfx("door");
+  if(target === 0){ travelTo("farm", 50*TILE+8, 6*TILE, "down"); toast("The lift rattles up into the daylight.", "#cbb98f"); return; }
+  state.mineDepth = target;
+  travelTo("mine", 2*TILE+8, 3*TILE, "down");
+  toast(`The lift lowers you to floor ${target}.`, "#a9b0c0");
+}
+function restoreLift(){
+  const depth = state.mineDepth||1;
+  if(depth % 5 !== 0 || (state.liftStops||[]).includes(depth)) return;
+  const c = liftStopCost(depth);
+  if(state.gold < c.g || !Object.keys(c.mats).every(it => (state.inv[it]||0) >= c.mats[it])){ playSfx("error"); return; }
+  state.gold -= c.g;
+  for(const it in c.mats) take(it, c.mats[it]);
+  state.liftStops.push(depth);
+  playSfx("upgrade"); pSparkle(state.px, state.py-12, "#ffd75a", 18);
+  banner("⚙ Lift stop restored", `Floor ${depth} is on the line now — for good.`);
+  saveGame();   // a permanent purchase should never be lost to a crash
+  renderLift();
+}
+
 // ---- kitchen ----
 function openCooking(){ openPanel("cookPanel", renderCooking); }
 function renderCooking(){

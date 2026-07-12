@@ -29,6 +29,7 @@ function freshState(){
     weather:"clear", forecast:null,        // forecast is rolled on the first newDay
     discovered:{ "Turnip Seeds":true, "Berry Bun":true },   // everything you've ever held — the Collection remembers
     xpCurve:3,                             // which XP table this save's XP is expressed in (see migrateSave)
+    liftStops:[],                          // restored Old Lift stops (floor numbers, multiples of 5) — permanent
 
     flags:{ introSeen:false },
   };

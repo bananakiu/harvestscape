@@ -369,7 +369,7 @@ function drawGroundTile(x, y, tt, nf){
   }
 }
 
-const TALL = new Set(["oak","pine","maple","bookshelf","lamp","fireplace","banner","sealeddoor","palm","mineentrance"]);
+const TALL = new Set(["oak","pine","maple","bookshelf","lamp","fireplace","banner","sealeddoor","palm","mineentrance","lift"]);
 function drawObject(ox, oy, o, k){
   const bx = ox*TILE, by = oy*TILE;
   let sway = 0;
