@@ -111,6 +111,7 @@ function addXP(skill, amt){
   const before = levelFor(state.skills[skill]);
   state.skills[skill] += amt;
   floatText(state.px + rand(-4,4), state.py - 22, "+"+amt+" "+skill.slice(0,4).toLowerCase(), "#9fd8ff");
+  showXpOrb(skill);   // the circular level-progress ring by the energy bar (10-ui.js)
   const after = levelFor(state.skills[skill]);
   if(after > before){
     let unl = []; for(let l=before+1; l<=after; l++) unl = unl.concat(unlocksAt(skill, l));
@@ -156,7 +157,7 @@ const OBJ_TITLE  = { bed:"Bed", campfire:"Campfire", stove:"Stove", fireplace:"F
   stall:"Market Stall", shipbin:"Shipping Bin", sign:"Sign", noticeboard:"Noticeboard", ledger:"The Valley Ledger",
   fountain:"Fountain", boardwalk:"Boardwalk", railcart:"Minecart", memorial:"Standing Stone", berrybush:"Berry Bush",
   frostberry:"Frostberry Bush", fruittree:"Fruit Tree", beehive:"Beehive", torch:"Torch", lamp:"Lamp", lantern:"Lantern",
-  crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder" };
+  crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift" };
 function npcAtTile(tx,ty){ if(!curMap||!curMap.npcs) return null;
   for(const n of curMap.npcs){ if(Math.floor(n.x/TILE)===tx && Math.floor(n.y/TILE)===ty) return n; } return null; }
 function objLook(obj){
@@ -406,6 +407,7 @@ function interact(){
       case "seaweednode": forageNode(tx,ty,obj,"Seaweed","Fishing",6); return;
       case "coralnode": forageNode(tx,ty,obj, chance(0.12)?"Pearl":"Coral","Fishing",12); return;
       case "ladderup": mineUp(); return;
+      case "lift": openLift(); return;
       case "ladderdown": mineDown(); return;
       case "mineentrance": enterMine(); return;
       case "sealeddoor": openVault(tx,ty); return;
@@ -866,6 +868,10 @@ function respawnNodes(m){
 }
 function updateTime(dt){
   if(gameMode!=="play" || paused) return;
+  // The Harvest Moon rule: time stands still underground — you can't see the sun, and getting
+  // yanked to bed mid-vein was the least satisfying moment in the game (owner playtest,
+  // 2026-07-12). Energy still drains per swing; that's the mine's honest limiter.
+  if(curMap && curMap.id === "mine") return;
   state.time += dt * (60/16);
   if(curMap && curMap.music === "auto"){ const h = state.time/60; setMusicMode(nightFactor(h)>0.55 ? "night" : "day"); }
   if(state.time >= 26*60){ toast("You stayed up far too late…", "#ff8a7a"); doSleep(); }

@@ -22,6 +22,37 @@
 
 ---
 
+## XP orb — RuneScape-style level-progress ring · 2026-07-12
+
+Unversioned feature commit (a parallel agent session is mid-flight on a large batch; leaving the
+release cut — VERSION bump + in-game `CHANGELOG` mirror — to whoever cuts next, to avoid another
+version-code race). **Fold this into the next release's player-facing notes.**
+
+### Added
+- **The XP orb** (`#xpOrb`, `10-ui.js` / `index.html` / `style.css`; fired from `addXP`,
+  `08-actions.js`). Owner feedback, with an OSRS screenshot: *"While I'm leveling up skills, it's
+  unsatisfying because I don't know the progression of my level… a progress bar of sorts…
+  RuneScape does this… and an indicator for what level you are at as well."* The `+12 farm`
+  floaters answer *what you earned* but never *how far along you are* — grinding poured XP into
+  the dark between panel-checks. The orb is RS's hover-orb adopted into the house identity: a
+  circular ring docked right of the energy bar (part of the vitals row, like RS's status globes),
+  gold arc clockwise from 12 o'clock = fraction through the CURRENT level, the skill's procedural
+  icon (`SKILL_ICON`/`spr`) pixel-crisp in the middle, current level in a wood-bevel badge below.
+- **Behaviour:** appears on any XP gain and *eases* its arc toward the new fraction (watching it
+  creep is the satisfaction); on a level-up it sweeps to full, blooms, then resets to the new
+  level's remainder while the badge bumps to the new number. Fades ~3.2s after the last gain —
+  training-time feedback only, never permanent HUD chrome (design bible §8.4). A hide guard
+  postpones the fade while a sweep/flash is in flight so the level-up payoff is never cut off
+  (found via throttled-rAF testing: wall-clock hide vs frame-driven sweep can race).
+- **Rendering:** 96×96 canvas CSS-sized in em (smooth vector arc at any stage scale, dpr-friendly),
+  icon drawn 3× with smoothing off; colours are the blessed roles only (gold arc `#ffce5a→#ffe6a0`,
+  wood-dark disc/track, `--gold` badge). Self-driven rAF loop that starts on show and cancels on
+  hide — zero cost while the orb is hidden.
+
+Verified in-browser: orb appears beside the energy bar on gain, arc matches `xpFrac` (31.6% at
+Wc 8 mid-level), level-cross 4→5 sweeps + badge-bumps to 5, orb outlives the old 3.2s cutoff while
+sweeping, console clean.
+
 ## v2.8.2 — "Turned Earth" · 2026-07-12 · tag `v2.8.2`
 
 Version code **32**. Polish batch 2. The starter plot was the survey's biggest sprite offender:

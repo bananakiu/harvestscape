@@ -175,6 +175,92 @@ function drawClockDial(){
   g.strokeStyle = "#00000066"; g.lineWidth=1; g.beginPath(); g.arc(11,13,10,Math.PI,0); g.stroke();
 }
 
+// ---- XP orb ----
+// The RuneScape hover-orb, adopted: a circular ring beside the energy bar that fills clockwise
+// with your progress through the CURRENT level, the skill's icon in the middle and the level in a
+// badge below. It exists because "+12 farm" floaters answer *what you earned* but never *how far
+// along you are* — grinding felt like pouring XP into the dark. The orb appears on any XP gain,
+// eases its arc toward the new fraction (the satisfaction is watching it creep), and on a level-up
+// sweeps to full, flashes, then resets to the new level's remainder. Fades ~3s after the last gain
+// so it is training-time feedback, never permanent HUD chrome (design bible 8.4).
+const xpOrb = { skill:null, lvl:0, shown:0, target:0, sweep:false, flash:0, active:false, hideT:0, raf:0, last:0 };
+function xpFrac(skill){
+  const xp = state.skills[skill], lvl = levelFor(xp);
+  return lvl >= 99 ? 1 : clamp(inv(xp, XP_TABLE[lvl], XP_TABLE[lvl+1]), 0, 1);
+}
+function showXpOrb(skill){
+  const orb = $("xpOrb"); if(!orb || !state || !(skill in state.skills)) return;
+  const lvl = levelFor(state.skills[skill]), frac = xpFrac(skill);
+  if(xpOrb.skill !== skill){
+    // switched crafts — snap straight to this skill's state, no cross-skill animation
+    xpOrb.skill = skill; xpOrb.lvl = lvl; xpOrb.shown = frac; xpOrb.target = frac; xpOrb.sweep = false;
+  } else if(lvl > xpOrb.lvl){
+    // levelled up — sweep the ring to full first; the tick resets it to the new remainder
+    xpOrb.lvl = lvl; xpOrb.sweep = true; xpOrb.target = frac;
+    const badge = $("xpOrbLvl");
+    if(badge){ badge.classList.remove("bump"); void badge.offsetWidth; badge.classList.add("bump"); }
+  } else {
+    xpOrb.target = frac;
+  }
+  $("xpOrbLvl").textContent = xpOrb.lvl;
+  if(orb.classList.contains("hidden")){ orb.classList.remove("hidden"); orb.classList.remove("in"); void orb.offsetWidth; orb.classList.add("in"); }
+  orb.classList.remove("out");
+  if(!xpOrb.active){ xpOrb.active = true; xpOrb.last = performance.now(); xpOrb.raf = requestAnimationFrame(xpOrbTick); }
+  clearTimeout(xpOrb.hideT);
+  xpOrb.hideT = setTimeout(hideXpOrb, 3200);
+}
+function hideXpOrb(){
+  const orb = $("xpOrb"); if(!orb) return;
+  // never cut off the level-up payoff — if the ring is mid-sweep (or still flashing), come back
+  if(xpOrb.sweep || xpOrb.flash > 0){ xpOrb.hideT = setTimeout(hideXpOrb, 600); return; }
+  orb.classList.add("out");
+  setTimeout(() => {
+    orb.classList.add("hidden");
+    xpOrb.active = false; cancelAnimationFrame(xpOrb.raf); xpOrb.skill = null;
+  }, 380);
+}
+function xpOrbTick(now){
+  const dt = Math.min(0.05, (now - xpOrb.last)/1000); xpOrb.last = now;
+  if(xpOrb.sweep){
+    xpOrb.shown += dt * 2.4;                                     // fast, readable sweep to full
+    if(xpOrb.shown >= 1){ xpOrb.shown = 0; xpOrb.sweep = false; xpOrb.flash = 0.5; }
+  } else {
+    xpOrb.shown += (xpOrb.target - xpOrb.shown) * Math.min(1, dt*6);   // ease toward the new fraction
+    if(Math.abs(xpOrb.target - xpOrb.shown) < 0.002) xpOrb.shown = xpOrb.target;
+  }
+  if(xpOrb.flash > 0) xpOrb.flash = Math.max(0, xpOrb.flash - dt);
+  drawXpOrb();
+  if(xpOrb.active) xpOrb.raf = requestAnimationFrame(xpOrbTick);
+}
+function drawXpOrb(){
+  const c = $("xpOrbC"); if(!c || !xpOrb.skill) return;
+  const g = c.getContext("2d"); g.clearRect(0,0,96,96);
+  const cx = 48, cy = 48;
+  // inner disc — the same dark wood as the tracker cards
+  g.beginPath(); g.arc(cx,cy,34,0,7); g.fillStyle = "rgba(30,22,15,.88)"; g.fill();
+  // track ring — near-black, like the unfilled ring in RS
+  g.beginPath(); g.arc(cx,cy,39,0,7); g.lineWidth = 9; g.strokeStyle = "rgba(12,9,6,.92)"; g.stroke();
+  // progress arc — gold, clockwise from 12 o'clock
+  if(xpOrb.shown > 0.004){
+    const grad = g.createLinearGradient(0,0,0,96);
+    grad.addColorStop(0,"#ffe6a0"); grad.addColorStop(1,"#ffce5a");
+    g.beginPath(); g.arc(cx,cy,39,-Math.PI/2, -Math.PI/2 + xpOrb.shown*Math.PI*2);
+    g.lineWidth = 9; g.lineCap = "round"; g.strokeStyle = grad; g.stroke(); g.lineCap = "butt";
+  }
+  // level-up flash — a soft bloom over the whole ring that decays
+  if(xpOrb.flash > 0){
+    g.beginPath(); g.arc(cx,cy,39,0,7); g.lineWidth = 13;
+    g.strokeStyle = `rgba(255,240,190,${(xpOrb.flash*1.4).toFixed(3)})`; g.stroke();
+  }
+  // hairline edges keep it crisp against any backdrop
+  g.lineWidth = 2; g.strokeStyle = "rgba(0,0,0,.55)";
+  g.beginPath(); g.arc(cx,cy,44.5,0,7); g.stroke();
+  g.beginPath(); g.arc(cx,cy,33.5,0,7); g.stroke();
+  // the skill's icon, pixel-crisp at 3x, centred
+  const s = spr[SKILL_ICON[xpOrb.skill]];
+  if(s){ g.imageSmoothingEnabled = false; g.drawImage(s, cx-24, cy-24, 48, 48); }
+}
+
 // ---- icons ----
 function mkIcon(spriteName){
   const s = spr[spriteName];
