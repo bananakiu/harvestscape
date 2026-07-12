@@ -14,7 +14,40 @@
 
 ---
 
-## 2026-07-13 (evening) — Story verdict: "kind of falls flat"
+## 2026-07-13 (late evening) — The forest verdict: "cool, but not dynamic enough. Not fun."
+
+**Owner (near-verbatim):**
+
+> The system on the forest is cool. It's a resource space, but it's not dynamic enough. It's
+> not fun. The mine itself has levels, progression, and save points. If we could integrate
+> some sort of system like that, that's semantically exciting. It'll also be good to have
+> treasures or something — in the same way that when you cut logs in RuneScape, you might get
+> birds' nests with jewelry, rings, trinkets, or unlocks.
+>
+> It'll be interesting to have those sorts of reward mechanisms and maybe a way to crawl
+> deeper into the forest instead of just having a blank space where you can collect wood.
+> That way, you could also slowly make the trees have a rarity system, where in the lower
+> levels only the common trees are there, and in deeper levels the higher-level trees are
+> there. It's also sort of like an elevator system, but maybe some other system to make sure
+> that you could go deeper into the grove faster.
+>
+> I don't know. Help me figure this out. Before you build it out, just plan it first so that
+> we could go through it.
+
+**Interpretation.** The Deep Grove (v2.x) gave the axe a *venue* but not a *game*. The mine is
+fun because it has a loop — descend, risk nothing but time/energy, bank progress at lift stops,
+and the loot table deepens with you. The grove is one flat room with a west-is-older gradient;
+once you can chop maple (WC 18) there is nothing left to want, and Woodcutting is a dead skill
+from 18 to 99. Four asks, all of them the mine's loop translated into forest language: (1) depth
+levels with progression, (2) permanent save/skip points ("like the elevator, but maybe some
+other system" — i.e. same function, different fiction), (3) rarity-by-depth tree tables, (4) a
+birds'-nest-style treasure drop on chopping. Constraint carried over from the 2026-07-12 gem
+verdict: treasure must have *uses*, not just sell value, or it becomes another economy faucet.
+
+**Direction call.** Plan first, build later — owner wants to review the plan before any code.
+
+**Produced:** the Grove Depths plan (pitched in chat this session; plan doc + build on
+green-light).
 
 **Owner:** *"What will you build next, and are there any major improvements you want in the story?
 The story kind of falls flat a bit, in my opinion."*
