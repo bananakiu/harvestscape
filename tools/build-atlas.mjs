@@ -105,8 +105,9 @@ const MAP_ACCESS = {
   store: "East path, in town. Selling, seeds, tools, animals, saplings, hives — and the noticeboard by the door.",
   mayahouse: "In town. Maya's home (and later, Elias's tea by the pond).",
   guild: "North of town. Elder Rowan keeps the nine dark wings; the story's heart.",
-  mine: "North ridge. Endless floors, regenerated daily; a cart banks your best depth every 5 floors. The sealed vault waits below (Mining 20).",
+  mine: "North ridge. Endless floors, regenerated daily. The Old Lift beside each floor's ladder rides to the surface free; every 5th floor's stop can be restored (wood + ore + gold) to skip down forever. Time stands still underground. The sealed vault waits below (Mining 20).",
   beach: "South path. Bram's coast — salmon water, shore forage, festivals, and every finale.",
+  grove: "West, through the farm's treeline. A true forest that regrows overnight — young oak by the gate, old pine and maple deeper in (WC 8 / 18).",
 };
 for (const id of Object.keys(D.MAPS))
   if (!MAP_ACCESS[id]) throw new Error(`MAPS gained "${id}" — update MAP_ACCESS in build-atlas.mjs`);
