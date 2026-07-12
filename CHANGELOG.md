@@ -22,6 +22,32 @@
 
 ---
 
+## v2.9.2 — "Tempered Tools" · 2026-07-13 · tag `v2.9.2`
+
+Version code **35**. Pillar 3 of [ECONOMY_REBALANCE.md](ECONOMY_REBALANCE.md) — the one that
+actually breaks the "mine → gold → everything" chain the owner flagged. Also cuts the **XP-orb
+rail** (next section, unversioned) into a player release. All three pillars are now shipped.
+
+### Balance
+- **Multi-resource tool upgrades** (`TIER_COST`+`toolCost()`, `01-data.js`; `buyTool`; shop UI
+  shows each material with your count): Copper = 300g + 5 Copper Ore + **10 Wood**; Iron = 1,200g +
+  5 Iron Ore + **10 Pine Wood** (WC 8); Gold = 5,000g + 5 Gold Ore + **10 Maple Wood** (WC 18) +
+  a **signature gem** set into the handle — Hoe Amethyst · Can Topaz · Axe Emerald · Pick Ruby ·
+  **Rod Pearl** (the beach's prize, pulling a third skill in). **Why:** tool tiers were gold + one
+  ore, so mine money bought everything and a gold axe trivialized woodcutting as a *purchase*.
+  Now every tier needs Mining AND Woodcutting progress; the top tier is an achievement across
+  crafts. (The Grove, shipped one release earlier, is deliberately what makes the wood costs fair.)
+- **The gem faucet turned down to a treat:** spawn coefficient 0.018 → **0.010** (gems were as
+  common as ore at depth 6+ — 10.8% vs 10%); payout now **weighted** (`pickGem`: Am 4 · To 3 ·
+  Em 2 · Ru 1.5 · Di 0.5) instead of uniform; prices trimmed 120/160/280/360/640 →
+  **75/110/190/260/480**. Net: average gem ≈ **150g** (was ~312g) at roughly half the drop rate —
+  a ~75% cut to the runaway faucet — while gems gain non-sell uses the same series (tier-3 tools,
+  deep lift stops), so finding one still sings.
+
+*Verified live: 10,000g + 10 Copper Ore alone REFUSED the Axe upgrade (the owner's exact exploit);
++10 Wood bought it and consumed the wood; Gold Pick refused without a Ruby, bought with one;
+8,000-sample gem distribution 36/27/19/14/4.5% averaging exactly 150g; console clean.*
+
 ## XP orbs — a rail of them, at top-center · 2026-07-13
 
 Unversioned follow-up to the XP orb (`f8b028d`, released in v2.9.0), from direct owner feedback:

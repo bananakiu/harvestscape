@@ -132,7 +132,10 @@ function genMine(m){
     if(x===ux&&y===uy || x===dx&&y===dy || (x===ux+2&&y===uy)) continue;   // ladders + the lift are sacred
     const r = rng();
     const oreP = 0.10 * oreBoost;
-    const gemP = 0.018 * Math.min(depth,6) * gemBoost;
+    // 0.018 made gems as common as ore at depth 6+ (10.8% vs 10%) — the "busted gold" faucet the
+    // owner flagged. 0.010 keeps the deep sparkly (6% at depth 6, still fog/storm-boosted) while
+    // the weighted payout (pickGem) makes a Diamond an event again.
+    const gemP = 0.010 * Math.min(depth,6) * gemBoost;
     if(r < oreP){ const k = oreTable[randiR(rng,0,oreTable.length-1)]; put(m,x,y,k,{hp:ORES[k].hp}); placed++; }
     else if(r < oreP + gemP){ put(m,x,y, rng()<0.35?"crystal":"gemrock", {hp:3+Math.floor(depth/2)}); }
     else if(r < oreP + gemP + 0.035){ put(m,x,y, rng()<0.5?"rubble":"minecart"); }

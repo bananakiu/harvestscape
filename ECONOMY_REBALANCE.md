@@ -1,7 +1,8 @@
 # The Economy Rebalance — one faucet, one key
 
 *Plan for the owner's 2026-07-12 playtest feedback (see [DEVLOG.md](DEVLOG.md)). Built as the
-v2.9.x series. Read this before touching the economy again — the numbers interlock.*
+v2.9.x series — **all three pillars shipped**: v2.9.0 "The Old Lift" · v2.9.1 "The Deep Grove" ·
+v2.9.2 "Tempered Tools". Read this before touching the economy again — the numbers interlock.*
 
 ## Diagnosis
 

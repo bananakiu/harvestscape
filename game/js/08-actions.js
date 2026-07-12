@@ -280,7 +280,7 @@ function useTool(){
       if(freeSwing) floatText(state.px, state.py-30, "free swing", "#b6f27a");
       obj.hp -= power; obj.shakeT = 0.2; cam.shake = 2.4; hitstop = 0.05; playSfx("mine");
       pChips(tx*TILE+8, ty*TILE+8, "#6a6472", 5); pSparkle(tx*TILE+8, ty*TILE+8, "#c8a0f0", 4);
-      if(obj.hp <= 0){ delete curMap.objects[key(tx,ty)]; const g = pick(Object.keys(GEMS));
+      if(obj.hp <= 0){ delete curMap.objects[key(tx,ty)]; const g = pickGem();
         give(g,1);
         addXP("Mining", hasMastery("Mining",75) ? 138 : 55);            // ★ Gemcutter
         bump("mined"); bump("gems"); pSparkle(tx*TILE+8, ty*TILE+8, GEMS[g], 12); playSfx("ore"); }
@@ -952,9 +952,11 @@ function buyFood(item, cost){
 }
 function buyTool(tool){
   const cur = state.tools[tool]; if(cur>=3) return;
-  const c = TIER_COST[cur+1];
-  if(state.gold < c.g || (state.inv[c.ore]||0) < c.n) return;
-  state.gold -= c.g; take(c.ore, c.n); state.tools[tool] = cur+1; bump("toolUpgrades");
-  banner("🔧 "+TOOL_TIERS[cur+1]+" "+tool+"!", "Faster, stronger, cozier.");
+  const c = toolCost(tool, cur+1);
+  if(state.gold < c.g || !Object.keys(c.mats).every(it => (state.inv[it]||0) >= c.mats[it])) return;
+  state.gold -= c.g;
+  for(const it in c.mats) take(it, c.mats[it]);
+  state.tools[tool] = cur+1; bump("toolUpgrades");
+  banner("🔧 "+TOOL_TIERS[cur+1]+" "+tool+"!", cur+1===3 ? "The "+TIER3_GEM[tool]+" is set into the handle. Earned across every craft." : "Faster, stronger, cozier.");
   playSfx("upgrade"); pSparkle(state.px, state.py-14, "#ffce5a", 12); refreshHUD(); renderShop(); refreshHotbar();
 }

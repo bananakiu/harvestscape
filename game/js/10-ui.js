@@ -649,14 +649,16 @@ function renderShop(){
     for(const tool of TOOLS){
       const cur = state.tools[tool];
       if(cur >= 3){ html += `<div class="row"><span class="lead" data-icon="tool_${TOOL_ICON[tool]}"><canvas></canvas><span style="color:${TIER_COL[3]}">${TOOL_TIERS[3]} ${tool} ★ <span class="sub">maxed</span></span></span></div>`; continue; }
-      const c = TIER_COST[cur+1];
-      const can = state.gold>=c.g && (state.inv[c.ore]||0)>=c.n;
+      const c = toolCost(tool, cur+1);
+      const can = state.gold>=c.g && Object.keys(c.mats).every(it => (state.inv[it]||0) >= c.mats[it]);
       const CAN_PERK = ["", "waters a 3-tile row", "waters a 5-tile row", "waters 3×3"];
       const HOE_PERK = ["", "tills a 3-tile row", "tills a 5-tile row", "tills 3×3"];
       const perk = tool==="Can" ? CAN_PERK[cur+1] : tool==="Hoe" ? HOE_PERK[cur+1]
                  : tool==="Rod" ? "faster bites, steadier reel" : "stronger, less energy";
+      const matStr = Object.keys(c.mats).map(it => { const have=state.inv[it]||0, need=c.mats[it];
+        return `${need} ${it} <span style="color:${have>=need?'#8fd06a':'#c98a6a'}">(${have})</span>`; }).join(" + ");
       html += `<div class="row"><span class="lead" data-icon="tool_${TOOL_ICON[tool]}"><canvas></canvas><span style="color:${TIER_COL[cur+1]}">${TOOL_TIERS[cur+1]} ${tool}</span> ` +
-        `<span class="sub">${c.g}g + ${c.n} ${c.ore} · ${perk}<br>you have ${state.inv[c.ore]||0} ${c.ore}</span></span>` +
+        `<span class="sub">${c.g}g + ${matStr}<br>${perk}</span></span>` +
         `<button class="buy" ${can?"":"disabled"} onclick="buyTool('${tool}')">upgrade</button></div>`;
     }
   }

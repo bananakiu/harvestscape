@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "2.9.1", code: 34, codename: "The Deep Grove", date: "2026-07-12" };
+const VERSION = { name: "2.9.2", code: 35, codename: "Tempered Tools", date: "2026-07-13" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"2.9.2", code:35, date:"2026-07-13", name:"Tempered Tools", notes:[
+    { t:"balance",s:"Tool upgrades now take wood AND ore AND coin — and a gold tool wants a signature gem set into the handle (the Rod's is a Pearl from the beach). An upgrade is earned across crafts now, not bought with mine money." },
+    { t:"balance",s:"Gems are rarer and humbler-priced — a treat, not the economy. A Diamond is an event again. (They gained real uses too: top-tier tools and the deep lift stops.)" },
+    { t:"new",   s:"XP orbs now line up side by side at the top of the screen when you're training several skills — one ring each, RuneScape-style." },
+  ]},
   { v:"2.9.1", code:34, date:"2026-07-12", name:"The Deep Grove", notes:[
     { t:"new",   s:"A footpath through the farm's western treeline leads to the Deep Grove — a true forest that regrows overnight. Older wood grows deeper in, and there's forage along the way." },
   ]},
@@ -259,7 +264,18 @@ FISH.forEach(f => EDIBLE["Cooked "+f.name] = 22 + f.lvl);
 
 // ---- GEMS (from the mine) & SHORE forage (from the beach) ----
 const GEMS = { Amethyst:"#a877e0", Topaz:"#e8b23a", Emerald:"#3ec878", Ruby:"#e0455a", Diamond:"#b8ecf7" };
-const GEM_SELL = { Amethyst:120, Topaz:160, Emerald:280, Ruby:360, Diamond:640 };
+// Trimmed from 120/160/280/360/640 (owner playtest 2026-07-12: "the gems are just too easy to
+// get… suddenly everything else is immaterial"). Gems are a treat now, not the economy — and they
+// gained non-sell uses the same week (tier-3 tools, the deep lift stop), so finding one still sings.
+const GEM_SELL = { Amethyst:75, Topaz:110, Emerald:190, Ruby:260, Diamond:480 };
+// Drops are weighted toward the humble end — a Diamond is an event, not a Tuesday.
+const GEM_WEIGHTS = [["Amethyst",4],["Topaz",3],["Emerald",2],["Ruby",1.5],["Diamond",0.5]];
+function pickGem(){
+  let t=0; for(const [,w] of GEM_WEIGHTS) t+=w;
+  let x=Math.random()*t;
+  for(const [g,w] of GEM_WEIGHTS){ if((x-=w)<0) return g; }
+  return "Amethyst";
+}
 for(const g in GEM_SELL) ITEM_SELL[g] = GEM_SELL[g];
 const SHORE = { Shell:22, Coral:48, Seaweed:14, Clam:38, Pearl:260 };
 for(const s in SHORE) ITEM_SELL[s] = SHORE[s];
@@ -445,7 +461,21 @@ const TOOLS = ["Hoe", "Can", "Axe", "Pick", "Rod"];
 const TOOL_ICON = { Hoe:"hoe", Can:"can", Axe:"axe", Pick:"pick", Rod:"rod" };
 const TOOL_TIERS = ["Basic", "Copper", "Iron", "Gold"];
 const TIER_POWER = [1, 2, 3, 5];
-const TIER_COST  = [null, {g:300, ore:"Copper Ore", n:5}, {g:1200, ore:"Iron Ore", n:5}, {g:5000, ore:"Gold Ore", n:5}];
+// Tool tiers cost wood + ore + gold — and the top tier a signature gem — so every upgrade needs
+// Mining AND Woodcutting progress (and the Rod's Pearl, the beach). A gold tool is an achievement
+// across skills, not a purchase. (Owner playtest 2026-07-12: "right now it's mining and gold and
+// then you unlock everything else" — gold alone must never be the universal key.)
+const TIER_COST  = [null,
+  { g:300,  mats:{ "Copper Ore":5, "Wood":10 } },
+  { g:1200, mats:{ "Iron Ore":5,  "Pine Wood":10 } },
+  { g:5000, mats:{ "Gold Ore":5,  "Maple Wood":10 } }];
+const TIER3_GEM  = { Hoe:"Amethyst", Can:"Topaz", Axe:"Emerald", Pick:"Ruby", Rod:"Pearl" };
+function toolCost(tool, tier){
+  const base = TIER_COST[tier]; if(!base) return null;
+  const mats = Object.assign({}, base.mats);
+  if(tier === 3 && TIER3_GEM[tool]) mats[TIER3_GEM[tool]] = 1;   // the keepsake set into the handle
+  return { g: base.g, mats };
+}
 const TIER_COL   = ["#b7a48c", "#c77b3f", "#d8c4bc", "#ffd75a"];
 
 // ---- THE OLD LIFT ----
