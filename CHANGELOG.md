@@ -22,6 +22,30 @@
 
 ---
 
+## The Game Atlas — the whole game on one page, generated from the data · 2026-07-12
+
+Docs/tooling only; no game code changed. Owner's ask (DEVLOG, same date): a poster/HTML "game
+kit" showing the expanse of the finished game — every mission, unlock, map, and person, "almost
+like an instruction manual" — so reviewing the design no longer requires a playthrough.
+
+### Added
+- **`GAME_ATLAS.html`** — a single self-contained page: the story spine (all quests in order
+  with objectives, rewards, and turn-in scripts), all six letters and nine almanac pages
+  (spoiler-folded), the Nine Crafts and how each lights, the full XP curve and per-skill unlock
+  ladders with mastery perks, every map and how it's reached, all six NPCs with gift tastes and
+  full heart-scene scripts, courtship/marriage, the calendar/weather tables, the economy
+  (crops/orchard/animals/Hunt/gems/recipes/tools/projects/demand), and a 100% checklist.
+- **`tools/build-atlas.mjs`** — the generator. **Why a generator, not a document:** a
+  hand-written atlas would drift from the build within one release. The script evaluates the
+  *live* data files (`00-core`, `01-data`, `04-world`, `13-content`, `14-story`, `11-title`) in
+  a node vm with browser stubs and renders the page from what it finds, so numbers, quests, and
+  scripts are always the shipped ones. The three hand-written mappings it does contain (wing
+  requirements, almanac triggers, map access notes) are assertion-guarded: if the underlying
+  data changes shape, generation **throws** instead of publishing stale prose. Regenerate with
+  `node tools/build-atlas.mjs` after any content change.
+- Design note: dropped a `backdrop-filter` on the sticky nav — it broke headless/pane
+  screenshot compositing (captured black) and a solid bar reads identically.
+
 ## XP orb — RuneScape-style level-progress ring · 2026-07-12
 
 Unversioned feature commit (a parallel agent session is mid-flight on a large batch; leaving the

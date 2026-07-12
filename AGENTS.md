@@ -93,8 +93,12 @@ Treat the changelog as non-optional deliverable output, the same as the code its
 - `DEVLOG.md` — the owner's playtest feedback and direction calls, near-verbatim. When the
   owner gives play feedback, record it there (raw signal + interpretation), then link the
   plan/changelog work it produces.
-- `NEW_PLAYER_EXPERIENCE.md` — planned onboarding beta (exposition, tutorial, story
-  visibility); not yet built.
+- `GAME_ATLAS.html` — the whole game on one page, generated from live game data by
+  `node tools/build-atlas.mjs`. **Regenerate it whenever game content changes** (quests, crops,
+  NPCs, recipes, maps…) and commit it with the change; the generator throws if its few
+  hand-written mappings go stale.
+- `NEW_PLAYER_EXPERIENCE.md` — the onboarding beta plan (shipped in v2.2.0; polish tier still
+  on the roadmap).
 - `GAME_DESIGN_PRINCIPLES.md` — the design bible; the yardstick audits grade against.
 - `DESIGN_SCORECARD.md` — latest graded audit of the build vs. the principles.
 - `README.md`, `GAME_SCOPE.md`, `DESIGN_REVIEW.md`, `DESIGN_V1.5.md`, `ROADMAP_V2.html` —

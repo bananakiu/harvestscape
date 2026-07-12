@@ -14,6 +14,79 @@
 
 ---
 
+## 2026-07-12 (later still) — Owner asks for a Game Atlas: see the whole game without playing it
+
+**Owner feedback (near-verbatim):**
+
+> Apart from a dev log, I would like a sort of poster, presentation, or HTML file that just
+> shows the expanse of the game: what the whole game looks like, so that I don't need to play
+> through it every time to see what the game is like when completed. For example: a skill tree —
+> how many things are unlocked, missions, every mission laid out, maps that you can unlock, and
+> people you can meet, almost like an instruction manual for the entire game. A storyline,
+> basically some game kit that I could just explore so that I see the game without having to
+> test it each time. Build that.
+
+**Interpretation.** The owner needs a *reviewable artifact* of the finished game — the whole
+design surface (story, quests, unlocks, maps, people, calendar, economy, completion) on one
+page, explorable without a playthrough. This is a designer's tool as much as a manual: it makes
+"is the game big/coherent enough?" answerable at a glance, and it makes future feedback cheaper
+because the owner can point at the atlas instead of grinding to the relevant content.
+
+**Direction call (ours).** Built as a *generator* (`tools/build-atlas.mjs`), not a hand-written
+page — it evaluates the live game data files and emits `GAME_ATLAS.html`, so the atlas can never
+drift from the build; regenerate after any content change. Spoilers folded behind toggles so it
+still works as a player-facing manual.
+
+**Produced:** `GAME_ATLAS.html` + `tools/build-atlas.mjs`. See `CHANGELOG.md`, same date.
+
+## 2026-07-12 (later) — Second playtest: mine traversal, busted gold economy, frozen time, a forest, and the story getting lost
+
+**Owner feedback (condensed, preserving the words that matter):**
+
+> When going up the mine there should be a quick exit option… and I want a checkpoint system just
+> like in Stardew Valley where there's an elevator… some sort of mechanism to unlock the elevator —
+> maybe a resource dump where you pay a certain amount to unlock it to a certain floor… right now
+> you don't save progress in the mine, plus when you're on level 10 and want to go up you climb 10
+> flights of stairs — that's just not economical.
+>
+> Gold is kind of busted right now… it's so easy to make money by mining gems and selling them, and
+> suddenly you could order a full set of chickens, full set of cows, upgrade all your tools right
+> away… once you find a way to make so much money, progression elsewhere becomes broken and useless…
+> I have a gold axe that just cuts through every tree right away… right now it's mining and gold and
+> then you unlock everything else. The gems are just too easy to get.
+>
+> You quickly run out of time while mining. I would like time to pause while you're in the mine,
+> just like in Harvest Moon… suddenly you fall asleep — it doesn't provide satisfying gameplay.
+>
+> One of the problems is with woodcutting; you just run out of trees. There's no procedurally
+> generated forest — the equivalent of a mine where you could cut trees and gain resources…
+> Perhaps we could gate tool upgrades with several resources… a certain type of wood to upgrade
+> your axe and your pickaxe, ensuring you won't just max out mining — you have to work on your
+> woodcutting as well. This way you're forced to explore the rest of the game.
+>
+> [Not to implement now:] The world still feels kind of small… maybe the farm is just a farm, and
+> you move to a different map to get to the village… build the village out and spread it out.
+>
+> In general it's kind of hard to see the point of the story. I get kind of lost. There are a lot
+> of fetch quests… while I level these things up, the main mission doesn't shine through.
+>
+> Feel free to spin up sub-agents… but I want you to plan this out as a whole first to make sure
+> the game is still fun and progression is balanced.
+
+**Interpretation — one root problem, several symptoms.** The economy has a single dominant faucet
+(mine gems + gold ore) and gold is a universal key (tools, animals, saplings). So mining trivially
+unlocks everything, tool tiers are purchases rather than achievements, and the other skills become
+decoration. The mine itself also has QoL debt (no lift, no quick exit, the clock punishes being
+underground). And woodcutting lacks its "mine" — a renewable place to practice the skill.
+
+**Direction locked (built as v2.9.x):** (1) mine QoL — quick exit + a restore-the-old-lift
+checkpoint system paid in resources, and time frozen underground; (2) a procedural, daily-
+regenerating forest map for woodcutting; (3) multi-resource tool upgrades (wood + ore + gold, gems
+for top tiers) + gem faucet/price nerf, so every tool tier requires multiple skills. **Recorded for
+the roadmap, not built now:** the world split / bigger village (owner's explicit deferral) and a
+story-visibility pass beyond what fits here — the deep fix (the story walking through the world)
+belongs with the world expansion. Full design: `ECONOMY_REBALANCE.md`.
+
 ## 2026-07-12 — Progression verdict: v2.7 curve overshot; early levels must be earned
 
 **Owner feedback (near-verbatim):**
