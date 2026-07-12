@@ -22,6 +22,32 @@
 
 ---
 
+## [Unreleased] — Grove Depths, Phase 4: the Old Lift joins the Pledge Ledger
+
+Phase 4 of [GROVE_DEPTHS.md](GROVE_DEPTHS.md) — the owner's waystone critique applied verbatim
+to the mine: the old lift-stop flow (pay in full, standing at the stop) wasted the trek when you
+arrived under-resourced and made you memorize costs between trips.
+
+### Changed
+- **Lift stops now fund like waystones.** Discovery is *derived*: `mineBest ≥ n` means you once
+  stood on floor n, so every such stop appears in the Journal's Restorations ledger — including
+  **retroactively on old saves, with zero migration** (listing stops at `mineBest`, so the
+  doubling series past 20 never renders to infinity). Deposits are partial and payable anywhere
+  (Journal or at the lift); the panel's all-or-nothing "restore" button (disabled until you
+  carried everything at once) is replaced by the ledger's contribute row, which always accepts
+  *something*. Completion still lands in `state.liftStops`, so ride logic, `enterMine`'s
+  hum-toast, and existing saves are untouched. `restoreLift` deleted — one funding path now.
+- `mineDown`'s landing toast now reads the ledger: an untouched stop says "a lift stop waits
+  here"; a part-funded one says exactly what it's short ("the lift stop here is 600g, 6× Pine
+  Wood short"). The ledger remembers; the toasts remind.
+
+### Verified
+Acceptance case from the plan, in-browser: save with `mineBest=17`, `liftStops=[5]` → ledger
+lists floors 5 (restored) / 10 / 15, nothing past 20; remote partial deposit from the farm
+(900g + 9 pine + 2 iron); rode to floor 10; contributed the remainder at the lift; stop woke
+instantly and the panel re-rendered to "restored stop · you are here"; `liftStops=[5,10]`;
+pledge record cleaned up.
+
 ## [Unreleased] — Grove Depths, Phase 3: canopy nests and charms
 
 Phase 3 of [GROVE_DEPTHS.md](GROVE_DEPTHS.md) — the birds'-nest reward layer the owner asked for

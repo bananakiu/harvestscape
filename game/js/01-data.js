@@ -621,9 +621,13 @@ function pledgeDiscovered(id){
   return false;
 }
 // Everything the Journal's Restorations section should list, in display order.
+// Lift stops are discovered by DERIVATION — mineBest ≥ n means you stood on that floor once —
+// so old saves backfill retroactively with zero migration. Listing stops at mineBest keeps the
+// doubling series past floor 20 from rendering to infinity.
 function ledgerPledges(){
   const out = [];
   for(const id of ["way3","way6","way9"]) if(pledgeDiscovered(id)) out.push(id);
+  for(let n = 5; n <= (state.mineBest||0); n += 5) out.push("lift"+n);
   return out;
 }
 

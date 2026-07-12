@@ -712,12 +712,11 @@ function renderLift(){
       (s===depth ? `<span class="sub">you are here</span>` : `<button class="buy" onclick="rideLift(${s})">ride</button>`) + `</div>`;
   }
   if(depth % 5 === 0 && !stops.includes(depth)){
-    const c = liftStopCost(depth);
-    const matStr = Object.keys(c.mats).map(it => { const have=state.inv[it]||0, need=c.mats[it];
-      return `${need}× ${it} <span style="color:${have>=need?'#8fd06a':'#c98a6a'}">(${have})</span>`; }).join(", ");
-    const can = state.gold >= c.g && Object.keys(c.mats).every(it => (state.inv[it]||0) >= c.mats[it]);
-    html += `<div class="row ${can?'':'locked'}"><span class="lead"><span>Restore this stop <span class="sub">${c.g}g · ${matStr}</span></span></span>` +
-      `<button class="buy" ${can?'':'disabled'} onclick="restoreLift()">restore</button></div>`;
+    // Grove Depths Phase 4: the stop funds through the Pledge Ledger — partial deposits, here
+    // or from the Journal, and arriving under-resourced is never a wasted trip. The old
+    // all-or-nothing "restore" button (disabled until you carried everything at once) is gone.
+    html += pledgeRowHtml("lift"+depth);
+    html += `<div class="desc" style="margin-top:.4em;color:var(--ink-soft);">Pledge what you carry — here, or from the Journal (J), anywhere. The ledger keeps the tally.</div>`;
   } else if(depth % 5 !== 0){
     const next = Math.ceil(depth/5)*5;
     html += `<div class="desc" style="margin-top:.4em;color:var(--ink-soft);">The next restorable stop is at floor ${next}.</div>`;
@@ -732,19 +731,9 @@ function rideLift(target){
   travelTo("mine", 2*TILE+8, 3*TILE, "down");
   toast(`The lift lowers you to floor ${target}.`, "#a9b0c0");
 }
-function restoreLift(){
-  const depth = state.mineDepth||1;
-  if(depth % 5 !== 0 || (state.liftStops||[]).includes(depth)) return;
-  const c = liftStopCost(depth);
-  if(state.gold < c.g || !Object.keys(c.mats).every(it => (state.inv[it]||0) >= c.mats[it])){ playSfx("error"); return; }
-  state.gold -= c.g;
-  for(const it in c.mats) take(it, c.mats[it]);
-  state.liftStops.push(depth);
-  playSfx("upgrade"); pSparkle(state.px, state.py-12, "#ffd75a", 18);
-  banner("⚙ Lift stop restored", `Floor ${depth} is on the line now — for good.`);
-  saveGame();   // a permanent purchase should never be lost to a crash
-  renderLift();
-}
+// restoreLift (the all-or-nothing at-the-stop purchase) is gone — lift stops fund through
+// contributePledge like everything else on the ledger. completePledge still lands the stop in
+// state.liftStops, so ride logic and old saves are untouched.
 
 // ---- The Pledge Ledger (waystones now; the Old Lift joins it in Phase 4) ----
 // One contribute button per pledge: it deposits EVERYTHING you're carrying that's still owed

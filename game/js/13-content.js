@@ -225,7 +225,18 @@ function enterMine(){
 }
 function mineDown(){ state.mineDepth = (state.mineDepth||1) + 1; state.mineBest = Math.max(state.mineBest||0, state.mineDepth);
   checkQuests(); travelTo("mine", 2*TILE+8, 3*TILE, "down");
-  const stop = state.mineDepth % 5 === 0 && !(state.liftStops||[]).includes(state.mineDepth) ? "  ·  a lift stop waits here" : "";
+  // the toasts do the reminding, the ledger does the remembering: a part-funded stop says
+  // exactly what it's still short (Grove Depths Phase 4)
+  let stop = "";
+  if(state.mineDepth % 5 === 0 && !(state.liftStops||[]).includes(state.mineDepth)){
+    const id = "lift"+state.mineDepth;
+    if(state.pledges && state.pledges[id]){
+      const rem = pledgeRemaining(id), owed = [];
+      if(rem.g > 0) owed.push(rem.g+"g");
+      for(const it in rem.mats) owed.push(rem.mats[it]+"× "+it);
+      stop = "  ·  the lift stop here is "+owed.join(", ")+" short";
+    } else stop = "  ·  a lift stop waits here";
+  }
   toast("You climb down to floor "+state.mineDepth+"…"+stop, "#a9b0c0"); }
 function mineUp(){
   if((state.mineDepth||1) > 1){ state.mineDepth--; travelTo("mine", 2*TILE+8, 3*TILE, "down"); }
