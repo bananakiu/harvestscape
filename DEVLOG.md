@@ -14,6 +14,21 @@
 
 ---
 
+## 2026-07-13 (evening) — Story verdict: "kind of falls flat"
+
+**Owner:** *"What will you build next, and are there any major improvements you want in the story?
+The story kind of falls flat a bit, in my opinion."*
+
+**Interpretation + our diagnosis (five named causes, full pitch in chat, plan doc to follow on
+green-light):** (1) the Guild's darkness is a checklist, not a felt absence — nothing in the world
+visibly *lacks* or *heals*; (2) Act I never seeds a question, so the Act II reveal answers something
+the player never asked; (3) quest objectives are systemic gates wearing quest costumes ("reach total
+level 60"), not people asking for help; (4) NPCs never talk to *each other* outside set pieces, so
+the valley reads as spokes around the player, not a web; (5) no midpoint event and no player choice —
+the arc is opening → long grind → finale. Direction proposed: make healing physical (per-wing world
+changes), plant the mystery early, humanize the gates, let the valley talk, add a midpoint lantern
+night. v3.1's markers/celebrations fixed *visibility* of the story; this is about the story itself.
+
 ## 2026-07-13 (later) — Green light: build the world split and the story pass
 
 **Owner:** *"Okay, let's go ahead and continue building those two things."* — i.e. the two items
