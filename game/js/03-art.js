@@ -67,17 +67,27 @@ function buildTiles(){
   mkSpr("dirt", 16, 16, g => { px(g,0,0,16,16,"#a97e4c");
     seedRR(7); for(let i=0;i<18;i++){ const x=rr()*16|0,y=rr()*16|0; px(g,x,y,1,1, rr()<.5?"#946a3d":"#b98d59"); } });
 
+  // Tilled soil used to be full-width straight bands inside a 1px frame — from above, a field of it
+  // read as dark lumber decking, not earth (a new player couldn't tell their plot was soil). Now the
+  // furrows are BROKEN (notched shadow rows, scattered ridge highlights, clods), with no frame, so a
+  // bed of tiles reads as turned earth in rows.
   mkSpr("tilled", 16, 16, g => {
-    px(g,0,0,16,16,"#7a5734");
-    for(let y=2;y<16;y+=4){ px(g,0,y,16,2,"#634527"); px(g,0,y+2,16,1,"#8a6640"); }
-    px(g,0,0,16,1,"#8a6640"); px(g,0,15,16,1,"#513619");
-    px(g,0,0,1,16,"#8a6640"); px(g,15,0,1,16,"#513619");
+    px(g,0,0,16,16,"#7d5a35");
+    seedRR(11);
+    for(let y=2;y<16;y+=4){
+      for(let x=0;x<16;x++){ if(rr()>0.14) px(g,x,y,1,2,"#5e4326"); }        // furrow shadow, notched
+      for(let x=0;x<16;x++){ if(rr()>0.45) px(g,x,y+2,1,1,"#94713f"); }      // sunlit ridge crest
+    }
+    for(let i=0;i<9;i++){ const x=rr()*16|0, y=rr()*16|0; px(g,x,y,1,1, rr()<.5?"#6b4c2a":"#8f6a3e"); }  // clods
   });
   mkSpr("watered", 16, 16, g => {
-    px(g,0,0,16,16,"#4f3a21");
-    for(let y=2;y<16;y+=4){ px(g,0,y,16,2,"#3d2c18"); px(g,0,y+2,16,1,"#5e4527"); }
-    seedRR(3); for(let i=0;i<10;i++){ const x=rr()*16|0,y=rr()*16|0; px(g,x,y,1,1,"#6b83a0"); }
-    px(g,0,0,1,16,"#5e4527"); px(g,15,0,1,16,"#2c1f10");
+    px(g,0,0,16,16,"#57401f");
+    seedRR(11);                                                              // same furrow layout as tilled — watering darkens, doesn't rearrange
+    for(let y=2;y<16;y+=4){
+      for(let x=0;x<16;x++){ if(rr()>0.14) px(g,x,y,1,2,"#3f2e16"); }
+      for(let x=0;x<16;x++){ if(rr()>0.45) px(g,x,y+2,1,1,"#6a5230"); }
+    }
+    seedRR(3); for(let i=0;i<10;i++){ const x=rr()*16|0,y=rr()*16|0; px(g,x,y,1,1,"#6b83a0"); }  // wet glints
   });
 
   // water — 3 shimmer frames

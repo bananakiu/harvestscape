@@ -22,6 +22,16 @@
 
 ---
 
+## v2.8.2 — "Turned Earth" · 2026-07-12 · tag `v2.8.2`
+
+Version code **32**. Polish batch 2. The starter plot was the survey's biggest sprite offender:
+`tilled` drew full-width straight bands inside a 1px frame, so a bed of it read as **dark lumber
+decking** — a brand-new player literally couldn't tell their field was soil (it looked like a
+structure). Redrawn (`03-art.js`): broken/notched furrow shadows, sunlit ridge crests, scattered
+clods, no frame. `watered` uses the *same* furrow layout, darkened with wet glints — watering
+darkens the earth, it doesn't rearrange it. Verified with a demo bed of tilled/watered/planted
+rows: reads as turned earth at a glance.
+
 ## v2.8.1 — "Lamplight" · 2026-07-12 · tag `v2.8.1`
 
 Version code **31**. First batch of the owner's "make it just nice" polish mandate (DEVLOG
