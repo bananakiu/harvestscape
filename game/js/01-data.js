@@ -8,13 +8,16 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.4.0", code: 41, codename: "What the Valley Lost", date: "2026-07-13" };
+const VERSION = { name: "3.5.0", code: 42, codename: "Neighbours", date: "2026-07-13" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.5.0", code:42, date:"2026-07-13", name:"Neighbours", notes:[
+    { t:"change",s:"The valley's requests sound like the valley now — Rowan asks to see the crafts live in your hands, Tom wants to build you better iron, Bram wants you fishing beside him. Same tasks; real voices." },
+  ]},
   { v:"3.4.0", code:41, date:"2026-07-13", name:"What the Valley Lost", notes:[
     { t:"new",   s:"Every Guild wing you relight now changes the village itself — a market stall appears, barrels of the day's catch, a cook-fire on the plaza, lanterns up the mine path… the valley visibly wakes as you work." },
     { t:"new",   s:"Until three wings are lit, the shuttered years still show: rubble by the neighbours' doors, and their signs say so." },
@@ -706,10 +709,10 @@ const QUESTS = [
     reward:{ gold:120, items:{"Carrot Seeds":3}, msg:"Word spreads; Tom sends carrot seeds." } },
 
   { id:"meet-tom", title:"Coin & Company", giver:"Tom",
-    desc:"A valley is its people. Step inside Tom's store, east down the path, and sell your goods.",
+    desc:"A valley is its people. Step inside Tom's store, east down the road, and let him talk your ear off.",
     obj:[ {text:"Visit Tom's store & say hello", talk:"tom"},
-          {text:"Earn 250g from selling", stat:"earned", goal:250} ],
-    reward:{ gold:100, items:{"Berry Bun":3}, msg:"Tom rounds up your total, with a wink." } },
+          {text:"Sell him the valley's good things — 250g earned", stat:"earned", goal:250} ],
+    reward:{ gold:100, items:{"Berry Bun":3}, msg:"“First proper trade this counter's seen in months.” Tom rounds up, with a wink." } },
 
   { id:"old-keeper", title:"The Old Keeper", giver:"Willowbrook",
     desc:"An old man keeps the shuttered Guild Hall in the north of town. Go and hear him out.",
@@ -722,23 +725,23 @@ const QUESTS = [
     reward:{ gold:120, items:{"Strawberry Seeds":3}, msg:"Strawberries — her favorite, if you were wondering." } },
 
   { id:"prove-crafts", title:"Prove the Crafts", giver:"Elder Rowan",
-    desc:"“Show me the crafts still live here.” Light the first three wings of the Guild.",
-    obj:[ {text:"Reach Farming 10", level:{skill:"Farming",n:10}},
-          {text:"Reach Woodcutting 8", level:{skill:"Woodcutting",n:8}},
-          {text:"Reach Mining 8", level:{skill:"Mining",n:8}} ],
-    reward:{ gold:250, items:{"Iron Ore":4}, msg:"Three wings flicker back to light." } },
+    desc:"“Anyone can hold a seal. Show me the crafts still live in someone's hands — the field, the axe, the pick. Then we'll talk about wings.”",
+    obj:[ {text:"Show him a farmer's hands — Farming 10", level:{skill:"Farming",n:10}},
+          {text:"Show him a forester's swing — Woodcutting 8", level:{skill:"Woodcutting",n:8}},
+          {text:"Show him a miner's eye — Mining 8", level:{skill:"Mining",n:8}} ],
+    reward:{ gold:250, items:{"Iron Ore":4}, msg:"Rowan stands at the wall a long moment. Three wings, flickering. “Well,” he says. “Well.”" } },
 
   { id:"the-coast", title:"Salt & Silver", giver:"Bram",
-    desc:"Follow the village's south path to the coast. Bram the fisher tends the Fishing wing.",
+    desc:"Follow the village's south path to the coast. An old fisher tends the Fishing wing — mostly by ignoring it, and everyone else.",
     obj:[ {text:"Meet Bram at the coast", talk:"bram"},
-          {text:"Reach Fishing 10", level:{skill:"Fishing",n:10}} ],
+          {text:"Fish beside him until he nods — Fishing 10", level:{skill:"Fishing",n:10}} ],
     reward:{ gold:300, items:{"Cooked Salmon":2}, msg:"Bram grunts. From him, that's a medal." } },
 
   { id:"into-deep", title:"Into the Deep", giver:"Elder Rowan",
-    desc:"The old mine north of the ridge runs deep. Rowan whispers of a founding gift below.",
-    obj:[ {text:"Reach mine floor 5", mineDepth:5},
-          {text:"Mine 25 rocks", stat:"mined", goal:25} ],
-    reward:{ gold:300, items:{"Gold Ore":3}, msg:"The deep opens to you." } },
+    desc:"“The mine remembers the Guild's founding — it's all still down there, past the easy seams. Go deep enough that the mountain learns your name.”",
+    obj:[ {text:"Go down past the easy seams — mine floor 5", mineDepth:5},
+          {text:"Swing until the mountain knows you — 25 rocks mined", stat:"mined", goal:25} ],
+    reward:{ gold:300, items:{"Gold Ore":3}, msg:"“Deep enough,” Rowan says, and for a moment he looks young. “Now I can tell you what's down there.”" } },
 
   { id:"star-metal", title:"The Founding Gift", giver:"Elder Rowan",
     desc:"Deep in the mine a sealed vault holds Star Metal — the Guild's heart. Break it open (Mining 20) and recover it.",
@@ -746,14 +749,14 @@ const QUESTS = [
     reward:{ gold:400, items:{"Emerald":1}, msg:"The Mining wing blazes to life." } },
 
   { id:"master-tools", title:"Master Smith", giver:"Tom",
-    desc:"Grandpa's basic tools got him by. Forge yourself something worthy of the Guild.",
-    obj:[ {text:"Upgrade tools 3 times", stat:"toolUpgrades", goal:3} ],
-    reward:{ gold:250, items:{"Gold Ore":3}, msg:"Tom whistles at your new kit." } },
+    desc:"“Your grandpa's kit got him by, bless him — but the Guild deserves better iron. Bring me the makings and we'll build you something worthy.”",
+    obj:[ {text:"Let Tom improve your kit — 3 tool upgrades", stat:"toolUpgrades", goal:3} ],
+    reward:{ gold:250, items:{"Gold Ore":3}, msg:"Tom turns the tool over twice and whistles. “Now THAT would've made your grandpa jealous.”" } },
 
   { id:"wake-valley", title:"Wake the Valley", giver:"The Valley",
     desc:"They said Willowbrook was finished. Light every wing and bring the Grand Festival back to the coast.",
-    obj:[ {text:"Reach total level 60", totalLevel:60},
-          {text:"Reach 4 hearts with Maya", heart:4},
+    obj:[ {text:"Let every craft live in you — total level 60", totalLevel:60},
+          {text:"Let Maya believe it's real — 4 hearts", heart:4},
           {text:"Recover the Star Metal", flag:"foundVault"} ],
     reward:{ gold:2000, msg:"Lanterns rise over the water. The valley is awake — and it's yours." },
     finale:true },

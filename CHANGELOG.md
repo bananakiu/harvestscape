@@ -22,6 +22,22 @@
 
 ---
 
+## v3.5.0 — "Neighbours" · 2026-07-13 · tag `v3.5.0`
+
+Version code **42**. Story overhaul 2/3 ([STORY_OVERHAUL.md](STORY_OVERHAUL.md)): the
+quests were **systemic gates in quest costumes** — "Reach Farming 10", "Upgrade tools 3 times" —
+systems asking for numbers, not people asking for help. A pure writing pass over `QUESTS`
+(`01-data.js`): descriptions become the giver speaking ("Anyone can hold a seal. Show me the
+crafts still live in someone's hands…"), objectives keep their exact mechanics but carry the ask
+("Show him a farmer's hands — Farming 10" — the number stays visible; the design bible's
+numbers-must-be-honest rule holds), and completion messages thank you like a neighbour ("Rowan
+stands at the wall a long moment. Three wings, flickering. 'Well,' he says. 'Well.'"). Six quests
+rewritten (meet-tom, prove-crafts, the-coast, into-deep, master-tools, wake-valley's level line);
+the letter quests and Act II were already written in voice and stand untouched. **Zero balance
+change** — every objective check is byte-identical.
+
+*Verified live: journal renders the new text (giver voice + honest numbers), console clean.*
+
 ## v3.4.0 — "What the Valley Lost" · 2026-07-13 · tag `v3.4.0`
 
 Version code **41**. First release of the story overhaul ([STORY_OVERHAUL.md](STORY_OVERHAUL.md),
