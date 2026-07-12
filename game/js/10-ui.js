@@ -302,7 +302,7 @@ function renderSkills(){
   }
   html += `</div><div id="skillDetail">${skillDetailHtml(skillSel)}</div>`;
   html += `<details class="skillHelp"><summary>About the XP curve</summary>` +
-    `<div>A real RuneScape XP curve — 92 is halfway to 99. Every skill earns a mastery at 25 · 50 · 75 · 99.</div></details>`;
+    `<div>Levels are paced to be savored — each takes a little more than the last, and only the final stretch to 99 is a true completionist climb. Every skill earns a mastery at 25 · 50 · 75 · 99.</div></details>`;
   b.innerHTML = html;
   hydrateIcons(b);   // draw the skill-tile icons (the old panel declared an icon map but never used it)
 }

@@ -34,7 +34,9 @@ body{
   position:relative;
   width:min(1040px, 98vw);
   aspect-ratio:320 / 208;
-  max-height:94dvh;
+  /* leave room for the two-line controls hint below — a 94dvh stage pushed it off-screen and the
+     centered layout clipped it mid-glyph. On short viewports the hint hides instead (media rule). */
+  max-height:calc(100dvh - 92px);
   border-radius:10px;
   overflow:hidden;
   box-shadow:
@@ -629,4 +631,9 @@ body{
 
 @media (max-width:640px){
   #belowbar{ display:none; }
+}
+/* short viewports: give the game the height back; the hints would crowd it out */
+@media (max-height:520px){
+  #belowbar{ display:none; }
+  #stage{ max-height:96dvh; }
 }

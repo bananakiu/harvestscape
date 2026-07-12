@@ -45,9 +45,13 @@ function collectLights(){
       case "banner":    L.push({x:cx,y:cy-6,r:24,c:"255,210,120",i:0.5}); break;
     }
   }
-  if(curMap.id === "farm"){
-    L.push({ x:6*TILE+8, y:5*TILE+12, r:34, c:"255,205,120", i:1 });
-    L.push({ x:9*TILE+8, y:5*TILE+12, r:34, c:"255,205,120", i:1 });
+  // Every window in the valley glows after dark — the same procedural rule that draws them
+  // (isWindowTile, 07-entities.js). This replaces two hardcoded cottage lights and is most of the
+  // point of having windows: a town that looks lived-in at night. Cheap: collectLights only runs
+  // when lights show, and the scan is a few thousand array reads on a 320×208 game.
+  for(let wy=0; wy<curMap.h; wy++) for(let wx=0; wx<curMap.w; wx++){
+    if(curMap.tiles[wy*curMap.w+wx] === T.WALL && isWindowTile(wx, wy))
+      L.push({ x:wx*TILE+8, y:wy*TILE+11, r:28, c:"255,208,128", i:0.8 });
   }
   L.push({ x:state.px, y:state.py-6, r: curMap.id==="mine"?98:42,   // wide warm lantern underground; a soft warm aura up top
            c: curMap.id==="mine"?"255,215,160":"255,226,178", i: curMap.id==="mine"?1:0.55 });

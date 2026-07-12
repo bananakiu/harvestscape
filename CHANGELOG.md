@@ -22,6 +22,33 @@
 
 ---
 
+## v2.8.1 — "Lamplight" · 2026-07-12 · tag `v2.8.1`
+
+Version code **31**. First batch of the owner's "make it just nice" polish mandate (DEVLOG
+2026-07-12) — driven by a full visual survey of every surface (farm day/night, town, store, mine,
+beach, panels), fixing the roughest findings, each verified by screenshot.
+
+### Added
+- **Procedural windows on every building** (`isWindowTile`, `07-entities.js`). Windows were a
+  hardcoded two-tile set on the cottage; every other building in the valley was a blank-faced
+  crate you couldn't tell apart. Now any upper-facade WALL tile gets a window on a fixed spacing —
+  and the spacing rule `(x·5+y·3)%3===0` reproduces the cottage's original two windows *exactly*,
+  so nothing moved. **At night they all glow**: `collectLights` (`06-weather.js`) scans for window
+  tiles and gives each a small warm pool, replacing the two hardcoded cottage lights. The night
+  town went from a dark silhouette to a village with people inside. (13 windows on the farm map.)
+- **A real shoreline** (`drawSandDressing`/`drawWaterFoam`, `07-entities.js`). The coast met the
+  grass and the sea in hard 90° tile edges. Now: a damp sand band + dark waterline where sand
+  touches water, broken foam dashes on the water side (two-phase drift, skipped under winter ice),
+  and season-tinted grass tufts creeping onto the sand. All deterministic in (x,y) — no shimmer.
+
+### Fixed
+- **Controls hint clipped off-screen on short viewports.** `#stage` could take 94dvh, pushing the
+  two-line hint below the fold where centered flex clipped it mid-glyph. The stage now reserves
+  hint room (`max-height: calc(100dvh − 92px)`); under 520px tall the hint hides and the game gets
+  the space back (matching the existing narrow-width rule).
+- **Skills panel described the old curve** ("A real RuneScape XP curve — 92 is halfway to 99") —
+  false since v2.7, doubly so after v2.8. Rewritten for the repaced curve.
+
 ## v2.8.0 — "Earned" · 2026-07-12 · tag `v2.8.0`
 
 Version code **30**. Third calibration of the XP curve, from the owner's playtest of v2.7 (see

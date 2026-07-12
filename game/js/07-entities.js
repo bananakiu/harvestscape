@@ -118,7 +118,13 @@ function drawHeldTool(x, y, face){
 }
 
 // ---- the renderer ----
-const HOUSE_WINDOWS = new Set(["6,5","9,5"]);
+// Windows are procedural: any upper-facade WALL tile (a WALL with another WALL below it) gets one
+// on a fixed spacing. This replaces a hardcoded two-window set that left every OTHER building in
+// the valley blank-faced — and the spacing rule reproduces those two cottage windows exactly, so
+// nothing moved. Windows glow at night (nf > 0.4), which is most of why they exist: a lived-in town.
+function isWindowTile(x, y){
+  return tileAt(x, y+1) === T.WALL && (x*5 + y*3) % 3 === 0;
+}
 function computeCam(shx, shy){
   const mw = curMap.w*TILE, mh = curMap.h*TILE;
   cam.x = mw <= VIEW_W ? Math.round((mw-VIEW_W)/2) : clamp(state.px - VIEW_W/2, 0, mw - VIEW_W);
@@ -277,6 +283,58 @@ function drawCow(a){
   }
 }
 
+// Shoreline dressing: the coast used to meet the grass and the sea in hard 90° tile edges. These
+// overlays read the four neighbours and soften the seams — wet sand along the waterline, a broken
+// foam line on the water side, grass tufts creeping onto the sand. All deterministic in (x,y) so
+// the shore doesn't shimmer; only the foam breathes (a slow two-phase shift).
+function shorelineEdges(x, y, pred){
+  return { n:pred(tileAt(x,y-1)), s:pred(tileAt(x,y+1)), w:pred(tileAt(x-1,y)), e:pred(tileAt(x+1,y)) };
+}
+const GRASS_LIKE = new Set([T.GRASS, T.FLOWERGRASS, T.TALLGRASS]);
+const FRINGE_GREEN = { Spring:"#5aa54e", Summer:"#4f9a44", Fall:"#93913f", Winter:"#d7dfe4" };
+function drawSandDressing(x, y, bx, by){
+  const wet = shorelineEdges(x, y, t => t===T.WATER);
+  if(wet.n || wet.s || wet.w || wet.e){
+    ctx.fillStyle = "#c4ab74";                                     // damp band
+    if(wet.n) ctx.fillRect(bx, by, TILE, 3);
+    if(wet.s) ctx.fillRect(bx, by+TILE-3, TILE, 3);
+    if(wet.w) ctx.fillRect(bx, by, 3, TILE);
+    if(wet.e) ctx.fillRect(bx+TILE-3, by, 3, TILE);
+    ctx.fillStyle = "#a98f60";                                     // the dark waterline itself
+    if(wet.n) ctx.fillRect(bx, by, TILE, 1);
+    if(wet.s) ctx.fillRect(bx, by+TILE-1, TILE, 1);
+    if(wet.w) ctx.fillRect(bx, by, 1, TILE);
+    if(wet.e) ctx.fillRect(bx+TILE-1, by, 1, TILE);
+  }
+  const gr = shorelineEdges(x, y, t => GRASS_LIKE.has(t));
+  if(gr.n || gr.s || gr.w || gr.e){
+    ctx.fillStyle = FRINGE_GREEN[renderSeason] || FRINGE_GREEN.Spring;
+    const h = (x*31 + y*17) & 7;                                   // stagger tufts per tile
+    for(let i=0;i<3;i++){
+      const o = 2 + ((h+i*5) % 11);                                // 2..12 along the edge
+      if(gr.n) ctx.fillRect(bx+o, by,        2, 1+((h+i)&1));
+      if(gr.s) ctx.fillRect(bx+o, by+TILE-2+((h+i)&1), 2, 2-((h+i)&1));
+      if(gr.w) ctx.fillRect(bx,        by+o, 1+((h+i)&1), 2);
+      if(gr.e) ctx.fillRect(bx+TILE-2+((h+i)&1), by+o, 2-((h+i)&1), 2);
+    }
+  }
+}
+function drawWaterFoam(x, y, bx, by){
+  if(renderSeason === "Winter") return;                            // frozen — the ice overlay owns the look
+  const sh = shorelineEdges(x, y, t => t===T.SAND || GRASS_LIKE.has(t));
+  if(!(sh.n || sh.s || sh.w || sh.e)) return;
+  const phase = (Math.floor(animT*1.25) + x + y) & 1;              // slow breath, offset per tile
+  ctx.fillStyle = "rgba(226,242,244,0.85)";
+  const h = (x*13 + y*29) & 3;
+  for(let i=0;i<3;i++){
+    const o = 1 + ((h + i*5 + phase*2) % 12);                      // broken dashes, drifting slightly
+    if(sh.n) ctx.fillRect(bx+o, by,        3, 1);
+    if(sh.s) ctx.fillRect(bx+o, by+TILE-1, 3, 1);
+    if(sh.w) ctx.fillRect(bx,        by+o, 1, 3);
+    if(sh.e) ctx.fillRect(bx+TILE-1, by+o, 1, 3);
+  }
+}
+
 function drawGroundTile(x, y, tt, nf){
   const bx = x*TILE, by = y*TILE;
   switch(tt){
@@ -287,11 +345,12 @@ function drawGroundTile(x, y, tt, nf){
     case T.TILLED: ctx.drawImage(spr.tilled, bx, by); break;
     case T.WATERED: ctx.drawImage(spr.watered, bx, by); break;
     case T.WATER: { const f=(Math.floor(animT*3)+((x+y)%3))%3; ctx.drawImage(spr["water"+f], bx, by);
-      if(renderSeason==="Winter") ctx.drawImage(spr.ice, bx, by); break; }
-    case T.SAND: ctx.drawImage(spr.sand, bx, by); break;
+      if(renderSeason==="Winter") ctx.drawImage(spr.ice, bx, by);
+      drawWaterFoam(x, y, bx, by); break; }
+    case T.SAND: ctx.drawImage(spr.sand, bx, by); drawSandDressing(x, y, bx, by); break;
     case T.PATH: { const pv=(x*5+y*3)&1; ctx.drawImage(spr["path"+pv], bx, by); break; }
     case T.BRIDGE: ctx.drawImage(spr.bridge, bx, by); break;
-    case T.WALL: { if(HOUSE_WINDOWS.has(x+","+y)) ctx.drawImage(nf>0.4 ? spr.wall_win_lit : spr.wall_win, bx, by);
+    case T.WALL: { if(isWindowTile(x,y)) ctx.drawImage(nf>0.4 ? spr.wall_win_lit : spr.wall_win, bx, by);
       else ctx.drawImage(spr.wall, bx, by); break; }
     case T.ROOF: ctx.drawImage(tileAt(x,y-1)!==T.ROOF ? spr.roof_top : spr.roof, bx, by); break;
     case T.DOOR: ctx.drawImage(spr.door, bx, by); break;
