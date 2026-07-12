@@ -15,6 +15,7 @@ const MAPS = {
   guild:     { w:17, h:11, name:"Guild of Nine Crafts",  subtitle:"once, the heart of the valley", music:"cozy", bg:"#12100b", gen:genGuild },
   mine:      { w:34, h:22, name:"The Old Mine",          subtitle:"",                 music:"mine", bg:"#050406", gen:genMine },
   beach:     { w:46, h:24, outdoor:true, name:"Willowbrook Coast", subtitle:"salt on the breeze", music:"beach", bg:"#2f4a63", gen:genBeach },
+  grove:     { w:44, h:30, outdoor:true, name:"The Deep Grove", subtitle:"the forest gives, and grows back", music:"auto", bg:"#0d150c", gen:genGrove },
 };
 
 // ---------------- interior helpers ----------------
@@ -225,6 +226,51 @@ function mineUp(){
 }
 
 // ---------------- the beach ----------------
+// ---------------- the Deep Grove ----------------
+// Woodcutting's mine: a dense forest that regrows overnight (mapCache), so the axe has a renewable
+// venue the way the pick has the ore. Deeper (further west) grows older wood — oak thins out and
+// pine/maple take over — so your WC level decides how much of the grove is really "yours" yet.
+// The farm's little southwest stand stays as the starter patch; this is where the skill lives.
+function genGrove(m){
+  const rng = makeRng(777 + state.day*23);   // the forest rearranges itself each night
+  const t = m.tiles;
+  for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++){
+    const n = rng();
+    t[y*W+x] = n<0.07 ? T.FLOWERGRASS : n<0.13 ? T.TALLGRASS : T.GRASS;
+  }
+  // impassable border, like the coast — the forest simply thickens past walking
+  for(let x=0;x<m.w;x++){ t[0*W+x]=T.IWALL; t[(m.h-1)*W+x]=T.IWALL; }
+  for(let y=0;y<m.h;y++){ t[y*W+0]=T.IWALL; t[y*W+m.w-1]=T.IWALL; }
+  // east-edge exit back to the farm's treeline
+  t[15*W+(m.w-1)] = T.DOOR;
+  m.warps[key(m.w-2, 15)] = { to:"farm", sx:3*TILE+8, sy:34*TILE, face:"right", auto:true };
+  // a worn footpath from the gate to the old clearing
+  for(let x=11;x<=m.w-2;x++) t[15*W+x]=T.PATH;
+  m.objects[key(m.w-4,13)] = { kind:"sign", text:"→ Back to the Farm" };
+  // the clearing: a rest spot with a campfire (cook what you forage; the light is company)
+  m.objects[key(11,14)] = { kind:"campfire" };
+  // trees — deeper west is older wood. Density leaves walking room but reads as real forest.
+  for(let y=1;y<m.h-1;y++) for(let x=1;x<m.w-1;x++){
+    if(Math.abs(y-15)<=1 && x>=9) continue;                      // keep the path breathable
+    if(Math.hypot(x-11,y-14) < 3.2) continue;                    // and the clearing open
+    if(t[y*W+x]!==T.GRASS && t[y*W+x]!==T.FLOWERGRASS && t[y*W+x]!==T.TALLGRASS) continue;
+    if(rng() >= 0.34) continue;
+    const r = rng();
+    let kind;
+    if(x > 28)      kind = r<0.72 ? "oak" : r<0.95 ? "pine" : "maple";   // young fringe by the gate
+    else if(x > 14) kind = r<0.42 ? "oak" : r<0.82 ? "pine" : "maple";   // the middle wood
+    else            kind = r<0.25 ? "oak" : r<0.60 ? "pine" : "maple";   // the old deep grove
+    m.objects[key(x,y)] = { kind, hp:TREES[kind].hp };
+  }
+  // undergrowth to forage on the way
+  let bushes=0;
+  for(let i=0;i<60 && bushes<7;i++){
+    const x=randiR(rng,2,m.w-3), y=randiR(rng,2,m.h-3);
+    const g=t[y*W+x];
+    if((g===T.GRASS||g===T.FLOWERGRASS||g===T.TALLGRASS) && !m.objects[key(x,y)]){ m.objects[key(x,y)]={kind: rng()<0.6?"berrybush":"bush"}; bushes++; }
+  }
+}
+
 function genBeach(m){
   const rng = makeRng(555 + state.day*17);   // the tide rearranges the sand every night
   const t = m.tiles;

@@ -22,6 +22,30 @@
 
 ---
 
+## v2.9.1 — "The Deep Grove" · 2026-07-12 · tag `v2.9.1`
+
+Version code **34**. Pillar 2 of [ECONOMY_REBALANCE.md](ECONOMY_REBALANCE.md): woodcutting's mine.
+The owner: *"you just run out of trees… there's no procedurally generated forest — the equivalent
+of a mine where you could cut trees and gain resources."* The farm's ~44 trees (+5/night regrowth)
+were a puddle next to the mine's infinite ore; pillar 3's wood-hungry tool costs need a real supply.
+
+### Added
+- **The Deep Grove** (`genGrove`, `13-content.js` + `MAPS` entry): a 44×30 forest map through the
+  farm's western treeline (footpath + auto-warp + sign carved after the farm's tree scatter so
+  nothing can seal it). ~370 trees regenerating **daily** via the existing `mapCache` — the same
+  renewal rule as the mine, no new persistence. A worn path leads to a clearing with a campfire
+  (cook your forage; the light is company), berrybushes along the way, coast-style impassable
+  border with an east-gate exit.
+- **Age bands, not level walls:** near the gate it's mostly young oak (72%); the middle wood turns
+  pine-heavy; the old deep grove is ~75% pine/maple. Your WC level (pine 8, maple 18) decides how
+  much of the forest is really *yours* yet — the venue is generous, the skill still gates the
+  yield. Zero new sprites or systems: trees, paths, signs, forage all reuse existing pieces.
+- First-visit hint for new players (`tip_grove`, NPX saves only).
+
+*Verified live: farm warp + clear path; grove generated 179 oak / 119 pine / 78 maple + forage +
+campfire; exit warp back; overnight regrowth confirmed (chop → clearMapCache → tree back); forest
+screenshot reads dense-but-walkable; console clean. Atlas regenerated (now 10 maps).*
+
 ## v2.9.0 — "The Old Lift" · 2026-07-12 · tag `v2.9.0`
 
 Version code **33**. Pillar 1 of the economy rebalance ([ECONOMY_REBALANCE.md](ECONOMY_REBALANCE.md),

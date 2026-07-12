@@ -24,6 +24,8 @@ function tutoringTick(){
     tutTip("tip_rain","Rain waters your fields for free today — and the fish are rising.");
   if(curMap.id==="mine" && !state.flags.tip_mine)
     tutTip("tip_mine","Swing your Pick at the rock for ore and gems. Find a ladder to go deeper.");
+  if(curMap.id==="grove" && !state.flags.tip_grove)
+    tutTip("tip_grove","The Grove regrows overnight — cut what you need. Older wood grows deeper in.");
   // contextual verb hints, keyed to what you're facing with the tool in hand
   const slot = HOTBAR[slotSel]; if(!slot) return;
   const tool = slot.tool;

@@ -213,6 +213,13 @@ function genFarm(m){
   for(let i=0;i<40;i++){ const x=randiR(rng,2,22), y=randiR(rng,27,44);
     const r=rng(), kind=r<0.55?"oak":r<0.82?"pine":"maple"; place(x,y,kind,{hp:TREES[kind].hp}); }
   for(let i=0;i<10;i++) place(randiR(rng,2,22),randiR(rng,27,44), rng()<0.5?"bush":"berrybush");
+  // --- the Deep Grove (west, through the treeline) ---
+  // a footpath out of the little forest into woodcutting's real venue; carved AFTER the tree
+  // scatter so nothing can seal it (objects on the path rows are cleared).
+  for(let x=1;x<=6;x++) set(x,34,T.PATH);
+  for(let x=0;x<=6;x++) for(let dy=-1;dy<=1;dy++) delete obj[key(x,34+dy)];
+  m.warps[key(1,34)] = { to:"grove", sx:(44-3)*TILE, sy:15*TILE, face:"left", auto:true };
+  obj[key(5,33)] = { kind:"sign", text:"← The Deep Grove" };
 
   // ore ridge (north) — early mining above ground
   for(let i=0;i<24;i++){ const x=randiR(rng,26,49), y=randiR(rng,1,4);
