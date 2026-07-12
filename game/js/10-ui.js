@@ -713,7 +713,7 @@ function renderLift(){
 function rideLift(target){
   closeAllPanels();
   playSfx("door");
-  if(target === 0){ travelTo("village", 20*TILE+8, 3*TILE, "down"); toast("The lift rattles up into the daylight.", "#cbb98f"); return; }
+  if(target === 0){ travelTo("village", 33*TILE+8, 4*TILE+8, "down"); toast("The lift rattles up into the daylight.", "#cbb98f"); return; }
   state.mineDepth = target;
   travelTo("mine", 2*TILE+8, 3*TILE, "down");
   toast(`The lift lowers you to floor ${target}.`, "#a9b0c0");

@@ -22,6 +22,65 @@
 
 ---
 
+## v3.1.1 — "Doors & Roads" · 2026-07-13 · tag `v3.1.1`
+
+Version code **38**. The v3.0 world-split left a layer of mapping debt the owner hit all at once
+(DEVLOG, this date): *"when I exit the building… I get teleported into the previous location of
+Tom Shop"*, *"the mine is behind the roof of the Nine Crafts Guild"*, *"buildings that don't have
+doors… doors don't match up with the pathways"*, and the beach warp that could be circumvented
+along the map's bottom edge. One patch, five root causes:
+
+### Fixed
+- **Interior exits pointed at the pre-v3 farm** (`genStore`/`genMayaHouse`/`genGuild`,
+  `13-content.js`): when the town became its own map in v3.0, the three story interiors kept
+  their old `exitAt(…,"farm",…)` targets — the farm tiles where the buildings *used* to stand.
+  Walking out of Tom's dropped you on an empty farm road. Each now exits to `"village"` one tile
+  below its own door. Same class of bug in `mineUp()`/`rideLift()`: surfacing from the mine
+  landed you at village (20,3) — a tile v3.0's Guild *roof* sits on (`unstick()` then shoved you
+  somewhere arbitrary). The barn exit was also off by one column (spawned at x21, door at x22).
+- **The mine was buried under the Guild** (`genVillage`): the north path (x=20) and the mine
+  warp at (20,2) were laid down first, then the Guild rect (x13–27, y2–7) was drawn *over* them —
+  the warp tile sat under a solid roof tile, unreachable, and the mine mouth at (20,1) rendered
+  behind the Guild's roofline. The mouth now stands on open ridge at the village's northeast
+  (entrance (33,3), warp (33,4)) with its own path down to the plaza's east lane. The layout rule
+  is written into the generator as a comment: **every door sits on a path; no road runs under a
+  building.**
+- **Single-tile edge warps could be walked around** (village⇄beach, farm⇄village, farm⇄grove):
+  each crossing was one warp tile on an open map edge, so hugging the rim slid past it — the
+  owner's "I have to walk up a tile from the bottom of the map". All are now multi-tile bands
+  (3×2 pad at the coast path's mouth, 3-tall band on the farm/village road, 2×3 pad at the grove
+  footpath). The farm map *persists* in saves, so `migrateSave` adds the farm-side bands to
+  existing saves (additive + idempotent, keyed on the absence of `key(59,14)`), mirroring the v3
+  farm-rebuild precedent; the other maps regenerate daily and pick theirs up for free.
+- **Beach arrival/exit mismatch** (`genBeach`): entering the coast spawned you at x=30 but the
+  exit door sat at the top *centre* (x=23) — directly behind the festival stage (row 4, x21–25),
+  so leaving meant detouring around the stage to a door you never arrived through. The door, its
+  warp, and the sign moved to x=30, matching every arrival (village warp, boardwalk fast-travel),
+  with the approach column kept clear of random palms.
+
+### Added / Changed
+- **Every village door now meets a path** (`genVillage`): the Guild's door is centred under its
+  roof (x=20) with a walk down to the plaza; Tom's door connects to the west road; Maya's door
+  has a stub onto a new east lane (row 11 — the plaza's corner lamp owns (26,10)) that continues
+  to the mine path. The coast path fans out 3-wide at the map edge onto the new warp pad.
+- **The ambient houses have doors now** (the owner: "buildings that don't have doors"): the
+  Wrens' and the Harrows' each got a DOOR tile, a path stub, and a south lane (y=24) linking
+  them to the coast path. Their doors are latched — a new generic interaction in `interact()`
+  (`08-actions.js`) answers E on any outdoor warp-less DOOR tile with "You knock. Quiet inside —
+  nobody's home just now." — preserving "their doors open in a later chapter" while killing the
+  fake-facade feel. (Interior exit doors are excluded: their warp lives on the exit mat and
+  interiors aren't `outdoor`.)
+- `.claude/launch.json`: the dev server honours the harness-assigned `PORT` (`autoPort`) so two
+  sessions can preview simultaneously; port 8643 stays the default when free.
+
+Verified in-browser end-to-end: enter/exit round-trips for all three story buildings land at
+their own doors; mine enter/exit and lift-to-surface land at the new mouth; walking the village's
+bottom edge now catches the coast warp; the beach exit is a straight walk up from arrival; the
+knock line fires on the Wrens' door; console clean; save migration exercised by stripping the
+new warps and re-running `migrateSave`.
+
+---
+
 ## v3.1.0 — "The Thread" · 2026-07-13 · tag `v3.1.0`
 
 Version code **37**. The story-visibility pass ([VALLEY_V3.md](VALLEY_V3.md) part 2) — the owner:

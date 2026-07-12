@@ -231,6 +231,13 @@ function migrateSave(s){
     }
     s.farm = fresh;
   }
+  // v3.1.1 edge-warp bands: the farm's road/footpath exits were single tiles, so hugging the map
+  // edge walked right past them. The farm persists, so older saves get the widened bands here
+  // (the other maps regenerate and pick theirs up for free). Additive and idempotent.
+  if(s.farm && s.farm.warps && !s.farm.warps[key(59,14)]){
+    for(const wy of [14,15,16]) s.farm.warps[key(59,wy)] = { to:"village", sx:2*TILE, sy:14*TILE+8, face:"right", auto:true };
+    for(const wx of [0,1]) for(const wy of [33,34,35]) s.farm.warps[key(wx,wy)] = { to:"grove", sx:(44-3)*TILE, sy:15*TILE, face:"left", auto:true };
+  }
 }
 function beginPlay(){
   gameMode = "play"; paused = false; sleeping = false;

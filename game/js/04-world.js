@@ -181,7 +181,8 @@ function genFarm(m){
   for(let y=15;y<=40;y++) set(30,y,T.PATH);
 
   // --- the road to the village (v3: the town moved off the farm and became its own map) ---
-  m.warps[key(59,15)] = { to:"village", sx:2*TILE, sy:14*TILE+8, face:"right", auto:true };
+  // a 3-tall warp band: hugging the map edge above or below the road must still catch it
+  for(const wy of [14,15,16]) m.warps[key(59,wy)] = { to:"village", sx:2*TILE, sy:14*TILE+8, face:"right", auto:true };
   obj[key(57,14)] = { kind:"sign", text:"→ The Village" };
 
   // farm props
@@ -199,7 +200,9 @@ function genFarm(m){
   // scatter so nothing can seal it (objects on the path rows are cleared).
   for(let x=1;x<=6;x++) set(x,34,T.PATH);
   for(let x=0;x<=6;x++) for(let dy=-1;dy<=1;dy++) delete obj[key(x,34+dy)];
-  m.warps[key(1,34)] = { to:"grove", sx:(44-3)*TILE, sy:15*TILE, face:"left", auto:true };
+  // a 2×3 warp pad: walking the map's west edge past the footpath must still catch it
+  for(const wx of [0,1]) for(const wy of [33,34,35])
+    m.warps[key(wx,wy)] = { to:"grove", sx:(44-3)*TILE, sy:15*TILE, face:"left", auto:true };
   obj[key(5,33)] = { kind:"sign", text:"← The Deep Grove" };
 
   // ore ridge (north) — early mining above ground

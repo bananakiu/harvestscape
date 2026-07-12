@@ -53,7 +53,7 @@ function genBarn(m){
   put(m,2,1,"trough"); put(m,4,1,"trough");
   put(m,11,1,"barrel"); put(m,12,3,"crate"); put(m,1,5,"crate"); put(m,12,6,"barrel"); put(m,1,2,"plantpot");
   put(m,9,1,"sign",{text:"Buy a cow at Tom's. Milk her each morning (E) — and scratch her behind the ears while you're there."});
-  exitAt(m,7,"farm", 21*TILE+8, 8*TILE);   // 2 tiles below the barn door
+  exitAt(m,7,"farm", 22*TILE+8, 8*TILE);   // 2 tiles below the barn door (x matches the door at 22)
 }
 function genStore(m){
   genRoom(m, T.PLANK, T.IWALL);
@@ -64,7 +64,7 @@ function genStore(m){
   put(m,2,6,"crate"); put(m,3,6,"barrel"); put(m,11,6,"crate"); put(m,11,5,"barrel");
   put(m,12,2,"plantpot"); put(m,1,5,"crate");
   put(m,12,6,"sign",{text:"“Dusted daily.” — Tom"});
-  exitAt(m,7,"farm",46*TILE+8,15*TILE);   // 2 tiles below the store door
+  exitAt(m,7,"village",9*TILE+8,10*TILE+8);   // just below the store door, on its path
 }
 function genMayaHouse(m){
   genRoom(m, T.IFLOOR, T.IWALL);
@@ -72,7 +72,7 @@ function genMayaHouse(m){
   put(m,2,2,"bed"); put(m,8,2,"fireplace"); put(m,4,1,"painting"); put(m,9,3,"bookshelf");
   put(m,5,4,"table"); put(m,5,3,"chair"); put(m,2,5,"plantpot"); put(m,9,6,"lamp");
   put(m,3,6,"sign",{text:"Maya's sketchbook lies open — half-drawn festival lanterns."});
-  exitAt(m,6,"farm",53*TILE+8,15*TILE);   // 2 tiles below Maya's door
+  exitAt(m,6,"village",30*TILE+8,10*TILE+8);   // just below Maya's door, on the east lane
 }
 function genGuild(m){
   genRoom(m, T.PLANK, T.IWALL);
@@ -88,7 +88,7 @@ function genGuild(m){
   for(let y=5;y<=7;y++) for(let x=6;x<=10;x++) m.tiles[y*W+x]=T.CARPET;
   put(m,4,7,"crate"); put(m,12,7,"barrel");
   put(m,1,7,"sign",{text:"Nine crafts. Nine wings. Tend them all, and the valley wakes."});
-  exitAt(m,8,"farm",36*TILE+8,11*TILE);
+  exitAt(m,8,"village",20*TILE+8,7*TILE+8);   // just below the Guild door, on its path
 }
 
 // ---------------- the mine (procedural floors) ----------------
@@ -226,7 +226,7 @@ function mineDown(){ state.mineDepth = (state.mineDepth||1) + 1; state.mineBest 
   toast("You climb down to floor "+state.mineDepth+"…"+stop, "#a9b0c0"); }
 function mineUp(){
   if((state.mineDepth||1) > 1){ state.mineDepth--; travelTo("mine", 2*TILE+8, 3*TILE, "down"); }
-  else { travelTo("village", 20*TILE+8, 3*TILE, "down"); }   // the mine mouth opens on the village ridge now
+  else { travelTo("village", 33*TILE+8, 4*TILE+8, "down"); }   // the mine mouth, northeast ridge of the village
 }
 
 // ---------------- the beach ----------------
@@ -244,21 +244,31 @@ function genVillage(m){
   }
   const set2=(x,y,v)=>{ t[y*W+x]=v; };
   const rect2=(x0,y0,x1,y1,v)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) set2(x,y,v); };
-  // the plaza and its roads
+  // the plaza and its roads. Layout rule (v3.1.1): every door sits ON a path, and no road ever
+  // runs under a building — the old north path went straight through the Guild's footprint,
+  // which buried the mine mouth behind its roof.
   rect2(14,10,26,18,T.PATH);
   for(let x=0;x<=14;x++) set2(x,14,T.PATH);          // west road — to the farm
-  for(let y=1;y<=10;y++) set2(20,y,T.PATH);          // north path — to the mine
+  for(let y=7;y<=9;y++)  set2(20,y,T.PATH);          // Guild door → plaza
+  for(let y=10;y<=13;y++) set2(9,y,T.PATH);          // store door → west road
+  for(let x=27;x<=33;x++) set2(x,11,T.PATH);         // east lane — to Maya's door and the mine (row 11: the plaza's corner lamp sits on 10)
+  set2(30,10,T.PATH);                                // stub up to Maya's door
+  for(let y=4;y<=10;y++) set2(33,y,T.PATH);          // mine path — up the ridge, clear of every roof
   for(let y=18;y<=27;y++) set2(20,y,T.PATH);         // south path — to the coast
-  // west: the road home
-  m.warps[key(0,14)] = { to:"farm", sx:57*TILE, sy:15*TILE+8, face:"left", auto:true };
+  rect2(19,25,21,27,T.PATH);                         // the coast path fans out at the map's edge
+  for(let x=6;x<=34;x++) set2(x,24,T.PATH);          // south lane — the neighbours' street
+  set2(6,23,T.PATH); set2(34,23,T.PATH);             // stubs to the neighbours' doors
+  // west: the road home. A 3-tall warp band — hugging the map edge must still catch it.
+  for(const y of [13,14,15]) m.warps[key(0,y)] = { to:"farm", sx:57*TILE, sy:15*TILE+8, face:"left", auto:true };
   m.objects[key(2,13)] = { kind:"sign", text:"← Willowbrook Farm" };
-  // north: the Old Mine
-  m.objects[key(20,1)] = { kind:"mineentrance" };
-  m.warps[key(20,2)] = { to:"mine", sx:0, sy:0, face:"down", auto:false, mine:true };
-  m.objects[key(22,2)] = { kind:"sign", text:"⛏ The Old Mine" };
-  // south: the coast
-  m.warps[key(20,27)] = { to:"beach", sx:30*TILE+8, sy:3*TILE, face:"down", auto:true };
-  m.objects[key(18,26)] = { kind:"sign", text:"↓ To the Coast" };
+  // northeast: the Old Mine (moved off the Guild's back in v3.1.1 — its mouth is on open ridge now)
+  m.objects[key(33,3)] = { kind:"mineentrance" };
+  m.warps[key(33,4)] = { to:"mine", sx:0, sy:0, face:"down", auto:false, mine:true };
+  m.objects[key(31,4)] = { kind:"sign", text:"⛏ The Old Mine" };
+  // south: the coast. A 3×2 warp pad — walking along the very bottom of the map counts too.
+  for(const x of [19,20,21]) for(const y of [26,27])
+    m.warps[key(x,y)] = { to:"beach", sx:30*TILE+8, sy:3*TILE, face:"down", auto:true };
+  m.objects[key(17,26)] = { kind:"sign", text:"↓ To the Coast" };
   // --- the story buildings ---
   // Tom's General Store (west of the plaza)
   rect2(7,6,12,7,T.ROOF); rect2(7,8,12,9,T.WALL); set2(9,9,T.DOOR);
@@ -268,15 +278,15 @@ function genVillage(m){
   // The Aldermans' (Maya's, east of the plaza)
   rect2(28,6,32,7,T.ROOF); rect2(28,8,32,9,T.WALL); set2(30,9,T.DOOR);
   m.warps[key(30,9)] = { to:"mayahouse", sx:6*TILE+8, sy:6*TILE, face:"up" };
-  m.objects[key(33,9)] = { kind:"sign", text:"The Aldermans'" };
-  // Guild of Nine Crafts (north of the plaza, the biggest roof in the valley)
-  rect2(13,2,27,3,T.ROOF); rect2(13,4,27,6,T.WALL); set2(19,6,T.DOOR);
-  m.warps[key(19,6)] = { to:"guild", sx:8*TILE+8, sy:8*TILE, face:"up" };
+  m.objects[key(27,9)] = { kind:"sign", text:"The Aldermans'" };
+  // Guild of Nine Crafts (north of the plaza, the biggest roof in the valley; door centred)
+  rect2(13,2,27,3,T.ROOF); rect2(13,4,27,6,T.WALL); set2(20,6,T.DOOR);
+  m.warps[key(20,6)] = { to:"guild", sx:8*TILE+8, sy:8*TILE, face:"up" };
   m.objects[key(28,6)] = { kind:"sign", text:"Guild of Nine Crafts" };
-  // --- ambient neighbours (facades with windows; their doors open in a later chapter) ---
-  rect2(4,19,8,20,T.ROOF); rect2(4,21,8,22,T.WALL);
+  // --- ambient neighbours on the south lane (doors are latched; they open in a later chapter) ---
+  rect2(4,19,8,20,T.ROOF); rect2(4,21,8,22,T.WALL); set2(6,22,T.DOOR);
   m.objects[key(9,22)] = { kind:"sign", text:"The Wrens'" };
-  rect2(32,19,36,20,T.ROOF); rect2(32,21,36,22,T.WALL);
+  rect2(32,19,36,20,T.ROOF); rect2(32,21,36,22,T.WALL); set2(34,22,T.DOOR);
   m.objects[key(31,22)] = { kind:"sign", text:"The Harrows'" };
   // --- plaza dressing ---
   for(const [lx,ly] of [[14,10],[26,10],[14,18],[26,18]]) m.objects[key(lx,ly)] = { kind:"lamp" };
@@ -348,12 +358,16 @@ function genBeach(m){
   // border so you can't wander off the sides/top (except the exit)
   for(let x=0;x<m.w;x++) t[0*W+x]=T.IWALL;
   for(let y=0;y<m.h;y++){ t[y*W+0]=T.IWALL; t[y*W+m.w-1]=T.IWALL; }
-  // exit back to the village (top centre) — the coast hangs off the town now, not the farm
-  t[0*W+ (m.w>>1)]=T.DOOR;
-  m.warps[key(m.w>>1, 1)] = { to:"village", sx:20*TILE+8, sy:26*TILE, face:"up", auto:true };
-  put(m, (m.w>>1)-2, 1, "sign", {text:"↑ Back to the village"});
+  // exit back to the village — at x=30, where the village path drops you off. It used to sit at
+  // the top CENTRE, which put the festival stage (rows 4, x21-25) squarely between the door and
+  // the sand: you arrived 7 tiles east of it and had to detour around the stage to leave.
+  const ex = 30;
+  t[0*W+ex]=T.DOOR;
+  m.warps[key(ex, 1)] = { to:"village", sx:20*TILE+8, sy:26*TILE, face:"up", auto:true };
+  put(m, ex-2, 1, "sign", {text:"↑ Back to the village"});
   // palms + driftwood
   for(let i=0;i<8;i++){ const x=randiR(rng,3,m.w-4), y=randiR(rng,3,m.h-12); if(t[y*W+x]===T.GRASS||t[y*W+x]===T.SAND) put(m,x,y,"palm"); }
+  for(let y=1;y<=5;y++) delete m.objects[key(ex,y)];   // a palm must never seal the village door's approach
   for(let i=0;i<5;i++){ const x=randiR(rng,3,m.w-4), y=m.h-9; put(m,x,y,"driftwood"); }
   // forage nodes near the tideline
   for(let i=0;i<14;i++){ const x=randiR(rng,3,m.w-4), y=m.h-9+randiR(rng,0,1);

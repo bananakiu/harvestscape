@@ -326,6 +326,9 @@ function interact(){
   // door / warp
   const w = warpAt(tx,ty);
   if(w && !w.auto){ doWarp(w); return; }
+  // an outdoor door with no warp behind it — a neighbour's latched house (opens in a later chapter).
+  // Interior exit doors are excluded (their warp lives on the mat, and the map isn't outdoor).
+  if(tt === T.DOOR && curMap.outdoor){ toast("You knock. Quiet inside — nobody's home just now.", "#cbb98f"); return; }
 
   // harvest crop
   const crop = curMap.crops[k];

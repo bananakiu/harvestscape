@@ -3,9 +3,10 @@
   "configurations": [
     {
       "name": "harvestscape",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8643", "--directory", "game"],
-      "port": 8643
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "python3 -m http.server ${PORT:-8643} --directory game"],
+      "port": 8643,
+      "autoPort": true
     },
     {
       "name": "prototype",
