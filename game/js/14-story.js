@@ -262,9 +262,7 @@ const LETTER_FESTIVAL =
 // idempotent (check-before-place, exactly like raiseMemorial).
 // Cottage end / mine-mouth end. Each cart's landing tile is the one BELOW it, so both must be
 // walkable — (12,8) is the shipping bin, which is why the cottage cart sits east of the path.
-const CART_A = [14,7], CART_B = [48,7];
-const BOARDWALK_AT = [31,33];                  // beside the south path (x=30 is paved — never block it)
-const FOUNTAIN_AT = [41,14];
+const CART_A = [14,7];   // the farm's cart end; the village end lives in genVillage (35,14)
 
 function projectDone(id){ return !!state.flags["proj_"+id]; }
 function projectPending(id){ return !!state.flags["proj_"+id+"_pending"]; }
@@ -297,22 +295,14 @@ function completeProjects(){
   if(finished.length) applyProjects(state.farm);
   return finished;
 }
-// Idempotent world changes. Safe to run on every boot and after every completion.
+// Idempotent world changes on the PERSISTENT farm map. Safe to run on every boot and after every
+// completion. v3: the fountain, boardwalk, and the village-side cart moved into genVillage (the
+// village regenerates daily, so it reads state.flags directly) — the farm keeps only its cart end.
 function applyProjects(farm){
   if(!farm || !state.flags) return;
   // never bury a growing crop under a solid object — the tile is re-tried each morning
   const put1 = (x,y,o) => { const k = key(x,y); if(!farm.objects[k] && !farm.crops[k]) farm.objects[k] = o; };
-  if(state.flags.proj_minecart){
-    put1(CART_A[0], CART_A[1], { kind:"railcart", to:"B" });
-    put1(CART_B[0], CART_B[1], { kind:"railcart", to:"A" });
-  }
-  if(state.flags.proj_boardwalk){
-    put1(BOARDWALK_AT[0], BOARDWALK_AT[1], { kind:"boardwalk" });
-    for(const [x,y] of [[28,33],[32,33],[28,35],[32,35]]) put1(x, y, { kind:"lantern" });   // all clear of x=30
-  }
-  if(state.flags.proj_fountain){
-    put1(FOUNTAIN_AT[0], FOUNTAIN_AT[1], { kind:"fountain" });
-  }
+  if(state.flags.proj_minecart) put1(CART_A[0], CART_A[1], { kind:"railcart", to:"village" });
 }
 // The fountain: one coin a day buys you a little goodwill somewhere in the valley.
 function tossCoin(){
@@ -322,7 +312,7 @@ function tossCoin(){
   state.gold -= 10; state.flags.coinDay = state.day;
   const who = pick(FEST_CAST.concat(state.flags.act2Done ? ["elias"] : []));
   ensureRel(who).points += 10;
-  playSfx("coin"); pSplash(FOUNTAIN_AT[0]*TILE+8, FOUNTAIN_AT[1]*TILE+8, 8);
+  playSfx("coin"); pSplash(20*TILE+8, 14*TILE+8, 8);   // the village fountain (genVillage plaza centre)
   pSparkle(state.px, state.py-14, "#8fd3ff", 10); refreshHUD();
   showDialog("The Fountain",
     `The coin turns once and goes under.\n\nSomehow, by evening, ${NPCDEF[who].name} will have heard you were thinking of them.`,
@@ -669,8 +659,7 @@ function raiseMemorial(){
 // thing that belongs there later gets silently skipped.
 const RESERVED_FARM_TILES = new Set([
   key(27,34), key(25,34), key(29,34), key(25,36), key(29,36),      // the memorial + its lanterns
-  key(31,33), key(28,33), key(32,33), key(28,35), key(32,35),      // the boardwalk + its lanterns
-  key(14,7),  key(48,7),  key(41,14),                              // the carts and the fountain
+  key(14,7),                                                       // the farm's cart end (v3: the rest moved to the village)
 ]);
 function isReservedFarmTile(x,y){ return RESERVED_FARM_TILES.has(key(x,y)); }
 

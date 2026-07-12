@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "2.9.2", code: 35, codename: "Tempered Tools", date: "2026-07-13" };
+const VERSION = { name: "3.0.0", code: 36, codename: "The Valley Opens", date: "2026-07-13" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.0.0", code:36, date:"2026-07-13", name:"The Valley Opens", notes:[
+    { t:"new",   s:"The world grew: your farm is purely a farm now, and the east road leads to Willowbrook Village — a real plaza with the store, the Guild, your neighbours' houses, and lamps that glow at dusk." },
+    { t:"new",   s:"The mine opens on the village's north ridge and the coast lies down its south path — the town is the valley's hub, the way it always should have been." },
+    { t:"change",s:"Everything you've planted and built carries over exactly as it was — crops, fields, orchard trees, hives. The Minecart Line project now runs farm ⇄ village: real fast travel." },
+  ]},
   { v:"2.9.2", code:35, date:"2026-07-13", name:"Tempered Tools", notes:[
     { t:"balance",s:"Tool upgrades now take wood AND ore AND coin — and a gold tool wants a signature gem set into the handle (the Rod's is a Pearl from the beach). An upgrade is earned across crafts now, not bought with mine money." },
     { t:"balance",s:"Gems are rarer and humbler-priced — a treat, not the economy. A Diamond is an event again. (They gained real uses too: top-tier tools and the deep lift stops.)" },
@@ -555,7 +560,7 @@ const QUESTS = [
     reward:{ gold:250, items:{"Iron Ore":4}, msg:"Three wings flicker back to light." } },
 
   { id:"the-coast", title:"Salt & Silver", giver:"Bram",
-    desc:"Follow the south path to the coast. Bram the fisher tends the Fishing wing.",
+    desc:"Follow the village's south path to the coast. Bram the fisher tends the Fishing wing.",
     obj:[ {text:"Meet Bram at the coast", talk:"bram"},
           {text:"Reach Fishing 10", level:{skill:"Fishing",n:10}} ],
     reward:{ gold:300, items:{"Cooked Salmon":2}, msg:"Bram grunts. From him, that's a medal." } },
@@ -618,7 +623,7 @@ const HOWTO_TEXT =
 "• Axe chops trees  • Pick mines rock  • Rod fishes water\n\n" +
 "E interacts — harvest crops, talk to folk, open doors, cook, and step inside your cottage to sleep in your bed and pass the night.\n\n" +
 "Fishing: cast with the Rod, wait for the !, then press Space to hook it. Now HOLD Space to raise the green bar and keep the fish inside it — let it slip and the line goes slack. Land one cleanly for a perfect catch.\n\n" +
-"Explore! Enter the shops and houses in town, descend the old mine (north) for ore and gems, and follow the south path to the coast. Keep hens in the coop and cows in the barn — visit them each morning.\n\n" +
+"Explore! The east road leads to the village — shops, the Guild, and your neighbours. The old mine opens on the village's north ridge, the coast lies down its south path, and the Deep Grove waits through the farm's western trees. Keep hens in the coop and cows in the barn — visit them each morning.\n\n" +
 "Read the sky. Tomorrow's weather is chalked on the noticeboard every evening, and each kind of day offers something the others don't — rain doubles your foraging and brings the fish up; a storm shuts the coast but drives the veins, and leaves wrack on the sand the morning after; fog makes the deep seams read rich. Sleep through a day and you miss what it was offering. Nothing is ever lost.\n\n" +
 "Tom can only shift so much of one thing a day. Sell forty of the same crop and the price slides; bring him variety and it doesn't. Watch the price in his shop before you sell.\n\n" +
 "Bram knows five fish that rise only when everything lines up — the right water, the right hour, the right weather, the right season. He'll tell you about one for every heart you earn, and the Almanac remembers.\n\n" +

@@ -361,12 +361,13 @@ function interact(){
       case "ledger": openProjects(); return;
       case "fountain": tossCoin(); return;
       case "boardwalk": travelTo("beach", 30*TILE+8, 3*TILE, "down"); return;
-      case "railcart": {                                    // the rails run both ways
-        const [ax,ay] = CART_A, [bx,by] = CART_B;
-        const far = obj.to === "B" ? [bx, by+1] : [ax, ay+1];
+      case "railcart": {
+        // v3: the Minecart Line runs BETWEEN the farm and the village — restored fast travel
+        // that finally means something now the town is a real walk away.
         toast("The cart rattles down the old rails…", "#cbb98f");
-        // land facing the cart you arrived in, so the ride home is one keypress
-        travelTo("farm", far[0]*TILE+8, far[1]*TILE+8, "up"); return;
+        if(curMap.id === "village") travelTo("farm", CART_A[0]*TILE+8, (CART_A[1]+1)*TILE+8, "up");
+        else travelTo("village", 35*TILE+8, 15*TILE+8, "up");   // land below the village cart
+        return;
       }
       case "memorial": state.flags.memorialRead = true;
         openLetter("✒ Carved into the standing stone", LETTER_MEMORIAL); return;

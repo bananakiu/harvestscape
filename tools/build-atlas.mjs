@@ -124,15 +124,16 @@ if (D.JOURNAL_PAGES && (D.JOURNAL_PAGES.length !== 9 || !D.JOURNAL_PAGES.every(p
 
 // How each map is reached (mirrors the warps laid down by the generators).
 const MAP_ACCESS = {
-  farm: "Where you wake on day 1. Fields, the pond, the meadow, the orchard ground, and every door below leads off it.",
+  farm: "Where you wake on day 1 — and since v3, purely a farm: fields, both ponds, the meadow, the southwest woods. The east road leads to the village; the Grove path west.",
+  village: "East road from the farm. The valley's hub since v3: the plaza (fountain, lamps), Tom's store + noticeboard, the Aldermans', the Guild hall, two neighbour houses — with the mine off its north ridge and the coast down its south path. Maya and Pip stroll the plaza by day.",
   cottage: "Your front door, on the farm. Sleep here to pass the night; the chest holds a letter, later.",
   coop: "On the farm — houses up to 6 hens (300g each at Tom's).",
   barn: "On the farm — houses up to 4 cows (600g each at Tom's).",
-  store: "East path, in town. Selling, seeds, tools, animals, saplings, hives — and the noticeboard by the door.",
-  mayahouse: "In town. Maya's home (and later, Elias's tea by the pond).",
-  guild: "North of town. Elder Rowan keeps the nine dark wings; the story's heart.",
-  mine: "North ridge. Endless floors, regenerated daily. The Old Lift beside each floor's ladder rides to the surface free; every 5th floor's stop can be restored (wood + ore + gold) to skip down forever. Time stands still underground. The sealed vault waits below (Mining 20).",
-  beach: "South path. Bram's coast — salmon water, shore forage, festivals, and every finale.",
+  store: "On the village plaza. Selling, seeds, tools, animals, saplings, hives — and the noticeboard by the door.",
+  mayahouse: "On the village plaza. Maya's home (and later, Elias's tea by the pond).",
+  guild: "North of the village plaza. Elder Rowan keeps the nine dark wings; the story's heart.",
+  mine: "The village's north ridge. Endless floors, regenerated daily. The Old Lift beside each floor's ladder rides to the surface free; every 5th floor's stop can be restored (wood + ore + gold) to skip down forever. Time stands still underground. The sealed vault waits below (Mining 20).",
+  beach: "The village's south path. Bram's coast — salmon water, shore forage, festivals, and every finale.",
   grove: "West, through the farm's treeline. A true forest that regrows overnight — young oak by the gate, old pine and maple deeper in (WC 8 / 18).",
 };
 for (const id of Object.keys(D.MAPS || {}))

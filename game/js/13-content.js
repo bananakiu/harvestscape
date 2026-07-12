@@ -16,6 +16,7 @@ const MAPS = {
   mine:      { w:34, h:22, name:"The Old Mine",          subtitle:"",                 music:"mine", bg:"#050406", gen:genMine },
   beach:     { w:46, h:24, outdoor:true, name:"Willowbrook Coast", subtitle:"salt on the breeze", music:"beach", bg:"#2f4a63", gen:genBeach },
   grove:     { w:44, h:30, outdoor:true, name:"The Deep Grove", subtitle:"the forest gives, and grows back", music:"auto", bg:"#0d150c", gen:genGrove },
+  village:   { w:40, h:28, outdoor:true, name:"Willowbrook Village", subtitle:"the valley's beating heart", music:"auto", bg:"#101408", gen:genVillage },
 };
 
 // ---------------- interior helpers ----------------
@@ -225,10 +226,71 @@ function mineDown(){ state.mineDepth = (state.mineDepth||1) + 1; state.mineBest 
   toast("You climb down to floor "+state.mineDepth+"…"+stop, "#a9b0c0"); }
 function mineUp(){
   if((state.mineDepth||1) > 1){ state.mineDepth--; travelTo("mine", 2*TILE+8, 3*TILE, "down"); }
-  else { travelTo("farm", 50*TILE+8, 6*TILE, "down"); }
+  else { travelTo("village", 20*TILE+8, 3*TILE, "down"); }   // the mine mouth opens on the village ridge now
 }
 
 // ---------------- the beach ----------------
+// ---------------- the village ----------------
+// v3's world split: the town moved off the farm and became its own, larger place — a plaza,
+// the three story buildings, ambient neighbour houses, and the mine + coast hanging off it
+// (town as the hub). Regenerated daily like the beach, so project results are laid from
+// state.flags here rather than by applyProjects (which owns only the persistent farm map).
+function genVillage(m){
+  const rng = makeRng(444);                     // the village doesn't rearrange — it's home
+  const t = m.tiles;
+  for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++){
+    const n = rng();
+    t[y*W+x] = n<0.06 ? T.FLOWERGRASS : n<0.09 ? T.TALLGRASS : T.GRASS;
+  }
+  const set2=(x,y,v)=>{ t[y*W+x]=v; };
+  const rect2=(x0,y0,x1,y1,v)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) set2(x,y,v); };
+  // the plaza and its roads
+  rect2(14,10,26,18,T.PATH);
+  for(let x=0;x<=14;x++) set2(x,14,T.PATH);          // west road — to the farm
+  for(let y=1;y<=10;y++) set2(20,y,T.PATH);          // north path — to the mine
+  for(let y=18;y<=27;y++) set2(20,y,T.PATH);         // south path — to the coast
+  // west: the road home
+  m.warps[key(0,14)] = { to:"farm", sx:57*TILE, sy:15*TILE+8, face:"left", auto:true };
+  m.objects[key(2,13)] = { kind:"sign", text:"← Willowbrook Farm" };
+  // north: the Old Mine
+  m.objects[key(20,1)] = { kind:"mineentrance" };
+  m.warps[key(20,2)] = { to:"mine", sx:0, sy:0, face:"down", auto:false, mine:true };
+  m.objects[key(22,2)] = { kind:"sign", text:"⛏ The Old Mine" };
+  // south: the coast
+  m.warps[key(20,27)] = { to:"beach", sx:30*TILE+8, sy:3*TILE, face:"down", auto:true };
+  m.objects[key(18,26)] = { kind:"sign", text:"↓ To the Coast" };
+  // --- the story buildings ---
+  // Tom's General Store (west of the plaza)
+  rect2(7,6,12,7,T.ROOF); rect2(7,8,12,9,T.WALL); set2(9,9,T.DOOR);
+  m.warps[key(9,9)] = { to:"store", sx:7*TILE+8, sy:6*TILE, face:"up" };
+  m.objects[key(6,9)] = { kind:"sign", text:"Tom's General Store" };
+  m.objects[key(7,10)] = { kind:"noticeboard" };
+  // The Aldermans' (Maya's, east of the plaza)
+  rect2(28,6,32,7,T.ROOF); rect2(28,8,32,9,T.WALL); set2(30,9,T.DOOR);
+  m.warps[key(30,9)] = { to:"mayahouse", sx:6*TILE+8, sy:6*TILE, face:"up" };
+  m.objects[key(33,9)] = { kind:"sign", text:"The Aldermans'" };
+  // Guild of Nine Crafts (north of the plaza, the biggest roof in the valley)
+  rect2(13,2,27,3,T.ROOF); rect2(13,4,27,6,T.WALL); set2(19,6,T.DOOR);
+  m.warps[key(19,6)] = { to:"guild", sx:8*TILE+8, sy:8*TILE, face:"up" };
+  m.objects[key(28,6)] = { kind:"sign", text:"Guild of Nine Crafts" };
+  // --- ambient neighbours (facades with windows; their doors open in a later chapter) ---
+  rect2(4,19,8,20,T.ROOF); rect2(4,21,8,22,T.WALL);
+  m.objects[key(9,22)] = { kind:"sign", text:"The Wrens'" };
+  rect2(32,19,36,20,T.ROOF); rect2(32,21,36,22,T.WALL);
+  m.objects[key(31,22)] = { kind:"sign", text:"The Harrows'" };
+  // --- plaza dressing ---
+  for(const [lx,ly] of [[14,10],[26,10],[14,18],[26,18]]) m.objects[key(lx,ly)] = { kind:"lamp" };
+  for(let i=0;i<8;i++){ const x=randiR(rng,2,m.w-3), y=randiR(rng,2,m.h-3);
+    if(t[y*W+x]===T.GRASS && !m.objects[key(x,y)]) t[y*W+x]=T.FLOWERGRASS; }
+  // --- Rowan's projects, as they stand ---
+  if(state.flags && state.flags.proj_fountain) m.objects[key(20,14)] = { kind:"fountain" };
+  if(state.flags && state.flags.proj_boardwalk){
+    m.objects[key(21,25)] = { kind:"boardwalk" };
+    for(const [x,y] of [[18,24],[22,24],[18,26],[22,26]]) if(!m.objects[key(x,y)]) m.objects[key(x,y)] = { kind:"lantern" };
+  }
+  if(state.flags && state.flags.proj_minecart) m.objects[key(35,14)] = { kind:"railcart", to:"farm" };
+}
+
 // ---------------- the Deep Grove ----------------
 // Woodcutting's mine: a dense forest that regrows overnight (mapCache), so the axe has a renewable
 // venue the way the pick has the ore. Deeper (further west) grows older wood — oak thins out and
@@ -286,10 +348,10 @@ function genBeach(m){
   // border so you can't wander off the sides/top (except the exit)
   for(let x=0;x<m.w;x++) t[0*W+x]=T.IWALL;
   for(let y=0;y<m.h;y++){ t[y*W+0]=T.IWALL; t[y*W+m.w-1]=T.IWALL; }
-  // exit back to farm (top centre)
+  // exit back to the village (top centre) — the coast hangs off the town now, not the farm
   t[0*W+ (m.w>>1)]=T.DOOR;
-  m.warps[key(m.w>>1, 1)] = { to:"farm", sx:30*TILE+8, sy:42*TILE, face:"up", auto:true };
-  put(m, (m.w>>1)-2, 1, "sign", {text:"↑ Back to the valley"});
+  m.warps[key(m.w>>1, 1)] = { to:"village", sx:20*TILE+8, sy:26*TILE, face:"up", auto:true };
+  put(m, (m.w>>1)-2, 1, "sign", {text:"↑ Back to the village"});
   // palms + driftwood
   for(let i=0;i<8;i++){ const x=randiR(rng,3,m.w-4), y=randiR(rng,3,m.h-12); if(t[y*W+x]===T.GRASS||t[y*W+x]===T.SAND) put(m,x,y,"palm"); }
   for(let i=0;i<5;i++){ const x=randiR(rng,3,m.w-4), y=m.h-9; put(m,x,y,"driftwood"); }
@@ -453,10 +515,12 @@ function spawnMapNpcs(m){
   m.npcs = [];
   const h = curHour();
   if(m.id==="farm"){
-    if(h>=7 && h<18.5) m.npcs.push(mkNpc("maya", 31*TILE, 36*TILE, {wander:{x0:25,y0:32,x1:41,y1:39}}));
-    if(h>=8 && h<19)   m.npcs.push(mkNpc("pip",  34*TILE, 24*TILE, {wander:{x0:31,y0:18,x1:44,y1:28}}));
-    // he came home, and he fishes the pond his daughter grew up beside
+    // v3: the neighbours stroll their own plaza now, not your field. The farm keeps only Elias —
+    // he came home, and he fishes the pond his daughter grew up beside.
     if(state.flags.act2Done && h>=7 && h<19) m.npcs.push(mkNpc("elias", 47*TILE, 31*TILE, {face:"right"}));
+  } else if(m.id==="village"){
+    if(h>=7 && h<18.5) m.npcs.push(mkNpc("maya", 24*TILE, 12*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));
+    if(h>=8 && h<19)   m.npcs.push(mkNpc("pip",  17*TILE, 16*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));
   } else if(m.id==="store"){ m.npcs.push(mkNpc("tom", 7*TILE+8, 2*TILE+8, {face:"down"})); }
   else if(m.id==="mayahouse"){ if(h>=18.5 || h<7) m.npcs.push(mkNpc("maya", 6*TILE, 4*TILE, {face:"down"})); }
   else if(m.id==="guild"){ m.npcs.push(mkNpc("rowan", 8*TILE+8, 5*TILE, {face:"down"})); }

@@ -22,6 +22,44 @@
 
 ---
 
+## v3.0.0 — "The Valley Opens" · 2026-07-13 · tag `v3.0.0`
+
+Version code **36**. The world split — the owner's deferred 2026-07-12 item, green-lit today
+(DEVLOG; plan in [VALLEY_V3.md](VALLEY_V3.md)): *"maybe the farm is just a farm, and you move out
+of the farm to a different map to get to the village… build the village out… it's too small."*
+
+### Added
+- **Willowbrook Village** (`genVillage`, `13-content.js`; 40×28, regenerated daily like the beach):
+  a paved plaza with corner lamps (they glow at night via the window/lamp lighting), Tom's store +
+  noticeboard, the Aldermans' (Maya's), the Guild hall with the biggest roof in the valley, two
+  ambient neighbour houses (windowed facades; "their doors open in a later chapter"), flowerbeds —
+  and **the mine off its north ridge, the coast down its south path**. Town is the hub now.
+  Maya and Pip stroll the plaza by day (they used to stand in your field).
+- **The farm is purely a farm.** Town buildings, the mine mouth, and the beach path left the farm
+  map; what they left behind is open land (more farmable space — a feature, not a loss). The east
+  road auto-warps to the village, both ways, signed.
+
+### Changed
+- **Rowan's projects rewired:** the Town Fountain and Coast Boardwalk now build in the *village*
+  (laid by `genVillage` from `state.flags`, since the village regenerates daily; `applyProjects`
+  keeps owning only the persistent farm map); the **Minecart Line runs farm ⇄ village** — real
+  fast travel that finally means something at this distance.
+- Mine surface exits (ladder from floor 1, the lift's Surface ride) land on the village ridge;
+  the beach's exit sign reads "Back to the village"; How-to-Play and quest prose updated.
+
+### Save migration (the cozy contract, applied to a map)
+Old saves have the town baked into their persistent farm tiles. On load, a farm without the
+village road is rebuilt, and the player's own work carries over **coordinate-for-coordinate**:
+every crop (its tile re-tilled/re-watered), every worked field tile, every orchard tree (age and
+fruit intact) and hive. Valid by construction — no kept landmark moved, and nothing could ever be
+planted inside the old town. Nothing the player made is lost.
+
+*Verified live: farm has the road and no town remnants; village has all six warps
+(store/Maya/Guild/mine/beach/farm), 4 lamps, noticeboard, signs; store round-trip with Tom;
+beach exits to the village; Maya+Pip on the plaza at noon; a fabricated pre-v3 save migrated with
+crop+watered tile, worked field, fruited cherry tree, and hive all intact and the town gone;
+plaza screenshot; console clean.*
+
 ## The Atlas Archive — one snapshot per release, all history backfilled · 2026-07-13
 
 Docs/tooling only; no game code changed. Owner's ask (DEVLOG, same date): keep an atlas *per

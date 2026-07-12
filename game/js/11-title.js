@@ -201,6 +201,28 @@ function migrateSave(s){
   if(s.flags.mayaConfided) s.flags.confided_maya = true;
   if(s.flags.married && !s.flags.spouse) s.flags.spouse = "maya";
   if(!s.farm) s.farm = newMap("farm");
+  // v3 world split: farms saved before the village existed still have the town baked into their
+  // tiles. Rebuild the layout and carry the player's own work over coordinate-for-coordinate —
+  // every kept landmark (cottage, plot, ponds, woods) stayed at its old coordinates, and nothing
+  // could ever be planted inside the old town, so positions remain valid by construction.
+  // Nothing the player made is lost: the cozy contract, applied to a map.
+  if(s.farm && !s.farm.warps[key(59,15)]){
+    const old = s.farm, fresh = newMap("farm");
+    fresh.crops = old.crops || {};
+    for(const k in fresh.crops){                     // re-till (and re-wet) the ground under every crop
+      const [x,y] = k.split(",").map(Number);
+      fresh.tiles[y*W+x] = old.tiles[y*W+x] === T.WATERED ? T.WATERED : T.TILLED;
+    }
+    for(let i=0;i<old.tiles.length;i++){             // preserve the shape of worked-but-empty fields
+      if((old.tiles[i]===T.TILLED || old.tiles[i]===T.WATERED) && fresh.tiles[i]===T.GRASS)
+        fresh.tiles[i] = old.tiles[i];
+    }
+    for(const k in (old.objects||{})){               // orchard trees and hives are the player's, not the map's
+      const o = old.objects[k];
+      if((o.kind==="fruittree" || o.kind==="beehive") && !fresh.objects[k]) fresh.objects[k] = o;
+    }
+    s.farm = fresh;
+  }
 }
 function beginPlay(){
   gameMode = "play"; paused = false; sleeping = false;

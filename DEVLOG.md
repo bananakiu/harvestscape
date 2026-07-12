@@ -14,6 +14,23 @@
 
 ---
 
+## 2026-07-13 (later) — Green light: build the world split and the story pass
+
+**Owner:** *"Okay, let's go ahead and continue building those two things."* — i.e. the two items
+deliberately deferred from the 2026-07-12 playtest: (1) the world split ("maybe the farm is just a
+farm, and you move out of the farm to a different map to get to the village… build the village out
+a little more and spread it out — it's too small") and (2) story visibility ("it's kind of hard to
+see the point of the story… the main mission doesn't shine through").
+
+**Direction locked.** Built as the v3.0 arc, plan in [VALLEY_V3.md](VALLEY_V3.md):
+- **v3.0.0 "The Valley Opens"** — the farm map becomes pure farm (town removed → more open land);
+  a new, larger **village map** with plaza, fountain, lamps, extra houses, and the mine/beach
+  attached to it (town as the hub); a road links farm ⇄ village. Existing saves migrate
+  layout-preservingly (crops, orchards, hives, tilled fields carried over).
+- **v3.1.0 "The Thread"** — story beats you can't miss: quest markers over the relevant neighbour's
+  head, a small celebration when a Guild wing lights, and the morning card naming the story's next
+  step. The act framing (v2.2) finally gets a world big enough to read in.
+
 ## 2026-07-13 — Atlas per release: keep a reference of the game's state at every version
 
 **Owner feedback (near-verbatim):**

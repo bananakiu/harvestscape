@@ -174,34 +174,14 @@ function genFarm(m){
   set(21,5,T.WALL); set(23,5,T.WALL);
   obj[key(26,6)] = { kind:"sign", text:"The Barn" };
 
-  // paths
-  for(let x=9;x<=45;x++) set(x,15,T.PATH);
+  // paths — the farm's lane runs from the buildings out to the east road (the way to the village)
+  for(let x=9;x<=59;x++) set(x,15,T.PATH);
   for(let y=6;y<=15;y++) set(13,y,T.PATH);
   for(let y=15;y<=40;y++) set(30,y,T.PATH);
-  for(let x=30;x<=52;x++) set(x,22,T.PATH);
-  for(let y=15;y<=22;y++) set(45,y,T.PATH);
 
-  // --- TOWN (east) buildings with doors ---
-  // General Store
-  rect(44,10,48,11,T.ROOF); rect(44,12,48,13,T.WALL); door(46,13,"store", 7*TILE+8, 6*TILE); set(45,12,T.WALL); set(47,12,T.WALL);
-  obj[key(43,13)] = { kind:"sign", text:"Tom's General Store" };
-  obj[key(44,14)] = { kind:"noticeboard" };   // pinned beside Tom's door — the valley's small wants
-  // Maya's House
-  rect(51,10,55,11,T.ROOF); rect(51,12,55,13,T.WALL); door(53,13,"mayahouse", 6*TILE+8, 6*TILE); set(52,12,T.WALL); set(54,12,T.WALL);
-  obj[key(56,13)] = { kind:"sign", text:"The Aldermans'" };
-  // Guild Hall (bigger, north-center)
-  rect(33,5,40,6,T.ROOF); rect(33,7,40,9,T.WALL); door(36,9,"guild", 8*TILE+8, 8*TILE); set(34,7,T.WALL); set(38,7,T.WALL);
-  obj[key(41,9)] = { kind:"sign", text:"Guild of Nine Crafts" };
-
-  // --- mine entrance (north ridge) ---
-  obj[key(50,4)] = { kind:"mineentrance" };
-  m.warps[key(50,5)] = { to:"mine", sx:0, sy:0, face:"down", auto:false, mine:true };
-  obj[key(52,5)] = { kind:"sign", text:"⛏ The Old Mine" };
-
-  // --- beach path (south) ---
-  for(let y=40;y<=44;y++) set(30,y,T.PATH);
-  m.warps[key(30,44)] = { to:"beach", sx:30*TILE+8, sy:3*TILE, face:"down", auto:true };
-  obj[key(28,43)] = { kind:"sign", text:"↓ To the Coast" };
+  // --- the road to the village (v3: the town moved off the farm and became its own map) ---
+  m.warps[key(59,15)] = { to:"village", sx:2*TILE, sy:14*TILE+8, face:"right", auto:true };
+  obj[key(57,14)] = { kind:"sign", text:"→ The Village" };
 
   // farm props
   obj[key(12,8)] = { kind:"shipbin" };
