@@ -215,7 +215,7 @@ function renderWorld(){
       }
     }});
   }
-  for(const a of curMap.animals) ents.push({ y: a.y, draw: () => a.species==="cow" ? drawCow(a) : drawChicken(a) });
+  for(const a of curMap.animals) ents.push({ y: a.y, draw: () => a.species==="cow" ? drawCow(a) : a.species==="sheep" ? drawSheep(a) : drawChicken(a) });
   ents.sort((a,b) => a.y - b.y).forEach(e => e.draw());
 
   // facing cursor + prompts
@@ -313,6 +313,23 @@ function drawCow(a){
     ctx.fillStyle = "#f4f8fb"; ctx.fillRect(a.x-2, my, 4, 5);
     ctx.fillStyle = "#5a9ad0"; ctx.fillRect(a.x-2, my+3, 4, 1);
     ctx.fillStyle = "#e8e8e8"; ctx.fillRect(a.x-1, my-1, 2, 1);
+  }
+}
+// a near-clone of drawCow — same anchors and calm breathing bob; a fleece puff floats when the
+// coat is ready to shear (woolReady, 13-content.js), so the pull to visit is visible from afar.
+function drawSheep(a){
+  const frame = a.moving ? (Math.floor(a.walk)%2) : 0;
+  const s = spr["sheep_"+frame];
+  const bob = (!a.moving && Math.sin(animT*1.6) > 0.7) ? -1 : 0;
+  const dx = Math.round(a.x-10), dy = Math.round(a.y-15+bob);
+  ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.beginPath(); ctx.ellipse(a.x, a.y+1, 7, 2, 0, 0, 7); ctx.fill();
+  if(a.face==="left"){ ctx.save(); ctx.scale(-1,1); ctx.drawImage(s, -dx-20, dy); ctx.restore(); }
+  else ctx.drawImage(s, dx, dy);
+  if(typeof woolReady === "function" && woolReady(a.ref)){   // wool-ready hint: a little fleece puff
+    const wy = a.y-20 + Math.sin(animT*4);
+    ctx.fillStyle = "#f6f6fa"; ctx.fillRect(a.x-2, wy, 4, 4);
+    ctx.fillStyle = "#ffffff"; ctx.fillRect(a.x-1, wy-1, 2, 1);
+    ctx.fillStyle = "#dcdce4"; ctx.fillRect(a.x-2, wy+3, 4, 1);
   }
 }
 

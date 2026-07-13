@@ -128,7 +128,7 @@ const MAP_ACCESS = {
   village: "East road from the farm. The valley's hub since v3: the plaza (fountain, lamps), Tom's store + noticeboard, the Aldermans', the Guild hall, two neighbour houses — with the mine off its north ridge and the coast down its south path. Maya and Pip stroll the plaza by day.",
   cottage: "Your front door, on the farm. Sleep here to pass the night; the chest holds a letter, later.",
   coop: "On the farm — houses up to 6 hens (300g each at Tom's).",
-  barn: "On the farm — houses up to 4 cows (600g each at Tom's).",
+  barn: "On the farm — houses up to 4 cows (600g) and up to 4 sheep (500g) at Tom's; shear wool with shears (250g).",
   store: "On the village plaza. Selling, seeds, tools, animals, saplings, hives — and the noticeboard by the door.",
   mayahouse: "On the village plaza. Maya's home (and later, Elias's tea by the pond).",
   guild: "North of the village plaza. Elder Rowan keeps the nine dark wings; the story's heart.",
@@ -453,7 +453,9 @@ honey (100g) faster where more blooms nearby.</p>
 
 <h3>Animals</h3>
 <p class="prose">Hens 300g (coop holds 6) → eggs 55g, large eggs 95g with friendship. Cows 600g
-(barn holds 4) → milk 90g, large milk 165g. Visit each morning; pet for friendship.</p>
+(barn holds 4) → milk 90g, large milk 165g. Sheep 500g (share the barn, up to 4) → wool 120g,
+sheared with shears (250g, one-time at Tom's), coat regrows every few days. Visit each morning;
+pet for friendship.</p>
 
 <h3>The Hunt — five legendary fish</h3>
 <p class="prose">Bram tells one clue per heart. Each legend rises only under exact conditions,

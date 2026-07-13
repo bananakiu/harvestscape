@@ -21,7 +21,7 @@ function freshState(){
     skills:{ Farming:0, Woodcutting:0, Mining:0, Fishing:0, Cooking:0 },
     tools:{ Hoe:0, Can:0, Axe:0, Pick:0, Rod:0 },
     rel:{},                               // per-NPC relationship { points, talkedDay, giftedDay }
-    animals:{ chickens:[], cows:[] },     // each: { friend, eggDay|milkDay, petDay }
+    animals:{ chickens:[], cows:[], sheep:[] },   // each: { friend, eggDay|milkDay|woolDay, petDay }
     mineDepth:0, mineBest:0,
     groveRing:0, groveBest:0,              // the Deep Grove's rings — mirrors mineDepth/mineBest
     pledges:{},                            // the Pledge Ledger: id → { gPaid, mats:{item:n} } (see 01-data.js)

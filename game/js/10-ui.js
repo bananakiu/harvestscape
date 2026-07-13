@@ -473,7 +473,7 @@ const MUSEUM = [
   { name:"The Legends",   items:()=>LEGENDS.map(l=>l.name) },
   { name:"Gems",          items:()=>Object.keys(GEM_SELL) },
   { name:"The Shore",     items:()=>Object.keys(SHORE) },
-  { name:"Farm & Forage", items:()=>["Field Salad","Frostberry","Berry Bun","Honey","Egg","Large Egg","Milk","Large Milk"] },   // no Wool: there are no sheep, so it can never be discovered (would cap the Collection one short)
+  { name:"Farm & Forage", items:()=>["Field Salad","Frostberry","Berry Bun","Honey","Egg","Large Egg","Milk","Large Milk","Wool","Prize Fleece"] },   // Wool obtainable since v3.8 (sheep + shears); Prize Fleece is its friendship-tier prize
   { name:"The Kitchen",   items:()=>RECIPES.map(r=>r.name) },
   { name:"Materials",     items:()=>["Wood","Pine Wood","Maple Wood","Willow Wood","Elder Wood","Heartwood","Stone","Copper Ore","Iron Ore","Gold Ore"] },
   { name:"The Canopy",    items:()=>Object.keys(CHARMS) },
@@ -795,6 +795,9 @@ function renderShop(){
     html += `<div class="row"><span class="lead" data-icon="item_Egg"><canvas></canvas><span>Chicken <span class="sub">lays an egg daily · lives in your coop · ${hens}/6 hens</span></span></span><span><span class="price">300g</span> <button class="buy" ${state.gold>=300&&hens<6?"":"disabled"} onclick="buyChicken()">buy</button></span></div>`;
     const cows = (state.animals.cows||[]).length;
     html += `<div class="row"><span class="lead" data-icon="item_Milk"><canvas></canvas><span>Cow <span class="sub">milk her every morning · lives in your barn · ${cows}/4 cows</span></span></span><span><span class="price">600g</span> <button class="buy" ${state.gold>=600&&cows<4?"":"disabled"} onclick="buyCow()">buy</button></span></div>`;
+    const sheep = (state.animals.sheep||[]).length;
+    html += `<div class="row"><span class="lead" data-icon="item_Wool"><canvas></canvas><span>Sheep <span class="sub">shear a full coat every few days · shares the barn · ${sheep}/${SHEEP_MAX} sheep</span></span></span><span><span class="price">${SHEEP_COST}g</span> <button class="buy" ${state.gold>=SHEEP_COST&&sheep<SHEEP_MAX?"":"disabled"} onclick="buySheep()">buy</button></span></div>`;
+    html += `<div class="row"><span class="lead" data-icon="item_Shears"><canvas></canvas><span>Shears <span class="sub">${state.flags.hasShears?"you own a pair — shear any sheep with E":"gather wool from your sheep · one and done"}</span></span></span><span><span class="price">${SHEARS_COST}g</span> <button class="buy" ${!state.flags.hasShears&&state.gold>=SHEARS_COST?"":"disabled"} onclick="buyShears()">${state.flags.hasShears?"owned":"buy"}</button></span></div>`;
   } else {
     for(const tool of TOOLS){
       const cur = state.tools[tool];

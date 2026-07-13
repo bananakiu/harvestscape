@@ -542,7 +542,7 @@ function interact(){
   }
 
   const a = nearestAnimal(24);
-  if(a){ a.species==="cow" ? petCow(a) : petChicken(a); return; }
+  if(a){ a.species==="cow" ? petCow(a) : a.species==="sheep" ? shearSheep(a) : petChicken(a); return; }
   const n = nearestNpc(28);
   if(n){ talkNpc(n.id); return; }
 

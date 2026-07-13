@@ -189,9 +189,10 @@ function migrateSave(s){
   for(const t of TOOLS){ if(s.tools[t] === undefined) s.tools[t] = 0; }
   if(s.skills) for(const sk in f.skills){ if(s.skills[sk] === undefined) s.skills[sk] = 0; }
   if(!s.rel) s.rel = {};
-  if(!s.animals) s.animals = { chickens:[], cows:[] };
+  if(!s.animals) s.animals = { chickens:[], cows:[], sheep:[] };
   if(!s.animals.chickens) s.animals.chickens = [];
   if(!s.animals.cows) s.animals.cows = [];      // barns arrived after the first saves
+  if(!s.animals.sheep) s.animals.sheep = [];    // sheep arrived in v3.8 — old saves have s.animals but no sheep key
   if(!s.flags) s.flags = {};
   // The new-player experience (prologue, verb hints, tips, arrival scene) belongs only to saves
   // BORN in the NPX era. Any pre-existing save is mid-journey — mark it done so nothing fires, and

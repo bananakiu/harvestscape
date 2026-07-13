@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.7.0", code: 44, codename: "The Cellar", date: "2026-07-14" };
+const VERSION = { name: "3.8.0", code: 45, codename: "The Flock", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.8.0", code:45, date:"2026-07-14", name:"The Flock", notes:[
+    { t:"new",   s:"Sheep join the barn (500g at Tom's, up to four). Buy a pair of shears (250g, once) and shear a full coat with E for Wool — a soft armful worth 120g. Coats regrow every few days, so a flock rewards a steady visit, not a daily raid." },
+    { t:"new",   s:"Wool rejoins the Collection at last — it was held back for years because nothing could produce it. Now the sheep make it real, and the museum can be completed with it in." },
+  ]},
   { v:"3.7.0", code:44, date:"2026-07-14", name:"The Cellar", notes:[
     { t:"new",   s:"The Cellar arrives: buy Kegs and Preserves Jars at Tom's, set them in your yard like hives, and give any crop or orchard fruit a second life — jam in two nights, wine in three. Every product sells under its own name, so the market can glut on each." },
     { t:"new",   s:"Machines load with one press — they take the best growable in your bag — and an axe lifts them (with their load returned) if you change your mind. Nothing is ever lost." },
@@ -386,8 +390,14 @@ ITEM_SELL["Grandpa's Guild Pin"] = 0;     // keepsake — grants +10% XP while c
 ITEM_SELL["Bram's Oilskin"] = 0;          // the Hunt's crown — faster bites, and the sea in any weather
 
 // ---- ANIMAL PRODUCE ----
-ITEM_SELL["Egg"] = 55; ITEM_SELL["Large Egg"] = 95; ITEM_SELL["Milk"] = 90; ITEM_SELL["Large Milk"] = 165; ITEM_SELL["Wool"] = 120;
+ITEM_SELL["Egg"] = 55; ITEM_SELL["Large Egg"] = 95; ITEM_SELL["Milk"] = 90; ITEM_SELL["Large Milk"] = 165; ITEM_SELL["Wool"] = 120; ITEM_SELL["Prize Fleece"] = 220;
 EDIBLE["Egg"] = 16; EDIBLE["Milk"] = 22; EDIBLE["Large Milk"] = 40;
+// Sheep (v3.8): the barn's third resident, and the honest source that finally makes Wool obtainable.
+// Wool is priced above milk but regrows over several days, not daily — a coat is worth the wait, and
+// this keeps a flock of sheep from out-earning the whole field. Shears are a one-time buy at Tom's
+// (a gentle gold sink), never consumed — the cozy contract: nothing is taken, nothing wears out.
+const SHEEP_COST = 500, SHEEP_MAX = 4, SHEARS_COST = 250, WOOL_REGROW = 3;
+ITEM_SELL["Shears"] = 0;   // a keepsake tool, not for resale
 
 // ---- COOKING RECIPES (made at a stove or campfire) ----
 // ing: {item:qty}. Dishes give energy + sell + Cooking XP + are good gifts.
@@ -932,6 +942,8 @@ const EXAMINE = {
   "Milk": "A pail of white, still faintly warm.",
   "Large Milk": "A brimming pail from a well-loved cow.",
   "Wool": "Soft, warm, and freshly off the sheep.",
+  "Prize Fleece": "The finest coat in the valley — only a truly cherished sheep grows one.",
+  "Shears": "Well-oiled, sharp, and shepherd-approved. A sheep never minds.",
   "Star Metal": "Star-fallen metal that slept in the vault; the Guild's forge wakes with it.",
   "Guild Seal": "Proof a craft was mastered, not merely attempted.",
   "Bouquet": "A Willowbrook bouquet, carried straight to one particular door.",

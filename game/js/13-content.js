@@ -52,7 +52,7 @@ function genBarn(m){
   genRoom(m, T.HAY, T.IWALL);
   put(m,2,1,"trough"); put(m,4,1,"trough");
   put(m,11,1,"barrel"); put(m,12,3,"crate"); put(m,1,5,"crate"); put(m,12,6,"barrel"); put(m,1,2,"plantpot");
-  put(m,9,1,"sign",{text:"Buy a cow at Tom's. Milk her each morning (E) — and scratch her behind the ears while you're there."});
+  put(m,9,1,"sign",{text:"Cows and sheep both bed down here. Milk (E) each morning; shear a full coat (E) with shears from Tom's. A scratch behind the ears never hurts."});
   exitAt(m,7,"farm", 22*TILE+8, 8*TILE);   // 2 tiles below the barn door (x matches the door at 22)
 }
 function genStore(m){
@@ -538,9 +538,9 @@ const NPCDEF = {
   bram:  { name:"Bram",        portrait:"port_bram",  spr:"bram",  romance:true,
            loved:["Golden Koi","Pearl"], liked:["Salmon","Coral","Cooked Salmon"] },
   pip:   { name:"Pip",         portrait:"port_pip",   spr:"pip",
-           loved:["Amethyst","Berry Bun"], liked:["Shell","Starfruit","Topaz"] },
+           loved:["Amethyst","Berry Bun"], liked:["Shell","Starfruit","Topaz","Wool"] },
   elias: { name:"Elias",       portrait:"port_elias", spr:"elias",
-           loved:["Golden Koi","Pearl"], liked:["Trout","Salmon","Coral","Cooked"] },
+           loved:["Golden Koi","Pearl","Prize Fleece"], liked:["Trout","Salmon","Coral","Cooked","Wool"] },
 };
 
 // dialogue by heart tier (index clamps); some react to progress
@@ -711,6 +711,12 @@ function spawnAnimals(m){
       m.animals.push({ ref:c, species:"cow", speed:7, x:(3 + (i%2)*5)*TILE+8, y:(4 + Math.floor(i/2)*3)*TILE+8,
         dir:{x:0,y:0}, timer:0, walk:0, moving:false, face: i%2?"left":"right" });
     });
+    // sheep share the barn — placed on a distinct tile base (6,4)(10,4)(6,7)(10,7) that dodges the
+    // four cow tiles and every barn prop, so no two animals ever spawn stacked
+    (state.animals.sheep||[]).forEach((c,i) => {
+      m.animals.push({ ref:c, species:"sheep", speed:9, x:(6 + (i%2)*4)*TILE+8, y:(4 + Math.floor(i/2)*3)*TILE+8,
+        dir:{x:0,y:0}, timer:0, walk:0, moving:false, face: i%2?"left":"right" });
+    });
   }
 }
 function updateAnimals(dt){
@@ -768,6 +774,52 @@ function buyCow(){
   if(state.gold < 600){ toast("Not enough coin (600g)."); playSfx("error"); return; }
   state.gold -= 600; state.animals.cows.push({ friend:0, milkDay:0, petDay:0 });
   toast("A cow ambles into the barn. 🐄", "#8fd06a"); playSfx("coin"); refreshHUD(); renderShop();
+}
+
+// ---- sheep ----
+// A coat is ready WOOL_REGROW days after the last shearing (woolDay stamps the last shear). Unlike
+// milk/eggs (daily), wool takes its time — a coat's worth waiting for, and it keeps a flock from
+// out-earning the field. New sheep grow their first coat over the same span (buySheep stamps today).
+function woolReady(c){ return (state.day - (c.woolDay||0)) >= WOOL_REGROW; }
+function shearSheep(a){
+  const c = a.ref;
+  // A full coat + shears is the payoff; a truly cherished sheep (friend>=180) grows a Prize Fleece,
+  // mirroring the Large Milk/Egg tier so a sheep's friendship is never dead state.
+  if(woolReady(c) && state.flags.hasShears){
+    c.woolDay = state.day;
+    const prize = c.friend >= 180 && chance(0.5);
+    give(prize ? "Prize Fleece" : "Wool", 1);
+    c.friend = Math.min(250, c.friend + 8);
+    playSfx("get"); pSparkle(a.x, a.y-10, "#f6f6fa", prize?10:7);
+    floatText(a.x, a.y-16, prize?"+prize fleece":"+wool", prize?"#ffe6a0":"#e8e8ee");
+    return;
+  }
+  // Anything else falls through to a friendly pet — a full-coated sheep is never un-pettable, and
+  // the "get shears" nudge is a warm hint, not an error buzz on every press (review fix, v3.8).
+  if(c.petDay !== state.day){
+    c.petDay = state.day; c.friend = Math.min(250, c.friend + 3);
+    const nudge = woolReady(c) && !state.flags.hasShears
+      ? "Her coat's full — shears from Tom's would gather it. She leans into your hand anyway. ♥"
+      : "The sheep leans into your hand. ♥";
+    toast(nudge, "#ff7d9c"); playSfx("heart"); pSparkle(a.x, a.y-10, "#ff9ab0", 4);
+  } else toast("This one's had plenty of fuss today.");
+}
+function buySheep(){
+  if(!state.animals.sheep) state.animals.sheep = [];
+  if(state.animals.sheep.length >= SHEEP_MAX){ toast(`Your barn's flock is full (${SHEEP_MAX} sheep).`); return; }
+  if(state.gold < SHEEP_COST){ toast(`Not enough coin (${SHEEP_COST}g).`); playSfx("error"); return; }
+  state.gold -= SHEEP_COST;
+  // stamp woolDay=today so the first coat grows over WOOL_REGROW days, the same as every coat after
+  state.animals.sheep.push({ friend:0, woolDay:state.day, petDay:0 });
+  toast("A sheep trots into the barn. 🐑  Its coat will want a few days to grow.", "#8fd06a");
+  playSfx("coin"); refreshHUD(); renderShop();
+}
+function buyShears(){
+  if(state.flags.hasShears){ toast("You've already a good pair of shears."); return; }
+  if(state.gold < SHEARS_COST){ toast(`Not enough coin (${SHEARS_COST}g).`); playSfx("error"); return; }
+  state.gold -= SHEARS_COST; state.flags.hasShears = true; give("Shears", 1, true);
+  toast("A fine pair of shears. Now the wool is yours for the gathering.", "#8fd06a");
+  playSfx("coin"); refreshHUD(); renderShop();
 }
 function buySapling(k){
   const t = FRUIT_TREES[k]; if(!t) return;

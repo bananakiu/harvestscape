@@ -22,6 +22,53 @@
 
 ---
 
+## v3.8.0 — "The Flock" · 2026-07-14 · tag `v3.8.0`
+
+Version code **45**. Sheep & wool — restoring the last orphaned item to the Collection with an
+honest source, and the design scorecard's long-standing "sheep+wool" backlog line. Built from a
+5-agent parallel subsystem map and hardened by a 3-lens adversarial review (see below).
+
+### Added
+- **Sheep, the barn's third resident** (`13-content.js`: `buySheep`, `shearSheep`, `woolReady`,
+  spawn branch; `07-entities.js`: `drawSheep` + 3-way draw dispatch; `08-actions.js`: 3-way pet
+  dispatch; `03-art.js`: `sheep_0/1` sprites). 500g at Tom's, up to 4, **sharing the barn** with
+  cows (placed on a distinct tile base so no two animals ever spawn stacked — no new map, so the
+  atlas/MAP_ACCESS is untouched). Collected the cozy one-button way (E), never a tool-swing.
+- **Shears** (`buyShears`, `state.flags.hasShears`) — a **one-time 250g** convenience at Tom's,
+  never consumed (the cozy contract: nothing wears out). A gentle gold sink the economy audits
+  keep asking for. Gates only the *gathering* of wool, not petting.
+- **Wool regrows on a cadence, not daily** (`WOOL_REGROW = 3`): a coat is worth 120g and takes a
+  few days to grow back, so a flock rewards a relaxed "visit whenever" rhythm instead of a daily
+  raid — deliberately lower gold/day than cows, redeemed by needing no daily attention.
+- **Wool rejoins the Collection.** It shipped as a priced, sprited, described item years ago but
+  was pulled from the museum in v2.6.1 because nothing could produce it (it would cap completion
+  one short). The sheep make it real; `10-ui.js:476` adds it back (the inverse of the v2.6.1 fix,
+  landed in the *same change* as its source, exactly as that fix's comment warned it must be).
+
+### Review-driven (a 3-lens adversarial pass ran before commit — correctness/regression cleared
+the code as crash-free and save-safe; these are the design findings it surfaced, all fixed here)
+- **Friendship is no longer dead state.** A cherished sheep (friend ≥ 180) grows a **Prize Fleece**
+  (220g, its own sprite/examine/Collection slot) on a 50% shear roll — mirroring the Large Milk/Egg
+  tier, so the +8/shear friendship climb finally has a ceiling worth chasing (~40 days to reach it
+  on the 3-day cadence — a proper long-game payoff for the cozy base's slowest animal).
+- **Wool is no longer terminal.** Pip *likes* Wool and Elias — the ferryman home from eleven cold
+  years at sea — *loves* a Prize Fleece (and likes plain Wool), so the new material connects to the
+  relationship layer instead of dead-ending at Tom's counter.
+- **A full-coated sheep is never un-pettable.** The first cut of `shearSheep` returned early when the
+  coat was ready but you owned no shears, soft-blocking the pet branch and buzzing an *error* sound
+  on every E press. Restructured so anything short of a real shear falls through to a warm pet (a
+  "get shears from Tom's" *nudge*, not an error), consistent with cows and hens.
+
+### Save compat
+`state.animals.sheep` added to `freshState` and seeded in `migrateSave` (`11-title.js`) — old saves
+have `s.animals` but no `sheep` key, so the generic backfill can't graft it; the explicit guard does
+(the v2.6.1 dead-code trap, avoided). Every consumer independently guards with `(…||[])`.
+
+*Verified live end-to-end (twice — before and after the review fixes): buy gates, one-time shears,
+non-overlapping barn spawn beside cows, 3-day coat grow-in, shearing, the shears gate, Prize Fleece
+at friend ≥ 180, the pettable-no-buzz fix, gift wiring, both wool items in the Collection, old-save
+migration, screenshots of the flock and the shop; console clean.*
+
 ## v3.7.0 — "The Cellar" · 2026-07-14 · tag `v3.7.0`
 
 Version code **44**. Artisan machines — the design scorecard's oldest unfilled economy gap, and

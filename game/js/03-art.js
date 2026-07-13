@@ -564,6 +564,13 @@ function buildItems(){
   mkSpr("item_Large Milk", 16, 16, g => { px(g,5,1,6,2,"#e8e8e8"); px(g,4,3,8,12,"#f6fafd"); px(g,4,6,8,5,"#dfeaf2"); px(g,4,3,8,1,"#ffffff");
     px(g,5,8,6,2,"#5a9ad0"); px(g,11,4,1,9,"#d8e2ea"); px(g,6,12,2,1,"#ffd75a"); });
   mkSpr("item_Wool", 16, 16, g => { px(g,4,5,8,7,"#f0f0f4"); px(g,3,7,10,4,"#f6f6fa"); px(g,5,4,6,3,"#ffffff"); for(let i=0;i<4;i++) px(g,4+i*2,7,1,3,"#dcdce4"); });
+  // Prize Fleece — a fuller, cloud-white coat with a gold ribbon, the reward off a cherished sheep
+  mkSpr("item_Prize Fleece", 16, 16, g => {
+    px(g,3,4,10,9,"#f6f6fa"); px(g,2,6,12,5,"#ffffff"); px(g,4,3,8,3,"#ffffff");   // lush cloud
+    for(let i=0;i<5;i++) px(g,3+i*2,7,1,3,"#e4e4ee");                                // curls
+    px(g,5,5,2,2,"#ffffff"); px(g,9,6,2,2,"#ffffff");                                // highlights
+    px(g,3,12,10,1,"#ffce5a"); px(g,7,12,2,3,"#ffce5a"); px(g,7,13,2,1,"#c9922f");   // gold ribbon
+  });
   mkSpr("item_Bouquet", 16, 16, g => { // wrapped flowers
     px(g,6,8,4,6,"#e6ddc4"); px(g,6,8,4,1,"#f4ecd6");                 // paper wrap
     px(g,7,9,2,5,"#4f8a34"); px(g,5,10,1,3,"#4f8a34"); px(g,10,10,1,3,"#4f8a34"); // stems
@@ -757,6 +764,35 @@ function buildInteriors(){
 
   mkSpr("cow_0", 20, 16, g => { cowBody(g); cowLegs(g, 4, 12); });
   mkSpr("cow_1", 20, 16, g => { cowBody(g); cowLegs(g, 5, 11); });
+
+  // the sheep: a cloud of fleece on dark little legs, facing right (drawSheep flips for left).
+  // Fleece palette matches item_Wool so the animal and its drop read as the same soft thing.
+  const sheepBody = g => {
+    px(g,2,7,1,4,"#3a3630");                                      // stubby tail
+    px(g,3,4,12,8,"#f0f0f4"); px(g,3,4,12,1,"#ffffff");           // fleece body
+    px(g,4,5,10,1,"#f6f6fa"); px(g,5,6,3,2,"#ffffff"); px(g,9,5,2,2,"#ffffff");  // curls / highlights
+    px(g,4,11,10,1,"#dcdce4");                                    // belly shade
+    px(g,6,7,1,1,"#e0e0e8"); px(g,10,8,1,1,"#e0e0e8"); px(g,8,6,1,1,"#e0e0e8");  // wool dapples
+    px(g,14,6,4,5,"#3a3630"); px(g,14,6,4,1,"#4a463e");           // dark face
+    px(g,17,8,1,2,"#241a10");                                     // muzzle
+    px(g,14,5,1,1,"#f0f0f4"); px(g,16,4,2,1,"#efe9dc");           // a tuft + ear
+    px(g,15,7,1,1,"#0d0b08");                                     // eye
+  };
+  const sheepLegs = (g, a, b) => {
+    px(g,a,12,2,4,"#4a463e"); px(g,a,15,2,1,"#241a10");
+    px(g,b,12,2,4,"#4a463e"); px(g,b,15,2,1,"#241a10");
+  };
+  mkSpr("sheep_0", 20, 16, g => { sheepBody(g); sheepLegs(g, 5, 12); });
+  mkSpr("sheep_1", 20, 16, g => { sheepBody(g); sheepLegs(g, 6, 11); });
+
+  // shears — the one tool that gathers wool (a bought convenience, shown in the shop + backpack)
+  mkSpr("item_Shears", 16, 16, g => {
+    px(g,4,3,2,7,"#c7ccd2"); px(g,10,3,2,7,"#c7ccd2");            // the two blades
+    px(g,4,3,2,1,"#eef1f4"); px(g,10,3,2,1,"#eef1f4");            // blade shine
+    px(g,5,9,6,2,"#8a5f38");                                      // the joined wooden bows
+    px(g,6,11,1,3,"#8a5f38"); px(g,9,11,1,3,"#8a5f38");           // the finger loops
+    px(g,7,7,2,2,"#5a5560");                                      // the pivot rivet
+  });
 
   mkSpr("coop", 16, 24, g => { // exterior building
     px(g,0,10,16,14,"#c9a86a"); px(g,0,10,16,2,"#e0c488"); for(let y=14;y<24;y+=4) px(g,0,y,16,1,"#a5844e");
