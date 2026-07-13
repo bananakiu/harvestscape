@@ -436,6 +436,39 @@ body{
 .museItem.locked{ color:#5c5340; }
 .museItem.locked .q{ font-size:1.3em; opacity:.5; }
 .museItem span{ overflow:hidden; text-overflow:ellipsis; max-width:100%; white-space:nowrap; }
+
+/* one in-body section title, shared across the tabbed panels (Collection, Ledger, Calendar…) */
+.secHead{ color:var(--gold-hi); font-size:1.02em; letter-spacing:.02em; margin:.1em 0 .5em; }
+
+/* ---- world map (Journal → Map tab): a schematic Willowbrook drawn from CSS grid boxes ---- */
+.wmBoard{
+  display:grid; gap:.4em; margin:.1em 0 .5em;
+  grid-template-columns:repeat(4,1fr);
+  grid-template-areas:
+    ".     .     guild   mine"
+    "grove farm  village mine"
+    "grove farm  village .   "
+    ".     .     coast   .   ";
+}
+.wmNode{
+  position:relative; display:flex; flex-direction:column; gap:.12em;
+  padding:.42em .5em; border-radius:.5em; min-height:3.4em;
+  background:linear-gradient(var(--wood-l),var(--wood)); border:.14em solid var(--wood-d);
+  box-shadow:0 .16em 0 rgba(0,0,0,.35), inset 0 .1em 0 rgba(255,255,255,.06);
+}
+.wmName{ color:var(--gold-hi); font-size:.9em; line-height:1.05; overflow-wrap:anywhere; }
+.wmSub{ color:var(--ink-soft); font-size:.72em; line-height:1.05; }
+.wmYou{ color:var(--gold); font-size:.72em; margin-top:.05em; }
+.wmNpcs{ display:flex; flex-wrap:wrap; gap:.2em; margin-top:.2em; }
+.wmNpc canvas{ width:1.4em; height:1.4em; image-rendering:pixelated;
+  border:.1em solid var(--wood-d); border-radius:.3em; background:#221812; }
+.wmNode.here{ border-color:var(--gold); animation:wmPulse 1.5s ease-in-out infinite; }
+@keyframes wmPulse{
+  0%,100%{ box-shadow:0 .16em 0 rgba(0,0,0,.35), 0 0 .2em var(--gold), inset 0 0 0 .1em var(--gold-hi); }
+  50%    { box-shadow:0 .16em 0 rgba(0,0,0,.35), 0 0 .75em var(--gold), inset 0 0 0 .1em var(--gold-hi); }
+}
+.wmFoot{ color:var(--ink-soft); font-size:.82em; line-height:1.35; margin-top:.2em; text-align:center; }
+.wmFoot b{ color:var(--gold-hi); }
 .howto{ margin-top:.8em; border-top:.1em solid rgba(255,255,255,.1); padding-top:.5em; }
 .howto summary{ cursor:pointer; color:var(--gold-hi); font-size:.95em; list-style:none; }
 .howto summary::-webkit-details-marker{ display:none; }

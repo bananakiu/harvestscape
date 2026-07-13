@@ -350,6 +350,18 @@ function closePanel(id){ if(openPanels.has(id)){ openPanels.delete(id); $(id).cl
 function closeAllPanels(silent){ for(const id of Array.from(openPanels)){ openPanels.delete(id); $(id).classList.add("hidden"); } if(!silent && dlg.open) closeDialog(); }
 function togglePanel(id, render){ if(openPanels.has(id)) closePanel(id); else openPanel(id, render); }
 
+// A shared tab-strip component. Panels that page their .body (Shop, Journal) render their tab row
+// into a sibling strip via this; the active tab is remembered per-panel in _panelTab, so a
+// re-render (funding a pledge, switching seasons) keeps you on the same page for free.
+const _panelTab = {};
+function panelTabs(panelId, stripId, tabs, render){
+  const strip = $(stripId); if(!strip) return tabs[0][0];
+  const active = _panelTab[panelId] || (_panelTab[panelId] = tabs[0][0]);
+  strip.innerHTML = tabs.map(([k,l]) => `<div class="tab ${k===active?"active":""}" data-tab="${k}">${l}</div>`).join("");
+  strip.querySelectorAll(".tab").forEach(t => t.onclick = () => { _panelTab[panelId] = t.dataset.tab; playSfx("select"); render(); });
+  return active;
+}
+
 // ---- Skills panel: a RuneScape-style skill grid ----
 // A compact tile per skill — procedural icon + level badge + XP bar + one muted next-goal line —
 // instead of the old wall of prose. The full detail (exact XP, remaining to next, earned masteries
@@ -439,42 +451,41 @@ const MUSEUM = [
   { name:"Materials",     items:()=>["Wood","Pine Wood","Maple Wood","Willow Wood","Elder Wood","Heartwood","Stone","Copper Ore","Iron Ore","Gold Ore"] },
   { name:"The Canopy",    items:()=>Object.keys(CHARMS) },
 ];
-function renderMuseum(){
-  const disc = state.discovered || {};
-  let total=0, found=0, body="";
-  for(const sec of MUSEUM){
-    const items = sec.items();
-    let cells = "";
-    for(const it of items){
-      total++;
-      if(disc[it]){ found++;
-        cells += `<div class="museItem has" data-icon="item_${it}" title="${escapeHtml(EXAMINE[it]||it)}"><canvas></canvas><span>${it}</span></div>`;
-      } else {
-        cells += `<div class="museItem locked" title="Not yet discovered"><span class="q">?</span><span>· · ·</span></div>`;
-      }
-    }
-    body += `<div class="museSec">${sec.name}</div><div class="museGrid">${cells}</div>`;
-  }
-  return `<details class="museum"><summary>🗃 The Collection — ${found}/${total} discovered</summary>${body}</details>`;
-}
+// (The Collection tile grid now lives in renderCollectionHtml, the Journal's Collection tab.)
+// The Journal, once a single 3-screen scroll of nine unrelated systems, is now a tabbed book —
+// Quests / Map / Calendar / Ledger / Collection — the FoMT/Stardew "one clean page each" model.
+// renderJournal keeps its name + zero-arg signature so the J key and the touch menu stay wired.
+let _lastJournalTab = null;
 function renderJournal(){
   const b = $("questPanel").querySelector(".body");
+  const tab = panelTabs("questPanel", "journalTabs",
+    [["quests","Quests"],["map","Map"],["calendar","Calendar"],["ledger","Ledger"],["collect","Collection"]],
+    renderJournal);
+  if(tab !== _lastJournalTab){ b.scrollTop = 0; _lastJournalTab = tab; }
+  if(tab === "map"){ renderWorldMap(b); return; }        // draws + hydrates itself
   let html = "";
-  // Guild wings progress
+  if(tab === "quests")        html = journalQuestsHtml();
+  else if(tab === "calendar") html = renderAlmanac();
+  else if(tab === "ledger")   html = renderLedger();
+  else                        html = renderCollectionHtml();
+  b.innerHTML = html;
+  hydrateIcons(b);
+}
+// Quests tab: the guild-wings progress strip, the act-grouped story spine with the finale
+// pre-revealed, and Grandpa's found pages at the foot (the story lore beside the story tasks).
+function journalQuestsHtml(){
+  let html = "";
   const lit = wingsLit();
   html += `<div class="jq"><h3 style="color:var(--gold-hi)">🏛 Guild of Nine Crafts — ${lit}/9 wings lit</h3><div style="display:flex;flex-wrap:wrap;gap:.25em .6em;font-size:.86em;">`;
   WINGS.forEach(w => { const on = w.lit();
     html += `<span style="color:${on?"var(--gold-hi)":"var(--ink-soft)"}">${on?"◆":"◇"} ${w.name}</span>`; });
   html += `</div></div>`;
-  html += renderRestorations();   // the Pledge Ledger — every discovered restoration, payable from here
-  // Story quests grouped under their act, so a casual player perceives the arc — not a flat list.
   html += `<div class="actHead">${ACT_TITLES[1]}</div>`;
   let act2Open = false;
   QUESTS.forEach((q, idx) => {
     const done = idx < state.questIdx;
     const active = idx === state.questIdx;
     if(idx > state.questIdx){
-      // Always reveal the finale as Act I's destination — greyed, so the goal is visible early.
       if(idx === FINALE_IDX && state.questIdx < FINALE_IDX){
         html += `<div class="jq dest"><h3>◇ ${QUESTS[FINALE_IDX].title} <span style="color:var(--ink-soft);font-size:.8em;">— where Act I is heading</span></h3>` +
                 `<div class="desc">Relight the Nine Crafts and bring the Grand Festival back to the coast.</div></div>`;
@@ -490,11 +501,84 @@ function renderJournal(){
   });
   if(state.questIdx >= QUESTS.length) html += `<div style="text-align:center;color:var(--gold-hi);">✦ Every task complete. The valley is yours. ✦</div>`;
   html += renderPages();
-  html += renderAlmanac();
-  html += renderMuseum();
-  html += `<details class="howto"><summary>❔ How to Play</summary><div class="howtoBody">${escapeHtml(HOWTO_TEXT)}</div></details>`;
-  b.innerHTML = html;
-  hydrateIcons(b);   // draw the Collection's discovered-item icons
+  return html;
+}
+// Ledger tab: the valley's civic works, payable from here (Restorations now; Rowan's Projects fold in next).
+function renderLedger(){
+  const r = renderRestorations();
+  return r || `<div class="locked">No restorations found yet — the Guild's old works reveal themselves as you explore.</div>`;
+}
+// Collection tab: the discovery museum, promoted out of its old collapsed <details> into a full page.
+function renderCollectionHtml(){
+  const disc = state.discovered || {};
+  let total=0, found=0, body="";
+  for(const sec of MUSEUM){
+    let cells = "";
+    for(const it of sec.items()){
+      total++;
+      if(disc[it]){ found++;
+        cells += `<div class="museItem has" data-icon="item_${it}" title="${escapeHtml(EXAMINE[it]||it)}"><canvas></canvas><span>${it}</span></div>`;
+      } else {
+        cells += `<div class="museItem locked" title="Not yet discovered"><span class="q">?</span><span>· · ·</span></div>`;
+      }
+    }
+    body += `<div class="museSec">${sec.name}</div><div class="museGrid">${cells}</div>`;
+  }
+  return `<div class="secHead">🗃 The Collection — ${found}/${total} discovered</div>${body}`;
+}
+
+// ---- The Valley of Willowbrook: a schematic town map (Journal → Map tab) ----
+// Owner asked for "a map of the whole city with an indicator of where you are." Drawn as CSS grid
+// boxes (not the pixel canvas) so region labels stay crisp and NPC dots can be procedural portraits.
+// The layout mirrors the real warp cardinals: grove W of the farm, village E, guild N of the plaza,
+// mine on the NE ridge, coast S. Regions are static; the you-are-here marker and the neighbour dots
+// are derived live from state.map and the day's clock.
+const WORLD_MAP = [
+  { id:"grove",   area:"grove",   label:"The Deep Grove",     sub:"forest & rings" },
+  { id:"farm",    area:"farm",    label:"Willowbrook Farm",   sub:"home · coop · barn" },
+  { id:"village", area:"village", label:"Willowbrook Village",sub:"plaza · store · Alderman" },
+  { id:"guild",   area:"guild",   label:"Guild of Nine Crafts",sub:"the valley's heart" },
+  { id:"mine",    area:"mine",    label:"The Old Mine",       sub:"ore & gems" },
+  { id:"coast",   area:"coast",   label:"Willowbrook Coast",  sub:"fishing & festivals" },
+];
+// every live map id folds onto one of the six board regions
+const MAP_REGION = { farm:"farm", cottage:"farm", coop:"farm", barn:"farm",
+  village:"village", store:"village", mayahouse:"village", guild:"guild",
+  mine:"mine", beach:"coast", grove:"grove" };
+// Where each neighbour is right now — inferred read-only from the spawn schedule (spawnMapNpcs,
+// 13-content.js). Live NPC entities only exist on the loaded map, so the map reconstructs their
+// whereabouts from the same clock rules rather than reading entities off other maps.
+function npcRegionNow(id){
+  const h = (typeof curHour === "function") ? curHour() : 12;
+  if(typeof beachEvent === "function" && beachEvent()) return "coast";   // a festival gathers everyone on the sand
+  switch(id){
+    case "tom":   return "village";
+    case "rowan": return "guild";
+    case "bram":  return "coast";
+    case "maya":  return "village";
+    case "pip":   return "village";
+    case "elias": return (state.flags && state.flags.act2Done && h >= 7 && h < 19) ? "farm" : null;
+  }
+  return null;
+}
+function renderWorldMap(b){
+  const cur = MAP_REGION[state.map] || "farm";
+  const byRegion = {};
+  for(const id in NPCDEF){ const r = npcRegionNow(id); if(r){ (byRegion[r] = byRegion[r] || []).push(id); } }
+  let nodes = "";
+  for(const n of WORLD_MAP){
+    const here = n.id === cur;
+    const dots = (byRegion[n.id] || []).map(id => spr[NPCDEF[id].portrait]
+      ? `<span class="wmNpc" data-icon="${NPCDEF[id].portrait}" title="${escapeHtml(NPCDEF[id].name)} is here"><canvas></canvas></span>` : "").join("");
+    nodes += `<div class="wmNode${here?" here":""}" style="grid-area:${n.area}">` +
+      `<span class="wmName">${n.label}</span><span class="wmSub">${n.sub}</span>` +
+      (here ? `<span class="wmYou">✦ you are here</span>` : "") +
+      (dots ? `<span class="wmNpcs">${dots}</span>` : "") + `</div>`;
+  }
+  const where = (MAPS[state.map] || {}).name || "the valley";
+  b.innerHTML = `<div class="wmBoard">${nodes}</div>` +
+    `<div class="wmFoot">You're in <b>${escapeHtml(where)}</b>. The faces show where the valley folk are about now.</div>`;
+  hydrateIcons(b);
 }
 
 // ---- Grandpa's torn pages: found by living, re-readable forever ----
@@ -598,16 +682,11 @@ function renderProjects(){
 }
 
 // ---- shop ----
-let shopTab = "sell";
-function openShop(tab, silent){ shopTab = tab || "sell"; openPanel("shopPanel", renderShop);
+function openShop(tab, silent){ _panelTab["shopPanel"] = tab || "sell"; openPanel("shopPanel", renderShop);
   if(!silent) toast(pick(TOM_GREET), "#e9dcc0"); }
 function renderShop(){
-  const panel = $("shopPanel");
-  const tabs = $("shopTabs");
-  const TABS = [["sell","Sell"],["buy","Seeds & Food"],["tools","Tools"]];
-  tabs.innerHTML = TABS.map(([k,l]) => `<div class="tab ${k===shopTab?"active":""}" data-tab="${k}">${l}</div>`).join("");
-  tabs.querySelectorAll(".tab").forEach(t => t.onclick = () => { shopTab = t.dataset.tab; playSfx("select"); renderShop(); });
-  const b = panel.querySelector(".body");
+  const b = $("shopPanel").querySelector(".body");
+  const shopTab = panelTabs("shopPanel", "shopTabs", [["sell","Sell"],["buy","Seeds & Food"],["tools","Tools"]], renderShop);
   let html = "";
   if(shopTab === "sell"){
     const sellables = Object.keys(state.inv).filter(i => ITEM_SELL[i]);
@@ -889,6 +968,7 @@ function renderSettings(){
     `<div class="setRow"><span>Music</span><input type="range" id="setMusic" min="0" max="100" value="${Math.round(SND.musicVol*100)}"><span class="val">${Math.round(SND.musicVol*100)}</span></div>` +
     `<div class="setRow"><span>Sound FX</span><input type="range" id="setSfx" min="0" max="100" value="${Math.round(SND.sfxVol*100)}"><span class="val">${Math.round(SND.sfxVol*100)}</span></div>` +
     `<div class="setRow"><span>Audio</span><button class="dangerBtn" id="setMute" style="background:#3d5a2e;border-color:#6a8f52;color:#eaffd8;">${SND.enabled?"On":"Off"}</button></div>` +
+    `<div class="setRow"><span>How to play</span><button class="dangerBtn" id="setHelp" style="background:#3a4a30;border-color:#6a8f52;color:#eaffd8;">Read the guide</button></div>` +
     `<div class="setRow"><span>Save</span><span style="color:var(--ink-soft);font-size:.85em;">auto-saves each night</span></div>` +
     `<div class="setRow"><span>Version</span><button class="dangerBtn" id="setNews" style="background:#3a3550;border-color:#6a648f;color:#e6e0ff;">v${VERSION.name} — What's New</button></div>` +
     `<div class="setRow"><span>Danger zone</span><button class="dangerBtn" id="setWipe">Delete Save &amp; Restart</button></div>` +
@@ -898,6 +978,7 @@ function renderSettings(){
   sfx.oninput = () => { setSfxVol(sfx.value/100); sfx.nextElementSibling.textContent = sfx.value; };
   sfx.onchange = () => playSfx("select");
   $("setMute").onclick = () => { setMusicEnabled(!SND.enabled); renderSettings(); };
+  $("setHelp").onclick = () => { closeAllPanels(); openLetter("❔ How to Play", HOWTO_TEXT); };
   $("setNews").onclick = () => openPanel("newsPanel", renderNews);
   $("setWipe").onclick = () => { if(confirm("Delete your save and restart from the title?")){ wipeSave(); location.reload(); } };
 }
