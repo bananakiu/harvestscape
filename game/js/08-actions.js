@@ -185,7 +185,7 @@ const OBJ_TITLE  = { bed:"Bed", campfire:"Campfire", stove:"Stove", fireplace:"F
   stall:"Market Stall", shipbin:"Shipping Bin", sign:"Sign", noticeboard:"Noticeboard", ledger:"The Valley Ledger",
   fountain:"Fountain", boardwalk:"Boardwalk", railcart:"Minecart", memorial:"Standing Stone", berrybush:"Berry Bush",
   frostberry:"Frostberry Bush", fruittree:"Fruit Tree", beehive:"Beehive", torch:"Torch", lamp:"Lamp", lantern:"Lantern",
-  crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift", olddoor:"A Planked Door", keg:"Keg", jar:"Preserves Jar",
+  crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift", olddoor:"A Planked Door", keg:"Keg", jar:"Preserves Jar", bench:"Bench", plantpot:"Flower Planter",
   deadfall:"Deadfall", westtrail:"The Trail West", easttrail:"The Trail Back", waystone:"Waystone", hearttree:"The Heart of the Forest",
   ancient:"Ancient Tree" };
 function npcAtTile(tx,ty){ if(!curMap||!curMap.npcs) return null;
@@ -448,6 +448,13 @@ function interact(){
       }
       case "memorial": state.flags.memorialRead = true;
         openLetter("✒ Carved into the standing stone", LETTER_MEMORIAL); return;
+      case "bench": {   // a small cozy beat: sit, and the square lives around you for a moment
+        const lines = [
+          "You sit a while. Someone's kept the lamps trimmed and the square swept.",
+          "You rest on the warm wood and watch the valley go about its day.",
+          "A moment on the bench. The fountain's murmur, a door somewhere, the wind." ];
+        toast(pick(lines), "#e9dcc0"); playSfx("select"); return;
+      }
       case "berrybush": forageNode(tx,ty,obj,"Field Salad","Farming",6); return;
       case "frostberry": forageNode(tx,ty,obj,"Frostberry","Farming",14); return;
       case "fruittree": {

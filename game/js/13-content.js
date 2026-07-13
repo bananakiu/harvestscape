@@ -308,6 +308,12 @@ function genVillage(m){
   m.objects[key(31,22)] = { kind:"sign", text:"The Harrows'" };
   // --- plaza dressing ---
   for(const [lx,ly] of [[14,10],[26,10],[14,18],[26,18]]) m.objects[key(lx,ly)] = { kind:"lamp" };
+  // benches + planters on the plaza's north/south edge rows (y10/y18) — verified clear of the
+  // arteries, the door approaches, and the Maya/Pip wander box (x15-24, y11-16), so nothing gets
+  // walled in. putIf skips any tile already claimed by wing/project dressing.
+  const putIf0 = (x,y,o) => { if(!m.objects[key(x,y)]) m.objects[key(x,y)] = o; };
+  putIf0(16,10,{kind:"bench"}); putIf0(24,10,{kind:"bench"});
+  putIf0(16,18,{kind:"plantpot"}); putIf0(24,18,{kind:"plantpot"});
   for(let i=0;i<8;i++){ const x=randiR(rng,2,m.w-3), y=randiR(rng,2,m.h-3);
     if(t[y*W+x]===T.GRASS && !m.objects[key(x,y)]) t[y*W+x]=T.FLOWERGRASS; }
   // --- Rowan's projects, as they stand ---
@@ -596,6 +602,12 @@ function npcStory(id){
       state.flags.hook_tomSlip = true;
       return "So you've met old Rowan! Hard man to know, that one. Him and El— …and everyone else, back in the day. Anyway! Coin for goods, that's the Tom guarantee.";
     }
+    // out on the plaza at midday (the _plazaTom maybePlazaLife spawns) — a lighter, social Tom, but
+    // only AFTER the story beats above have had their say, so nothing important is ever preempted
+    if(curMap && curMap.id === "village") return pick([
+      "Ah, the fresh air! Counter can mind itself for ten minutes. Don't tell the ledger.",
+      "Good day for it. Maya's got young Pip chasing pigeons round the fountain again.",
+      "It's nice — folk in the square. Wasn't always. Feels like the valley's remembering how." ]);
   } else if(id==="maya"){
     if(spouseId()==="maya") return pick([
       "Morning, love — I watered the east rows before you woke. Don't you dare argue about it. ♥",

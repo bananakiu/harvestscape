@@ -22,6 +22,42 @@
 
 ---
 
+## v3.9.0 — "Plaza Life" · 2026-07-14 · tag `v3.9.0`
+
+Version code **46**. The village plaza was a well-built stage with almost no life on it — the
+world-split (v3.0) and healing pass (v3.4) filled it with buildings and dressing, but by day it
+held only Maya and Pip wandering. This adds ambient life. Built from the same 5-agent subsystem map
+as v3.8 and hardened by a focused adversarial review (four findings, all fixed before commit).
+
+### Added
+- **Benches & flower planters** (`bench` sprite in `03-art.js`; placed in `genVillage`): a worn
+  garden bench you can sit on for a small cozy beat (a rotating flavor line, no mechanic — the
+  "sit and watch the valley" moment the genre lives on), plus planters. Placed on the plaza's
+  north/south edge rows (verified clear of every artery, door approach, and the Maya/Pip wander
+  box, so nothing gets walled in). Both examinable, both with a proper title (the review caught
+  that a bench read as lowercase "bench" and planters fell through to the tile name).
+- **Tom steps outside at midday** (`maybePlazaLife`, `14-story.js`, ticked from the main loop like
+  `maybeLanternTest`): an ambient plaza-Tom appears in the square from ~11:30–14:00 and is removed
+  live when the window closes — NPCs otherwise only spawn on map entry, so this mutates
+  `curMap.npcs` directly. Talking to him gives a lighter, social Tom ("the counter can mind itself
+  for ten minutes"), gated to the village map and placed *after* the story beats so it never
+  preempts the festival cue or the "slipped name" hook. `npcRegionNow` already reports Tom in the
+  village, so the whereabouts panel stays honest.
+
+### Review-driven hardening (a focused adversarial pass ran before commit)
+- **The Lantern Test keeps its staging.** The v3.6 midpoint scene stages its own Tom by find-by-id;
+  a wandering plaza-Tom present at that exact moment would be grabbed and left standing across the
+  square. `maybePlazaLife` now stands down while the Lantern Test is *pending* (5 wings lit, scene
+  not yet played) — invisible (the scene fires within a frame-to-a-day), and the collision is gone.
+- **Tom no longer spawns on the market stall.** His midday spot moved off (11,12) — the tile the
+  Farming wing's stall claims — to (10,12) with a tighter roam box, so facing him always talks
+  instead of opening the shop.
+
+*Verified live: benches/planters placed and off the wander box; Tom appears only 11:30–14:00,
+removed after, re-added on re-entry, suppressed while the Lantern Test is pending and resuming
+after; social line gated correctly with story beats keeping priority; examine titles/text; screenshot
+of the lively square (Tom + Maya + Pip); `npcRegionNow` consistent; console clean. Atlas v3.9.0.*
+
 ## v3.8.0 — "The Flock" · 2026-07-14 · tag `v3.8.0`
 
 Version code **45**. Sheep & wool — restoring the last orphaned item to the Collection with an

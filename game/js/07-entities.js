@@ -110,7 +110,7 @@ function drawPrompt(cx, cy){
   ctx.fillStyle = "#ffce5a"; ctx.fillRect(cx-5, y-6, 10, 1);
   queueText(cx, y+1.5, "E", { color:"#ffe6a0", size:8, weight:"bold", shadow:null });
 }
-const INTERACT_KINDS = new Set(["campfire","stove","counter","stall","shipbin","sign","berrybush","frostberry","wrack","chest","noticeboard","fruittree","beehive",
+const INTERACT_KINDS = new Set(["campfire","stove","counter","stall","shipbin","sign","berrybush","frostberry","wrack","chest","noticeboard","fruittree","beehive","bench",
   "ledger","railcart","boardwalk","fountain",
   "bed","ladderup","ladderdown","mineentrance","shellnode","coralnode","seaweednode","sealeddoor","desk","memorial",
   "waystone","westtrail","easttrail","deadfall","hearttree","lift","olddoor","keg","jar"]);

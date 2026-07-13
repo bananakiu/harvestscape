@@ -227,6 +227,32 @@ function maybeLanternTest(){
   ]);
 }
 
+// Plaza life: Tom steps out of his store for a midday stretch, giving the square a third face
+// alongside Maya and Pip's daytime wandering. Because NPCs only spawn on map entry, this runs from
+// the main loop (like maybeLanternTest) and mutates curMap.npcs live — adding Tom when the noon
+// window opens and removing him when it closes or the coat of the day moves on. He's marked
+// _plazaTom so he's never confused with the festival/lantern-test Tom, and npcRegionNow already
+// reports Tom in the village, so the "where is everyone" panel stays honest.
+function maybePlazaLife(){
+  if(!state || gameMode!=="play" || paused || isCutscene() || uiBlocking() || sleeping) return;
+  if(!curMap || curMap.id !== "village") return;
+  // Stand down while the Lantern Test is pending (5 wings lit, not yet played): its cutscene stages
+  // its own Tom via a find-by-id, and an ambient plaza-Tom present at that moment would be grabbed
+  // and mispositioned. Suppressing him for that one-frame-to-one-day window is invisible.
+  if(typeof wingsLit === "function" && wingsLit() >= 5 && !state.flags.lanternTest) return;
+  const h = curHour();
+  const midday = h >= 11.5 && h < 14;
+  const tom = curMap.npcs.find(n => n._plazaTom);
+  if(midday && !tom){
+    const t = mkNpc("tom", 10*TILE, 12*TILE, { face:"down", wander:{ x0:9, y0:11, x1:12, y1:14 } });
+    t._plazaTom = true; curMap.npcs.push(t);
+    // announce it once a day, not on every re-entry during the window
+    if(state.flags.tomPlazaDay !== state.day){ state.flags.tomPlazaDay = state.day; toast("Tom's out front of the store, taking the air.", "#e9dcc0"); }
+  } else if(!midday && tom){
+    const i = curMap.npcs.indexOf(tom); if(i>=0) curMap.npcs.splice(i,1);
+  }
+}
+
 // ===================== GRANDPA'S LETTERS =====================
 let _letterCb = null;
 function openLetter(head, text, onClose){

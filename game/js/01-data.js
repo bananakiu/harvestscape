@@ -8,13 +8,16 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.8.0", code: 45, codename: "The Flock", date: "2026-07-14" };
+const VERSION = { name: "3.9.0", code: 46, codename: "Plaza Life", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.9.0", code:46, date:"2026-07-14", name:"Plaza Life", notes:[
+    { t:"new",   s:"The village square feels lived-in now: benches and flower planters to sit among, and Tom steps out of his store for a stretch around midday — a third face in the plaza beside Maya and Pip, with a lighter word or two if you stop to chat." },
+  ]},
   { v:"3.8.0", code:45, date:"2026-07-14", name:"The Flock", notes:[
     { t:"new",   s:"Sheep join the barn (500g at Tom's, up to four). Buy a pair of shears (250g, once) and shear a full coat with E for Wool — a soft armful worth 120g. Coats regrow every few days, so a flock rewards a steady visit, not a daily raid." },
     { t:"new",   s:"Wool rejoins the Collection at last — it was held back for years because nothing could produce it. Now the sheep make it real, and the museum can be completed with it in." },
@@ -1021,4 +1024,6 @@ const EXAMINE_TILE = {
   EXAMINE["Preserves Jar"] = "A crock with a patient lid.";
   EXAMINE_OBJ["keg"] = "Something in there is taking its time.";
   EXAMINE_OBJ["jar"] = "The lid says: not yet.";
+  EXAMINE_OBJ["bench"] = "Worn smooth by years of sitting. Still room for one more.";
+  EXAMINE_OBJ["plantpot"] = "Someone tends these — the blooms are always fresh.";
 })();

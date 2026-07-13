@@ -27,6 +27,7 @@ function loop(ts){
         updateWeather(dt);
         maybeSeasonalFestival();        // a festival window can open while you stand on the sand
         maybeLanternTest();             // the midpoint beat fires the first time you enter the village at 5 wings
+        maybePlazaLife();               // Tom steps out for a midday stretch — the plaza's third face
       }
     }
     updateParticles(dt);

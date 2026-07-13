@@ -699,6 +699,13 @@ function buildInteriors(){
     px(g,5,5,6,5,"#ffe6a0"); px(g,6,11,4,1,"#8a6a48"); });
   mkSpr("plantpot", 16, 16, g => { px(g,5,11,6,4,"#b5622f"); px(g,5,11,6,1,"#d07d47"); px(g,6,4,4,8,"#3f7a2e");
     px(g,3,6,4,4,"#5fa03e"); px(g,9,5,4,4,"#5fa03e"); px(g,6,3,3,3,"#6fb04a"); });
+  // a worn garden bench for the plaza — somewhere to sit and watch the valley go about its day
+  mkSpr("bench", 16, 15, g => {
+    px(g,2,2,12,2,"#8a5f38"); px(g,2,2,12,1,"#a5763f"); px(g,2,3,12,1,"#6e4a2a");   // backrest rail
+    px(g,3,4,1,5,"#6e4a2a"); px(g,12,4,1,5,"#6e4a2a"); px(g,7,4,1,4,"#6e4a2a");      // back slats
+    px(g,1,8,14,3,"#9a6b3e"); px(g,1,8,14,1,"#b07d48"); px(g,1,10,14,1,"#7a5230");   // the seat
+    px(g,2,11,2,4,"#5e4426"); px(g,12,11,2,4,"#5e4426");                             // legs
+  });
   mkSpr("counter", 16, 16, g => { px(g,0,4,16,9,"#8a5f38"); px(g,0,4,16,2,"#a5763f"); px(g,0,11,16,2,"#5e4426");
     px(g,0,6,16,1,"#6e4a2a"); px(g,2,7,3,3,"#8fd06a"); px(g,7,7,3,3,"#ff9438"); px(g,12,7,2,3,"#ff4d55"); });
   mkSpr("barrel", 16, 16, g => { px(g,4,3,8,12,"#8a5f38"); px(g,4,3,8,1,"#a5763f"); px(g,3,5,10,2,"#6e4a2a"); px(g,3,11,10,2,"#6e4a2a");
