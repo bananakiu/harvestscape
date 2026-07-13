@@ -263,6 +263,13 @@ body{
   opacity:0; pointer-events:none;
 }
 #banner.show{ animation:bannerpop 3.2s ease forwards; }
+/* a warm halo flares behind the card on arrival, then settles — the level-up "ta-da" (cozy, not a flash) */
+#banner.show::before{
+  content:""; position:absolute; inset:-45% -25%; z-index:-1; pointer-events:none; border-radius:50%;
+  background:radial-gradient(closest-side, rgba(255,214,90,.5), rgba(255,214,90,0) 72%);
+  animation:bannerGlow 1.2s ease-out forwards;
+}
+@keyframes bannerGlow{ 0%{opacity:0;transform:scale(.5)} 22%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(1.18)} }
 @keyframes bannerpop{
   0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}
   8%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}
