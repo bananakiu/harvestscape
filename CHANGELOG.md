@@ -34,8 +34,8 @@ feedback *primitives*, so it propagates to every call-site automatically.
 ### Added
 - **Over-invested in the item-get loop** (the bible's "emotional core of a farming game"). A
   collected item used to only scale-pop; now every collect blooms a soft warm **glow** behind the
-  icon and sparks off a few gold **stars** (`de7bfbe`… actually `96e0cc8`: a new additive-`lighter`
-  `pGlow` particle + a star burst in `pItemPop`). `pSparkle` gained the same bloom, so level-ups and
+  icon and sparks off a few gold **stars** (`96e0cc8`: a new additive-`lighter` `pGlow` particle + a
+  star burst in `pItemPop`). `pSparkle` gained the same bloom, so level-ups and
   gem finds — which already call it from the action sites — feel like a *find*, with zero edits to
   `08-actions.js`.
 - **A warm halo behind the level-up banner** (`de7bfbe`) — a `#banner.show::before` radial that
