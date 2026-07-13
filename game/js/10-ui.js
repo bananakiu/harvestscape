@@ -413,30 +413,57 @@ function renderSkills(){
   b.innerHTML = html;
   hydrateIcons(b);   // draw the skill-tile icons (the old panel declared an icon map but never used it)
 }
+// The Backpack, Stardew-style: a visual grid of item tiles (icon + a corner stack count), sorted
+// into the same category sections the Collection uses, with the examine flavour, sell/energy value
+// and the charm's wear control moved onto a tap-to-open detail strip — so the bag reads at a glance
+// instead of as a wall of one-line-plus-italic-paragraph rows.
+let invSel = null;
+function selectInvItem(it){ invSel = (invSel === it ? null : it); playSfx("select"); renderInv(); }
+function invDetailHtml(it){
+  if(!it || !state.inv[it]) return "";   // empty → the sticky detail bar collapses (see #invDetail:not(:empty))
+  let h = `<div class="sdHead"><span class="sdName">${it}</span><span class="sdLvl">×${state.inv[it]}</span></div>`;
+  const bits = [];
+  if(ITEM_SELL[it]) bits.push(`${ITEM_SELL[it]}g each`);
+  if(EDIBLE[it])    bits.push(`+${EDIBLE[it]} energy`);
+  if(bits.length) h += `<div class="sdXp">${bits.join(" · ")}</div>`;
+  if(EXAMINE[it]) h += `<div class="sdLine muted" style="font-style:italic">${escapeHtml(EXAMINE[it])}</div>`;
+  if(CHARMS[it]){
+    const worn = state.charm === it;
+    h += `<div class="sdLine unlock">✦ ${CHARMS[it].effect}</div>`;
+    h += worn ? `<button class="buy" onclick="wearCharm(null)">worn ✓ — take it off</button>`
+              : `<button class="buy" onclick="wearCharm('${jsq(it)}')">wear this</button>`;
+  }
+  return h;
+}
 function renderInv(){
   const b = $("invPanel").querySelector(".body");
   const items = Object.keys(state.inv);
-  if(!items.length){ b.innerHTML = `<div class="locked">Empty. The valley provides — go get it!</div>`; return; }
-  b.innerHTML = items.map(it => {
-    const ic = spr["item_"+it] ? `<canvas></canvas>` : "";
-    const sell = ITEM_SELL[it];
-    const val = sell ? `<span class="sub" style="margin-left:.4em">${sell}g ea</span>` : (EDIBLE[it] ? `<span class="sub" style="margin-left:.4em">+${EDIBLE[it]} energy</span>` : "");
-    const ex = EXAMINE[it] ? `<div class="exline">${escapeHtml(EXAMINE[it])}</div>` : "";
-    // a canopy charm can be WORN — one at a time, the single slot doing the balancing
-    const worn = state.charm === it;
-    const charmBtn = CHARMS[it]
-      ? (worn ? `<button class="buy" onclick="wearCharm(null)">worn ✓</button>` : `<button onclick="wearCharm('${jsq(it)}')">wear</button>`)
-      : "";
-    const eff = CHARMS[it] ? `<span class="sub" style="margin-left:.4em">${CHARMS[it].effect}</span>` : "";
-    return `<div class="row"><span class="lead" data-icon="item_${it}">${ic}<span>${it}${val}${eff}</span></span><span>${charmBtn} ×${state.inv[it]}</span></div>${ex}`;
-  }).join("");
+  if(!items.length){ invSel = null; b.innerHTML = `<div class="locked">Empty. The valley provides — go get it!</div>`; return; }
+  // bucket items into the same sections the Collection uses, so the bag reads sorted like Stardew's
+  const SEC = {}; MUSEUM.forEach(s => s.items().forEach(n => SEC[n] = s.name));
+  const groups = {};
+  for(const it of items){ const g = SEC[it] || "Satchel"; (groups[g] = groups[g] || []).push(it); }
+  const secOrder = MUSEUM.map(s => s.name).filter(n => groups[n]);
+  if(groups["Satchel"]) secOrder.push("Satchel");
+  let html = "";
+  for(const g of secOrder){
+    html += `<div class="museSec">${g}</div><div class="museGrid">`;
+    for(const it of groups[g]){
+      const worn = state.charm === it;
+      html += `<div class="museItem has invTile${it===invSel?" sel":""}${worn?" worn":""}" data-icon="item_${it}" title="${escapeHtml(it)}" onclick="selectInvItem('${jsq(it)}')">` +
+        `<canvas></canvas><span class="invCount">×${state.inv[it]}</span><span>${it}</span></div>`;
+    }
+    html += `</div>`;
+  }
+  html += `<div id="invDetail">${invDetailHtml(invSel)}</div>`;
+  b.innerHTML = html;
   hydrateIcons(b);
 }
 function wearCharm(name){
   state.charm = name;
   if(name){ toast("You put on the " + name + ".", "#8fe8c8"); playSfx("gift"); }
   else playSfx("select");
-  saveGame(); renderInv();
+  saveGame(); renderInv();   // invSel persists (module var), so the detail strip stays open on the new state
 }
 // ---- The Collection: a museum of everything you've ever found, with its examine flavour ----
 const MUSEUM = [

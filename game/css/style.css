@@ -440,6 +440,28 @@ body{
 /* one in-body section title, shared across the tabbed panels (Collection, Ledger, Calendar…) */
 .secHead{ color:var(--gold-hi); font-size:1.02em; letter-spacing:.02em; margin:.1em 0 .5em; }
 
+/* ---- Backpack: a visual tile bag (extends the Collection .museItem grammar) ---- */
+.invTile{ position:relative; cursor:pointer; min-height:4em; gap:.2em; }
+.invTile canvas{ width:2em; height:2em; image-rendering:pixelated; }
+.invTile:hover{ background:rgba(150,110,60,.28); }
+.invTile.sel{ border:.14em solid var(--gold); box-shadow:0 0 .4em var(--gold), inset 0 0 0 .1em var(--gold-hi); }
+.invTile.worn{ box-shadow:inset 0 0 0 .12em #8fe8c8; }
+.invCount{
+  position:absolute; top:.15em; right:.2em; min-width:1.35em; text-align:center;
+  background:var(--wood-d); border:.1em solid #0006; border-radius:.35em;
+  color:var(--gold); font-size:.78em; line-height:1.25; padding:0 .15em; text-shadow:0 1px 0 #000;
+}
+/* the item detail sticks to the bottom of the bag like a Stardew tooltip — always in view when an
+   item is selected, and collapses to nothing when none is (so a full bag isn't pushed around) */
+#invDetail{ position:sticky; bottom:-.6em; margin-top:.4em; }
+#invDetail:not(:empty){
+  background:linear-gradient(rgba(34,25,17,.97),rgba(28,20,14,.99));
+  border:.12em solid var(--wood-hi); border-radius:.5em; padding:.4em .55em;
+  box-shadow:0 -.2em .5em rgba(0,0,0,.45);
+}
+#invDetail .sdLine{ margin:.12em 0; }
+#invDetail .buy{ margin-top:.3em; }
+
 /* ---- world map (Journal → Map tab): a schematic Willowbrook drawn from CSS grid boxes ---- */
 .wmBoard{
   display:grid; gap:.4em; margin:.1em 0 .5em;
