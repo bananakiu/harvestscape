@@ -22,6 +22,56 @@
 
 ---
 
+## UI/UX sweep — tabbed Journal, a town map, a tile Backpack, a month calendar · 2026-07-13
+
+Unversioned menu-UI sweep (a parallel session owns the version cut + data files; **fold this into
+the next release's player notes**). Owner ask: *"do a sweep of the entire UI/UX… the journal in
+particular, and the inventory, is particularly bad… so messy. Draw from Harvest Moon / Friends of
+Mineral Town / Stardew — a map of the whole city with where you are, and a more visual tile
+inventory."* Grounded in a 4-lens design panel (FoMT / Stardew / world-map / info-architecture).
+Scope-locked to `10-ui.js` + `css/style.css` + `index.html` throughout; committed narrowly (never
+`-A`) so the concurrent session's data-file work was never swept in.
+
+### Changed
+- **Journal: one 3.4-screen scroll → a tabbed book** (`93abee9`). renderJournal concatenated nine
+  systems (guild wings, pledge ledger, story quests, Grandpa's pages, sky+calendar+birthdays+Bram's
+  ledger, the Collection, how-to) into one endless `.body` scroll. Now a FoMT/Stardew tabbed panel —
+  **Quests / Map / Calendar / Ledger / Collection** — one clean page each. A shared `panelTabs()`
+  factory (active tab remembered per panel in `_panelTab`, so a re-render keeps your page) backs it;
+  the Shop was ported onto the same factory (zero visual change) to prove it. renderJournal kept its
+  name + zero-arg signature so the **J** key and touch menu stayed wired.
+- **NEW world map** (`93abee9`) — the owner's "map of the whole city with where you are."
+  `renderWorldMap` draws a schematic Willowbrook as CSS grid boxes laid out by the real warp
+  cardinals (grove W, village E, guild N, mine NE, coast S), a pulsing gold **"you are here"** keyed
+  off `state.map`, and live neighbour **portraits** inferred read-only from the spawn schedule
+  (`npcRegionNow`, a clock-driven reconstruction — live NPC entities only exist on the loaded map).
+  100% procedural, no assets. Mounted as the **Map** tab (no new keybinding; the keymap is full).
+- **Backpack: flat list → visual tile bag** (`04e87c5`). renderInv was one item per row, each
+  dragging an italic examine paragraph (~6 of 15 items on screen). Rebuilt on the `.museItem` tile
+  grammar: a grid of icon tiles with a corner **stack-count** badge, bucketed into the Collection's
+  category sections (Crops / Fish / Gems / Materials / Forage…) so the bag reads sorted like
+  Stardew's. Examine flavour, sell/energy value and the **charm wear/unwear** control moved onto a
+  **sticky detail footer** that's always in view when an item is selected and collapses when none is.
+- **Calendar: flat almanac → Harvest Moon month grid** (`35b7dda`). A 7×4 board of the selected
+  season's 28 days with festivals (✦) and birthdays (🎂) marked in place and **today ringed**, a
+  season selector, the sky as two chips, a "what's on" list, and Bram's legend ledger kept below.
+- **Merged the two duplicate ledgers** (`35b7dda`). Rowan's guild-desk "Valley Ledger" panel and the
+  Journal's "Restorations" were two names/panels/funding-UIs for one idea. Now one **Ledger** tab
+  (pledges + Rowan's projects); the guild desk opens the Journal there; `renderProjects()` survives
+  only as a re-render shim for `fundProject()` (in `14-story.js`, off-limits to this session).
+  Retired the standalone `#projPanel`.
+- **How-to-Play** left the Journal for a Settings "Read the guide" row (opens the guide as a
+  parchment letter), and the Collection was promoted out of its collapsed `<details>` into a full
+  tab page — finishing the declutter.
+
+### Housekeeping
+- Removed dead renderers/CSS left by the above (`renderMuseum`, `renderAlmanac`, the `.museum`/
+  `.howto` `<details>` styles); added shared `.secHead`/`.muted` in-body vocabulary.
+
+*Verified live throughout (real tab clicks + close button, every other panel re-checked for
+regressions, the Help letter, map you-are-here tracking `state.map`, charm wear, calendar marks):
+console clean at each commit.*
+
 ## v3.6.0 — "The Lantern Test" · 2026-07-13 · tag `v3.6.0`
 
 Version code **43**. Story overhaul 3/3 ([STORY_OVERHAUL.md](STORY_OVERHAUL.md)): the arc was

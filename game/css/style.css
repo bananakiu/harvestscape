@@ -422,11 +422,6 @@ body{
 .actHead:first-child{ margin-top:0; }
 .jq.dest{ opacity:.6; }
 .jq.dest h3{ color:#cbb98f; }
-/* The Collection — a discovery museum in the Journal */
-.museum{ margin-top:.8em; border-top:.1em solid rgba(255,255,255,.1); padding-top:.5em; }
-.museum summary{ cursor:pointer; color:var(--gold-hi); font-size:.95em; list-style:none; }
-.museum summary::-webkit-details-marker{ display:none; }
-.museum summary:hover{ color:#fff2c4; }
 .museSec{ color:#c8a86a; font-size:.76em; letter-spacing:.05em; text-transform:uppercase; margin:.7em 0 .35em; }
 .museGrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(4.6em, 1fr)); gap:.4em; }
 .museItem{ display:flex; flex-direction:column; align-items:center; gap:.15em; padding:.35em .2em; border-radius:.4em;
@@ -513,11 +508,6 @@ body{
 }
 .wmFoot{ color:var(--ink-soft); font-size:.82em; line-height:1.35; margin-top:.2em; text-align:center; }
 .wmFoot b{ color:var(--gold-hi); }
-.howto{ margin-top:.8em; border-top:.1em solid rgba(255,255,255,.1); padding-top:.5em; }
-.howto summary{ cursor:pointer; color:var(--gold-hi); font-size:.95em; list-style:none; }
-.howto summary::-webkit-details-marker{ display:none; }
-.howto summary:hover{ color:#fff2c4; }
-.howtoBody{ white-space:pre-wrap; color:#d8c9ab; font-size:.86em; line-height:1.5; margin-top:.5em; }
 .jq{ margin-bottom:.7em; padding-bottom:.5em; border-bottom:.1em solid rgba(255,255,255,.08); }
 .jq h3{ margin:0 0 .1em; color:var(--gold-hi); font-size:1.02em; }
 .jq h3.done{ color:var(--green); }

@@ -611,7 +611,7 @@ function renderWorldMap(b){
 // ---- Grandpa's torn pages: found by living, re-readable forever ----
 function renderPages(){
   const n = pagesFound();
-  let h = `<div class="jq"><h3 style="color:#e8d9a8">📜 Grandpa's Almanac — ${n}/9 pages</h3>`;
+  let h = `<div class="jq"><h3 style="color:#e8d9a8">📜 Grandpa's Pages — ${n}/9 found</h3>`;
   h += `<div class="desc" style="margin-bottom:.3em;">Torn pages, tucked where he left them. You find them by doing what he did.</div>`;
   for(const p of JOURNAL_PAGES){
     const got = !!state.flags["page_"+p.n];
