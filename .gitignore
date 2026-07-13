@@ -5,3 +5,7 @@
 art-exploration/
 game/_music_lab.html
 .claude/worktrees/
+
+# Godot migration spike — machine-specific import cache + generated render.
+godot-spike/.godot/
+godot-spike/spike_frame.png

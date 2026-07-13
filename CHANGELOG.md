@@ -22,6 +22,49 @@
 
 ---
 
+## Engine migration — Godot chosen; a spike de-risks the procedural port · 2026-07-14
+
+Not a game change — a **direction call** and the proof-of-concept behind it, logged here because
+this file's whole reason for existing is to let the game be rebuilt "possibly in a different
+engine" with the *reasoning* intact. Owner wants to take HarvestScape past the browser to
+**Steam/desktop + iOS/Android**, with room for engine-level headroom (perf, effects, tooling).
+Consoles are explicitly *not* a target, and the port is a **fresh rebuild of the same concept**,
+not a line-by-line translation.
+
+### Decision — Godot 4 (GDScript), not Unity
+- **The game's shape fits Godot, not Unity.** HarvestScape is a 2D, 320×208 pixel-art, tile game
+  that is *100% code* — every sprite is canvas drawing in `03-art.js`, every sound is a WebAudio
+  graph in `02-audio.js`, no asset files anywhere. Godot's 2D pipeline, `TileMap`, and
+  pixel-perfect camera are first-class; Unity's 2D is bolted onto a 3D engine. GDScript is
+  Python-ish and the JS logic (tile arrays, state machines, `dt` loop) maps almost directly;
+  Unity's C#-only path adds MonoBehaviour/prefab/serialization ceremony between us and the logic.
+- **No licence, no account, no runtime fee** (Godot is MIT) vs. Unity's account + licensing baggage.
+- **The one thing Unity wins — official console ports — is off the table**, so it buys us nothing.
+- **This machine settled it too.** Apple M4 / 16 GB / macOS 26.1 but only **~14 GB free disk**.
+  Godot's whole toolchain is < 3 GB; Unity Hub + an Editor + iOS/Android modules is 25–40 GB and
+  *would not fit* without clearing space first. Xcode 26.3 is already installed for iOS signing.
+- **GDScript over the C#/.NET Godot build:** lighter on the tight disk and cleaner mobile/web export.
+
+### Spike — `godot-spike/` (proves the parts that don't port trivially)
+The asset pipeline that usually kills a port is a non-issue here (there are no assets); the risk is
+the opposite — the two most distinctive systems have *no native equivalent to drop into*. The spike
+rebuilds a slice of each in-engine, keeping the "no asset files" identity:
+- **Procedural pixel-art** — `main.gd` ports `03-art.js`'s `px()` + seeded-scatter rng to
+  `Image`/`ImageTexture`, generating grass tiles, tilled soil, and a crop's three growth stages at
+  runtime. Confirmed by screenshot (`spike_frame.png`, a native **320×208** buffer, crisp nearest-
+  neighbour) — so the exact procedural approach survives, no baking to PNG required.
+- **Synthesized audio** — an "item-get" arpeggio built as raw samples and pushed into
+  `AudioStreamGenerator` (11,907 samples, no error), proving the WebAudio-graph model in
+  `02-audio.js` has a home in Godot's audio API.
+- **Machine + toolchain** — Godot 4.7 installed via Homebrew cask, runs native on the M4 (Metal /
+  Forward+), builds and runs headless from the CLI. Verified end-to-end on 2026-07-14.
+
+Result: the three unknowns (procedural art, synth audio, pixel-perfect render on this hardware) are
+green. Next step when the port begins in earnest is a proper `MIGRATION.md` phasing plan; the spike
+lives on as the reference for how the tricky subsystems translate.
+
+---
+
 ## Juice & game feel — the item-get loop, tactile menus, the level-up "ta-da" · 2026-07-13
 
 Unversioned presentation pass (a parallel session owns the version cut + data files; **fold into
