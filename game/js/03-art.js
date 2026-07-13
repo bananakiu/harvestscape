@@ -335,6 +335,20 @@ function buildDecor(){
     px(g,2,3,12,2,"#8a5f38"); px(g,2,3,12,1,"#a5763f");         // the lid
     px(g,12,7,1,1,"#241a10"); px(g,13,8,1,1,"#ffd75a");         // a bee
   });
+  // the Cellar, standing in the yard: a tapped barrel and a big preserves crock
+  mkSpr("keg", 16, 18, g => {
+    px(g,3,4,10,12,"#8a5f38"); px(g,3,4,10,1,"#a0774a"); px(g,3,15,10,1,"#5f4028");   // the barrel
+    px(g,4,4,8,12,"#96693e");
+    px(g,3,6,10,1,"#4a4550"); px(g,3,12,10,1,"#4a4550");                              // iron hoops
+    px(g,7,9,2,3,"#3a2c1c"); px(g,7,9,2,1,"#ffd75a");                                 // the tap
+    px(g,5,2,6,2,"#6e4a2a");                                                          // the bung board
+  });
+  mkSpr("jar", 16, 18, g => {
+    px(g,4,6,8,10,"#c9b98e"); px(g,4,6,8,1,"#e0d3ac"); px(g,4,15,8,1,"#a3946c");      // the crock
+    px(g,5,7,6,8,"#d4c49a");
+    px(g,3,4,10,2,"#8a5f38"); px(g,3,4,10,1,"#a0774a");                               // wooden lid
+    px(g,6,9,4,3,"#8a6a4a"); px(g,7,10,2,1,"#6e4a2a");                                // a tied label
+  });
   mkSpr("item_Honey", 16, 16, g => {
     px(g,5,3,6,2,"#c9924a"); px(g,4,5,8,9,"#e8a83a"); px(g,4,5,8,1,"#ffd75a");
     px(g,5,7,6,5,"#f0c05a"); px(g,6,8,2,2,"#fff0b0"); px(g,4,13,8,1,"#a5793a");
@@ -487,6 +501,32 @@ function buildItems(){
     // harvested produce icon
     mkSpr("item_"+c.name, 16, 16, g => drawProduce(g, c));
   }
+  // the Cellar's products: a corked bottle (wine) and a lidded crock (jam), tinted per growable
+  const artisanFor = (name, tint) => {
+    mkSpr("item_"+name+" Wine", 16, 16, g => {
+      px(g,6,1,4,3,"#7a5634"); px(g,7,0,2,1,"#5a3f26");                 // cork
+      px(g,5,4,6,2,shade(tint,0.8)); px(g,4,6,8,9,tint);                // neck + body
+      px(g,4,6,8,1,shade(tint,1.25)); px(g,5,14,6,1,shade(tint,0.6));
+      px(g,5,8,2,4,"rgba(255,255,255,0.35)");                          // glass shine
+    });
+    mkSpr("item_"+name+" Jam", 16, 16, g => {
+      px(g,4,4,8,10,tint); px(g,4,4,8,1,shade(tint,1.3)); px(g,4,13,8,1,shade(tint,0.6));  // the jar
+      px(g,3,2,10,3,"#e8dcc0"); px(g,3,2,10,1,"#f6eeda"); px(g,5,3,1,1,"#c9b98e");         // cloth lid
+      px(g,5,8,2,3,"rgba(255,255,255,0.3)");                                                // glass shine
+    });
+  };
+  for(const id in CROPS) artisanFor(CROPS[id].name, CROPS[id].pal[2]);
+  for(const k in FRUIT_TREES) artisanFor(FRUIT_TREES[k].fruit, FRUIT_TREES[k].pal[2]);
+  // the machines as carried items
+  mkSpr("item_Keg", 16, 16, g => {
+    px(g,3,3,10,11,"#8a5f38"); px(g,3,3,10,1,"#a0774a"); px(g,3,13,10,1,"#5f4028");
+    px(g,3,5,10,1,"#4a4550"); px(g,3,11,10,1,"#4a4550");               // hoops
+    px(g,7,8,2,2,"#3a2c1c"); px(g,7,8,2,1,"#ffd75a");                  // the little tap
+  });
+  mkSpr("item_Preserves Jar", 16, 16, g => {
+    px(g,4,5,8,9,"#c9b98e"); px(g,4,5,8,1,"#e0d3ac"); px(g,4,13,8,1,"#a3946c");
+    px(g,3,3,10,2,"#8a5f38"); px(g,3,3,10,1,"#a0774a");                // wooden lid
+  });
   // wood, ores, stone, fish
   const woodCols = { "Wood":"#a0774a", "Pine Wood":"#8a9a7a", "Maple Wood":"#c08a5a",
     "Willow Wood":"#8ab06a", "Elder Wood":"#5a8a9a", "Heartwood":"#9ac8ae" };

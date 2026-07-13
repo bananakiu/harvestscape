@@ -783,6 +783,18 @@ function buyHive(){
   playSfx("coin"); refreshHUD(); refreshHotbar(); renderShop();
 }
 
+// the Cellar's machines cost wood + ore + coin, like every good tool since Tempered Tools
+function buyMachine(mk){
+  const M = MACHINES[mk]; if(!M) return;
+  if(state.gold < M.cost.g || !Object.keys(M.cost.mats).every(it => (state.inv[it]||0) >= M.cost.mats[it])){
+    playSfx("error"); return; }
+  state.gold -= M.cost.g;
+  for(const it in M.cost.mats) take(it, M.cost.mats[it]);
+  give(M.name, 1, true);
+  toast(`One ${M.name.toLowerCase()}, ready for the yard. Select it like a seed and set it down.`, "#cbb98f");
+  playSfx("coin"); refreshHUD(); refreshHotbar(); renderShop();
+}
+
 function buyBouquet(){
   if(state.gold < 500 || (state.inv["Bouquet"]||0) > 0){ return; }
   state.gold -= 500; give("Bouquet",1,true);

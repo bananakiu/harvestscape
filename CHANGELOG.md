@@ -22,6 +22,36 @@
 
 ---
 
+## v3.7.0 — "The Cellar" · 2026-07-14 · tag `v3.7.0`
+
+Version code **44**. Artisan machines — the design scorecard's oldest unfilled economy gap, and
+the natural next system after Tempered Tools: crops needed a *second life* beyond Tom's counter
+and the kitchen. Also cuts the parallel session's unversioned **game-feel pass** (level-up halo,
+tactile menu presses, corner nudging) into a player release.
+
+### Added
+- **Kegs and Preserves Jars** (`MACHINES`, `01-data.js`): bought at Tom's for wood + ore + coin
+  (the Tempered Tools rule — 900g + 8 Pine Wood + 2 Iron Ore / 550g + 6 Wood + 2 Copper Ore),
+  placed like hives (`plantPermanent`, farm-only, capped 4/6), worked overnight by `tendCellar`
+  in `newDay`. **Keg: any growable → its Wine, 3 nights, 2.2×. Jar: → its Jam, 2 nights, 1.6×.**
+- **Why those multipliers:** machines trade *time* for value at zero energy, so they must sit
+  under the kitchen's dishes (which cost ingredients + attention) — and every product is its own
+  item name, so **Tom's Demand gluts per product**: forty identical jams saturate exactly like
+  forty starfruit. No infinite-money lever.
+- **One-button cozy:** an empty machine takes the best growable in your bag (toast names it); a
+  working one tells you the nights left; a ready one hands over the product (+14 Farming). The
+  axe lifts a machine and **returns its load unspoiled** — nothing is ever taken (the contract).
+- **Generated everything:** sell prices, examine lines ("Three days in the barrel, and the
+  strawberry learned patience."), and tinted item sprites (bottle/crock per growable's palette)
+  are generated for every crop and orchard fruit — ~50 products from ~30 lines of generation,
+  and any future crop gets its wine and jam for free.
+- Sleep card reports finished batches ("🍶 2 cellar batches finished aging").
+
+*Verified live end-to-end: buy refused without materials, consumed them when present; placement
+capped and farm-only; keg auto-picked Strawberry over Turnip; jar ready night 2, keg night 3;
+collected Strawberry Wine (374g = 2.2×170) + Turnip Jam (56g = 1.6×35); axe returned a loaded
+keg's Turnip; collect-moment screenshot (icons popping, orb ticking); console clean.*
+
 ## Engine migration — Godot chosen; a spike de-risks the procedural port · 2026-07-14
 
 Not a game change — a **direction call** and the proof-of-concept behind it, logged here because

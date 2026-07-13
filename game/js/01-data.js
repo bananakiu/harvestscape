@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.6.0", code: 43, codename: "The Lantern Test", date: "2026-07-13" };
+const VERSION = { name: "3.7.0", code: 44, codename: "The Cellar", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.7.0", code:44, date:"2026-07-14", name:"The Cellar", notes:[
+    { t:"new",   s:"The Cellar arrives: buy Kegs and Preserves Jars at Tom's, set them in your yard like hives, and give any crop or orchard fruit a second life — jam in two nights, wine in three. Every product sells under its own name, so the market can glut on each." },
+    { t:"new",   s:"Machines load with one press — they take the best growable in your bag — and an axe lifts them (with their load returned) if you change your mind. Nothing is ever lost." },
+    { t:"polish",s:"A game-feel pass rode along: a warm halo behind the level-up banner, menu buttons that press down under your click, and corner-nudging so you slip around obstacles instead of catching on them." },
+  ]},
   { v:"3.6.0", code:43, date:"2026-07-13", name:"The Lantern Test", notes:[
     { t:"new",   s:"At five relit wings, the valley takes a breath: Rowan risks stringing the old lanterns across the plaza — and half the line lights. A taste of the festival, years early, with a flicker of doubt in it. The two that lit stay up." },
   ]},
@@ -267,6 +272,25 @@ const TREE_FRUIT_CAP   = 3;       // it holds three days of fruit, then waits fo
 // so the meadow is generous and your starfruit rows are not. Four hives is the valley's limit.
 const HIVE_COST = 700, HIVE_RADIUS = 4, HIVE_CAP = 3, HIVE_MAX = 4;
 
+// ---- THE CELLAR (artisan machines) ----
+// A crop's second life: the keg ages anything into wine (slow, rich), the preserves jar sets it
+// into jam (quick, modest). The multipliers are deliberately shy of the kitchen's best dishes —
+// machines trade TIME for value with zero energy, so they must never beat cooking (which costs
+// ingredients + attention) or the field itself. And because every product is its own item name,
+// Tom's Demand saturates per-product: forty jars of the same jam glut just like forty starfruit.
+const MACHINES = {
+  keg: { name:"Keg",           days:3, mult:2.2, max:4,
+         cost:{ g:900, mats:{ "Pine Wood":8, "Iron Ore":2 } },
+         product: n => n + " Wine",
+         blurb:"Ages a crop into wine over three days. Patience in a barrel." },
+  jar: { name:"Preserves Jar", days:2, mult:1.6, max:6,
+         cost:{ g:550, mats:{ "Wood":6, "Copper Ore":2 } },
+         product: n => n + " Jam",
+         blurb:"Sets a crop into jam over two days. Summer, kept." },
+};
+// what the machines will take: anything grown — crops and orchard fruit
+function machineLoadable(item){ return CROP_NAMES.has(item) || FRUIT_NAMES.has(item); }
+
 // ---- THE HUNT ----
 // Where a fish lives. The pond and the coast are different water, and the valley knows it.
 const WATER = {
@@ -336,6 +360,20 @@ for(const k in FRUIT_TREES){ const t = FRUIT_TREES[k];
   ITEM_SELL[t.fruit] = t.sell; EDIBLE[t.fruit] = 24; }
 ITEM_SELL["Honey"] = 100; EDIBLE["Honey"] = 30;
 const FRUIT_NAMES = new Set(Object.values(FRUIT_TREES).map(t => t.fruit));
+
+// ---- the Cellar's products, generated for every growable ----
+// Wine 2.2× and Jam 1.6× the raw sell price (see MACHINES for why those sit under the kitchen's
+// dishes). Each product is a distinct item, so Tom's Demand gluts per product — and each gets an
+// examine line, because everything in this valley deserves a word.
+(function(){
+  const each = (name, sell) => {
+    ITEM_SELL[name+" Wine"] = Math.round(sell * 2.2);
+    ITEM_SELL[name+" Jam"]  = Math.round(sell * 1.6);
+  };
+  for(const k in CROPS) each(CROPS[k].name, CROPS[k].sell);
+  for(const k in FRUIT_TREES) each(FRUIT_TREES[k].fruit, FRUIT_TREES[k].sell);
+})();
+ITEM_SELL["Keg"] = 0; ITEM_SELL["Preserves Jar"] = 0;   // the machines themselves aren't for resale
 // Shop staples. Both priced below their buy cost (24g / 30g) so there is no buy-low-sell-high
 // loop. Berry Bun previously had no price at all, which quietly made it ungiftable — and it is
 // Pip's favourite thing in the world.
@@ -960,3 +998,15 @@ const EXAMINE_TILE = {
   "FLOWERGRASS": "Wildflowers have made themselves at home here.",
   "BRIDGE": "Old planks over the water, still sound.",
 };
+// the Cellar's products each get a word too (generated — one warm voice, every crop covered)
+(function(){
+  const all = Object.values(CROPS).map(c=>c.name).concat(Object.values(FRUIT_TREES).map(t=>t.fruit));
+  for(const n of all){
+    EXAMINE[n+" Wine"] = `Three days in the barrel, and the ${n.toLowerCase()} learned patience.`;
+    EXAMINE[n+" Jam"]  = `${n}, kept the old way — under a lid, for later.`;
+  }
+  EXAMINE["Keg"] = "It ages whatever you trust it with.";
+  EXAMINE["Preserves Jar"] = "A crock with a patient lid.";
+  EXAMINE_OBJ["keg"] = "Something in there is taking its time.";
+  EXAMINE_OBJ["jar"] = "The lid says: not yet.";
+})();

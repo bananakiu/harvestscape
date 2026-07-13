@@ -779,6 +779,16 @@ function renderShop(){
     html += `<div class="row"><span class="lead" data-icon="item_Honey"><canvas></canvas><span>Beehive ` +
       `<span class="sub">honey every morning · more where more is in bloom</span></span></span>` +
       `<span><span class="price">${HIVE_COST}g</span> <button class="buy" ${state.gold>=HIVE_COST?"":"disabled"} onclick="buyHive()">buy</button></span></div>`;
+    // the Cellar: machines that give a crop a second life (wood + ore + coin, like every good tool)
+    for(const mk in MACHINES){
+      const M = MACHINES[mk];
+      const matStr = Object.keys(M.cost.mats).map(it => { const have=state.inv[it]||0, need=M.cost.mats[it];
+        return `${need} ${it} <span style="color:${have>=need?'#8fd06a':'#c98a6a'}">(${have})</span>`; }).join(" + ");
+      const can = state.gold >= M.cost.g && Object.keys(M.cost.mats).every(it => (state.inv[it]||0) >= M.cost.mats[it]);
+      html += `<div class="row"><span class="lead" data-icon="item_${M.name}"><canvas></canvas><span>${M.name} ` +
+        `<span class="sub">${M.blurb}<br>${M.cost.g}g + ${matStr}</span></span></span>` +
+        `<span><button class="buy" ${can?"":"disabled"} onclick="buyMachine('${mk}')">buy</button></span></div>`;
+    }
 
     html += `<h2 style="font-size:1em;color:var(--gold-hi);margin:.4em 0 .2em;">RANCH</h2>`;
     const hens = state.animals.chickens.length;
@@ -1073,6 +1083,7 @@ function showSleepCard(s){
   lines.push(`${w.icon} ${w.offer}`);
   if(s.fruited) lines.push(`🍎 ${s.fruited} tree${s.fruited>1?"s":""} bore fruit`);
   if(s.honeyed) lines.push(`🍯 ${s.honeyed} hive${s.honeyed>1?"s":""} filled with honey`);
+  if(s.cellared) lines.push(`🍶 ${s.cellared} cellar batch${s.cellared>1?"es":""} finished aging`);
   if(s.grew) lines.push(`🌱 ${s.grew} crop${s.grew>1?"s":""} grew overnight`);
   if(s.ready) lines.push(`✔ ${s.ready} ready to harvest`);
   if(s.withered) lines.push(`🥀 ${s.withered} crop${s.withered>1?"s":""} withered with the season`);

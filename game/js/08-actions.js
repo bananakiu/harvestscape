@@ -49,17 +49,21 @@ function plantables(){
   const list = Object.keys(CROPS).filter(id => skillLvl("Farming") >= CROPS[id].lvl);
   for(const k in FRUIT_TREES) if((state.inv[FRUIT_TREES[k].name]||0) > 0) list.push("sap:"+k);
   if((state.inv["Beehive"]||0) > 0) list.push("hive");
+  for(const k in MACHINES) if((state.inv[MACHINES[k].name]||0) > 0) list.push("mach:"+k);
   return list;
 }
 const isSapSel  = s => typeof s === "string" && s.startsWith("sap:");
 const isHiveSel = s => s === "hive";
+const isMachSel = s => typeof s === "string" && s.startsWith("mach:");
 function plantableName(sel){
   if(isHiveSel(sel)) return "Beehive";
+  if(isMachSel(sel)) return MACHINES[sel.slice(5)].name;
   if(isSapSel(sel)) return FRUIT_TREES[sel.slice(4)].name;
   return CROPS[sel] ? CROPS[sel].name + " Seeds" : "Seeds";
 }
 function plantableIcon(sel){
   if(isHiveSel(sel)) return "beehive";
+  if(isMachSel(sel)) return "item_" + MACHINES[sel.slice(5)].name;
   if(isSapSel(sel)) return "sapling_" + sel.slice(4);
   return "item_" + (CROPS[sel] ? CROPS[sel].name : "Turnip") + " Seeds";
 }
@@ -181,7 +185,7 @@ const OBJ_TITLE  = { bed:"Bed", campfire:"Campfire", stove:"Stove", fireplace:"F
   stall:"Market Stall", shipbin:"Shipping Bin", sign:"Sign", noticeboard:"Noticeboard", ledger:"The Valley Ledger",
   fountain:"Fountain", boardwalk:"Boardwalk", railcart:"Minecart", memorial:"Standing Stone", berrybush:"Berry Bush",
   frostberry:"Frostberry Bush", fruittree:"Fruit Tree", beehive:"Beehive", torch:"Torch", lamp:"Lamp", lantern:"Lantern",
-  crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift", olddoor:"A Planked Door",
+  crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift", olddoor:"A Planked Door", keg:"Keg", jar:"Preserves Jar",
   deadfall:"Deadfall", westtrail:"The Trail West", easttrail:"The Trail Back", waystone:"Waystone", hearttree:"The Heart of the Forest",
   ancient:"Ancient Tree" };
 function npcAtTile(tx,ty){ if(!curMap||!curMap.npcs) return null;
@@ -279,7 +283,7 @@ function useTool(){
   }
   else if(tool === "Seeds"){
     // a tree or a hive goes in open ground, not a furrow, and it stays there for good
-    if(isSapSel(state.seedSel) || isHiveSel(state.seedSel)){ plantPermanent(tx, ty); return; }
+    if(isSapSel(state.seedSel) || isHiveSel(state.seedSel) || isMachSel(state.seedSel)){ plantPermanent(tx, ty); return; }
     const c = CROPS[state.seedSel];
     if(skillLvl("Farming") < c.lvl){ toast(`Need Farming ${c.lvl} for ${c.name}.`, "#ff8a7a"); playSfx("error"); return; }
     if(!c.seasons.includes(curSeason())){ toast(`${c.name} only grows in ${c.seasons.join(" & ")}.`, "#ff8a7a"); playSfx("error"); return; }
@@ -292,7 +296,7 @@ function useTool(){
   }
   else if(tool === "Axe"){
     // an orchard tree or a hive can be dug up and carried off — so a misplacement is never forever
-    if(obj && (obj.kind === "fruittree" || obj.kind === "beehive")){ digUp(tx, ty, obj); return; }
+    if(obj && (obj.kind === "fruittree" || obj.kind === "beehive" || MACHINES[obj.kind])){ digUp(tx, ty, obj); return; }
     // the deadfall — the grove's door west. Chopping THROUGH it is the way deeper, and the
     // door pays you: wood and XP on the fell. Its level req is the next ring's soft gate.
     if(obj && obj.kind === "deadfall"){
@@ -466,6 +470,31 @@ function interact(){
         const n = obj.honey; obj.honey = 0;
         give("Honey", n); addXP("Farming", 12*n); bump("harvested", n);
         playSfx("get"); pSparkle(tx*TILE+8, ty*TILE, "#e8a83a", 6*n);
+        return;
+      }
+      case "keg": case "jar": {
+        const M = MACHINES[obj.kind];
+        if(obj.ready){                                        // collect the finished product
+          const prod = M.product(obj.item);
+          give(prod, 1); addXP("Farming", 14); bump("harvested");
+          delete obj.item; delete obj.days; delete obj.ready;
+          playSfx("get"); pSparkle(tx*TILE+8, ty*TILE, "#ffd98a", 10);
+          return;
+        }
+        if(obj.item){                                         // still working
+          toast(`The ${obj.item.toLowerCase()} needs ${M.days - obj.days} more ${M.days-obj.days===1?"night":"nights"}.`, "#cbb98f");
+          return;
+        }
+        // empty: load the best growable you're carrying — one button, no menus (cozy contract)
+        let best = null;
+        for(const it in state.inv){
+          if(state.inv[it] > 0 && machineLoadable(it) && (!best || (ITEM_SELL[it]||0) > (ITEM_SELL[best]||0))) best = it;
+        }
+        if(!best){ toast("It wants something grown — a crop or an orchard fruit."); playSfx("error"); return; }
+        take(best);
+        obj.item = best; obj.days = 0; obj.ready = false;
+        toast(`The ${M.name.toLowerCase()} takes your ${best.toLowerCase()}. ${M.days} nights.`, "#cbb98f");
+        playSfx("plant"); pPuff(tx*TILE+8, ty*TILE+4, "#cbb98f", 5);
         return;
       }
       case "wrack": {                                  // what the storm took, the sea returns
@@ -887,6 +916,7 @@ function newDay(){
   }
   respawnNodes(farm);               // after the day rolls, so it sees the season you wake into
   const orchard = tendOrchard(farm);// trees age; the ones in season set fruit; the hives fill
+  const cellared = tendCellar(farm);// the kegs and jars age their loads one night
   const built = completeProjects(); // Rowan's crews worked through the night
   applyProjects(farm);              // re-try any placement a crop was sitting on yesterday
   rollWeather();                    // today becomes what was forecast last night; tomorrow is re-rolled
@@ -894,7 +924,7 @@ function newDay(){
   if(state.weather === "rain"){ for(let i=0;i<W*H;i++) if(farm.tiles[i]===T.TILLED) farm.tiles[i]=T.WATERED; }
   state.flags.stormWrack = wasStorm;   // one day only; the beach regenerates nightly
   saveGame();
-  return { grew, ready, rain: state.weather === "rain", withered, season: seasonChanged ? newSeason : null,
+  return { grew, ready, cellared, rain: state.weather === "rain", withered, season: seasonChanged ? newSeason : null,
            spouse: spouseTended, built, weather: state.weather, forecast: state.forecast, wrack: wasStorm,
            fruited: orchard.fruited, honeyed: orchard.honeyed };
 }
@@ -917,6 +947,10 @@ function digUp(tx, ty, obj){
     if(obj.honey > 0){ give("Honey", obj.honey); }
     give("Beehive", 1, true);
     toast("You lift the hive. The bees will settle wherever you set it down.", "#e8a83a");
+  } else if(MACHINES[obj.kind]){
+    if(obj.item) give(obj.item, 1);                 // nothing is ever taken: the load comes back out
+    give(MACHINES[obj.kind].name, 1, true);
+    toast(`You heft the ${MACHINES[obj.kind].name.toLowerCase()}${obj.item ? " — its load comes back out unspoiled" : ""}.`, "#cbb98f");
   } else {
     const t = FRUIT_TREES[obj.type];
     if(obj.fruit > 0 && t){ give(t.fruit, obj.fruit); }
@@ -945,6 +979,22 @@ function plantPermanent(tx, ty){
   const hive = isHiveSel(state.seedSel);
   if(hive && Object.values(curMap.objects).filter(o => o.kind === "beehive").length >= HIVE_MAX){
     toast("Four hives is all the valley's flowers can carry."); playSfx("error"); return; }
+  const mach = isMachSel(state.seedSel) ? state.seedSel.slice(5) : null;   // "mach:keg" / "mach:jar"
+  if(mach){
+    const M = MACHINES[mach];
+    if(Object.values(curMap.objects).filter(o => o.kind === mach).length >= M.max){
+      toast(`${M.max} ${M.name.toLowerCase()}s is plenty for one cellar.`); playSfx("error"); return; }
+    if((state.inv[M.name]||0) < 1){ toast("You don't have one."); playSfx("error"); return; }
+    if(!spendEnergy(2)) return;
+    take(M.name);
+    curMap.objects[key(tx,ty)] = { kind:mach };   // empty until you load it (interact with a crop in your bag)
+    setTile(tx,ty, T.GRASS);
+    toast(`The ${M.name.toLowerCase()} is set. Bring it something grown.`, "#cbb98f");
+    addXP("Farming", 20); playSfx("plant");
+    pSparkle(tx*TILE+8, ty*TILE+8, "#cbb98f", 10);
+    normalizeSeedSel(); refreshHotbar(); refreshHUD();
+    return;
+  }
   const sap = hive ? null : FRUIT_TREES[state.seedSel.slice(4)];
   if(!hive && !sap){ toast("Nothing to plant."); playSfx("error"); return; }
   if((state.inv[hive ? "Beehive" : sap.name] || 0) < 1){ toast("You don't have one."); playSfx("error"); return; }
@@ -984,6 +1034,19 @@ function hiveYield(farm, hx, hy){
 }
 
 // runs each night, after the season has rolled
+// the Cellar works while you sleep: every loaded keg/jar ages one night; done means ready.
+function tendCellar(farm){
+  let readied = 0;
+  for(const k0 in farm.objects){
+    const o = farm.objects[k0];
+    const M = MACHINES[o.kind];
+    if(!M || !o.item || o.ready) continue;
+    o.days = (o.days||0) + 1;
+    if(o.days >= M.days){ o.ready = true; readied++; }
+  }
+  return readied;
+}
+
 function tendOrchard(farm){
   let fruited = 0, honeyed = 0;
   for(const k0 in farm.objects){
