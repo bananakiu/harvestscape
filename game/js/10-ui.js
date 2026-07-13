@@ -492,7 +492,7 @@ function renderJournal(){
   if(tab === "map"){ renderWorldMap(b); return; }        // draws + hydrates itself
   let html = "";
   if(tab === "quests")        html = journalQuestsHtml();
-  else if(tab === "calendar") html = renderAlmanac();
+  else if(tab === "calendar") html = renderCalendarHtml();
   else if(tab === "ledger")   html = renderLedger();
   else                        html = renderCollectionHtml();
   b.innerHTML = html;
@@ -530,10 +530,10 @@ function journalQuestsHtml(){
   html += renderPages();
   return html;
 }
-// Ledger tab: the valley's civic works, payable from here (Restorations now; Rowan's Projects fold in next).
+// Ledger tab: the valley's unfinished work, all payable from here — the Restorations pledges plus
+// Rowan's civic projects, once two separate panels, now one page.
 function renderLedger(){
-  const r = renderRestorations();
-  return r || `<div class="locked">No restorations found yet — the Guild's old works reveal themselves as you explore.</div>`;
+  return `<div class="secHead">📜 The Valley Ledger</div>` + renderRestorations() + projectsRowsHtml();
 }
 // Collection tab: the discovery museum, promoted out of its old collapsed <details> into a full page.
 function renderCollectionHtml(){
@@ -630,42 +630,60 @@ function rereadPage(n){
 }
 
 // ---- the almanac: what's coming, and what you've already seen this year ----
-function renderAlmanac(){
-  const today = yearSlot(curSeason(), dayOfSeason());
-  const row = (icon, name, season, day, done, note) => {
-    const slot = yearSlot(season, day);
-    const isToday = slot === today;
-    const col = done ? "var(--ink-soft)" : isToday ? "var(--gold-hi)" : "var(--parch)";
-    return `<div class="obj" style="color:${col}">${done?"✔":icon} ${name}` +
-      `<span style="color:var(--ink-soft);font-size:.85em;"> — ${season} ${day}${isToday?" · today!":""}</span>` +
-      (note?`<div style="color:var(--ink-soft);font-size:.8em;margin-left:1.1em;">${note}</div>`:"") + `</div>`;
-  };
-  // ---- the sky, and what it's offering ----
+// Calendar tab: the flat year-long almanac list is now a Harvest Moon month grid — a 7×4 board of
+// the selected season's 28 days, festivals and birthdays marked in place so you can read "what's on
+// THIS season" at a glance, with the sky at the top and Bram's legend ledger below.
+let calSeason = null;
+function selectCalSeason(s){ calSeason = s; playSfx("select"); renderJournal(); }
+function renderCalendarHtml(){
+  if(calSeason === null) calSeason = curSeason();
   const wNow = weatherInfo(state.weather), wNext = weatherInfo(state.forecast || "clear");
-  let h = `<div class="jq"><h3 style="color:var(--gold-hi)">🌦 The Sky</h3>`;
-  h += `<div class="obj" style="color:${wNow.tone}">${wNow.icon} Today — ${wNow.name}` +
-       `<div style="color:var(--ink-soft);font-size:.82em;margin-left:1.1em;">${wNow.offer}</div></div>`;
-  h += `<div class="obj" style="color:${wNext.tone}">${wNext.icon} Tomorrow — ${wNext.name}` +
-       `<div style="color:var(--ink-soft);font-size:.82em;margin-left:1.1em;">${wNext.offer}</div></div>`;
-  h += `<div class="desc" style="margin-top:.35em;font-size:.85em;">Rain waters your fields. <b>Snow does not</b> — the ground is frozen, and a frostbloom still wants the can.</div>`;
-  h += `</div>`;
-
-  h += `<div class="jq"><h3 style="color:var(--gold-hi)">📅 Almanac — Year ${YEAR()}</h3>`;
-  h += `<div class="desc" style="margin-bottom:.3em;">The valley keeps its own calendar. Be on the coast for a festival; bring a gift on a birthday.</div>`;
-  for(const f of FESTIVALS) h += row("✦", f.name, f.season, f.day, festivalDoneThisYear(f), f.blurb);
+  // ---- the sky ----
+  let h = `<div class="skyRow">` +
+    `<span class="skyChip" style="border-color:${wNow.tone}"><b style="color:${wNow.tone}">${wNow.icon} Today</b> ${wNow.name}</span>` +
+    `<span class="skyChip" style="border-color:${wNext.tone}"><b style="color:${wNext.tone}">${wNext.icon} Tomorrow</b> ${wNext.name}</span></div>`;
+  h += `<div class="desc muted" style="margin:.1em 0 .5em;font-size:.82em;">${wNow.offer}</div>`;
+  // ---- season selector ----
+  h += `<div class="tabs calTabs">` + SEASONS.map(s =>
+    `<div class="tab ${s===calSeason?"active":""}" onclick="selectCalSeason('${s}')">${s}</div>`).join("") + `</div>`;
+  // ---- index this season's marked days ----
+  const ev = {};
+  const put = (day, cls, glyph, name, blurb, done) => { ev[day] = { cls, glyph, name, blurb, done }; };
+  for(const f of FESTIVALS) if(f.season === calSeason) put(f.day, "fest", "✦", f.name, f.blurb, festivalDoneThisYear(f));
   if(state.flags.anniversaryDay != null){
-    const s = SEASONS[Math.floor((state.flags.anniversaryDay-1)/SEASON_DAYS)];
-    const d = ((state.flags.anniversaryDay-1) % SEASON_DAYS) + 1;
-    h += row("🏮", "The Lantern Festival", s, d, !!state.flags["did_anniversary_"+YEAR()], "The night the valley woke. Every year, on the coast.");
+    const aS = SEASONS[Math.floor((state.flags.anniversaryDay-1)/SEASON_DAYS)];
+    const aD = ((state.flags.anniversaryDay-1) % SEASON_DAYS) + 1;
+    if(aS === calSeason) put(aD, "fest", "🏮", "The Lantern Festival", "The night the valley woke. Every year, on the coast.", !!state.flags["did_anniversary_"+YEAR()]);
   }
-  h += `</div><div class="jq"><h3 style="color:var(--rose)">🎂 Birthdays</h3>`;
-  for(const id in BIRTHDAYS){ const b = BIRTHDAYS[id];
-    h += row("🎂", NPCDEF[id].name, b.season, b.day, !!state.flags["bday_"+id+"_"+YEAR()], null); }
+  for(const id in BIRTHDAYS){ const b = BIRTHDAYS[id]; if(b.season === calSeason)
+    put(b.day, "bday", "🎂", NPCDEF[id].name + "'s birthday", "Bring a gift they love — it counts for far more today.", !!state.flags["bday_"+id+"_"+YEAR()]); }
+  const todaySlot = yearSlot(curSeason(), dayOfSeason());
+  // ---- the 28-day grid ----
+  h += `<div class="calGrid">`;
+  for(let d=1; d<=SEASON_DAYS; d++){
+    const e = ev[d], isToday = yearSlot(calSeason, d) === todaySlot;
+    let cls = "calCell";
+    if(e){ cls += " mark " + e.cls; if(e.done) cls += " done"; }
+    if(isToday) cls += " today";
+    h += `<div class="${cls}"${e?` title="${escapeHtml(e.name)}"`:""}><span class="calNum">${d}</span>${e?`<span class="calDot">${e.glyph}</span>`:""}</div>`;
+  }
   h += `</div>`;
-
-  // ---- Bram's ledger of legends ----
+  // ---- what's on, this season ----
+  const days = Object.keys(ev).map(Number).sort((a,b)=>a-b);
+  if(days.length){
+    h += `<div class="secHead" style="margin-top:.6em;">${calSeason} · Year ${YEAR()}</div>`;
+    for(const d of days){ const e = ev[d];
+      h += `<div class="obj ${e.done?"done":""}"><b style="color:${e.cls==="bday"?"var(--rose)":"var(--gold-hi)"}">${e.glyph} ${e.name}</b>` +
+        `<span class="muted" style="font-size:.85em;"> — ${calSeason} ${d}${e.done?" · done this year":""}</span>` +
+        (e.blurb?`<div class="muted" style="font-size:.82em;margin-left:1.1em;">${e.blurb}</div>`:"") + `</div>`;
+    }
+  } else h += `<div class="desc muted" style="text-align:center;">A quiet season — nothing on the calendar.</div>`;
+  return h + bramLedgerHtml();
+}
+// Bram's ledger of the five legendary fish — kept from the old almanac, now under the Calendar tab.
+function bramLedgerHtml(){
   const allLanded = legendsCaught() >= LEGENDS.length;
-  h += `<div class="jq"><h3 style="color:var(--blue)">🎣 Bram's Ledger — ${legendsCaught()}/${LEGENDS.length} landed</h3>`;
+  let h = `<div class="jq" style="margin-top:.7em;"><h3 style="color:var(--blue)">🎣 Bram's Ledger — ${legendsCaught()}/${LEGENDS.length} landed</h3>`;
   h += allLanded
     ? `<div class="desc" style="margin-bottom:.3em;color:var(--gold-hi)">All five landed. ${state.flags.huntCrowned ? "Bram's oilskin is yours — the fish come faster, and the storm is yours to fish." : "Go and see Bram."}</div>`
     : `<div class="desc" style="margin-bottom:.3em;">Five fish that rise only when everything lines up. Bram tells you one for every heart.</div>`;
@@ -680,18 +698,20 @@ function renderAlmanac(){
 }
 
 // ---- Rowan's ledger: the valley's unfinished work ----
-function openProjects(){ openPanel("projPanel", renderProjects); }
-function renderProjects(){
-  const panel = $("projPanel"); if(panel.classList.contains("hidden")) return;
-  const b = panel.querySelector(".body");
-  let html = `<div class="desc" style="margin-bottom:.5em;color:var(--ink-soft);">` +
-    `“Coin is only stored work, child. Spend it and the valley remembers.” — Rowan</div>`;
+// Rowan's guild-desk ledger and the Journal's Restorations were two names for one idea — funding the
+// valley's unfinished work — under two panels. They're now one Ledger tab. The desk opens the Journal
+// there; renderProjects() survives only as a re-render shim for fundProject() (in 14-story.js, which
+// this session must not edit).
+function openProjects(){ _panelTab["questPanel"] = "ledger"; openPanel("questPanel", renderJournal); }
+function renderProjects(){ if(openPanels.has("questPanel") && _panelTab["questPanel"] === "ledger") renderJournal(); }
+function projectsRowsHtml(){
+  let html = `<div class="secHead">🔨 Rowan's Ledger</div>`;
+  html += `<div class="desc" style="margin-bottom:.4em;color:var(--ink-soft);">“Coin is only stored work, child. Spend it and the valley remembers.” — Rowan</div>`;
   for(const p of PROJECTS){
     const done = projectDone(p.id), pending = projectPending(p.id);
     const cost = Object.entries(p.items).map(([it,n]) =>
       `<span style="color:${(state.inv[it]||0)>=n?"var(--parch)":"#c98a6a"}">${n}× ${it}</span>`).join(" · ");
     const goldOk = state.gold >= p.gold;
-    // the .sub spans are inline in the shop; here each wants its own line
     html += `<div class="row"><span class="lead"><span>` +
       `<span style="display:block;color:${done?"var(--gold-hi)":"var(--parch)"}">${done?"✔ ":pending?"🔨 ":""}${p.name}</span>` +
       `<span class="sub" style="display:block;margin:.1em 0;">${done ? p.done : pending ? "The work begins at dawn." : p.blurb}</span>` +
@@ -703,9 +723,9 @@ function renderProjects(){
         `<button class="buy" ${canFund(p)?"":"disabled"} onclick="fundProject('${p.id}')">fund</button></span>`;
     html += `</div>`;
   }
-  const left = PROJECTS.filter(p=>!projectDone(p.id)).length;
-  if(!left) html += `<div style="margin-top:.6em;text-align:center;color:var(--gold-hi);">✦ Every page of the ledger is struck through. ✦</div>`;
-  b.innerHTML = html;
+  if(!PROJECTS.filter(p=>!projectDone(p.id)).length)
+    html += `<div style="margin-top:.4em;text-align:center;color:var(--gold-hi);">✦ Every page of the ledger is struck through. ✦</div>`;
+  return html;
 }
 
 // ---- shop ----
