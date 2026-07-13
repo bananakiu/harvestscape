@@ -436,6 +436,11 @@ body{
 .secHead{ color:var(--gold-hi); font-size:1.02em; letter-spacing:.02em; margin:.1em 0 .5em; }
 .muted{ color:var(--ink-soft); }
 
+/* ---- micro-interactions: everything you can tap answers the press (juice 8.2) ---- */
+.tab, .museItem.has, .invTile, .skillCell, .wmNode, .pclose, .calCell.mark{ transition:transform .07s ease, filter .12s ease; }
+.tab:hover, .calCell.mark:hover{ filter:brightness(1.12); }
+.tab:active, .museItem.has:active, .invTile:active, .skillCell:active, .pclose:active, .calCell.mark:active{ transform:translateY(.08em); }
+
 /* ---- Calendar tab: a Harvest Moon month grid ---- */
 .skyRow{ display:flex; gap:.4em; flex-wrap:wrap; margin-bottom:.15em; }
 .skyChip{

@@ -70,6 +70,7 @@ function pSplash(x,y,n=10){
     size:1, color:chance(.5)?"#a9d8f5":"#7fbce8", type:"rect" });
 }
 function pSparkle(x,y,color="#fff6b0",n=8){
+  pGlow(x, y, color, 8);   // a soft bloom under the stars — level-ups and gem finds feel like a find
   for(let i=0;i<n;i++) addP({ x, y, vx:rand(-22,22), vy:rand(-34,-6), grav:12, life:0, max:rand(.5,.9),
     size:rand(1,2)|0, color, type:"star" });
 }
@@ -93,12 +94,19 @@ function floatText(x,y,text,color="#fff"){
   for(const f of floaters){ if(f.life < 0.4 && Math.abs(f.x-x) < 28 && Math.abs(f.y-y) < 11){ y -= 12; } }
   floaters.push({ x, y, text, color, life:0, max:1.1, vy:-18 });
 }
-// an item icon that leaps out and arcs up (harvest/gather payoff)
+// a soft additive bloom — a warm glow that expands and fades. The cozy alternative to a hard flash.
+function pGlow(x, y, color="#ffe6a0", r=9){
+  addP({ x, y, vx:0, vy:0, grav:0, life:0, max:.42, size:r, color, type:"glow" });
+}
+// an item icon that leaps out and arcs up (harvest/gather payoff). The design bible calls the
+// item-get loop the emotional core of a farming game, so it's the one place to over-invest: the
+// icon pops and hangs, a warm glow blooms behind it, and a few gold stars spark off on collect.
 function pItemPop(x, y, spriteName){
   if(!spr[spriteName]) return;
-  // a gentler arc than a straight ballistic toss — it floats up, hangs a beat at the apex, then
-  // settles. The scale pop (in drawParticles) does the real "juice"; the physics just carries it.
+  pGlow(x, y - 2, "#ffe6a0", 9);
   addP({ x, y, vx:rand(-10,10), vy:-42, grav:96, life:0, max:1.0, size:16, color:"#fff", type:"icon", spriteName });
+  for(let i=0;i<5;i++) addP({ x:x+rand(-4,4), y:y+rand(-4,2), vx:rand(-26,26), vy:rand(-46,-16),
+    grav:34, life:0, max:rand(.35,.6), size:1, color:chance(.5)?"#fff6b0":"#ffd86a", type:"star" });
 }
 
 function updateParticles(dt){
@@ -119,6 +127,16 @@ function drawParticles(){
     const k = 1 - p.life/p.max;
     ctx.globalAlpha = clamp(k+.15, 0, 1);
     ctx.fillStyle = p.color;
+    if(p.type==="glow"){
+      // a soft additive bloom that swells then fades — warm, never a harsh flash (cozy contract)
+      const t = p.life/p.max, rad = p.size*(0.55 + t*0.85);
+      ctx.globalAlpha = (1-t)*(1-t)*0.5;
+      ctx.globalCompositeOperation = "lighter";
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, rad, 0, 7); ctx.fill();
+      ctx.globalCompositeOperation = "source-over";
+      continue;
+    }
     if(p.type==="lantern"){
       ctx.fillStyle = "rgba(255,185,90,0.22)"; ctx.fillRect((p.x-2)|0, (p.y-2)|0, 5, 5);
       ctx.fillStyle = "#ffd98a"; ctx.fillRect((p.x-1)|0, (p.y-1)|0, 2, 3);
