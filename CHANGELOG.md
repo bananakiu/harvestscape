@@ -43,12 +43,22 @@ feedback *primitives*, so it propagates to every call-site automatically.
 - **Tactile menu presses** (`96e0cc8`) — `:active` translate + hover-brighten across the redesigned
   tabs, inventory/collection/skill tiles, calendar day cells and close buttons, so every tappable
   thing answers the press.
+- **Corner nudging — Celeste's movement forgiveness** (`updatePlayer` / new `cornerNudge`,
+  `07-entities.js`). Press straight into the edge of a wall or object and, if a few-pixel slip to one
+  side would clear it, you now ease that way and round the corner instead of catching — the cozy
+  "the game quietly conspires to help you succeed." Deliberately narrow (probes only ~5px, so it
+  rescues genuine corner-catches without ever drifting on a flat wall) and defensive (every write is
+  collision-checked). Accel/decel was still left out on purpose — instant response suits a top-down
+  farmer; forgiveness, not floatiness, was the goal.
 
 *Note: shake, hit-pause and per-object sway already existed at the action sites and were left as-is;
-this pass filled the gaps the bible flags (item-get sparkle, everything-that-appears juice). Movement
-accel/decel was deliberately NOT added — instant response suits a top-down farmer, and it lives in
-the shared entities file. Verified live (item-get bloom + sparkle on collect; banner halo via a
-forced-static frame, since the pane throttles the 3.2s animation); console clean.*
+this pass filled the gaps the bible flags (item-get sparkle, everything-that-appears juice, movement
+forgiveness). The one edit outside the UI files — corner nudging in the shared `07-entities.js` — was
+made while that file was idle (~15h) and committed narrowly. Verified live: item-get bloom + sparkle
+on collect; banner halo via a forced-static frame (the pane throttles the 3.2s animation); corner
+nudge fuzz-tested across 5,128 start-cells × 4 directions × 40 frames with zero wall-penetrations /
+teleports / NaNs (max 1.13px/frame), and its slip-toward-the-gap logic unit-proven on synthetic
+walls (down/up/side openings nudge correctly; a flat wall does not); console clean.*
 
 ## UI/UX sweep — tabbed Journal, a town map, a tile Backpack, a month calendar · 2026-07-13
 

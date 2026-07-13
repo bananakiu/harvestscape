@@ -22,6 +22,25 @@ function facingTile(){
 }
 function triggerSwing(){ swingT = 0.26; }
 
+// Slip the player a hair perpendicular when they're pressing straight into a corner and a small
+// slide would clear the wall — the forward move was already found blocked by the caller. Probes only
+// a few px out (no long-range drift), and never moves into a blocked cell.
+function cornerNudge(horiz, dir, sp){
+  const step = Math.min(sp, 1.4), reach = 5;
+  if(horiz){
+    const fx = state.px + Math.sign(dir)*sp;          // where the blocked forward move wanted to land
+    for(let o = step; o <= reach; o += step) for(const s of [-1, 1])
+      if(!blockedAt(fx, state.py + s*o) && !blockedAt(state.px, state.py + s*step)){
+        state.py = clamp(state.py + s*step, 8, curMap.h*TILE-3); return;
+      }
+  } else {
+    const fy = state.py + Math.sign(dir)*sp;
+    for(let o = step; o <= reach; o += step) for(const s of [-1, 1])
+      if(!blockedAt(state.px + s*o, fy) && !blockedAt(state.px + s*step, state.py)){
+        state.px = clamp(state.px + s*step, 5, curMap.w*TILE-5); return;
+      }
+  }
+}
 function updatePlayer(dt){
   if(swingT > 0) swingT -= dt;
   if(gameMode !== "play" || paused || uiBlocking() || fishing.state !== "idle"){ moving = false; return; }
@@ -43,8 +62,15 @@ function updatePlayer(dt){
   const len = Math.hypot(dx,dy) || 1;
   const sp = 68 * dt;
   const nx = state.px + dx/len*sp, ny = state.py + dy/len*sp;
-  if(!blockedAt(nx, state.py)) state.px = clamp(nx, 5, curMap.w*TILE-5);
-  if(!blockedAt(state.px, ny)) state.py = clamp(ny, 8, curMap.h*TILE-3);
+  const okX = !blockedAt(nx, state.py), okY = !blockedAt(state.px, ny);
+  if(okX) state.px = clamp(nx, 5, curMap.w*TILE-5);
+  if(okY) state.py = clamp(ny, 8, curMap.h*TILE-3);
+  // Corner nudging (Celeste's forgiveness): pressing straight into a corner, if a few-pixel slip to
+  // one side would clear the wall, ease that way so you round corners and slip through gaps without
+  // pixel-perfect aim. Only on a pure-axis press whose forward move was blocked; every write is
+  // collision-checked, so it can never push you through a wall, and it self-terminates once clear.
+  if(!okX && dx !== 0 && dy === 0) cornerNudge(true,  dx, sp);
+  else if(!okY && dy !== 0 && dx === 0) cornerNudge(false, dy, sp);
 
   walkCycle += dt * 8;
   stepTimer -= dt;
