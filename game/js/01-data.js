@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.9.0", code: 46, codename: "Plaza Life", date: "2026-07-14" };
+const VERSION = { name: "3.10.0", code: 47, codename: "The Long Climb", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.10.0", code:47, date:"2026-07-14", name:"The Long Climb", notes:[
+    { t:"new",   s:"Every skill keeps giving you new things to find, all the way up. Farming gains six late crops (Rhubarb, Melon, Artichoke, Grape, Yam, and a winter Everbloom); the coast hides four deep-water fish for master anglers (up to the Coelacanth, a living fossil)." },
+    { t:"new",   s:"The mine's deep floors now hold Cobalt and Star Metal veins, and the deepest grove ring grows Silverwood — so Mining and Woodcutting reward levels past where they used to run dry. Each new find feeds the Cellar, the Collection, gifts, and the market." },
+  ]},
   { v:"3.9.0", code:46, date:"2026-07-14", name:"Plaza Life", notes:[
     { t:"new",   s:"The village square feels lived-in now: benches and flower planters to sit among, and Tom steps out of his store for a stretch around midday — a third face in the plaza beside Maya and Pip, with a lighter word or two if you stop to chat." },
   ]},
@@ -221,6 +225,16 @@ const CROPS = {
   pumpkin:    { name:"Pumpkin",    lvl:22, days:6, seed:220, sell:400, xp:72,  shape:"gourd",  seasons:["Fall"],            pal:["#3f7a2e","#5fa03e","#ff8a2a","#ffb35a"] },
   starfruit:  { name:"Starfruit",  lvl:24, days:8, seed:450, sell:950, xp:150, shape:"star",   seasons:["Summer"],          pal:["#4f8a34","#7fbe55","#ffe25a","#fff6b0"] },
   frostbloom: { name:"Frostbloom", lvl:14, days:6, seed:180, sell:330, xp:66,  shape:"bush",   seasons:["Winter"],          pal:["#4a6a7a","#6a94a8","#a8d8f0","#e6f6ff"] },
+  // The Long Climb (v3.10): six late crops so Farming pays new CONTENT — not just perks — from L30
+  // to L90, one per rung across the old L25–99 desert. Prices sit on the g/level trend but the long
+  // grow times keep daily yield in check, and (like every crop) each auto-inherits its produce/seed
+  // sprite, ITEM_SELL, Cellar wine+jam, Tom's per-item demand, gifting, and the Collection.
+  rhubarb:    { name:"Rhubarb",    lvl:30, days:5, seed:300, sell:420,  xp:90,  shape:"tall",  seasons:["Spring"],          pal:["#4f8a34","#7fbe55","#d0454a","#f07a7e"] },
+  melon:      { name:"Melon",      lvl:40, days:7, seed:400, sell:640,  xp:125, shape:"gourd", seasons:["Summer"],          pal:["#3f7a2e","#5fa03e","#5aa84a","#8fd06a"] },
+  artichoke:  { name:"Artichoke",  lvl:52, days:6, seed:480, sell:760,  xp:145, shape:"bush",  seasons:["Fall"],            pal:["#3f7a2e","#5fa03e","#7a8a5a","#a8b87a"] },
+  grape:      { name:"Grape",      lvl:64, days:7, seed:560, sell:900,  xp:180, shape:"bush",  seasons:["Summer","Fall"],   pal:["#3f7a2e","#5fa03e","#7a4a9a","#a87ac8"] },
+  yam:        { name:"Yam",        lvl:78, days:8, seed:720, sell:1200, xp:235, shape:"root",  seasons:["Fall"],            pal:["#4f8a34","#7fbe55","#c06a3a","#e0955a"] },
+  everbloom:  { name:"Everbloom",  lvl:90, days:9, seed:900, sell:1500, xp:300, shape:"star",  seasons:["Winter"],          pal:["#4a6a7a","#6a94a8","#c8b0f0","#eaddff"] },
 };
 
 // ---- TREES ----
@@ -236,6 +250,9 @@ const TREES = {
   willow:    { name:"Willow",    lvl:30, hp:8,  xp:150, drop:"Willow Wood", n:2, pal:["#4a8a4a","#6ab86a","#3a6a3a"] },
   elderwood: { name:"Elderwood", lvl:45, hp:16, xp:260, drop:"Elder Wood",  n:2, pal:["#2c5a6a","#3f7a8a","#1e4250"] },
   heartwood: { name:"Heartwood", lvl:70, hp:24, xp:520, drop:"Heartwood",   n:2, pal:["#5a9a7a","#7ac8a0","#3f7a5c"] },
+  // The Long Climb (v3.10): the deepest-ring wood, so the axe has a live target past Heartwood (L70)
+  // — the last 30 levels were pure grind with the skills panel showing "nothing left to unlock".
+  silverwood: { name:"Silverwood", lvl:85, hp:30, xp:760, drop:"Silverwood", n:2, pal:["#9aa8b0","#c8d4dc","#6a7a86"] },
 };
 
 // ---- ORES / ROCKS ----
@@ -244,6 +261,12 @@ const ORES = {
   copper: { name:"Copper Vein", lvl:1,  hp:4,  xp:26,  drop:"Copper Ore", gem:"#e08a45", col:"#c77b3f" },
   iron:   { name:"Iron Vein",   lvl:12, hp:8,  xp:62,  drop:"Iron Ore",   gem:"#d8c4bc", col:"#bfa8a0" },
   gold:   { name:"Gold Vein",   lvl:28, hp:12, xp:145, drop:"Gold Ore",   gem:"#ffe27a", col:"#ffd75a" },
+  // The Long Climb (v3.10): two deep veins so Mining pays content past Gold (L28) — planted at L45
+  // and L70, the heart of the old 71-level dead zone. They spawn only on the deep ore table (below),
+  // so shallow floors read exactly as tuned; a low miner facing one gets the "come back stronger"
+  // gate, same as Gold today. Rock + cracked sprites auto-generate from `gem`; the drop is a sink.
+  cobalt:    { name:"Cobalt Vein",     lvl:45, hp:16, xp:240, drop:"Cobalt Ore",       gem:"#6a8ad8", col:"#4a6ac8" },
+  starmetal: { name:"Star Metal Vein", lvl:70, hp:22, xp:520, drop:"Star Metal Shard", gem:"#c8ecff", col:"#a8c8e8" },
 };
 
 // ---- FISH ----
@@ -253,6 +276,14 @@ const FISH = [
   { name:"Trout",      lvl:12, xp:55,  sell:120, pal:["#7a6a9a","#c9b0e0"] },
   { name:"Salmon",     lvl:20, xp:95,  sell:240, pal:["#d76a4a","#ffb090"] },
   { name:"Golden Koi", lvl:32, xp:190, sell:620, pal:["#ffb02a","#ffe27a"] },
+  // The Long Climb (v3.10): four deep-water fish for the L34–98 tail the audits (and the v2.0
+  // scorecard) flagged as the game's longest desert. Each is its own item, so it auto-inherits the
+  // Cooked variant, EDIBLE, the Almanac list, Tom's per-name demand, gifting, and the Collection;
+  // the `f.lvl <= level` filter in hookFish holds each back until you've grown into it.
+  { name:"Moonperch",     lvl:40, xp:220, sell:780,  pal:["#7a8ac0","#d0d8f0"] },
+  { name:"Silvergill",    lvl:55, xp:300, sell:1080, pal:["#a8b0bc","#e8ecf2"] },
+  { name:"Gulf Sturgeon", lvl:70, xp:420, sell:1300, pal:["#5a6a5a","#9ab090"] },
+  { name:"Coelacanth",    lvl:85, xp:620, sell:1800, pal:["#2f4a6a","#5a7a9a"] },   // a living fossil — the deep's trophy (trimmed from 2200 so fishing doesn't out-earn the farm base)
 ];
 
 const CROP_NAMES = new Set(Object.keys(CROPS).map(k => CROPS[k].name));
@@ -302,7 +333,9 @@ function machineLoadable(item){ return CROP_NAMES.has(item) || FRUIT_NAMES.has(i
 // Where a fish lives. The pond and the coast are different water, and the valley knows it.
 const WATER = {
   pond:  ["Sardine", "Bass", "Trout",  "Golden Koi"],   // trout are a river fish; no salmon inland
-  coast: ["Sardine", "Bass", "Salmon", "Golden Koi"],   // the salmon run comes off the sea
+  // the deep-water rarities (v3.10) rise only off the open sea, and only for anglers who've grown
+  // into them (the f.lvl filter) — so the coast stays worth casting from L34 all the way to L85
+  coast: ["Sardine", "Bass", "Salmon", "Golden Koi", "Moonperch", "Silvergill", "Gulf Sturgeon", "Coelacanth"],
 };
 
 // Five fish that rise only under exact conditions. Bram knows all five, and will tell you one
@@ -333,8 +366,8 @@ const LEGENDS = [
 const LEGEND_BY_ID = {}; LEGENDS.forEach(l => LEGEND_BY_ID[l.id] = l);
 
 // ---- SELL VALUES ----
-const ITEM_SELL = { "Wood":12, "Pine Wood":28, "Maple Wood":52, "Willow Wood":34, "Elder Wood":95, "Heartwood":210,
-  "Stone":3, "Copper Ore":30, "Iron Ore":68, "Gold Ore":165 };
+const ITEM_SELL = { "Wood":12, "Pine Wood":28, "Maple Wood":52, "Willow Wood":34, "Elder Wood":95, "Heartwood":210, "Silverwood":340,
+  "Stone":3, "Copper Ore":30, "Iron Ore":68, "Gold Ore":165, "Cobalt Ore":300, "Star Metal Shard":450 };   // shard seats just under Diamond (480) — an ore must never out-value the rarest gem
 FISH.forEach(f => { ITEM_SELL[f.name] = f.sell; ITEM_SELL["Cooked "+f.name] = Math.floor(f.sell*1.75); });
 LEGENDS.forEach(l => { ITEM_SELL[l.name] = l.sell; });   // trophies. You don't cook a Stormrider.
 for(const k in CROPS) ITEM_SELL[CROPS[k].name] = CROPS[k].sell;
@@ -624,7 +657,7 @@ const RING_TREES = {
   6:[["oak",.06],["pine",.16],["maple",.26],["willow",.30],["elderwood",.22]],
   7:[["pine",.10],["maple",.20],["willow",.28],["elderwood",.30],["heartwood",.12]],
   8:[["pine",.06],["maple",.14],["willow",.26],["elderwood",.34],["heartwood",.20]],
-  9:[["maple",.10],["willow",.22],["elderwood",.38],["heartwood",.30]],
+  9:[["maple",.08],["willow",.20],["elderwood",.34],["heartwood",.26],["silverwood",.12]],   // silverwood (WC 85) — the deepest ring's rarest timber (v3.10)
 };
 function pickRingTree(ring, r){
   const tbl = RING_TREES[clamp(ring,1,GROVE_RINGS)] || RING_TREES[1];
@@ -876,6 +909,12 @@ const EXAMINE = {
   "Pumpkin": "Big, orange, and taking up the whole cart.",
   "Starfruit": "Summer's rare prize, glowing like it knows its worth.",
   "Frostbloom": "The only flower brave enough for winter.",
+  "Rhubarb": "Tart red stalks — sour raw, wonderful with a little sugar.",
+  "Melon": "Heavy, green-ribbed, and sloshing faintly when you lift it.",
+  "Artichoke": "All armour and no apology, until you get to the heart.",
+  "Grape": "A heavy bunch, dusty-sweet, half of them gone before the cart.",
+  "Yam": "Knobbled and honest — sweetest after the first frost threatens.",
+  "Everbloom": "It flowers in deep winter and doesn't seem to know it shouldn't.",
   "Turnip Seeds": "Tiny promises of a very quick vegetable.",
   "Potato Seeds": "Little eyes, already dreaming of the dark soil.",
   "Wheat Seeds": "A handful of grain and a summer's patience.",
@@ -888,6 +927,12 @@ const EXAMINE = {
   "Pumpkin Seeds": "Pale seeds, and a promise of something enormous.",
   "Starfruit Seeds": "Rare seeds worth more than most whole crops.",
   "Frostbloom Seeds": "Seeds that sleep until the cold wakes them.",
+  "Rhubarb Seeds": "Crowns, really — plant them and stand well back.",
+  "Melon Seeds": "Flat pale seeds with a whole lazy summer inside.",
+  "Artichoke Seeds": "Spiky little things, already looking defensive.",
+  "Grape Seeds": "Pips saved from a very good year.",
+  "Yam Seeds": "Knobbly starts for a knobbly, patient root.",
+  "Everbloom Seeds": "They only ever sprout when the frost is deepest.",
   "Cherry": "Spring's sweetest, and it lasts the whole season through.",
   "Plum": "Dusky and soft, heavy with summer.",
   "Apple": "Crisp, red, and autumn in a single bite.",
@@ -896,11 +941,19 @@ const EXAMINE = {
   "Trout": "A speckled river fish, all muscle and current.",
   "Salmon": "Fresh off the sea-run, still tasting of salt.",
   "Golden Koi": "A ribbon of gold that haunts the pond at dusk.",
+  "Moonperch": "Pale and cold-eyed; it only rises where the water runs deep.",
+  "Silvergill": "So bright it seems lit from within — a mirror with fins.",
+  "Gulf Sturgeon": "Ancient, armoured, and heavier than any two ordinary fish.",
+  "Coelacanth": "A living fossil. It was old when the valley was young.",
   "Cooked Sardine": "Fried whole, and crunched from head to tail.",
   "Cooked Bass": "Firm white flakes, honestly earned.",
   "Cooked Trout": "Pan-browned and river-sweet.",
   "Cooked Salmon": "Rich and rosy — Bram's idea of a medal.",
   "Cooked Golden Koi": "Almost a shame to eat something so gold.",
+  "Cooked Moonperch": "Firm, cold-water flesh, sweeter than it has any right to be.",
+  "Cooked Silvergill": "Delicate to the point of showing off.",
+  "Cooked Gulf Sturgeon": "A steak, really. It could feed the whole plaza.",
+  "Cooked Coelacanth": "You cooked a living fossil. The valley will talk for weeks.",
   "Sunfleck": "It only shows at spring dawn. This one showed.",
   "Moonscale": "Only the summer midnight ever gives one up.",
   "Whitefin": "Comes in on the fall fog, when no one's looking.",
@@ -909,10 +962,13 @@ const EXAMINE = {
   "Wood": "Ordinary wood, still smelling faintly of the tree.",
   "Pine Wood": "Pale and resinous; it never quite loses its scent.",
   "Maple Wood": "Warm reddish grain, prized by those who build to last.",
+  "Silverwood": "Pale as moonlight and lighter than it looks — the deep grove's rarest timber.",
   "Stone": "A plain grey stone, patient as the valley itself.",
   "Copper Ore": "Dull green-brown rock hiding a hint of shine.",
   "Iron Ore": "Heavier than it looks, and rusting already.",
   "Gold Ore": "Even in the rough, it catches the lantern light.",
+  "Cobalt Ore": "A cold blue metal from the deep floors — it rings when you tap it.",
+  "Star Metal Shard": "A splinter of the vault's own metal, humming with a faint blue light.",
   "Amethyst": "A purple gem the mine kept to itself for ages.",
   "Topaz": "Warm as bottled afternoon sun.",
   "Emerald": "Green as the valley on its best morning.",

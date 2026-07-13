@@ -22,6 +22,54 @@
 
 ---
 
+## v3.10.0 — "The Long Climb" · 2026-07-14 · tag `v3.10.0`
+
+Version code **47**. The game's deepest, longest-standing design gap — the one the docs name as
+its core tension: *keeping the RuneScape 1–99 grind as rich as the cozy base.* A 5-agent skill
+audit measured it precisely and it was stark: **every skill hit its content ceiling in the first
+quarter, then ground 60–75 levels on passive perks alone.** Farming's last crop was Starfruit at
+L24; Mining's last vein Gold at L28; Fishing's last catch at L34; Cooking at L40. Three-quarters of
+each 1–99 climb unlocked *nothing new*. This fills the four gathering deserts.
+
+### Added — new content up the whole ladder (all data-driven; every item auto-inherits its sprite,
+sell price, Cellar wine/jam, Tom's per-item demand, gifting, examine, the Collection, and the
+skills-panel "next unlock" — the systems already generalize over CROPS/FISH/ORES/TREES)
+- **Farming — six late crops** across all four seasons: Rhubarb (L30, Spring), Melon (L40, Summer),
+  Artichoke (L52, Fall), Grape (L64, Summer/Fall), Yam (L78, Fall), and **Everbloom (L90, Winter)** —
+  giving Winter a second crop and the ladder a near-cap rung. One per step across the old L25–99
+  dead zone. (`CROPS`, `01-data.js`.)
+- **Fishing — four deep-water fish** off the open sea (`WATER.coast`), held back by the existing
+  `f.lvl` filter: Moonperch (L40), Silvergill (L55), Gulf Sturgeon (L70), and **Coelacanth (L85), a
+  living-fossil trophy** — refilling the game's single longest desert (the v2.0 scorecard's
+  "Fishing 35–98"). (`FISH`, `01-data.js`.)
+- **Mining — two deep veins**: Cobalt (L45) and Star Metal (L70), spawning on extended `oreTable`
+  depth branches (floor 15+/25+), so diving deep *and* levelling both finally pay. A low miner
+  facing one gets the honest "come back stronger" gate. (`ORES` + `genMine`, `13-content.js`.)
+- **Woodcutting — Silverwood** (L85), the deepest grove ring's rarest timber (`RING_TREES[9]`), so
+  the axe has a live target past Heartwood (L70) — the skills panel no longer reads "nothing left
+  to unlock" for the last 30 levels.
+- ~50 supporting touches: `ITEM_SELL` for the new drops, museum **Materials** slots for the ores/wood
+  (obtainable-source + collection-slot in the *same change*, per the v3.8 rule), examine lines for
+  all 13 items + seeds/cooked variants, and thematic gift ties (Rowan ← Star Metal Shard/Cobalt,
+  Bram ← Coelacanth/Gulf Sturgeon, Pip ← Melon, Maya ← Grape, Tom ← Silverwood).
+
+### Review-driven (a 3-lens adversarial pass ran before commit — regression cleared the code as
+crash-free and save-safe: oreTable indexing recomputes per call, RING_TREES sums to 1, museum items
+all obtainable, no new save state. These `low` findings were fixed)
+- **Silverwood's gift tie was dead** — the comment claimed `"Silverwood".includes("Wood")` covered
+  it, but `includes` is case-sensitive and that's `false`. Added Silverwood (and Heartwood, which
+  had the same latent gap) to Tom's likes explicitly.
+- **Star Metal Shard (600g) out-sold Diamond (480g)** — an ore beating the rarest gem undercut the
+  "gems are a treat" framing (the 2026-07-12 nerf). Trimmed to **450g**, just under Diamond.
+- **The top deep fish ran hot** — Coelacanth 2200→**1800**, Gulf Sturgeon 1500→**1300**, so a coast
+  camp doesn't out-earn a tended farm. *(Backlog, out of scope: raw and cooked fish are independent
+  demand pools; a shared pool would tighten the endgame further.)*
+
+*Verified live end-to-end: all 13 items plant/mine/catch/chop correctly; every sprite auto-generates
+(zero `undefined`); level gates enforce and message cleanly; Cellar products, Collection (74→87
+slots), examine, and gifts all interlock; old saves load unchanged (data-only). Collection screenshot
+shows the new crops/fish rendering distinctly; console clean. Atlas snapshot v3.10.0.*
+
 ## v3.9.0 — "Plaza Life" · 2026-07-14 · tag `v3.9.0`
 
 Version code **46**. The village plaza was a well-built stage with almost no life on it — the

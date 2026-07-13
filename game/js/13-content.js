@@ -124,10 +124,15 @@ function genMine(m){
   for(let y=1;y<m.h-1;y++) for(let x=1;x<m.w-1;x++) if(m.tiles[y*W+x]===T.MFLOOR) floors.push([x,y]);
   // Deeper is always richer — the deep never recycles back to stone, so a fog/storm day rewards
   // pushing DOWN rather than camping a shallow floor (which used to be the perverse optimum).
+  // The Long Climb (v3.10): the table keeps improving past floor 10 now, so diving deep is worth it
+  // and the two new veins (Cobalt L45 / Star Metal L70) have a home — a reason to push down AND to
+  // keep levelling Mining to crack what you find down there.
   const oreTable = depth<3  ? ["stone","copper","copper","iron"]
                  : depth<6  ? ["copper","iron","iron","gold"]
                  : depth<10 ? ["iron","iron","gold","gold"]
-                 :            ["iron","gold","gold","gold"];
+                 : depth<15 ? ["iron","gold","gold","cobalt"]
+                 : depth<25 ? ["gold","gold","cobalt","cobalt","starmetal"]
+                 :            ["gold","cobalt","cobalt","starmetal","starmetal"];
   // The weather above reaches down here. A storm drives the veins, and fog is when the seams
   // "read" — the old miners' word for it. Both make the stone generous, for one day only.
   const oreBoost = isStorm() ? 1.5 : 1;
@@ -536,15 +541,15 @@ function beachEvent(){
 // ======================================================================
 const NPCDEF = {
   maya:  { name:"Maya",        portrait:"port_maya",  spr:"maya",  romance:true,
-           loved:["Strawberry","Golden Koi","Diamond","Pearl"], liked:["Cooked","Starfruit","Carrot","Coral"] },
+           loved:["Strawberry","Golden Koi","Diamond","Pearl"], liked:["Cooked","Starfruit","Carrot","Coral","Grape"] },
   tom:   { name:"Tom",         portrait:"port_tom",   spr:"tom",
-           loved:["Pumpkin","Gold Ore"], liked:["Wood","Copper Ore","Iron Ore"] },
+           loved:["Pumpkin","Gold Ore"], liked:["Wood","Copper Ore","Iron Ore","Silverwood","Heartwood"] },   // single-word woods need naming (includes() is case-sensitive; "Silverwood" ⊅ "Wood")
   rowan: { name:"Elder Rowan", portrait:"port_rowan", spr:"rowan",
-           loved:["Star Metal","Diamond"], liked:["Emerald","Ruby","Starfruit","Guild Seal"] },
+           loved:["Star Metal","Diamond"], liked:["Emerald","Ruby","Starfruit","Guild Seal","Cobalt Ore"] },   // "Star Metal" already covers the Shard
   bram:  { name:"Bram",        portrait:"port_bram",  spr:"bram",  romance:true,
-           loved:["Golden Koi","Pearl"], liked:["Salmon","Coral","Cooked Salmon"] },
+           loved:["Golden Koi","Pearl","Coelacanth"], liked:["Salmon","Coral","Cooked Salmon","Gulf Sturgeon"] },
   pip:   { name:"Pip",         portrait:"port_pip",   spr:"pip",
-           loved:["Amethyst","Berry Bun"], liked:["Shell","Starfruit","Topaz","Wool"] },
+           loved:["Amethyst","Berry Bun"], liked:["Shell","Starfruit","Topaz","Wool","Melon"] },
   elias: { name:"Elias",       portrait:"port_elias", spr:"elias",
            loved:["Golden Koi","Pearl","Prize Fleece"], liked:["Trout","Salmon","Coral","Cooked","Wool"] },
 };

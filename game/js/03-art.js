@@ -211,6 +211,7 @@ const TREE_FOLIAGE = {
   willow:    { Spring:["#4a8a4a","#6ab86a","#3a6a3a"], Summer:["#428242","#5cac5c","#326232"], Fall:["#a89a3a","#c8ba52","#7a6e28"], Winter:null },
   elderwood: { Spring:["#2c5a6a","#3f7a8a","#1e4250"], Summer:["#2c5a6a","#3f7a8a","#1e4250"], Fall:["#2c5a6a","#3f7a8a","#1e4250"], Winter:["#2c5a6a","#3f7a8a","#1e4250"] },   // evergreen, like pine
   heartwood: { Spring:["#5a9a7a","#7ac8a0","#3f7a5c"], Summer:["#5a9a7a","#7ac8a0","#3f7a5c"], Fall:["#5a9a7a","#7ac8a0","#3f7a5c"], Winter:["#5a9a7a","#7ac8a0","#3f7a5c"] },   // it doesn't sleep
+  silverwood: { Spring:["#8aa0ac","#b8ccd6","#647680"], Summer:["#8aa0ac","#b8ccd6","#647680"], Fall:["#8aa0ac","#b8ccd6","#647680"], Winter:["#9ab0bc","#cad8e0","#6a7c88"] },   // pale silver foliage, brightening in the snow (v3.10)
 };
 function buildTrees(){
   for(const id in TREES){
@@ -529,12 +530,12 @@ function buildItems(){
   });
   // wood, ores, stone, fish
   const woodCols = { "Wood":"#a0774a", "Pine Wood":"#8a9a7a", "Maple Wood":"#c08a5a",
-    "Willow Wood":"#8ab06a", "Elder Wood":"#5a8a9a", "Heartwood":"#9ac8ae" };
+    "Willow Wood":"#8ab06a", "Elder Wood":"#5a8a9a", "Heartwood":"#9ac8ae", "Silverwood":"#b8ccd6" };
   for(const w in woodCols){ mkSpr("item_"+w, 16, 16, g => {
     px(g,3,7,10,4,woodCols[w]); px(g,3,7,10,1,shade(woodCols[w],1.2)); px(g,3,10,10,1,shade(woodCols[w],.7));
     px(g,3,8,1,2,shade(woodCols[w],.6)); px(g,12,8,1,2,shade(woodCols[w],.6)); px(g,4,4,10,4,woodCols[w]); px(g,4,4,10,1,shade(woodCols[w],1.2)); }); }
   mkSpr("item_Stone", 16, 16, g => { px(g,4,6,8,7,"#9a9a9a"); px(g,3,8,10,4,"#8a8a8a"); px(g,5,5,5,3,"#a8a8a8"); px(g,4,12,9,1,"#6a6a6a"); });
-  const oreCols = { "Copper Ore":"#c77b3f", "Iron Ore":"#bfa8a0", "Gold Ore":"#ffd75a" };
+  const oreCols = { "Copper Ore":"#c77b3f", "Iron Ore":"#bfa8a0", "Gold Ore":"#ffd75a", "Cobalt Ore":"#5a7ad0", "Star Metal Shard":"#c8ecff" };
   for(const o in oreCols){ mkSpr("item_"+o, 16, 16, g => {
     px(g,4,6,8,7,"#7d7d7d"); px(g,3,8,10,4,"#6e6e6e"); px(g,5,5,5,3,"#8a8a8a");
     px(g,6,8,2,2,oreCols[o]); px(g,9,9,2,2,oreCols[o]); px(g,7,10,1,1,shade(oreCols[o],1.3)); }); }

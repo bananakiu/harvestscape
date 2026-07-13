@@ -475,7 +475,7 @@ const MUSEUM = [
   { name:"The Shore",     items:()=>Object.keys(SHORE) },
   { name:"Farm & Forage", items:()=>["Field Salad","Frostberry","Berry Bun","Honey","Egg","Large Egg","Milk","Large Milk","Wool","Prize Fleece"] },   // Wool obtainable since v3.8 (sheep + shears); Prize Fleece is its friendship-tier prize
   { name:"The Kitchen",   items:()=>RECIPES.map(r=>r.name) },
-  { name:"Materials",     items:()=>["Wood","Pine Wood","Maple Wood","Willow Wood","Elder Wood","Heartwood","Stone","Copper Ore","Iron Ore","Gold Ore"] },
+  { name:"Materials",     items:()=>["Wood","Pine Wood","Maple Wood","Willow Wood","Elder Wood","Heartwood","Silverwood","Stone","Copper Ore","Iron Ore","Gold Ore","Cobalt Ore","Star Metal Shard"] },
   { name:"The Canopy",    items:()=>Object.keys(CHARMS) },
 ];
 // (The Collection tile grid now lives in renderCollectionHtml, the Journal's Collection tab.)
