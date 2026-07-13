@@ -22,6 +22,34 @@
 
 ---
 
+## Juice & game feel — the item-get loop, tactile menus, the level-up "ta-da" · 2026-07-13
+
+Unversioned presentation pass (a parallel session owns the version cut + data files; **fold into
+the next release's player notes**). Target: the one design grade every audit parked at **B** while
+the rest climbed to A. Kept strictly inside the cozy contract (§8.2) — warm additive glows, never a
+red/harsh flash, no perpetual pulsing — and scope-locked to `05-particles.js` + `style.css` so the
+concurrent session's action code (`08-actions.js`) was never touched; the juice lives in the
+feedback *primitives*, so it propagates to every call-site automatically.
+
+### Added
+- **Over-invested in the item-get loop** (the bible's "emotional core of a farming game"). A
+  collected item used to only scale-pop; now every collect blooms a soft warm **glow** behind the
+  icon and sparks off a few gold **stars** (`de7bfbe`… actually `96e0cc8`: a new additive-`lighter`
+  `pGlow` particle + a star burst in `pItemPop`). `pSparkle` gained the same bloom, so level-ups and
+  gem finds — which already call it from the action sites — feel like a *find*, with zero edits to
+  `08-actions.js`.
+- **A warm halo behind the level-up banner** (`de7bfbe`) — a `#banner.show::before` radial that
+  flares on arrival and settles, giving the RuneScape level-up its "ta-da" without a flash.
+- **Tactile menu presses** (`96e0cc8`) — `:active` translate + hover-brighten across the redesigned
+  tabs, inventory/collection/skill tiles, calendar day cells and close buttons, so every tappable
+  thing answers the press.
+
+*Note: shake, hit-pause and per-object sway already existed at the action sites and were left as-is;
+this pass filled the gaps the bible flags (item-get sparkle, everything-that-appears juice). Movement
+accel/decel was deliberately NOT added — instant response suits a top-down farmer, and it lives in
+the shared entities file. Verified live (item-get bloom + sparkle on collect; banner halo via a
+forced-static frame, since the pane throttles the 3.2s animation); console clean.*
+
 ## UI/UX sweep — tabbed Journal, a town map, a tile Backpack, a month calendar · 2026-07-13
 
 Unversioned menu-UI sweep (a parallel session owns the version cut + data files; **fold this into
