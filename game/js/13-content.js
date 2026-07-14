@@ -13,7 +13,7 @@ const MAPS = {
   store:     { w:14, h:9,  name:"Tom's General Store",   subtitle:"coin for goods",   music:"cozy", bg:"#171009", gen:genStore },
   mayahouse: { w:12, h:9,  name:"The Alderman House",    subtitle:"",                 music:"cozy", bg:"#171009", gen:genMayaHouse },
   guild:     { w:17, h:11, name:"Guild of Nine Crafts",  subtitle:"once, the heart of the valley", music:"cozy", bg:"#12100b", gen:genGuild },
-  mine:      { w:34, h:22, name:"The Old Mine",          subtitle:"",                 music:"mine", bg:"#050406", gen:genMine },
+  mine:      { w:24, h:16, name:"The Old Mine",          subtitle:"",                 music:"mine", bg:"#050406", gen:genMine },   // v3.16: ~half the old 34×22 — smaller floors lean on descending + the checkpoints
   beach:     { w:46, h:24, outdoor:true, name:"Willowbrook Coast", subtitle:"salt on the breeze", music:"beach", bg:"#2f4a63", gen:genBeach },
   grove:     { w:44, h:30, outdoor:true, name:"The Deep Grove", subtitle:"the forest gives, and grows back", music:"auto", bg:"#0d150c", gen:genGrove },
   village:   { w:40, h:28, outdoor:true, name:"Willowbrook Village", subtitle:"the valley's beating heart", music:"auto", bg:"#101408", gen:genVillage },
@@ -127,11 +127,16 @@ function genMine(m){
   // The Long Climb (v3.10): the table keeps improving past floor 10 now, so diving deep is worth it
   // and the two new veins (Cobalt L45 / Star Metal L70) have a home — a reason to push down AND to
   // keep levelling Mining to crack what you find down there.
-  const oreTable = depth<3  ? ["stone","copper","copper","iron"]
-                 : depth<6  ? ["copper","iron","iron","gold"]
-                 : depth<10 ? ["iron","iron","gold","gold"]
-                 : depth<15 ? ["iron","gold","gold","cobalt"]
-                 : depth<25 ? ["gold","gold","cobalt","cobalt","starmetal"]
+  // v3.16 — the ore tiers are spaced FAR deeper, so an un-minable vein never walls off floor 3 and
+  // reaching the next tier is a real climb (owner: "stretch the progression, lean on the checkpoints").
+  // A vein still gates on Mining level (correct design), but now: iron first at floor 5, gold at 15,
+  // cobalt at 25, star metal at 35 — each roughly a 5-floor band you grind to level into the next.
+  const oreTable = depth<5  ? ["stone","copper","copper","copper"]
+                 : depth<10 ? ["stone","copper","copper","iron"]
+                 : depth<15 ? ["copper","iron","iron","iron"]
+                 : depth<25 ? ["iron","iron","gold","gold"]
+                 : depth<35 ? ["iron","gold","gold","cobalt"]
+                 : depth<45 ? ["gold","gold","cobalt","cobalt","starmetal"]
                  :            ["gold","cobalt","cobalt","starmetal","starmetal"];
   // The weather above reaches down here. A storm drives the veins, and fog is when the seams
   // "read" — the old miners' word for it. Both make the stone generous, for one day only.
@@ -141,13 +146,14 @@ function genMine(m){
   for(const [x,y] of floors){
     if(x===ux&&y===uy || x===dx&&y===dy || (x===ux+2&&y===uy)) continue;   // ladders + the lift are sacred
     const r = rng();
-    const oreP = 0.10 * oreBoost;
-    // 0.018 made gems as common as ore at depth 6+ (10.8% vs 10%) — the "busted gold" faucet the
-    // owner flagged. 0.010 keeps the deep sparkly (6% at depth 6, still fog/storm-boosted) while
-    // the weighted payout (pickGem) makes a Diamond an event again.
-    const gemP = 0.010 * Math.min(depth,6) * gemBoost;
+    // ore gets a little denser the deeper you push — part of why depth is worth it now
+    const oreP = (0.10 + 0.003*Math.min(depth,20)) * oreBoost;
+    // v3.16 — gems ×5 rarer (0.010→0.002): they were the "quick money" faucet that made upgrades
+    // trivial (owner). Rarity still climbs with depth (now to floor 20, not capped at 6) so a deep
+    // run stays sparkly and a Diamond is a genuine event — but you can't farm them shallow anymore.
+    const gemP = 0.002 * Math.min(depth,20) * gemBoost;
     if(r < oreP){ const k = oreTable[randiR(rng,0,oreTable.length-1)]; put(m,x,y,k,{hp:ORES[k].hp}); placed++; }
-    else if(r < oreP + gemP){ put(m,x,y, rng()<0.35?"crystal":"gemrock", {hp:3+Math.floor(depth/2)}); }
+    else if(r < oreP + gemP){ put(m,x,y, rng() < (0.30 + depth*0.008) ? "crystal" : "gemrock", {hp:3+Math.floor(depth/2)}); }
     else if(r < oreP + gemP + 0.035){ put(m,x,y, rng()<0.5?"rubble":"minecart"); }
     else if(r < oreP + gemP + 0.05){ put(m,x,y,"beam"); }
   }

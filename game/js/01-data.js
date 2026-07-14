@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.15.0", code: 52, codename: "The Deep Run", date: "2026-07-14" };
+const VERSION = { name: "3.16.0", code: 53, codename: "The Long Dark", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.16.0", code:53, date:"2026-07-14", name:"The Long Dark", notes:[
+    { t:"balance", s:"The mine is a longer, more honest climb. Each floor is about half the size — quicker to work, so you lean on the checkpoints and keep descending. The ore tiers are spaced far deeper: iron waits until floor 5, gold until 15, cobalt 25, star metal 35 — so an un-minable vein never walls off floor 3, and reaching each new metal is a real climb you grind and level into." },
+    { t:"balance", s:"Gems are five times rarer — they'd become a too-easy shortcut to money and cheap upgrades. They still grow more common the deeper you push (a deep run stays sparkly), but you can't farm them in the shallows anymore, so a Diamond is a genuine event and every tool upgrade is earned." },
+  ]},
   { v:"3.15.0", code:52, date:"2026-07-14", name:"The Deep Run", notes:[
     { t:"new",   s:"The mine has a new mood, if you want it. At the Old Lift, begin a Deep Run: time starts flowing underground and you race the dark for the rich deep floors. Pack Staircases from your hoard of worthless Stone and plunge three floors at a time. And — this is the valley — nothing is ever lost: when dawn comes you simply wake at home with everything you found, having gone as deep as you dared. The default mine stays timeless; the run is always your choice." },
   ]},

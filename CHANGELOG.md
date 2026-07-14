@@ -22,6 +22,42 @@
 
 ---
 
+## v3.16.0 — "The Long Dark" · 2026-07-14 · tag `v3.16.0`
+
+Version code **53**. An owner-directed mine rebalance: the descent was too short and money too easy
+(gems were a "quick money" faucet that made upgrades trivial). This stretches the whole climb and
+makes the deep the reward. All changes are in `genMine` + the mine's `MAPS` entry (`13-content.js`);
+the mine regenerates daily, so it applies immediately with no migration.
+
+### Changed
+- **Each floor is ~half the size** — `34×22 → 24×16` (area 748 → 384). Floors are quicker to work,
+  so you descend more often and lean on the every-5-floors lift checkpoints, instead of exhausting
+  one big cavern.
+- **Ore tiers spaced far deeper** — the depth→ore table was rebuilt so a vein you can't yet mine
+  never walls off floor 3 (the owner's specific complaint), and each metal is a real climb: **iron
+  first at floor 5, gold at 15, cobalt at 25, star metal at 35** — roughly a 10-floor band each,
+  gated by *both* depth and Mining level. Floors 1–4 are stone + copper (beginner-passable; the
+  stone also feeds Deep Run staircases).
+- **Gems ×5 rarer** — spawn probability `0.010 → 0.002`. They were a too-easy money shortcut. Rarity
+  still climbs with depth (now scaling to floor 20, not capped at floor 6), so a deep run stays
+  sparkly and the deep floors reward the committed — but you can no longer farm gems in the shallows,
+  so a Diamond is an event again and every tool upgrade is earned. (Combined with the half-size
+  floors, that's about **5× fewer gems per unit of playtime**.)
+- **Per-floor variety / depth reward** — ore density now rises gently with depth (`0.10 → ~0.16`
+  by floor 20) and gem rocks lean toward the prettier "crystal" variant the deeper you go, so
+  pushing down visibly pays off.
+
+### Verified
+Simulated `genMine` across depths 1–50 × many days: floor 384 tiles vs 748; **no gold before floor
+15, iron from floor 5, gold@15, cobalt@25, star metal@35** confirmed; gem count ~0.4/floor shallow
+vs the old ~4–5. **Connectivity stress-tested (600 floors, depths 1–50): 0 failures** — the
+down-ladder and lift are always reachable by mining through veins, and the up-ladder/lift are always
+reachable so a player is never stranded (unclearable props never seal the path). In-browser: the
+smaller floor renders clean and readable, gems glow, ladders reachable; console clean. Atlas v3.16.0.
+
+*Numbers are the owner's spec (half size, ×5 gems, iron@5/gold@15) — tune-friendly if playtest wants
+the bands wider or the gem floor higher.*
+
 ## v3.15.0 — "The Deep Run" · 2026-07-14 · tag `v3.15.0`
 
 Version code **52**. The fresh audit's **#2 priority** (owner-greenlit): the mine froze time in v2.9
