@@ -285,6 +285,7 @@ function beginPlay(){
   // already met but the festival never fired.
   state.flags.festivalActive = false; state.flags.festivalPending = false; state.flags.seasonalActive = null;
   state.flags.reunionScene = false; state.flags.turnInPending = false;
+  state.deepRun = false;   // a mid-run tab-switch save could persist this; we always reload onto the farm (timeless)
   if(!state.forecast) rollForecast();   // day 1, and every save from before the forecast existed
   applyProjects(state.farm);    // idempotent — re-lays anything a save already paid for
   if(!state.flags.festivalDone){

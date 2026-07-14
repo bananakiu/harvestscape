@@ -941,6 +941,7 @@ function newDay(){
   // Rain waters your fields. Snow does not — the ground is frozen, and the Almanac says so plainly.
   if(state.weather === "rain"){ for(let i=0;i<W*H;i++) if(farm.tiles[i]===T.TILLED) farm.tiles[i]=T.WATERED; }
   state.flags.stormWrack = wasStorm;   // one day only; the beach regenerates nightly
+  state.deepRun = false;               // a new dawn ends any deep run — you always wake home, haul intact
   saveGame();
   return { grew, ready, cellared, rain: state.weather === "rain", withered, season: seasonChanged ? newSeason : null,
            spouse: spouseTended, built, weather: state.weather, forecast: state.forecast, wrack: wasStorm,
@@ -1137,7 +1138,9 @@ function updateTime(dt){
   // The Harvest Moon rule: time stands still underground — you can't see the sun, and getting
   // yanked to bed mid-vein was the least satisfying moment in the game (owner playtest,
   // 2026-07-12). Energy still drains per swing; that's the mine's honest limiter.
-  if(curMap && curMap.id === "mine") return;
+  // EXCEPTION (v3.15): during an opt-in Deep Run, time flows — that's the whole expedition. The
+  // day ending just sends you home with your haul (doSleep below), so it costs a run, never items.
+  if(curMap && curMap.id === "mine" && !state.deepRun) return;
   state.time += dt * (60/16);
   if(curMap && curMap.music === "auto"){ const h = state.time/60; setMusicMode(nightFactor(h)>0.55 ? "night" : "day"); }
   if(state.time >= 26*60){ toast("You stayed up far too late…", "#ff8a7a"); doSleep(); }

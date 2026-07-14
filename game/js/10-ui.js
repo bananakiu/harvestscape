@@ -129,7 +129,7 @@ function refreshHUD(){
   $("dateLine").textContent = seas + " · Day " + d + "  " + weatherInfo(state.weather).icon;
   let h = Math.floor(state.time/60)%24, m = Math.floor(state.time%60/10)*10;
   const ap = h>=12 ? "pm":"am"; let h12 = h%12; if(h12===0) h12=12;
-  $("timeLine").textContent = h12 + ":" + String(m).padStart(2,"0") + " " + ap;
+  $("timeLine").textContent = (state.deepRun ? "⏱ " : "") + h12 + ":" + String(m).padStart(2,"0") + " " + ap;
   // gold is drawn by syncGold() each frame so it counts up (see below); don't snap it here
   const e = state.energy, bar = $("energyBar");
   bar.style.width = e + "%";
@@ -868,12 +868,53 @@ function renderLift(){
     const next = Math.ceil(depth/5)*5;
     html += `<div class="desc" style="margin-top:.4em;color:var(--ink-soft);">The next restorable stop is at floor ${next}.</div>`;
   }
+  // --- The Deep Run (v3.15): opt-in time pressure + a Stone sink, all cozy-safe ---
+  const dr = !!state.deepRun, stone = state.inv["Stone"]||0, stairs = state.inv["Staircase"]||0;
+  html += `<div class="desc" style="margin:.7em 0 .3em;border-top:1px solid rgba(0,0,0,.18);padding-top:.55em;">` +
+    `<b style="color:var(--gold-hi)">⛏ The Deep Run.</b> <span style="color:var(--ink-soft)">` +
+    (dr ? "The clock is running. Go as deep as you dare — sunrise sends you home with everything you've found."
+        : "Set the clock moving and race the dark for the rich deep floors. Nothing is ever lost — you just come home.") +
+    `</span></div>`;
+  html += `<div class="row"><span class="lead"><span>${dr ? "⏱ On a run — time is moving" : "☾ Timeless dig"}</span></span>` +
+    `<button class="buy" onclick="toggleDeepRun()">${dr ? "stand down" : "begin a run"}</button></div>`;
+  html += `<div class="row"><span class="lead"><span>Pack a Staircase <span class="sub">${STAIR_STONE} Stone → drop ${STAIR_DROP} floors · you hold ${stairs}</span></span></span>` +
+    `<button class="buy" ${stone>=STAIR_STONE?"":"disabled"} onclick="packStaircase()">pack (${stone} stone)</button></div>`;
+  if(stairs > 0) html += `<div class="row"><span class="lead"><span>Take a Staircase down <span class="sub">−1 Staircase · plunge ${STAIR_DROP} floors deeper</span></span></span>` +
+    `<button class="buy" onclick="takeStairs()">descend</button></div>`;
   b.innerHTML = html;
+}
+function toggleDeepRun(){
+  state.deepRun = !state.deepRun;
+  if(state.deepRun) toast("The Deep Run begins — the clock is moving now. Get deep, then get out.", "#ffcf6a");
+  else toast("You stand down. Underground, time holds still again.", "#a9b0c0");
+  playSfx("select"); renderLift();
+}
+function packStaircase(){
+  if((state.inv["Stone"]||0) < STAIR_STONE){ playSfx("error"); return; }
+  take("Stone", STAIR_STONE); give("Staircase", 1, true);
+  toast("A staircase, folded and ready. That's what all that stone was for.", "#cbb98f");
+  playSfx("upgrade"); refreshHUD(); renderLift();
+}
+function takeStairs(){
+  if((state.inv["Staircase"]||0) < 1){ playSfx("error"); return; }
+  take("Staircase", 1);
+  const prevBest = state.mineBest||0;
+  state.mineDepth = (state.mineDepth||1) + STAIR_DROP;
+  state.mineBest = Math.max(prevBest, state.mineDepth);
+  checkQuests();   // credit a "reach floor N" objective on arrival, exactly as mineDown does
+  closeAllPanels(); playSfx("door");
+  travelTo("mine", 2*TILE+8, 3*TILE, "down");   // one regen straight to the new floor
+  // toast, not banner: setMap fires its own "The Old Mine / Floor N" banner as the fade lands, and
+  // would overwrite a banner set here — a toast queues and survives the transition (as mineDown's does)
+  const newRecord = state.mineDepth > prevBest && state.mineDepth >= 10;
+  toast(newRecord ? `⛏ Floor ${state.mineDepth} — deeper than the valley's been in years. The dark gives up richer things down here.`
+                  : `Down ${STAIR_DROP} floors in a clatter of planks — floor ${state.mineDepth}.`,
+        newRecord ? "#ffcf6a" : "#a9b0c0");
 }
 function rideLift(target){
   closeAllPanels();
   playSfx("door");
-  if(target === 0){ travelTo("village", 33*TILE+8, 4*TILE+8, "down"); toast("The lift rattles up into the daylight.", "#cbb98f"); return; }
+  if(target === 0){ state.deepRun = false; travelTo("village", 33*TILE+8, 4*TILE+8, "down"); toast("The lift rattles up into the daylight.", "#cbb98f"); return; }
   state.mineDepth = target;
   travelTo("mine", 2*TILE+8, 3*TILE, "down");
   toast(`The lift lowers you to floor ${target}.`, "#a9b0c0");

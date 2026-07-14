@@ -841,6 +841,13 @@ function buildInteriors(){
   mkSpr("sheep_0", 20, 16, g => { sheepBody(g); sheepLegs(g, 5, 12); });
   mkSpr("sheep_1", 20, 16, g => { sheepBody(g); sheepLegs(g, 6, 11); });
 
+  // staircase — packed from bulk Stone, drops you deep fast on a Deep Run (v3.15)
+  mkSpr("item_Staircase", 16, 16, g => {
+    px(g,2,4,5,2,"#b0a99c"); px(g,2,4,5,1,"#c8c0b2");     // top step
+    px(g,6,7,5,2,"#a9a094"); px(g,6,7,5,1,"#bfb6a8");     // mid step
+    px(g,10,10,4,2,"#9a9186"); px(g,10,10,4,1,"#b3aa9e"); // low step
+    px(g,2,6,1,6,"#6e4a2a"); px(g,13,4,1,8,"#6e4a2a");    // rails
+  });
   // shears — the one tool that gathers wool (a bought convenience, shown in the shop + backpack)
   mkSpr("item_Shears", 16, 16, g => {
     px(g,4,3,2,7,"#c7ccd2"); px(g,10,3,2,7,"#c7ccd2");            // the two blades

@@ -22,6 +22,43 @@
 
 ---
 
+## v3.15.0 — "The Deep Run" · 2026-07-14 · tag `v3.15.0`
+
+Version code **52**. The fresh audit's **#2 priority** (owner-greenlit): the mine froze time in v2.9
+to be cozy, but that removed *every* trace of §6 expedition tension — push-your-luck, a time clock, a
+prep/consumable layer. This restores all three **without touching the cozy contract**, because it's
+opt-in and nothing is ever taken.
+
+### Added — an opt-in **Deep Run**
+- **A toggle in the Old Lift panel** sets `state.deepRun`. Only then does time flow underground
+  (`updateTime`, `08-actions.js`); the default mine stays timeless. Time-of-day flowing is the whole
+  expedition — and when 2am arrives the *existing* `doSleep` simply fades you home with your **entire
+  haul** (the contract's "nothing is taken" — the only cost is the depth you didn't reach).
+- **Staircases** (`STAIR_STONE=25`, `STAIR_DROP=3`): packed from bulk **Stone** at the lift — a real
+  sink for the valley's most worthless rock (3g) — and "taken" to plunge three floors instantly, so
+  you can pioneer the rich deep floors (v3.10's Cobalt/Star Metal, gems) before the clock runs out.
+- The lift-panel framing spells out the safety ("sunrise sends you home with everything you've
+  found"); a **⏱ marker on the clock** shows a run is live (the mine clock is otherwise frozen); a
+  new-record toast celebrates reaching a personal-best depth.
+
+### Cozy-contract & boundaries
+Nothing is ever taken — verified by the review's dedicated cozy lens (no loss, no trap, no non-opt-in
+time flow). `deepRun` clears at every boundary: `enterMine` (fresh surface entry = timeless),
+`mineUp` out the mouth, `rideLift(0)` to the surface, `newDay`, and `beginPlay`'s reset block. A new
+top-level `state.deepRun` needs no migration (undefined → falsy → timeless).
+
+### Review-driven
+A 3-lens adversarial pass (cozy-contract / time-edges / exploit-persist) cleared it with **zero
+critical/high/medium** findings. Its three low/nits are fixed: `beginPlay` now clears a mid-run
+tab-switch save's stale `deepRun` (so the ⏱ badge can't linger on the surface); `takeStairs` calls
+`checkQuests()` like `mineDown` (so a depth objective credits on arrival); and the record milestone
+uses a `toast` instead of a `banner` (which `setMap`'s map banner would have overwritten mid-fade).
+
+*Verified live: timeless by default / flows on a run / off-mine time untouched; 2am fades home with
+the haul intact; staircase pack (25 Stone→1) and descend (−1→+3 floors) with a record toast;
+Staircase not sellable; every run-boundary clears the flag; the ⏱ clock cue; the lift panel renders;
+console clean. Atlas snapshot v3.15.0.*
+
 ## v3.14.0 — "Warmer Shadows" · 2026-07-14 · tag `v3.14.0`
 
 Version code **51**. The fresh audit's **#6 priority** — "two cheap high-propagation fixes" — that

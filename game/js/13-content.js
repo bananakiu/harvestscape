@@ -229,6 +229,7 @@ function doWarp(w){
 // noticed), restored lift stops are a thing you SEE, paid for, and keep forever.
 function enterMine(){
   state.mineDepth = 1;
+  state.deepRun = false;   // every fresh descent from the surface starts timeless; opt into a run at the lift
   travelTo("mine", 2*TILE+8, 3*TILE, "down");
   if((state.liftStops||[]).length) setTimeout(() => toast("The Old Lift hums beside the ladder — ride it to any restored stop.", "#a9b0c0"), 900);
 }
@@ -249,7 +250,7 @@ function mineDown(){ state.mineDepth = (state.mineDepth||1) + 1; state.mineBest 
   toast("You climb down to floor "+state.mineDepth+"…"+stop, "#a9b0c0"); }
 function mineUp(){
   if((state.mineDepth||1) > 1){ state.mineDepth--; travelTo("mine", 2*TILE+8, 3*TILE, "down"); }
-  else { travelTo("village", 33*TILE+8, 4*TILE+8, "down"); }   // the mine mouth, northeast ridge of the village
+  else { state.deepRun = false; travelTo("village", 33*TILE+8, 4*TILE+8, "down"); }   // out the mine mouth — any run ends
 }
 
 // ---------------- the beach ----------------

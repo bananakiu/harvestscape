@@ -8,13 +8,16 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.14.0", code: 51, codename: "Warmer Shadows", date: "2026-07-14" };
+const VERSION = { name: "3.15.0", code: 52, codename: "The Deep Run", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.15.0", code:52, date:"2026-07-14", name:"The Deep Run", notes:[
+    { t:"new",   s:"The mine has a new mood, if you want it. At the Old Lift, begin a Deep Run: time starts flowing underground and you race the dark for the rich deep floors. Pack Staircases from your hoard of worthless Stone and plunge three floors at a time. And — this is the valley — nothing is ever lost: when dawn comes you simply wake at home with everything you found, having gone as deep as you dared. The default mine stays timeless; the run is always your choice." },
+  ]},
   { v:"3.14.0", code:51, date:"2026-07-14", name:"Warmer Shadows", notes:[
     { t:"polish", s:"A gentle depth pass over all the pixel art: shadows now lean a touch cooler and bluer, highlights a touch warmer and more golden — the way good pixel art breathes, instead of just going darker and lighter." },
     { t:"polish", s:"When you level a skill and it happens not to unlock anything new that level, the banner now tells you what's next and when — so the climb always shows you where it's going." },
@@ -360,6 +363,16 @@ const DECOR = {
   goldenstatue:{ name:"Golden Statue",  cost:300000, blurb:"A solid-gold likeness of you, valley's finest. Utterly pointless. Magnificent." },
 };
 const DECOR_MAX = 40;   // a generous cap so a farm can be dressed, but not infinitely spammed
+
+// ---- THE DEEP RUN (v3.15) ----
+// The mine froze time (v2.9) to be cozy — but that also removed every trace of expedition tension
+// (§6). The Deep Run restores it WITHOUT breaking the contract: it's opt-in (the default mine stays
+// timeless), and nothing is ever taken — when the day ends you wake at home with your whole haul,
+// having simply not gone as deep as you hoped. A Staircase (packed from bulk Stone — a sink for the
+// valley's most worthless rock) punches you STAIR_DROP floors down in a blink, so you can pioneer
+// the rich deep floors before 2am. The push-your-luck is pure opportunity: Stone spent, depth dared.
+const STAIR_STONE = 25;   // Stone to pack one Staircase
+const STAIR_DROP  = 3;    // floors a Staircase drops you
 
 // ---- THE HUNT ----
 // Where a fish lives. The pond and the coast are different water, and the valley knows it.
@@ -1022,6 +1035,7 @@ const EXAMINE = {
   "Gold Ore": "Even in the rough, it catches the lantern light.",
   "Cobalt Ore": "A cold blue metal from the deep floors — it rings when you tap it.",
   "Star Metal Shard": "A splinter of the vault's own metal, humming with a faint blue light.",
+  "Staircase": "A folding rig of ladder and plank. Drop it down a shaft and you're three floors deeper in a blink.",
   "Amethyst": "A purple gem the mine kept to itself for ages.",
   "Topaz": "Warm as bottled afternoon sun.",
   "Emerald": "Green as the valley on its best morning.",
