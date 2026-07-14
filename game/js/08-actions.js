@@ -131,7 +131,13 @@ function addXP(skill, amt){
   const after = levelFor(state.skills[skill]);
   if(after > before){
     let unl = []; for(let l=before+1; l<=after; l++) unl = unl.concat(unlocksAt(skill, l));
-    banner("⬆ "+skill+" Lv "+after+"!", unl.length ? ("Unlocked: "+unl.join(", ")) : "Well done.");
+    // §4.3 "always show the next unlock" — at the level-up moment too, not only in the panel: when
+    // this level unlocked nothing, point at what's still ahead so the grind always has a destination.
+    const nu = unl.length ? null : nextUnlock(skill);
+    banner("⬆ "+skill+" Lv "+after+"!",
+      unl.length ? ("Unlocked: "+unl.join(", "))
+      : nu       ? ("Next: "+nu.label+" at Lv "+nu.at)
+      :            "Mastery. Nothing left to learn — only to perfect.");
     playSfx("level"); pSparkle(state.px, state.py-14, "#8fd3ff", 14); refreshHotbar();
     // a neighbour notices when you cross a mastery tier — one warm line, in their own voice
     for(const tier of [25,50,75,99]) if(before < tier && after >= tier) masteryPraise(skill, tier);

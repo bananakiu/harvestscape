@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.13.0", code: 50, codename: "Homestead", date: "2026-07-14" };
+const VERSION = { name: "3.14.0", code: 51, codename: "Warmer Shadows", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.14.0", code:51, date:"2026-07-14", name:"Warmer Shadows", notes:[
+    { t:"polish", s:"A gentle depth pass over all the pixel art: shadows now lean a touch cooler and bluer, highlights a touch warmer and more golden — the way good pixel art breathes, instead of just going darker and lighter." },
+    { t:"polish", s:"When you level a skill and it happens not to unlock anything new that level, the banner now tells you what's next and when — so the climb always shows you where it's going." },
+  ]},
   { v:"3.13.0", code:50, date:"2026-07-14", name:"Homestead", notes:[
     { t:"new",   s:"Make the farm yours. Tom's new Décor catalogue sells cosmetic pieces — flower beds, a garden bench, a bird bath, a sundial, a wishing well, a grand fountain — that you set down like a hive and lift again with the axe. At the top: a solid-gold statue of you for 300,000g, utterly pointless and utterly magnificent. Somewhere for a rich valley's coin to finally go." },
   ]},

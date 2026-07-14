@@ -11,7 +11,16 @@ function mkSpr(name, w, h, fn){
   fn(g, w, h); spr[name] = c; return c;
 }
 const px = (g, x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x|0, y|0, w|0, h|0); };
-function shade(hex, f){ const [r,gg,b] = hexToRgb(hex); return rgbToHex(r*f, gg*f, b*f); }
+// Hue-shifted shading (§8.1's #1 pixel-art rule): don't just scale value — rotate hue as you go, so
+// shadows lean cool/blue and highlights lean warm/gold. Value-only shading reads muddy; this gives
+// the whole procedural atlas depth for free (one function, ~40 call sites). rgbToHex clamps 0–255.
+function shade(hex, f){
+  let [r,gg,b] = hexToRgb(hex);
+  r*=f; gg*=f; b*=f;
+  if(f < 1){ const d = 1-f; b += d*34; r -= d*14; }        // into shadow: cooler, bluer
+  else if(f > 1){ const d = f-1; r += d*30; gg += d*12; }   // into light: warmer, more golden
+  return rgbToHex(r, gg, b);
+}
 // deterministic scatter rng per-sprite
 let _rs = 1; const rr = () => (_rs = (_rs*1103515245+12345) & 0x7fffffff) / 0x7fffffff;
 function seedRR(s){ _rs = s; }

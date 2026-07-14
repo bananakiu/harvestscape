@@ -22,6 +22,30 @@
 
 ---
 
+## v3.14.0 — "Warmer Shadows" · 2026-07-14 · tag `v3.14.0`
+
+Version code **51**. The fresh audit's **#6 priority** — "two cheap high-propagation fixes" — that
+between them nudge the two dimensions each has been pinned on: Visual Coziness (A−, since v1.5) and
+the last stuck piece of Skill Progression.
+
+### Changed
+- **`shade()` now hue-shifts** (`03-art.js`), the §8.1 "#1 pixel-art rule" the audit flagged as
+  unimplemented since v1.5. Instead of pure value scaling (`r*f, g*f, b*f` — which reads muddy), it
+  rotates hue as it goes: **shadows lean cool/blue, highlights lean warm/gold.** One function, ~37
+  call sites across the whole procedural atlas, so every tree, sprite, and object gets a little depth
+  for free. Conservative magnitudes (clamped; ~10–14 units at typical `f`), verified non-degrading on
+  the day and night farm. *(A whole-atlas shading tweak — worth an owner eyeball; easy to tune in the
+  one function if a sprite reads off.)*
+- **The level-up banner previews the next unlock** (`addXP`, `08-actions.js`). When a level-up
+  happens to unlock nothing that level, the banner used to just say "Well done."; it now reads
+  "Next: <thing> at Lv <n>" via the existing `nextUnlock()`, so §4.3's "always show the next unlock"
+  is satisfied at the level-up *moment*, not only in the skills panel. At the very top it reads
+  "Mastery. Nothing left to learn — only to perfect."
+
+*Verified live: shade() hue-shift renders clean on day + night farm (no muddiness, no clipping);
+the next-unlock banner resolves correctly (e.g. Farming L27 → "Rhubarb at Lv 30"); console clean.
+Atlas snapshot v3.14.0.*
+
 ## v3.13.0 — "Homestead" · 2026-07-14 · tag `v3.13.0`
 
 Version code **50**. The fresh v3.11 audit's **#3 priority** and the Interlocking Economy's oldest
