@@ -211,9 +211,12 @@ function genFarm(m){
     m.warps[key(wx,wy)] = { to:"grove", sx:(44-3)*TILE, sy:15*TILE, face:"left", auto:true };
   obj[key(5,25)] = { kind:"sign", text:"← The Deep Grove" };
 
-  // ore ridge (north) — early mining above ground
-  for(let i=0;i<24;i++){ const x=randiR(rng,26,43), y=randiR(rng,1,4);
-    const r=rng(), kind=r<0.4?"stone":r<0.75?"copper":r<0.92?"iron":"gold"; place(x,y,kind,{hp:ORES[kind].hp}); }
+  // ore ridge (north) — early mining above ground. v3.17: mostly STONE now (copper needs Mining 10),
+  // so a new miner can grind their first levels here in daylight before ever entering the mine. A
+  // little copper/iron shows too — the next tiers, teasing, until your level catches up. No surface
+  // gold: that's a deep-mine reward.
+  for(let i=0;i<26;i++){ const x=randiR(rng,26,43), y=randiR(rng,1,4);
+    const r=rng(), kind=r<0.68?"stone":r<0.9?"copper":"iron"; place(x,y,kind,{hp:ORES[kind].hp}); }
   place(17,12,"oak",{hp:3}); place(19,13,"oak",{hp:3}); place(21,17,"pine",{hp:6});
   place(23,17,"copper",{hp:4}); place(25,18,"stone",{hp:2});
 

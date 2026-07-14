@@ -127,14 +127,19 @@ function genMine(m){
   // The Long Climb (v3.10): the table keeps improving past floor 10 now, so diving deep is worth it
   // and the two new veins (Cobalt L45 / Star Metal L70) have a home — a reason to push down AND to
   // keep levelling Mining to crack what you find down there.
-  // v3.16 — the ore tiers are spaced FAR deeper, so an un-minable vein never walls off floor 3 and
+  // v3.16 — the ore tiers are spaced FAR deeper, so no *high*-tier vein walls off the early floors and
   // reaching the next tier is a real climb (owner: "stretch the progression, lean on the checkpoints").
-  // A vein still gates on Mining level (correct design), but now: iron first at floor 5, gold at 15,
+  // A vein still gates on Mining level by design — a sub-10 miner can meet a copper wall down here, but
+  // the floor is ~¾ stone to mine around/level on, and the lift out is always free. iron first at 5, gold 15,
   // cobalt at 25, star metal at 35 — each roughly a 5-floor band you grind to level into the next.
-  const oreTable = depth<5  ? ["stone","copper","copper","copper"]
-                 : depth<10 ? ["stone","copper","copper","iron"]
-                 : depth<15 ? ["copper","iron","iron","iron"]
-                 : depth<25 ? ["iron","iron","gold","gold"]
+  // v3.17 — the shallow floors are STONE-heavy now that copper needs Mining 10: a beginner mines
+  // stone here to earn that first ten levels (and stockpile it for Deep Run staircases). Higher ores
+  // still first appear at iron@5 / gold@15 / cobalt@25 / star metal@35 — you SEE the next metal a few
+  // floors before your Mining catches up to it, RuneScape-style.
+  const oreTable = depth<5  ? ["stone","stone","stone","copper"]
+                 : depth<10 ? ["stone","stone","copper","iron"]
+                 : depth<15 ? ["stone","copper","iron","iron"]
+                 : depth<25 ? ["copper","iron","gold","gold"]
                  : depth<35 ? ["iron","gold","gold","cobalt"]
                  : depth<45 ? ["gold","gold","cobalt","cobalt","starmetal"]
                  :            ["gold","cobalt","cobalt","starmetal","starmetal"];

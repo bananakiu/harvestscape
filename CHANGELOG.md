@@ -22,6 +22,42 @@
 
 ---
 
+## v3.17.0 — "The Miner's Ladder" · 2026-07-14 · tag `v3.17.0`
+
+Version code **54**. Owner-directed: make tiering RuneScape-clean (memorable, every-10-levels) and
+**gate tool upgrades behind skill, not just materials** — hoarding ore shouldn't buy you an OP tool
+you haven't earned the level to swing.
+
+### Changed
+- **Ore Mining ladder → every 10 levels** (`ORES`, `01-data.js`): stone 1, **copper 10** (was 1),
+  **iron 20** (was 12), **gold 30** (was 28), **cobalt 40** (was 45), **star metal 50** (was 70).
+  Stone XP 8→12 so the grind up to copper isn't a slog. You now start on stone and earn your way up.
+- **Tool tiers gate on the tool's own skill** (`TOOL_SKILL` + `TIER_LEVEL=[1,10,20,30,40]`,
+  `01-data.js`; enforced in `buyTool`, `08-actions.js`; shown + disabled in the shop, `10-ui.js`):
+  Copper needs the skill at **10**, Iron **20**, Gold **30**, Star Metal **40**. Pick→Mining,
+  Axe→Woodcutting, Hoe/Can→Farming, Rod→Fishing. The shop row reads e.g. "needs Woodcutting 20" in
+  red until met. Materials + coin still apply on top — an upgrade is *earned across crafts*.
+- **Stone everywhere early** so a Mining-1 beginner always has something to mine: the surface ore
+  ridge is now ~⅔ stone with no surface gold (`genFarm` **and** the daily `respawnNodes`), and the
+  shallow mine floors are stone-heavy (`genMine`: floors 1–4 are ¾ stone). Higher metals still first
+  *appear* at iron@floor5 / gold@15 / cobalt@25 / star metal@35 — you see the next tier a few floors
+  before your level catches up, RuneScape-style.
+
+### Review-driven
+A focused adversarial pass cleared the big risks (no soft-lock; `master-tools`'s "3 tool upgrades"
+is a late quest reached with several skills already past 10 and the stat cumulative; every gating
+skill is trainable to 10 on its *basic* tool — no chicken-and-egg; buyTool/shop indexing correct).
+It caught two real **stale-level** misses, both fixed: the daily **`respawnNodes`** still used the
+pre-v3.17 ridge mix (refilling the surface with unmineable veins + gold) — synced to `genFarm`; and
+two **noticeboard `REQUESTS`** (Copper Ore, Iron Ore) still gated at the old mining levels — bumped
+to 10 / 20 so the board never asks for ore you can't yet mine.
+
+*Verified live: ore ladder 10/20/30/40/50; buyTool refuses below the level even with materials+coin
+and allows at level; shop shows "needs <skill> <lvl>" and disables; a Mining-1 player mines ~75% of
+shallow veins (stone); daily ridge respawns stone-heavy, no gold; noticeboard reachability correct at
+Mining 5/10/20; `nextUnlock` reads the new levels; console clean. Atlas v3.17.0. Numbers are the
+owner's spec — tune-friendly in one place each.*
+
 ## v3.16.0 — "The Long Dark" · 2026-07-14 · tag `v3.16.0`
 
 Version code **53**. An owner-directed mine rebalance: the descent was too short and money too easy

@@ -811,15 +811,17 @@ function renderShop(){
       const cur = state.tools[tool];
       if(cur >= MAX_TIER){ html += `<div class="row"><span class="lead" data-icon="tool_${TOOL_ICON[tool]}"><canvas></canvas><span style="color:${TIER_COL[cur]}">${TOOL_TIERS[cur]} ${tool} ★ <span class="sub">maxed</span></span></span></div>`; continue; }
       const c = toolCost(tool, cur+1);
-      const can = state.gold>=c.g && Object.keys(c.mats).every(it => (state.inv[it]||0) >= c.mats[it]);
+      const need = TIER_LEVEL[cur+1], sk = TOOL_SKILL[tool], haveLvl = skillLvl(sk) >= need;
+      const can = haveLvl && state.gold>=c.g && Object.keys(c.mats).every(it => (state.inv[it]||0) >= c.mats[it]);
       const CAN_PERK = ["", "waters a 3-tile row", "waters a 5-tile row", "waters 3×3", "waters 3×3, next to no energy"];
       const HOE_PERK = ["", "tills a 3-tile row", "tills a 5-tile row", "tills 3×3", "tills 3×3, next to no energy"];
       const perk = tool==="Can" ? CAN_PERK[cur+1] : tool==="Hoe" ? HOE_PERK[cur+1]
                  : tool==="Rod" ? "faster bites, steadier reel" : "stronger, less energy";
-      const matStr = Object.keys(c.mats).map(it => { const have=state.inv[it]||0, need=c.mats[it];
-        return `${need} ${it} <span style="color:${have>=need?'#8fd06a':'#c98a6a'}">(${have})</span>`; }).join(" + ");
+      const matStr = Object.keys(c.mats).map(it => { const have=state.inv[it]||0, need2=c.mats[it];
+        return `${need2} ${it} <span style="color:${have>=need2?'#8fd06a':'#c98a6a'}">(${have})</span>`; }).join(" + ");
+      const lvlStr = `<span style="color:${haveLvl?'#8fd06a':'#c98a6a'}">needs ${sk} ${need}</span>`;
       html += `<div class="row"><span class="lead" data-icon="tool_${TOOL_ICON[tool]}"><canvas></canvas><span style="color:${TIER_COL[cur+1]}">${TOOL_TIERS[cur+1]} ${tool}</span> ` +
-        `<span class="sub">${c.g}g + ${matStr}<br>${perk}</span></span>` +
+        `<span class="sub">${lvlStr} · ${c.g}g + ${matStr}<br>${perk}</span></span>` +
         `<button class="buy" ${can?"":"disabled"} onclick="buyTool('${tool}')">upgrade</button></div>`;
     }
   }

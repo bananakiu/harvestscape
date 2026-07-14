@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.16.0", code: 53, codename: "The Long Dark", date: "2026-07-14" };
+const VERSION = { name: "3.17.0", code: 54, codename: "The Miner's Ladder", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.17.0", code:54, date:"2026-07-14", name:"The Miner's Ladder", notes:[
+    { t:"balance", s:"Tiering is clean and predictable now, every ten levels: mine stone from the start, copper at Mining 10, iron 20, gold 30, cobalt 40, star metal 50. There's plenty of stone to begin with — above ground on the ridge and on the early floors — so you've always something to swing at while you climb." },
+    { t:"balance", s:"Tool upgrades are gated behind skill, not just materials. A shiny Copper Pick wants Mining 10; an Iron Axe wants Woodcutting 20; and so on up the ladder. Hoarding a pile of ore no longer buys you a tool you haven't earned the skill to swing — progression stays honest." },
+  ]},
   { v:"3.16.0", code:53, date:"2026-07-14", name:"The Long Dark", notes:[
     { t:"balance", s:"The mine is a longer, more honest climb. Each floor is about half the size — quicker to work, so you lean on the checkpoints and keep descending. The ore tiers are spaced far deeper: iron waits until floor 5, gold until 15, cobalt 25, star metal 35 — so an un-minable vein never walls off floor 3, and reaching each new metal is a real climb you grind and level into." },
     { t:"balance", s:"Gems are five times rarer — they'd become a too-easy shortcut to money and cheap upgrades. They still grow more common the deeper you push (a deep run stays sparkly), but you can't farm them in the shallows anymore, so a Diamond is a genuine event and every tool upgrade is earned." },
@@ -277,16 +281,20 @@ const TREES = {
 
 // ---- ORES / ROCKS ----
 const ORES = {
-  stone:  { name:"Stone Rock",  lvl:1,  hp:2,  xp:8,   drop:"Stone",      gem:null,      col:"#9a9a9a" },
-  copper: { name:"Copper Vein", lvl:1,  hp:4,  xp:26,  drop:"Copper Ore", gem:"#e08a45", col:"#c77b3f" },
-  iron:   { name:"Iron Vein",   lvl:12, hp:8,  xp:62,  drop:"Iron Ore",   gem:"#d8c4bc", col:"#bfa8a0" },
-  gold:   { name:"Gold Vein",   lvl:28, hp:12, xp:145, drop:"Gold Ore",   gem:"#ffe27a", col:"#ffd75a" },
+  // v3.17 — a clean, RuneScape-style Mining ladder: a new ore every 10 levels, easy to remember.
+  // Stone at 1 (you start here — there's plenty of it, above ground and on the early floors), then
+  // copper 10, iron 20, gold 30, cobalt 40, star metal 50. Stone gives a little more XP now so the
+  // grind up to copper isn't a slog.
+  stone:  { name:"Stone Rock",  lvl:1,  hp:2,  xp:12,  drop:"Stone",      gem:null,      col:"#9a9a9a" },
+  copper: { name:"Copper Vein", lvl:10, hp:4,  xp:26,  drop:"Copper Ore", gem:"#e08a45", col:"#c77b3f" },
+  iron:   { name:"Iron Vein",   lvl:20, hp:8,  xp:62,  drop:"Iron Ore",   gem:"#d8c4bc", col:"#bfa8a0" },
+  gold:   { name:"Gold Vein",   lvl:30, hp:12, xp:145, drop:"Gold Ore",   gem:"#ffe27a", col:"#ffd75a" },
   // The Long Climb (v3.10): two deep veins so Mining pays content past Gold (L28) — planted at L45
   // and L70, the heart of the old 71-level dead zone. They spawn only on the deep ore table (below),
   // so shallow floors read exactly as tuned; a low miner facing one gets the "come back stronger"
   // gate, same as Gold today. Rock + cracked sprites auto-generate from `gem`; the drop is a sink.
-  cobalt:    { name:"Cobalt Vein",     lvl:45, hp:16, xp:240, drop:"Cobalt Ore",       gem:"#6a8ad8", col:"#4a6ac8" },
-  starmetal: { name:"Star Metal Vein", lvl:70, hp:22, xp:520, drop:"Star Metal Shard", gem:"#c8ecff", col:"#a8c8e8" },
+  cobalt:    { name:"Cobalt Vein",     lvl:40, hp:16, xp:240, drop:"Cobalt Ore",       gem:"#6a8ad8", col:"#4a6ac8" },
+  starmetal: { name:"Star Metal Vein", lvl:50, hp:22, xp:520, drop:"Star Metal Shard", gem:"#c8ecff", col:"#a8c8e8" },
 };
 
 // ---- FISH ----
@@ -642,12 +650,12 @@ const REQUESTS = [
   { who:"bram",  item:"Sardine",     qty:5,  lvl:1,  line:"Bait. Don't look at me like that — the big ones eat the little ones. That's the arrangement." },
   { who:"tom",   item:"Potato",      qty:4,  lvl:3,  line:"Potatoes keep. Potatoes always keep. A shopkeeper's favourite word is 'keep'." },
   { who:"maya",  item:"Egg",         qty:4,  lvl:1,  line:"Gran's sponge takes four and I've got three, and I am NOT walking to the dairy in this wind." },
-  { who:"rowan", item:"Copper Ore",  qty:5,  lvl:1,  line:"The hall's brackets are green with age. Copper for copper. It's what the Guild would have done." },
+  { who:"rowan", item:"Copper Ore",  qty:5,  lvl:10, line:"The hall's brackets are green with age. Copper for copper. It's what the Guild would have done." },
   { who:"pip",   item:"Bass",        qty:2,  lvl:5,  line:"Dad says if I catch one I can keep it. Dad did NOT say who has to catch it." },
   { who:"tom",   item:"Wheat",       qty:5,  lvl:4,  line:"Bread sells. Bread always sells. I'd bake it myself but the last loaf frightened a customer." },
   { who:"bram",  item:"Pine Wood",   qty:4,  lvl:8,  line:"Pine takes the water. For the boats. Don't bring me oak and don't argue with me about it." },
   { who:"maya",  item:"Strawberry",  qty:3,  lvl:10, line:"…No reason. No reason at all. Stop smiling like that." },
-  { who:"rowan", item:"Iron Ore",    qty:4,  lvl:12, line:"A hinge on the mining wing. Eleven years it has hung crooked and eleven years it has bothered me." },
+  { who:"rowan", item:"Iron Ore",    qty:4,  lvl:20, line:"A hinge on the mining wing. Eleven years it has hung crooked and eleven years it has bothered me." },
   { who:"tom",   item:"Trout",       qty:2,  lvl:12, line:"A gentleman from the coast is coming and I have promised him river fish. I have promised him a great deal." },
   { who:"pip",   item:"Amethyst",    qty:1,  lvl:12, line:"Gary needs a FRIEND. It's not for me. It's for Gary. He gets lonely in the box." },
   { who:"maya",  item:"Carrot",      qty:5,  lvl:6,  line:"Soup for Rowan. He'll say he isn't hungry and then eat the whole pot. He does it every year." },
@@ -668,6 +676,11 @@ const TOOL_ICON = { Hoe:"hoe", Can:"can", Axe:"axe", Pick:"pick", Rod:"rod" };
 const TOOL_TIERS = ["Basic", "Copper", "Iron", "Gold", "Star Metal"];
 const TIER_POWER = [1, 2, 3, 5, 7];
 const MAX_TIER = TOOL_TIERS.length - 1;   // = 4; used everywhere instead of a hardcoded 3
+// v3.17 — a tool upgrade now needs SKILL, not just materials + coin. Gathering a pile of ore never
+// makes sense as the sole gate for an OP tool; you must have earned the level in that tool's own
+// craft. Clean & memorable, matching the ore ladder: Copper at 10, Iron 20, Gold 30, Star Metal 40.
+const TOOL_SKILL = { Hoe:"Farming", Can:"Farming", Axe:"Woodcutting", Pick:"Mining", Rod:"Fishing" };
+const TIER_LEVEL = [1, 10, 20, 30, 40];   // skill level required to reach each tier (index = tier)
 // Tool tiers cost wood + ore + gold — and the top tiers a signature gem / the deep materials — so
 // every upgrade needs Mining AND Woodcutting progress (and the Rod's Pearl, the beach). A gold tool
 // is an achievement across skills, not a purchase. (Owner playtest 2026-07-12: "right now it's

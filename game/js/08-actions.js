@@ -1129,7 +1129,7 @@ function respawnNodes(m){
   for(let i=0;i<4 && rocks+i<24;i++){
     const x=26+Math.floor(rng()*18), y=1+Math.floor(rng()*4), k=key(x,y), g=m.tiles[y*W+x];
     if((g===T.GRASS||g===T.FLOWERGRASS||g===T.TALLGRASS)&&!m.objects[k]){
-      const r=rng(), kind=r<.4?"stone":r<.75?"copper":r<.92?"iron":"gold"; m.objects[k]={kind,hp:ORES[kind].hp};
+      const r=rng(), kind=r<.68?"stone":r<.9?"copper":"iron"; m.objects[k]={kind,hp:ORES[kind].hp};   // v3.17: matches genFarm — stone-heavy, no surface gold
     }
   }
 }
@@ -1219,6 +1219,9 @@ function buyFood(item, cost){
 }
 function buyTool(tool){
   const cur = state.tools[tool]; if(cur>=MAX_TIER) return;
+  const need = TIER_LEVEL[cur+1], sk = TOOL_SKILL[tool];
+  if(skillLvl(sk) < need){   // v3.17 — skill gates the upgrade, not just the materials
+    toast(`You need ${sk} ${need} to handle a ${TOOL_TIERS[cur+1]} ${tool}.`, "#ff8a7a"); playSfx("error"); return; }
   const c = toolCost(tool, cur+1);
   if(state.gold < c.g || !Object.keys(c.mats).every(it => (state.inv[it]||0) >= c.mats[it])) return;
   state.gold -= c.g;
