@@ -801,11 +801,11 @@ function renderShop(){
   } else {
     for(const tool of TOOLS){
       const cur = state.tools[tool];
-      if(cur >= 3){ html += `<div class="row"><span class="lead" data-icon="tool_${TOOL_ICON[tool]}"><canvas></canvas><span style="color:${TIER_COL[3]}">${TOOL_TIERS[3]} ${tool} ★ <span class="sub">maxed</span></span></span></div>`; continue; }
+      if(cur >= MAX_TIER){ html += `<div class="row"><span class="lead" data-icon="tool_${TOOL_ICON[tool]}"><canvas></canvas><span style="color:${TIER_COL[cur]}">${TOOL_TIERS[cur]} ${tool} ★ <span class="sub">maxed</span></span></span></div>`; continue; }
       const c = toolCost(tool, cur+1);
       const can = state.gold>=c.g && Object.keys(c.mats).every(it => (state.inv[it]||0) >= c.mats[it]);
-      const CAN_PERK = ["", "waters a 3-tile row", "waters a 5-tile row", "waters 3×3"];
-      const HOE_PERK = ["", "tills a 3-tile row", "tills a 5-tile row", "tills 3×3"];
+      const CAN_PERK = ["", "waters a 3-tile row", "waters a 5-tile row", "waters 3×3", "waters 3×3, next to no energy"];
+      const HOE_PERK = ["", "tills a 3-tile row", "tills a 5-tile row", "tills 3×3", "tills 3×3, next to no energy"];
       const perk = tool==="Can" ? CAN_PERK[cur+1] : tool==="Hoe" ? HOE_PERK[cur+1]
                  : tool==="Rod" ? "faster bites, steadier reel" : "stronger, less energy";
       const matStr = Object.keys(c.mats).map(it => { const have=state.inv[it]||0, need=c.mats[it];

@@ -8,13 +8,16 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.11.0", code: 48, codename: "Second Helpings", date: "2026-07-14" };
+const VERSION = { name: "3.12.0", code: 49, codename: "Star Metal", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.12.0", code:49, date:"2026-07-14", name:"Star Metal", notes:[
+    { t:"new",   s:"A fourth and final tool tier: Star Metal. Forged at Tom's from the valley's deepest and rarest finds — Star Metal Shards and Cobalt from the deep floors, Silverwood and Heartwood from the grove's heart — it's the strongest, gentlest tool there is. Now the deep mine and the old grove finally make something, not just money." },
+  ]},
   { v:"3.11.0", code:48, date:"2026-07-14", name:"Second Helpings", notes:[
     { t:"new",   s:"The kitchen keeps teaching you dishes all the way up — eight new recipes from Rhubarb Pie (Cooking 44) to the Grand Feast (Cooking 90), the crown dish that needs the valley's finest crop, catch, and a master's hand. They cook up The Long Climb's new harvest and deep-sea fish, so nothing you grow or land goes to waste." },
   ]},
@@ -613,16 +616,24 @@ const REQUESTS = [
 // ---- TOOLS ----
 const TOOLS = ["Hoe", "Can", "Axe", "Pick", "Rod"];
 const TOOL_ICON = { Hoe:"hoe", Can:"can", Axe:"axe", Pick:"pick", Rod:"rod" };
-const TOOL_TIERS = ["Basic", "Copper", "Iron", "Gold"];
-const TIER_POWER = [1, 2, 3, 5];
-// Tool tiers cost wood + ore + gold — and the top tier a signature gem — so every upgrade needs
-// Mining AND Woodcutting progress (and the Rod's Pearl, the beach). A gold tool is an achievement
-// across skills, not a purchase. (Owner playtest 2026-07-12: "right now it's mining and gold and
-// then you unlock everything else" — gold alone must never be the universal key.)
+// The Star Metal tier (v3.12) is the 4th and final rung. It exists to close the reward-is-an-input
+// rule (§3.5): before it, everything The Long Climb (v3.10) added below the surface — Cobalt Ore,
+// Star Metal Shard, Silverwood, Heartwood — was sell-only, a pure faucet. This tier CONSUMES all
+// four, so the deepest veins and the rarest timber finally forge something. It's a transformative
+// unlock (§4.2), not another same-verb bump: a jump in power that only a master miner + woodcutter
+// can even gather the materials for.
+const TOOL_TIERS = ["Basic", "Copper", "Iron", "Gold", "Star Metal"];
+const TIER_POWER = [1, 2, 3, 5, 7];
+const MAX_TIER = TOOL_TIERS.length - 1;   // = 4; used everywhere instead of a hardcoded 3
+// Tool tiers cost wood + ore + gold — and the top tiers a signature gem / the deep materials — so
+// every upgrade needs Mining AND Woodcutting progress (and the Rod's Pearl, the beach). A gold tool
+// is an achievement across skills, not a purchase. (Owner playtest 2026-07-12: "right now it's
+// mining and gold and then you unlock everything else" — gold alone must never be the universal key.)
 const TIER_COST  = [null,
-  { g:300,  mats:{ "Copper Ore":5, "Wood":10 } },
-  { g:1200, mats:{ "Iron Ore":5,  "Pine Wood":10 } },
-  { g:5000, mats:{ "Gold Ore":5,  "Maple Wood":10 } }];
+  { g:300,   mats:{ "Copper Ore":5, "Wood":10 } },
+  { g:1200,  mats:{ "Iron Ore":5,  "Pine Wood":10 } },
+  { g:5000,  mats:{ "Gold Ore":5,  "Maple Wood":10 } },
+  { g:12000, mats:{ "Star Metal Shard":4, "Cobalt Ore":8, "Silverwood":8, "Heartwood":4 } }];
 const TIER3_GEM  = { Hoe:"Amethyst", Can:"Topaz", Axe:"Emerald", Pick:"Ruby", Rod:"Pearl" };
 function toolCost(tool, tier){
   const base = TIER_COST[tier]; if(!base) return null;
@@ -630,7 +641,7 @@ function toolCost(tool, tier){
   if(tier === 3 && TIER3_GEM[tool]) mats[TIER3_GEM[tool]] = 1;   // the keepsake set into the handle
   return { g: base.g, mats };
 }
-const TIER_COL   = ["#b7a48c", "#c77b3f", "#d8c4bc", "#ffd75a"];
+const TIER_COL   = ["#b7a48c", "#c77b3f", "#d8c4bc", "#ffd75a", "#bfe4ff"];
 
 // ---- THE OLD LIFT ----
 // A rusted lift shaft stands by the entry ladder of every mine floor. Riding UP is always free —

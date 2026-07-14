@@ -22,6 +22,38 @@
 
 ---
 
+## v3.12.0 — "Star Metal" · 2026-07-14 · tag `v3.12.0`
+
+Version code **49**. The **#1 ranked priority** from the fresh v3.11 design audit (and a gap the
+v3.10 adversarial review flagged independently): The Long Climb added Cobalt Ore, Star Metal Shard,
+Silverwood, and Heartwood, but nothing *consumed* them — tool tiers stopped at Gold and the Cellar
+takes only crops. They were pure faucet, breaking principle §3.5 ("rewards must be inputs"). This
+gives them a downstream loop.
+
+### Added — a 4th tool tier, **Star Metal** (`TOOL_TIERS`/`TIER_POWER`/`TIER_COST`, `01-data.js`)
+- Every tool now upgrades one rung past Gold to **Star Metal (power 7, up from Gold's 5)** for
+  **12,000g + 4 Star Metal Shard + 8 Cobalt Ore + 8 Silverwood + 4 Heartwood** — consuming *all
+  four* of The Long Climb's terminal deep resources in one recipe. It's a **transformative unlock**
+  (§4.2), not a same-verb bump: only a master miner *and* woodcutter can even gather the materials,
+  so the ultimate tool is an achievement across the two deepest grinds.
+- A bespoke upgrade banner ("Forged from the deep floors and the heart of the grove — there is no
+  finer tool in the valley") and the tier's own pale star-metal blue in the shop and hotbar ◆.
+
+### Changed
+- Introduced `MAX_TIER = TOOL_TIERS.length - 1`, replacing the three hardcoded "max tier = 3" bounds
+  (`buyTool`, the level-up banner, the shop's "maxed" row) so the cap now follows the data — a future
+  tier needs no bound-hunting. Every other tier-indexed read (`TIER_POWER[tier]`, the hotbar tint,
+  the 3×3 area at `tier>=3`) was already safe with the extended 5-element arrays.
+
+### Save compat
+None needed — `state.tools[tool]` was already 0–3; tier 4 is just a newly reachable value. Old saves
+with maxed-Gold tools simply gain one more upgrade to buy.
+
+*Verified live: Gold→Star Metal upgrade consumes all four deep materials + 12,000g; power reads 7;
+the tier caps at 4 (no 5th); the shop shows the Star Metal upgrade rows with per-material affordability
+and "★ maxed" for finished tools; hotbar tier tint correct; screenshot of the tools tab; console clean.
+Addresses design-scorecard priority #1. Atlas snapshot v3.12.0.*
+
 ## v3.11.0 — "Second Helpings" · 2026-07-14 · tag `v3.11.0`
 
 Version code **48**. The companion to v3.10 and the last skill desert: Cooking's recipe ladder

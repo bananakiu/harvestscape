@@ -1186,12 +1186,15 @@ function buyFood(item, cost){
   state.gold -= cost; give(item,1,true); toast("Bought "+item, "#8fd06a"); playSfx("coin"); refreshHUD(); renderShop();
 }
 function buyTool(tool){
-  const cur = state.tools[tool]; if(cur>=3) return;
+  const cur = state.tools[tool]; if(cur>=MAX_TIER) return;
   const c = toolCost(tool, cur+1);
   if(state.gold < c.g || !Object.keys(c.mats).every(it => (state.inv[it]||0) >= c.mats[it])) return;
   state.gold -= c.g;
   for(const it in c.mats) take(it, c.mats[it]);
   state.tools[tool] = cur+1; bump("toolUpgrades");
-  banner("🔧 "+TOOL_TIERS[cur+1]+" "+tool+"!", cur+1===3 ? "The "+TIER3_GEM[tool]+" is set into the handle. Earned across every craft." : "Faster, stronger, cozier.");
-  playSfx("upgrade"); pSparkle(state.px, state.py-14, "#ffce5a", 12); refreshHUD(); renderShop(); refreshHotbar();
+  const sub = cur+1===MAX_TIER ? "Forged from the deep floors and the heart of the grove. There is no finer tool in the valley."
+            : cur+1===3        ? "The "+TIER3_GEM[tool]+" is set into the handle. Earned across every craft."
+            :                    "Faster, stronger, cozier.";
+  banner("🔧 "+TOOL_TIERS[cur+1]+" "+tool+"!", sub);
+  playSfx("upgrade"); pSparkle(state.px, state.py-14, cur+1===MAX_TIER ? "#bfe4ff" : "#ffce5a", 14); refreshHUD(); renderShop(); refreshHotbar();
 }
