@@ -51,6 +51,76 @@ live code (`XP_TABLE` `inc()`, `TIER_COST`/`TIER_LEVEL`, `GEM_SELL`/`GEM_WEIGHTS
 `WOOL_REGROW`, `DIFF_MAX`, `genMine` coefficients, the 30% Starstone roll) before shipping, so the
 doc's ladders are the numbers of record, not a paraphrase that can drift.
 
+## v3.19.0 — "The Way Down" · 2026-07-14 · tag `v3.19.0`
+
+Version code **56**. Owner-directed, two coupled changes to how the mine plays:
+
+> "Instead of having a ladder appear at the corner of the level, we wanted it to be randomly
+> under a rock, just one per floor, so that players are encouraged to mine all the rocks until
+> they finally find the ladder for the level… similar to Harvest Moon and Sword of Val."
+>
+> "I want to make ores a little rarer, maybe by a factor of three, and because of that we should
+> increase their XP gain as well, so that it feels more rewarding to mine. There should be
+> generally more plain rocks without ore in the mines."
+
+### The hidden stairs (`13-content.js`, `genMine` + `08-actions.js`, mining depletion)
+
+- **The corner ladder-down is gone.** Every floor now hides its descent under **one** rock — a
+  plain `stone` rock flagged `{stairs:true}`, dropped on a random floor tile at least `minDist`
+  (`max(6, (w+h)/4)` ≈ 10 on the 24×16 floor) from the entry. Break it and it doesn't just vanish
+  like ordinary stone: it places a `ladderdown` in its spot, toasts *"The rock crumbles away over a
+  black shaft — the way down!"*, sparkles, and plays the upgrade sting. Then you press **E** on the
+  revealed ladder to descend, exactly as before. The floor's subtitle reads *"the way down is here
+  somewhere"* so the intent is legible from the first step.
+- **Why this shape.** The genre reference (Harvest Moon / Story of Seasons / Sword of Val) makes a
+  floor a *small search*, not a corridor to an exit. It also gives the "swing at everything" loop a
+  real point: you're not grinding stone for its own sake, you're *looking for the door*. Pairs
+  perfectly with the rarer-ore change below — the plain grey stone you break searching for the
+  stairs is the same stone that now dominates a floor, so the two changes reinforce each other
+  instead of fighting.
+- **The cozy-contract guarantee (the hard part).** Descending must never become a level wall: a
+  Mining-1 beginner has to be able to reach the stairs no matter what the RNG rolls. So after the
+  stairs tile is chosen, `genMine` runs a BFS from the spawn `(ux,uy+1)` to it (floor / walkable
+  props / mineable rock all count as passable); if it's sealed off, it **digs a straight tunnel**
+  from the entry, clearing blocking props; then **every mineable node on the resulting route is
+  converted to plain `stone`** — so whatever the path passes through, a green miner can always break
+  it. The valuable (level-gated) veins are kept *off* the guaranteed path; they're the deep's
+  optional reward, never a gate on the exit. Stress-tested: **0 failures across 600 floors**
+  (depth 1–50 × 12 days), exactly one stairs rock each, always reachable digging only stone.
+- **The Deep Run staircase still bypasses the search** (drops three floors and regenerates) — intended;
+  the hidden stairs are the *default* mine's loop, the paid Pack Staircase is the express lane.
+
+### Ore ~3× rarer, ~3× the XP; dense plain stone (`13-content.js` spawn, `01-data.js` `ORES`)
+
+- **Spawn mix rebalanced.** Plain `stone` now dominates a floor (`rockP` ≈ 0.24) while valuable
+  veins are ~3× scarcer (`oreP` ≈ 0.03 × depth scaling). A copper vein reads as a *find* again
+  instead of wallpaper, and there's always plenty of stone to swing at while you search for the
+  stairs — the two changes are the same change, really.
+- **XP raised ~3× to match** so mining feels *more* rewarding, not slower, despite fewer strikes:
+  copper **26 → 78**, iron **62 → 186**, gold **145 → 435**, cobalt **240 → 720**, star metal
+  **520 → 1560**. Plain stone drops **12 → 8** (you break a lot more of it now; it shouldn't
+  become a stealth XP faucet). Net: you swing more and strike ore less, but each ore strike counts
+  for three, so per-vein reward goes up while per-floor grind stays honest. Follows the balance
+  playbook's rule that scarcity and reward move together.
+
+### Hardening (from the pre-ship adversarial review)
+
+- Fallback stairs-pool branch now also excludes the **spawn tile** `(ux,uy+1)` (was excluding only
+  the up-ladder and lift), so a future shrink of the mine map can never drop the stairs rock onto
+  the player's spawn. Latent-only on the shipped 24×16 floor (the primary pool never empties), fixed
+  anyway to keep the invariant true by construction.
+- `m.meta.down` removed (kept `m.meta.up` as a diagnostic). It was a write-only vestige of the old
+  fixed down-ladder; leaving a field named `down` pointing at an *unbroken* stone rock was a trap for
+  a future agent who might trust it as a walkable portal. Nothing reads either field (verified by grep).
+
+### Verification
+
+- Three-lens adversarial workflow (connectivity/soft-lock · reveal-mechanic correctness ·
+  regression/economy), each finding independently refutation-checked: **zero real defects**, two
+  nits (both fixed above). Connectivity confirmed by the 600-floor stress test; the reveal→descend
+  path live-tested in-browser (stairs rock breaks in 2 swings → `ladderdown` appears → **E** drops
+  to the next floor, which re-hides a fresh stairs); console clean.
+
 ## v3.18.0 — "A Handful of Stars" · 2026-07-14 · tag `v3.18.0`
 
 Version code **55**. Owner-directed: make the gems read like RuneScape's — a recognizable ladder —

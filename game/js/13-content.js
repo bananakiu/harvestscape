@@ -116,9 +116,11 @@ function genMine(m){
       if(x!==x1) x += Math.sign(x1-x); else if(y!==y1) y += Math.sign(y1-y); } floor(x1,y1); };
   carve(ux,uy, m.w>>1, m.h>>1); carve(m.w>>1, m.h>>1, dx, dy);
   floor(ux,uy); floor(ux,uy+1); floor(ux+1,uy); put(m,ux,uy,"ladderup");
-  floor(dx,dy); floor(dx-1,dy); floor(dx,dy-1); put(m,dx,dy,"ladderdown");
+  floor(dx,dy); floor(dx-1,dy); floor(dx,dy-1);   // far corner stays carved as a connectivity anchor
   // the Old Lift stands by the entry ladder on every floor — the way out is never a climb
   floor(ux+2,uy); floor(ux+2,uy+1); floor(ux+3,uy); put(m,ux+2,uy,"lift");
+  // v3.19 — NO fixed ladder down. The way down is hidden under ONE rock somewhere on this floor; you
+  // mine the rock field to find it (Harvest Moon / Story of Seasons). Placed + made reachable below.
   // scatter ore/gems/props on floor tiles
   const floors = [];
   for(let y=1;y<m.h-1;y++) for(let x=1;x<m.w-1;x++) if(m.tiles[y*W+x]===T.MFLOOR) floors.push([x,y]);
@@ -136,89 +138,90 @@ function genMine(m){
   // stone here to earn that first ten levels (and stockpile it for Deep Run staircases). Higher ores
   // still first appear at iron@5 / gold@15 / cobalt@25 / star metal@35 — you SEE the next metal a few
   // floors before your Mining catches up to it, RuneScape-style.
-  const oreTable = depth<5  ? ["stone","stone","stone","copper"]
-                 : depth<10 ? ["stone","stone","copper","iron"]
-                 : depth<15 ? ["stone","copper","iron","iron"]
-                 : depth<25 ? ["copper","iron","gold","gold"]
-                 : depth<35 ? ["iron","gold","gold","cobalt"]
-                 : depth<45 ? ["gold","gold","cobalt","cobalt","starmetal"]
-                 :            ["gold","cobalt","cobalt","starmetal","starmetal"];
+  // v3.19 — the ore table is VALUABLE veins only now; plain stone is the separate filler (below).
+  // Same depth spacing: iron first at floor 5, gold 15, cobalt 25, star metal 35 — you see the next
+  // metal a few floors before your Mining catches up to it.
+  const oreTable = depth<5  ? ["copper"]
+                 : depth<10 ? ["copper","copper","iron"]
+                 : depth<15 ? ["copper","iron","iron"]
+                 : depth<25 ? ["iron","gold","gold"]
+                 : depth<35 ? ["gold","gold","cobalt"]
+                 : depth<45 ? ["gold","cobalt","cobalt","starmetal"]
+                 :            ["cobalt","cobalt","starmetal","starmetal"];
   // The weather above reaches down here. A storm drives the veins, and fog is when the seams
   // "read" — the old miners' word for it. Both make the stone generous, for one day only.
   const oreBoost = isStorm() ? 1.5 : 1;
   const gemBoost = isFog() ? 2.2 : isStorm() ? 1.4 : 1;
-  let placed=0;
   for(const [x,y] of floors){
-    if(x===ux&&y===uy || x===dx&&y===dy || (x===ux+2&&y===uy)) continue;   // ladders + the lift are sacred
+    if(x===ux&&y===uy || (x===ux+2&&y===uy)) continue;   // the up-ladder + the lift are sacred
     const r = rng();
-    // ore gets a little denser the deeper you push — part of why depth is worth it now
-    const oreP = (0.10 + 0.003*Math.min(depth,20)) * oreBoost;
-    // v3.16 — gems ×5 rarer (0.010→0.002): they were the "quick money" faucet that made upgrades
-    // trivial (owner). Rarity still climbs with depth (now to floor 20, not capped at 6) so a deep
-    // run stays sparkly and a Diamond is a genuine event — but you can't farm them shallow anymore.
-    const gemP = 0.002 * Math.min(depth,20) * gemBoost;
-    if(r < oreP){ const k = oreTable[randiR(rng,0,oreTable.length-1)]; put(m,x,y,k,{hp:ORES[k].hp}); placed++; }
-    else if(r < oreP + gemP){ put(m,x,y, rng() < (0.30 + depth*0.008) ? "crystal" : "gemrock", {hp:3+Math.floor(depth/2)}); }
-    else if(r < oreP + gemP + 0.035){ put(m,x,y, rng()<0.5?"rubble":"minecart"); }
-    else if(r < oreP + gemP + 0.05){ put(m,x,y,"beam"); }
+    // v3.19 — valuable veins are ~3× rarer than before (and worth ~3× the XP — see ORES): a vein is a
+    // real find now, not wallpaper. Plain stone is DENSE — it's the rock you dig through to hunt the
+    // hidden stairs, and it feeds Deep Run staircases.
+    const oreP  = 0.03 * (1 + 0.02*Math.min(depth,20)) * oreBoost;
+    const gemP  = 0.002 * Math.min(depth,20) * gemBoost;
+    const rockP = 0.24;   // plain stone filler
+    if(r < gemP){ put(m,x,y, rng() < (0.30 + depth*0.008) ? "crystal" : "gemrock", {hp:3+Math.floor(depth/2)}); }
+    else if(r < gemP + oreP){ const k = oreTable[randiR(rng,0,oreTable.length-1)]; put(m,x,y,k,{hp:ORES[k].hp}); }
+    else if(r < gemP + oreP + rockP){ put(m,x,y,"stone",{hp:ORES.stone.hp}); }
+    else if(r < gemP + oreP + rockP + 0.03){ put(m,x,y, rng()<0.5?"rubble":"minecart"); }
+    else if(r < gemP + oreP + rockP + 0.045){ put(m,x,y,"beam"); }
   }
   // torches on some wall edges for light (never over an existing object — would trap the player)
   for(const [x,y] of floors){ if(!m.objects[key(x,y)] && rng()<0.04){ const above=m.tiles[(y-1)*W+x]; if(above===T.MWALL) put(m,x,y,"torch"); } }
 
-  // ---- both ladders must stay reachable ----
-  // A ladder tile is solid (you press E from beside it), so what has to stay clear is its APPROACH.
-  // Unclearable props (rubble/minecart/beam) could otherwise seal a ladder pocket, and since the mine
-  // is cached per depth+day, a sealed floor stays sealed all day.
+  // keep the up-ladder & lift approaches clear of unclearable props (a sealed pocket stays sealed all day)
   const nbrs = (x,y) => [[x+1,y],[x-1,y],[x,y+1],[x,y-1]];
-  for(const [ax,ay] of [...nbrs(ux,uy), ...nbrs(dx,dy), ...nbrs(ux+2,uy)]){
-    const o = m.objects[key(ax,ay)]; if(o && o.kind !== "lift" && o.kind !== "ladderup" && o.kind !== "ladderdown") delete m.objects[key(ax,ay)];
+  for(const [ax,ay] of [...nbrs(ux,uy), ...nbrs(ux+2,uy)]){
+    const o = m.objects[key(ax,ay)]; if(o && o.kind !== "lift" && o.kind !== "ladderup") delete m.objects[key(ax,ay)];
   }
 
-  const minable = k => !!ORES[k] || k==="crystal" || k==="gemrock";   // a pick clears these
-  const open = (x,y,thruProps) => {
+  const minable = k => !!ORES[k] || k==="crystal" || k==="gemrock";   // a pick clears these; props don't
+  const open = (x,y) => {
     if(x<1||y<1||x>=m.w-1||y>=m.h-1) return false;
     if(m.tiles[y*W+x] !== T.MFLOOR) return false;
     const o = m.objects[key(x,y)];
-    if(!o || WALKABLE_OBJ.has(o.kind) || minable(o.kind)) return true;
-    return !!thruProps;
+    return !o || WALKABLE_OBJ.has(o.kind) || minable(o.kind);   // walkable or diggable; a prop blocks
   };
-  // BFS from the spawn to any tile touching the down-ladder
-  const pathDown = thruProps => {
-    const prev = {}; prev[key(ux,uy+1)] = null;
-    const q = [[ux,uy+1]];
-    for(let h=0; h<q.length; h++){
-      const [x,y] = q[h];
-      if(Math.abs(x-dx)+Math.abs(y-dy) === 1) return { prev, endK:key(x,y) };
-      for(const [nx,ny] of nbrs(x,y)){
-        const k2 = key(nx,ny);
-        if(k2 in prev || !open(nx,ny,thruProps)) continue;
-        prev[k2] = key(x,y); q.push([nx,ny]);
-      }
-    }
+  const bfsTo = (tx2,ty2) => {
+    const prev = {}; prev[key(ux,uy+1)] = null; const q = [[ux,uy+1]];
+    for(let h=0; h<q.length; h++){ const [x,y] = q[h];
+      if(x===tx2 && y===ty2) return { prev, endK:key(x,y) };
+      for(const [nx,ny] of nbrs(x,y)){ const k2 = key(nx,ny);
+        if(k2 in prev || !open(nx,ny)) continue; prev[k2] = key(x,y); q.push([nx,ny]); } }
     return null;
   };
-  if(!pathDown(false)){                       // sealed — dig the props out along a forced route
-    const r = pathDown(true);
-    if(r){ let k2 = r.endK;
-      while(k2){ const o = m.objects[k2];
-        if(o && !WALKABLE_OBJ.has(o.kind) && !minable(o.kind)) delete m.objects[k2];
-        k2 = r.prev[k2]; } }
+  // ---- hide the stairs down under ONE rock, and GUARANTEE you can always dig to it ----
+  // Descending is a SEARCH, never a level wall: the whole route to the stairs is plain stone anyone can
+  // break. The valuable veins (level-gated) are the deep's optional reward, kept OFF the guaranteed path.
+  const minDist = Math.max(6, Math.floor((m.w+m.h)/4));
+  let pool = floors.filter(([x,y]) => Math.abs(x-ux)+Math.abs(y-uy) >= minDist && !(x===ux+2&&y===uy));
+  if(!pool.length) pool = floors.filter(([x,y]) => !(x===ux&&y===uy) && !(x===ux&&y===uy+1) && !(x===ux+2&&y===uy));
+  const [sx,sy] = pool[randiR(rng, 0, pool.length-1)];
+  m.tiles[sy*W+sx] = T.MFLOOR; delete m.objects[key(sx,sy)];   // clear the spot so the BFS can reach it
+  let route = bfsTo(sx,sy);
+  if(!route){                                    // sealed off — dig a straight tunnel from the entry to it
+    let x=ux, y=uy+1, g=0;
+    while((x!==sx||y!==sy) && g++<300){ m.tiles[y*W+x]=T.MFLOOR;
+      const o=m.objects[key(x,y)]; if(o && !minable(o.kind) && !WALKABLE_OBJ.has(o.kind)) delete m.objects[key(x,y)];
+      if(x!==sx) x += Math.sign(sx-x); else if(y!==sy) y += Math.sign(sy-y); }
+    route = bfsTo(sx,sy);
   }
+  // any vein/gem on the route becomes plain stone, so ANY Mining level can dig its way down
+  if(route){ let k2 = route.endK; while(k2){ const o = m.objects[k2];
+    if(o && minable(o.kind) && o.kind !== "stone") m.objects[k2] = { kind:"stone", hp:ORES.stone.hp };
+    k2 = route.prev[k2]; } }
+  put(m, sx, sy, "stone", { hp:ORES.stone.hp, stairs:true });   // THE rock that hides the way down
 
-  // deep story vault — never sit it on the only corridor down, or a low-Mining player is stranded
+  // deep story vault — keep it off the stairs route (never strand a low miner)
   if(depth >= 5 && !state.flags.foundVault){
-    const r = pathDown(false), onPath = new Set();
-    if(r){ let k2 = r.endK; while(k2){ onPath.add(k2); k2 = r.prev[k2]; } }
-    let vx = dx-2, vy = dy;
-    if(onPath.has(key(vx,vy)) || m.objects[key(vx,vy)] || m.tiles[vy*W+vx] !== T.MFLOOR){
-      const cand = floors.filter(([x,y]) => !m.objects[key(x,y)] && !onPath.has(key(x,y))
-        && Math.abs(x-ux)+Math.abs(y-uy) > 6 && Math.abs(x-dx)+Math.abs(y-dy) > 1);
-      if(cand.length){ const c = cand[randiR(rng,0,cand.length-1)]; vx=c[0]; vy=c[1]; }
-    }
-    put(m, vx, vy, "sealeddoor", {story:"vault"});
+    const onPath = new Set(); if(route){ let k2 = route.endK; while(k2){ onPath.add(k2); k2 = route.prev[k2]; } }
+    const cand = floors.filter(([x,y]) => !m.objects[key(x,y)] && !onPath.has(key(x,y))
+      && !(x===sx&&y===sy) && Math.abs(x-ux)+Math.abs(y-uy) > 6);
+    if(cand.length){ const c = cand[randiR(rng,0,cand.length-1)]; put(m, c[0], c[1], "sealeddoor", {story:"vault"}); }
   }
-  m.subtitle = "Floor " + depth + (depth>=5?"  ·  something glimmers below":"");
-  m.meta.up = {x:ux,y:uy}; m.meta.down = {x:dx,y:dy};
+  m.subtitle = "Floor " + depth + "  ·  the way down is here somewhere";
+  m.meta.up = {x:ux,y:uy};   // entry (diagnostic only; nothing reads meta). No fixed down-portal now — the way down hides under the stairs rock.
 }
 function doWarp(w){
   if(!w) return;

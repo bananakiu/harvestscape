@@ -381,14 +381,23 @@ function useTool(){
     obj.hp -= hit; obj.shakeT = 0.2; cam.shake = 2.2; hitstop = 0.05; playSfx("mine");
     pChips(tx*TILE+8, ty*TILE+8, "#9a9a9a", 5);
     if(o.gem) pSparkle(tx*TILE+8, ty*TILE+8, o.gem, 4);
-    if(obj.hp <= 0){ delete curMap.objects[key(tx,ty)];
+    if(obj.hp <= 0){
+      const wasStairs = obj.stairs;
       const n = 1 + (hasMastery("Mining",50) && chance(0.15) ? 1 : 0);  // ★ Rich Seam
       give(o.drop, n); addXP("Mining", o.xp); bump("mined");
       // v3.18 — the star gem comes only off a Star Metal vein: same celestial deposit as the metal.
       // Rare because the vein itself is (Mining 50, floor 35+), and it's what the ultimate tools want.
       if(o === ORES.starmetal && chance(0.30)){ give("Starstone", 1);
         pSparkle(tx*TILE+8, ty*TILE+8, GEMS.Starstone, 16); floatText(state.px, state.py-30, "✦ a Starstone!", "#c8b8ff"); }
-      pSparkle(tx*TILE+8, ty*TILE+8, o.gem||"#cfcfcf", n>1?14:8); playSfx("ore"); }
+      if(wasStairs){   // v3.19 — this plain rock hid the way down; break it and the shaft opens
+        curMap.objects[key(tx,ty)] = { kind:"ladderdown" };
+        toast("The rock crumbles away over a black shaft — the way down!", "#cbb98f");
+        playSfx("upgrade"); pSparkle(tx*TILE+8, ty*TILE+8, "#c8d0e0", 16); floatText(state.px, state.py-34, "↓ found the stairs", "#a9b0c0");
+      } else {
+        delete curMap.objects[key(tx,ty)];
+        pSparkle(tx*TILE+8, ty*TILE+8, o.gem||"#cfcfcf", n>1?14:8); playSfx("ore");
+      }
+    }
   }
   else if(tool === "Rod"){
     if(tt !== T.WATER){ toast("Face the water to fish."); return; }

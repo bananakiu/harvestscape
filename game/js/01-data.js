@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.18.0", code: 55, codename: "A Handful of Stars", date: "2026-07-14" };
+const VERSION = { name: "3.19.0", code: 56, codename: "The Way Down", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.19.0", code:56, date:"2026-07-14", name:"The Way Down", notes:[
+    { t:"new",     s:"The stairs down are hidden. There's no ladder waiting in the corner anymore — the way down is buried under a single rock, somewhere on the floor, and you won't know which until you break it open. So you work the whole floor, swinging at the plain grey stone, until one rock crumbles away over a black shaft. It's a little dungeon-crawl now, the way the old farm games did it — every floor a small search." },
+    { t:"balance", s:"Ore is about three times rarer, and most of what you'll break is plain stone. So a copper vein actually feels like a find again — and to match, every ore is worth roughly three times the Mining XP it used to be. You swing more and strike ore less, but each strike counts for more. The way down is always diggable by anyone: whatever lies on the path to the stairs is guaranteed to be plain stone, so a green miner can never get walled off from descending." },
+  ]},
   { v:"3.18.0", code:55, date:"2026-07-14", name:"A Handful of Stars", notes:[
     { t:"new",   s:"The gems now read like an old adventurer's haul: Opal, Topaz, Sapphire, Emerald, Ruby, and Diamond, humblest to grandest. And above them all — the Starstone: a violet gem of the same fallen light as the star metal, given up only by the deep Star Metal veins, maybe one a season. It's what the finest tools are forged around." },
     { t:"new",   s:"(Gary is safe. He's still an amethyst, still Pip's, still yours — just no longer something the mine hands out to anyone. Pip would like an Opal to keep him company, though.)" },
@@ -289,16 +293,19 @@ const ORES = {
   // Stone at 1 (you start here — there's plenty of it, above ground and on the early floors), then
   // copper 10, iron 20, gold 30, cobalt 40, star metal 50. Stone gives a little more XP now so the
   // grind up to copper isn't a slog.
-  stone:  { name:"Stone Rock",  lvl:1,  hp:2,  xp:12,  drop:"Stone",      gem:null,      col:"#9a9a9a" },
-  copper: { name:"Copper Vein", lvl:10, hp:4,  xp:26,  drop:"Copper Ore", gem:"#e08a45", col:"#c77b3f" },
-  iron:   { name:"Iron Vein",   lvl:20, hp:8,  xp:62,  drop:"Iron Ore",   gem:"#d8c4bc", col:"#bfa8a0" },
-  gold:   { name:"Gold Vein",   lvl:30, hp:12, xp:145, drop:"Gold Ore",   gem:"#ffe27a", col:"#ffd75a" },
+  // v3.19 — a vein is ~3× rarer now (the mine is mostly plain stone you dig through), so each is a
+  // real find and pays ~3× the XP to match. Stone stays humble filler (there's a lot of it, and it
+  // hides the stairs down + feeds Deep Run staircases).
+  stone:  { name:"Stone Rock",  lvl:1,  hp:2,  xp:8,   drop:"Stone",      gem:null,      col:"#9a9a9a" },
+  copper: { name:"Copper Vein", lvl:10, hp:4,  xp:78,  drop:"Copper Ore", gem:"#e08a45", col:"#c77b3f" },
+  iron:   { name:"Iron Vein",   lvl:20, hp:8,  xp:186, drop:"Iron Ore",   gem:"#d8c4bc", col:"#bfa8a0" },
+  gold:   { name:"Gold Vein",   lvl:30, hp:12, xp:435, drop:"Gold Ore",   gem:"#ffe27a", col:"#ffd75a" },
   // The Long Climb (v3.10): two deep veins so Mining pays content past Gold (L28) — planted at L45
   // and L70, the heart of the old 71-level dead zone. They spawn only on the deep ore table (below),
   // so shallow floors read exactly as tuned; a low miner facing one gets the "come back stronger"
   // gate, same as Gold today. Rock + cracked sprites auto-generate from `gem`; the drop is a sink.
-  cobalt:    { name:"Cobalt Vein",     lvl:40, hp:16, xp:240, drop:"Cobalt Ore",       gem:"#6a8ad8", col:"#4a6ac8" },
-  starmetal: { name:"Star Metal Vein", lvl:50, hp:22, xp:520, drop:"Star Metal Shard", gem:"#c8ecff", col:"#a8c8e8" },
+  cobalt:    { name:"Cobalt Vein",     lvl:40, hp:16, xp:720,  drop:"Cobalt Ore",       gem:"#6a8ad8", col:"#4a6ac8" },
+  starmetal: { name:"Star Metal Vein", lvl:50, hp:22, xp:1560, drop:"Star Metal Shard", gem:"#c8ecff", col:"#a8c8e8" },
 };
 
 // ---- FISH ----
