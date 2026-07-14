@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.17.0", code: 54, codename: "The Miner's Ladder", date: "2026-07-14" };
+const VERSION = { name: "3.18.0", code: 55, codename: "A Handful of Stars", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.18.0", code:55, date:"2026-07-14", name:"A Handful of Stars", notes:[
+    { t:"new",   s:"The gems now read like an old adventurer's haul: Opal, Topaz, Sapphire, Emerald, Ruby, and Diamond, humblest to grandest. And above them all — the Starstone: a violet gem of the same fallen light as the star metal, given up only by the deep Star Metal veins, maybe one a season. It's what the finest tools are forged around." },
+    { t:"new",   s:"(Gary is safe. He's still an amethyst, still Pip's, still yours — just no longer something the mine hands out to anyone. Pip would like an Opal to keep him company, though.)" },
+  ]},
   { v:"3.17.0", code:54, date:"2026-07-14", name:"The Miner's Ladder", notes:[
     { t:"balance", s:"Tiering is clean and predictable now, every ten levels: mine stone from the start, copper at Mining 10, iron 20, gold 30, cobalt 40, star metal 50. There's plenty of stone to begin with — above ground on the ridge and on the early floors — so you've always something to swing at while you climb." },
     { t:"balance", s:"Tool upgrades are gated behind skill, not just materials. A shiny Copper Pick wants Mining 10; an Iron Axe wants Woodcutting 20; and so on up the ladder. Hoarding a pile of ore no longer buys you a tool you haven't earned the skill to swing — progression stays honest." },
@@ -424,7 +428,7 @@ const LEGEND_BY_ID = {}; LEGENDS.forEach(l => LEGEND_BY_ID[l.id] = l);
 
 // ---- SELL VALUES ----
 const ITEM_SELL = { "Wood":12, "Pine Wood":28, "Maple Wood":52, "Willow Wood":34, "Elder Wood":95, "Heartwood":210, "Silverwood":340,
-  "Stone":3, "Copper Ore":30, "Iron Ore":68, "Gold Ore":165, "Cobalt Ore":300, "Star Metal Shard":450 };   // shard seats just under Diamond (480) — an ore must never out-value the rarest gem
+  "Stone":3, "Copper Ore":30, "Iron Ore":68, "Gold Ore":165, "Cobalt Ore":300, "Star Metal Shard":450 };   // shard seats under Diamond (520) — an ore must never out-value a common gem (the Starstone is a class apart)
 FISH.forEach(f => { ITEM_SELL[f.name] = f.sell; ITEM_SELL["Cooked "+f.name] = Math.floor(f.sell*1.75); });
 LEGENDS.forEach(l => { ITEM_SELL[l.name] = l.sell; });   // trophies. You don't cook a Stormrider.
 for(const k in CROPS) ITEM_SELL[CROPS[k].name] = CROPS[k].sell;
@@ -434,20 +438,26 @@ const EDIBLE = { "Berry Bun":34, "Field Salad":26 };
 FISH.forEach(f => EDIBLE["Cooked "+f.name] = 22 + f.lvl);
 
 // ---- GEMS (from the mine) & SHORE forage (from the beach) ----
-const GEMS = { Amethyst:"#a877e0", Topaz:"#e8b23a", Emerald:"#3ec878", Ruby:"#e0455a", Diamond:"#b8ecf7" };
-// Trimmed from 120/160/280/360/640 (owner playtest 2026-07-12: "the gems are just too easy to
-// get… suddenly everything else is immaterial"). Gems are a treat now, not the economy — and they
-// gained non-sell uses the same week (tier-3 tools, the deep lift stop), so finding one still sings.
-const GEM_SELL = { Amethyst:75, Topaz:110, Emerald:190, Ruby:260, Diamond:480 };
-// Drops are weighted toward the humble end — a Diamond is an event, not a Tuesday.
-const GEM_WEIGHTS = [["Amethyst",4],["Topaz",3],["Emerald",2],["Ruby",1.5],["Diamond",0.5]];
+// v3.18 — a RuneScape-shaped gem ladder: Opal (humblest) → Topaz → Sapphire → Emerald → Ruby →
+// Diamond, and above them all the STARSTONE — the Onyx/Zenyte-rare gem, kin to the vault's star
+// metal, that only the deep Star Metal veins give up (and that the ultimate tools are forged around).
+// Amethyst stays for one reason: it's Gary, Pip's keepsake — kept for his sprite/lore, out of the pool.
+const GEMS = { Opal:"#bcd8d4", Topaz:"#e8b23a", Sapphire:"#3a6ad0", Emerald:"#3ec878", Ruby:"#e0455a",
+  Diamond:"#b8ecf7", Starstone:"#c8b8ff", Amethyst:"#a877e0" };
+// Values sit low (owner playtest 2026-07-12: gems are a treat, not the economy) and gems are 5× rarer
+// since v3.16; the Starstone is the exception — a genuine trophy, though you'll want to keep it for a tool.
+const GEM_SELL = { Opal:60, Topaz:100, Sapphire:160, Emerald:240, Ruby:340, Diamond:520, Starstone:1800 };
+// Drops weighted toward the humble end — a Diamond is an event. (Starstone is NOT here: it never rolls
+// from an ordinary gem rock; it comes only off a Star Metal vein — see the mining code.)
+const GEM_WEIGHTS = [["Opal",5],["Topaz",3.5],["Sapphire",2.2],["Emerald",1.4],["Ruby",0.8],["Diamond",0.35]];
 function pickGem(){
   let t=0; for(const [,w] of GEM_WEIGHTS) t+=w;
   let x=Math.random()*t;
   for(const [g,w] of GEM_WEIGHTS){ if((x-=w)<0) return g; }
-  return "Amethyst";
+  return "Opal";
 }
 for(const g in GEM_SELL) ITEM_SELL[g] = GEM_SELL[g];
+ITEM_SELL["Amethyst"] = 75;   // Gary — kept sellable (Pip will "KNOW"), but he's no longer mined or in the museum
 const SHORE = { Shell:22, Coral:48, Seaweed:14, Clam:38, Pearl:260 };
 for(const s in SHORE) ITEM_SELL[s] = SHORE[s];
 EDIBLE["Clam"] = 20;
@@ -657,7 +667,7 @@ const REQUESTS = [
   { who:"maya",  item:"Strawberry",  qty:3,  lvl:10, line:"…No reason. No reason at all. Stop smiling like that." },
   { who:"rowan", item:"Iron Ore",    qty:4,  lvl:20, line:"A hinge on the mining wing. Eleven years it has hung crooked and eleven years it has bothered me." },
   { who:"tom",   item:"Trout",       qty:2,  lvl:12, line:"A gentleman from the coast is coming and I have promised him river fish. I have promised him a great deal." },
-  { who:"pip",   item:"Amethyst",    qty:1,  lvl:12, line:"Gary needs a FRIEND. It's not for me. It's for Gary. He gets lonely in the box." },
+  { who:"pip",   item:"Opal",        qty:1,  lvl:10, line:"Gary needs a FRIEND. It's not for me. It's for Gary. He gets lonely in the box." },
   { who:"maya",  item:"Carrot",      qty:5,  lvl:6,  line:"Soup for Rowan. He'll say he isn't hungry and then eat the whole pot. He does it every year." },
   { who:"bram",  item:"Salmon",      qty:2,  lvl:20, line:"Not for me. For the smoker. The smoker doesn't care whose hands did the work — and neither do I." },
   { who:"rowan", item:"Emerald",     qty:1,  lvl:20, line:"For the Guild seal. Green for growing. Your grandfather chose that stone and I have never told him I agreed." },
@@ -689,8 +699,8 @@ const TIER_COST  = [null,
   { g:300,   mats:{ "Copper Ore":5, "Wood":10 } },
   { g:1200,  mats:{ "Iron Ore":5,  "Pine Wood":10 } },
   { g:5000,  mats:{ "Gold Ore":5,  "Maple Wood":10 } },
-  { g:12000, mats:{ "Star Metal Shard":4, "Cobalt Ore":8, "Silverwood":8, "Heartwood":4 } }];
-const TIER3_GEM  = { Hoe:"Amethyst", Can:"Topaz", Axe:"Emerald", Pick:"Ruby", Rod:"Pearl" };
+  { g:12000, mats:{ "Star Metal Shard":4, "Cobalt Ore":8, "Silverwood":8, "Heartwood":4, "Starstone":1 } }];   // v3.18: the star gem crowns the ultimate tool
+const TIER3_GEM  = { Hoe:"Opal", Can:"Topaz", Axe:"Emerald", Pick:"Ruby", Rod:"Pearl" };   // Hoe was Amethyst (now Gary-only)
 function toolCost(tool, tier){
   const base = TIER_COST[tier]; if(!base) return null;
   const mats = Object.assign({}, base.mats);
@@ -1053,7 +1063,10 @@ const EXAMINE = {
   "Cobalt Ore": "A cold blue metal from the deep floors — it rings when you tap it.",
   "Star Metal Shard": "A splinter of the vault's own metal, humming with a faint blue light.",
   "Staircase": "A folding rig of ladder and plank. Drop it down a shaft and you're three floors deeper in a blink.",
-  "Amethyst": "A purple gem the mine kept to itself for ages.",
+  "Amethyst": "Gary. Pip found him in the dark and named him. A purple keepsake worth more than any vein.",
+  "Opal": "Milky and shy, until the light hits it — then a whole quiet rainbow.",
+  "Sapphire": "Deep cold blue, like the pond under winter ice.",
+  "Starstone": "It holds a fleck of light that moves when you turn it. Kin to the star metal — the deep gives up maybe one a season.",
   "Topaz": "Warm as bottled afternoon sun.",
   "Emerald": "Green as the valley on its best morning.",
   "Ruby": "A deep red gem, quietly showing off.",

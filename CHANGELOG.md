@@ -22,6 +22,43 @@
 
 ---
 
+## v3.18.0 — "A Handful of Stars" · 2026-07-14 · tag `v3.18.0`
+
+Version code **55**. Owner-directed: make the gems read like RuneScape's — a recognizable ladder —
+and add a rare, story-tied top gem in the Onyx/Zenyte mold, kin to the star metal.
+
+### Changed / Added (`01-data.js` unless noted)
+- **Gem ladder → the RuneScape shape**: `GEMS`/`GEM_SELL`/`GEM_WEIGHTS` are now **Opal (60) ·
+  Topaz (100) · Sapphire (160) · Emerald (240) · Ruby (340) · Diamond (520)**, humblest to grandest,
+  weighted so Opal is common and a Diamond is an event. (Values stay low — gems are a treat, not the
+  economy, and they're 5× rarer since v3.16.)
+- **The Starstone** — a super-rare, star-themed, story-tied gem (the Onyx equivalent, 1800g). It is
+  **not** in the ordinary gem-rock pool; it drops **~30% off a Star Metal vein only** (Mining 50,
+  floor 35+ — same fallen deposit as the metal), and it is now **required to forge the Star Metal
+  tools** (`TIER_COST[4]` gains `Starstone:1`), so the rarest gem crowns the finest tools. Reliably
+  attainable — mining the 4 shards a tool needs already gives ~76% odds of a Starstone.
+- **Gary is preserved.** Amethyst is no longer randomly mined or a museum gem, but it stays fully in
+  the game as Pip's keepsake: its sprite, a Gary-flavored examine, the 2-heart gift scene
+  (`give("Amethyst")` unchanged), and a kept 75g value so old Amethysts remain sellable. Pip's
+  noticeboard request and gift-love shift to **Opal** ("a friend for Gary"), and the Gold Hoe's
+  signature gem moves Amethyst → Opal.
+- Examine lines for Opal, Sapphire, and the Starstone; the museum Gems row grows 5 → 7.
+
+### Save compat
+Data-only — no migration needed and none added: pre-v3.18 Amethysts stay sellable (`ITEM_SELL`),
+the Collection recomputes its total live (no cached count, no completion reward to mis-fire), and no
+new top-level state field. An old save's discovered-Amethyst flag is simply never re-listed.
+
+### Review-driven
+A focused adversarial pass **cleared all five risk areas with code evidence** (save migration, Gary
+integrity, Starstone obtainability-vs-requirement — no chicken-and-egg, economy ordering, correctness)
+— zero real defects. Its one nit (a stale "rarest gem (480)" comment on the shard price) is fixed.
+
+*Verified live: `pickGem` rolls Opal→Diamond only (no Starstone/Amethyst); Starstone drops ~28% off
+Star Metal veins and 0 off gem rocks; the Star Metal tool requires it; Gary sellable/examinable with
+his sprite; Pip requests + loves Opal; the museum shows 7 distinct gem sprites; console clean. Atlas
+snapshot v3.18.0.*
+
 ## v3.17.0 — "The Miner's Ladder" · 2026-07-14 · tag `v3.17.0`
 
 Version code **54**. Owner-directed: make tiering RuneScape-clean (memorable, every-10-levels) and

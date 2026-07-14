@@ -561,7 +561,7 @@ const NPCDEF = {
   bram:  { name:"Bram",        portrait:"port_bram",  spr:"bram",  romance:true,
            loved:["Golden Koi","Pearl","Coelacanth"], liked:["Salmon","Coral","Cooked Salmon","Gulf Sturgeon"] },
   pip:   { name:"Pip",         portrait:"port_pip",   spr:"pip",
-           loved:["Amethyst","Berry Bun"], liked:["Shell","Starfruit","Topaz","Wool","Melon"] },
+           loved:["Opal","Berry Bun"], liked:["Shell","Starfruit","Topaz","Wool","Melon"] },   // Opal for Gary's friend (Amethyst is Gary himself now)
   elias: { name:"Elias",       portrait:"port_elias", spr:"elias",
            loved:["Golden Koi","Pearl","Prize Fleece"], liked:["Trout","Salmon","Coral","Cooked","Wool"] },
 };

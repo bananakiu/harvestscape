@@ -384,6 +384,10 @@ function useTool(){
     if(obj.hp <= 0){ delete curMap.objects[key(tx,ty)];
       const n = 1 + (hasMastery("Mining",50) && chance(0.15) ? 1 : 0);  // ★ Rich Seam
       give(o.drop, n); addXP("Mining", o.xp); bump("mined");
+      // v3.18 — the star gem comes only off a Star Metal vein: same celestial deposit as the metal.
+      // Rare because the vein itself is (Mining 50, floor 35+), and it's what the ultimate tools want.
+      if(o === ORES.starmetal && chance(0.30)){ give("Starstone", 1);
+        pSparkle(tx*TILE+8, ty*TILE+8, GEMS.Starstone, 16); floatText(state.px, state.py-30, "✦ a Starstone!", "#c8b8ff"); }
       pSparkle(tx*TILE+8, ty*TILE+8, o.gem||"#cfcfcf", n>1?14:8); playSfx("ore"); }
   }
   else if(tool === "Rod"){
