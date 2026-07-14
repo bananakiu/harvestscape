@@ -111,6 +111,10 @@ Treat the changelog as non-optional deliverable output, the same as the code its
 - `NEW_PLAYER_EXPERIENCE.md` — the onboarding beta plan (shipped in v2.2.0; polish tier still
   on the roadmap).
 - `GAME_DESIGN_PRINCIPLES.md` — the design bible; the yardstick audits grade against.
+- `GAME_BALANCE_PRINCIPLES.md` — the balancing playbook: distilled, evidence-anchored rules for
+  gold / XP / progression, plus a runnable checklist, a failure-mode graveyard, and a live
+  reference-numbers appendix. **Read this before changing any economy, XP, or tier number** — it
+  operationalizes the bible's economy/progression sections with anchors from our own rebalances.
 - `DESIGN_SCORECARD.md` — latest graded audit of the build vs. the principles.
 - `README.md`, `GAME_SCOPE.md`, `DESIGN_REVIEW.md`, `DESIGN_V1.5.md`, `ROADMAP_V2.html` —
   scope and planning history.

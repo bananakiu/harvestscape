@@ -56,6 +56,8 @@ Sell and upgrade at **Tom's stall**; **sleep at your cottage door** to pass the 
 - `atlas/` — one atlas snapshot per release (start at `atlas/index.html`): the state of the game at every version, back to v2.1.0. Written automatically by the generator; part of the release checklist.
 - `tools/` — repo tooling (currently just the atlas generator).
 - `GROVE_DEPTHS.md` — the Grove Depths plan (depth rings, waystones on a pledge ledger, tree rarity, canopy treasure, plus the mine lift's ledger retrofit). Shipped in v3.3.0 "The Wood Remembers".
+- `GAME_DESIGN_PRINCIPLES.md` — the design bible; the yardstick the audits grade against.
+- `GAME_BALANCE_PRINCIPLES.md` — the balancing playbook: distilled rules for gold, XP, and progression, each anchored to a real rebalance in this game's history, with a checklist, failure-mode list, and a live reference-numbers appendix. Read it before touching any economy/XP/tier number.
 - `NEW_PLAYER_EXPERIENCE.md` — the onboarding beta plan (shipped in v2.2.0 "First Light"; its polish tier remains on the roadmap).
 - `AGENTS.md` — instructions for any AI agent working in this repo (canonical; `CLAUDE.md`, `GEMINI.md`, etc. are symlinks to it).
 - `GAME_SCOPE.md` — the original design vision (the larger Godot ambition this browser build is the vertical slice of).

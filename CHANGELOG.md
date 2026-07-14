@@ -22,6 +22,35 @@
 
 ---
 
+## Reference docs — `GAME_BALANCE_PRINCIPLES.md`, the balancing playbook · 2026-07-14
+
+Docs-only; no game change, no version bump, no atlas regen. Adds one new reference doc,
+`GAME_BALANCE_PRINCIPLES.md`, and links it from `README.md` and `AGENTS.md`.
+
+**Why.** The reasoning behind every gold / XP / progression decision is *recorded* — spread
+across 35 releases of this changelog, the owner's verdicts in `DEVLOG.md`, the graded audits,
+the plan docs (`ECONOMY_REBALANCE.md`, `GROVE_DEPTHS.md`), and terse comments in `01-data.js`.
+But it was never *distilled*: an agent about to change a number had to re-derive the whole
+history to avoid repeating a mistake we already made and fixed. The genre's hardest problem —
+balancing a Harvest Moon / Stardew economy against a RuneScape 1–99 grind — deserves a single
+prescriptive playbook, not a scavenger hunt.
+
+**What it is.** A principle-first companion to `GAME_DESIGN_PRINCIPLES.md` that *operationalizes*
+its economy/progression/psychology sections rather than restating them. Every principle carries a
+real anchor from our own history (the "one faucet, one key" collapse → the split-key fix; the v2.7
+XP overshoot → v2.8 "early levels must be earned"; the gem faucet nerfed to a treat; "a waystone
+must never waste the trip"; "an ore must never out-value a common gem"). It ends with a runnable
+**balancing checklist**, a **failure-mode graveyard**, a **one-lesson-per-release timeline**, and a
+**live reference-numbers appendix** (the XP curve, crop g/day trend, tool-tier ladder, `GEM_SELL`,
+ore/wood ladders, `DEMAND` constants, mine spawn coefficients).
+
+**How it was built & checked.** Distilled from the full audit trail via a fan-out review of every
+source doc plus the code/comments (157 balancing decisions extracted), synthesized, then run through
+an adversarial critique pass. Every *current-state* number in the appendix was verified against the
+live code (`XP_TABLE` `inc()`, `TIER_COST`/`TIER_LEVEL`, `GEM_SELL`/`GEM_WEIGHTS`, `DEMAND`, `DECOR`,
+`WOOL_REGROW`, `DIFF_MAX`, `genMine` coefficients, the 30% Starstone roll) before shipping, so the
+doc's ladders are the numbers of record, not a paraphrase that can drift.
+
 ## v3.18.0 — "A Handful of Stars" · 2026-07-14 · tag `v3.18.0`
 
 Version code **55**. Owner-directed: make the gems read like RuneScape's — a recognizable ladder —
