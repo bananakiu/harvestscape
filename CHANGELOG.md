@@ -22,6 +22,30 @@
 
 ---
 
+## v3.11.0 — "Second Helpings" · 2026-07-14 · tag `v3.11.0`
+
+Version code **48**. The companion to v3.10 and the last skill desert: Cooking's recipe ladder
+stopped at Frostbloom Tea (L40), so L41–99 (the back 60% of the climb) taught no new dishes. This
+fills it — and the new recipes eat exactly the crops and deep-sea fish The Long Climb just added,
+so the two releases close a loop: grow/catch the new content, then cook it.
+
+### Added — eight late recipes (`RECIPES`, `01-data.js`), pure data; each auto-inherits its plate
+sprite (from `col`), `ITEM_SELL`, `EDIBLE`, the Kitchen collection slot, and the skills-panel
+next-unlock. Priced on the series' existing ~1.4× profit-over-ingredients line (Tom's per-dish
+demand still caps the daily take):
+- **Rhubarb Pie** (L44) · **Melon Sorbet** (L48) · **Stuffed Artichoke** (L54) · **Grape Tart**
+  (L60) · **Harvest Roast** (L68, Yam) · **Fisherman's Pie** (L74, Salmon + Yam) · **Everbloom
+  Cordial** (L82, the winter flower bottled) · **Grand Feast** (L90) — the crown dish, needing
+  Gulf Sturgeon + Yam + Everbloom, i.e. mastery in Fishing, Farming *and* Cooking at once. The
+  "mastery award in the end" the owner asked for, now spread across three skills' peaks.
+- Examine lines for all eight; Cooking's content ceiling moves L40 → L90.
+
+*Verified live: every dish cooks and consumes its ingredients; the level gate blocks (Cooking 40
+can't make the L44 pie) and shows 🔒 in the kitchen; every dish is profitable (sell > raw
+ingredients); sprite/sell/EDIBLE/Kitchen-museum/examine/next-unlock all auto-derived; console clean.
+Small pure-data addendum to the adversarially-reviewed v3.10, reusing that release's fully-exercised
+recipe system. Atlas snapshot v3.11.0.*
+
 ## v3.10.0 — "The Long Climb" · 2026-07-14 · tag `v3.10.0`
 
 Version code **47**. The game's deepest, longest-standing design gap — the one the docs name as

@@ -8,13 +8,16 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.10.0", code: 47, codename: "The Long Climb", date: "2026-07-14" };
+const VERSION = { name: "3.11.0", code: 48, codename: "Second Helpings", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.11.0", code:48, date:"2026-07-14", name:"Second Helpings", notes:[
+    { t:"new",   s:"The kitchen keeps teaching you dishes all the way up — eight new recipes from Rhubarb Pie (Cooking 44) to the Grand Feast (Cooking 90), the crown dish that needs the valley's finest crop, catch, and a master's hand. They cook up The Long Climb's new harvest and deep-sea fish, so nothing you grow or land goes to waste." },
+  ]},
   { v:"3.10.0", code:47, date:"2026-07-14", name:"The Long Climb", notes:[
     { t:"new",   s:"Every skill keeps giving you new things to find, all the way up. Farming gains six late crops (Rhubarb, Melon, Artichoke, Grape, Yam, and a winter Everbloom); the coast hides four deep-water fish for master anglers (up to the Coelacanth, a living fossil)." },
     { t:"new",   s:"The mine's deep floors now hold Cobalt and Star Metal veins, and the deepest grove ring grows Silverwood — so Mining and Woodcutting reward levels past where they used to run dry. Each new find feeds the Cellar, the Collection, gifts, and the market." },
@@ -456,6 +459,19 @@ const RECIPES = [
   { name:"Fish Stew",         lvl:32, ing:{Salmon:1, Carrot:1, Tomato:1},energy:88,  sell:680, xp:48, col:"#d76a4a" },
   { name:"Cranberry Sauce",   lvl:36, ing:{Cranberry:2},                 energy:60,  sell:730, xp:40, col:"#c02a3a" },
   { name:"Frostbloom Tea",    lvl:40, ing:{Frostbloom:1, Milk:1},        energy:70,  sell:590, xp:44, col:"#a8d8f0" },
+  // Second Helpings (v3.11): eight late dishes so Cooking keeps unlocking recipes to L90, not just
+  // perks — and they eat The Long Climb's new crops & fish, closing that loop. Each sells at the
+  // series' ~1.4x-over-ingredients profit line (Tom's per-dish demand still caps the daily take),
+  // and auto-inherits its plate sprite (from col), sell, EDIBLE, the Kitchen collection, and the
+  // skills-panel next-unlock. The crown, Grand Feast, needs mastery in Farming, Fishing AND Cooking.
+  { name:"Rhubarb Pie",       lvl:44, ing:{Rhubarb:1, Wheat:2},              energy:85,  sell:820,  xp:92,  col:"#d0454a" },
+  { name:"Melon Sorbet",      lvl:48, ing:{Melon:1, Milk:1},                 energy:90,  sell:1050, xp:100, col:"#8fd06a" },
+  { name:"Stuffed Artichoke", lvl:54, ing:{Artichoke:1, Egg:1, Wheat:1},     energy:96,  sell:1280, xp:115, col:"#a8b87a" },
+  { name:"Grape Tart",        lvl:60, ing:{Grape:1, Wheat:1},                energy:92,  sell:1400, xp:130, col:"#7a4a9a" },
+  { name:"Harvest Roast",     lvl:68, ing:{Yam:1, Carrot:2},                 energy:100, sell:2050, xp:155, col:"#c06a3a" },
+  { name:"Fisherman's Pie",   lvl:74, ing:{Salmon:1, Yam:1, Milk:1},         energy:100, sell:2250, xp:178, col:"#d0a060" },
+  { name:"Everbloom Cordial", lvl:82, ing:{Everbloom:1, Honey:1},            energy:90,  sell:2400, xp:215, col:"#c8b0f0" },
+  { name:"Grand Feast",       lvl:90, ing:{"Gulf Sturgeon":1, Yam:1, Everbloom:1}, energy:100, sell:5400, xp:285, col:"#e0c070" },
 ];
 RECIPES.forEach(r => { ITEM_SELL[r.name] = r.sell; EDIBLE[r.name] = r.energy; });
 
@@ -992,6 +1008,14 @@ const EXAMINE = {
   "Fish Stew": "Even Bram would nod at this one.",
   "Cranberry Sauce": "Tart enough to wake the whole table.",
   "Frostbloom Tea": "Steam on the window while snow falls outside.",
+  "Rhubarb Pie": "Sweet-tart under a golden lid — best still warm from the oven.",
+  "Melon Sorbet": "Cold, pale green, and gone in about four spoonfuls.",
+  "Stuffed Artichoke": "Fiddly to make, and worth every leaf.",
+  "Grape Tart": "Glossy dark fruit on butter pastry. A little showy, honestly.",
+  "Harvest Roast": "Roots and roast, the whole of autumn on one plate.",
+  "Fisherman's Pie": "Bram's mother's recipe, more or less. He'd never admit it.",
+  "Everbloom Cordial": "Winter's only flower, bottled bright. It tastes like a held breath.",
+  "Grand Feast": "The whole valley's best on one table — land, sea, and the long climb it took to set it.",
   "Field Salad": "Wild greens, gathered along the lane.",
   "Frostberry": "It ripens only when everything else sleeps.",
   "Berry Bun": "Pip's favourite thing in the entire world.",
