@@ -1,4 +1,96 @@
-# HarvestScape Design Scorecard — v2.0 Re-Audit (July 2026)
+# HarvestScape Design Scorecard — v3.11 Re-Audit (2026-07-14)
+
+**Overall grade: A− (held from v2.0 — but the floor underneath rose materially)**
+
+Re-audit of the v3.11.0 working tree against `GAME_DESIGN_PRINCIPLES.md` by four
+independent pillar audits (Cozy base / Progression / Story+Whimsy / Presentation) plus a
+synthesis pass, each reading the full v2.1→v3.11 changelog and the live code with
+file-level evidence required. The prior graded audit was v2.0 (below, kept as history);
+~24 releases shipped between them.
+
+**Verdict:** the letter holds at **A−**, but that understates the work — **six dimensions
+rose and none fell**, and the two weaknesses the v2.0 audit named as the game's core
+tension are both substantially healed: the skill-content deserts (Skill Progression
+**B−→B+**) and the flat story (Quests & Story **B+→A−**). What keeps it at A− rather than A
+is that four *structural* gaps no release has touched now stand out clearly against the
+higher floor: the audio bed (**B−**, unmoved ~5 audits), the mine's lost expedition tension
+(§6.2–6.4 structurally gone since the underground clock was frozen in v2.9), the late-game
+gold-sink drought (§3.6, *widened* by v3.10/3.11's new high-value faucets), and value-only
+`shade()` (§8.1's #1 rule, capped since v1.5).
+
+| Pillar | Dimension | v2.0 | v3.11 | Δ |
+|---|---|---|---|---|
+| Cozy base | Day Loop | A | **A** | — |
+| Cozy base | Interlocking Economy | A− | **A−** | — |
+| Cozy base | Pacing the Year | A | **A** | — |
+| RuneScape layer | Skill Progression | B− | **B+** | ▲ |
+| RuneScape layer | Quests & Story | B+ | **A−** | ▲ |
+| RuneScape layer | Mine / Expedition | B− | **B** | ▲ |
+| RuneScape layer | Whimsy & Tone | A− | **A** | ▲ |
+| Presentation | Visual Coziness | A− | **A−** | — |
+| Presentation | Juice / Game Feel | B | **B+** | ▲ |
+| Presentation | Audio | B− | **B−** | — |
+| Presentation | UI | A | **A** | — |
+| Presentation | Cozy Contract | A | **A+** | ▲ |
+
+*(Psychology folded into its neighbours this pass; it tracks A−, lifted by the Collection,
+mastery praise, and the goal-ladder work.)*
+
+## What rose, and the evidence
+- **Skill Progression B−→B+** — v3.10 "The Long Climb" + v3.11 "Second Helpings" filled the
+  content deserts the v2.0 audit flagged: 6 late crops (L30–90), 4 deep fish (L40–85), 8
+  recipes (L44–90), and Cooking went from *zero* gated recipes to a full 1→90 ladder.
+  `nextUnlock()` now renders on every skill tile; mastery praise speaks at 25/50/75/99. Held
+  under A− by Mining's residual 28→45→70 gaps and the level-up banner still not previewing
+  the next unlock.
+- **Quests & Story B+→A−** — the v3.4–3.6 overhaul attacked all five DEVLOG "falls flat"
+  causes: healing is now *physical* (the village rebuilds per lit wing, with a rubble
+  "before"), Act I seeds questions (the planked door, Maya's scribbled-out figure, Tom's
+  slipped "El—"), the quest rewrite gave gates a human voice, and the Lantern Test is a real
+  midpoint. Under A by: every objective is still a numeric threshold (zero bespoke-mechanic
+  quests, §4.4), no quest-point meta-currency, and a linear arc with no player choice.
+- **Mine B−→B** — depth banking is visible, paid, permanent (the Old Lift's pledge ledger);
+  shallow-camping is no longer optimal. Under B+ by the lost expedition tension (below).
+- **Whimsy A−→A** — the "#1 free whimsy channel," examine text, is fully closed: ~130 items
+  + objects + NPCs + tiles, all voiced.
+- **Juice B→B+** — the dormant tween system is wired (gold count-up, item-pop bloom/apex-hang),
+  plus corner-nudging. Under A− by missing squash-&-stretch on watered crops / player.
+- **Cozy Contract A→A+** — the two v2.0 holds retired (red danger vignette → warm sleepy haze;
+  lightning wash capped), and every new system is contract-exemplary.
+
+## Ranked priorities (next work)
+1. **[M] Give the terminal deep resources a downstream loop** — Cobalt Ore, Star Metal Shard,
+   Silverwood, Heartwood are *sell-only* (tool tiers stop at Gold; `machineLoadable` excludes
+   ore/wood), so v3.10's Mining/Woodcutting ladders are pure faucet, breaking §3.5
+   reward-is-an-input. One change closes the most goals at once: a **Star-Metal tool tier (4th)
+   + a craft/smith sink for the rare timbers** makes the new veins a real payoff, adds a §4.2
+   *transformative* late unlock (not another same-verb bump), and re-tunes cross-feed
+   (§3.1/3.2). *(Flagged independently by the v3.10 adversarial review too.)*
+2. **[M] Restore the mine's expedition tension the cozy way** — freezing the clock underground
+   (v2.9) removed §6.2's only risk clock, so push-your-luck (§6.3) and consumable-prep (§6.4)
+   are structurally gone. Add an **opt-in "deep run" mode where time flows**, with a
+   **staircase craftable from bulk Stone** (a real sink for the near-dead 3g resource) — a
+   Skull-Cavern loop that never touches the timeless default mine.
+3. **[M] Close the §3.6 gold-sink drought** — PROJECTS is ~20k one-time; there's no infinite
+   decor catalogue and no absurd vanity sink, while v3.10/3.11 widened the faucet (Grand Feast
+   5400g). Ship a **placeable decor/furniture catalogue** (reuse the hive/machine placement
+   path) + **one deliberately absurd vanity buy**.
+4. **[M] The one-file audio pass** — Audio is the only presentation dimension stuck (~5 audits)
+   and the cheapest grade-mover: an **always-on ambient bed** (a low-gain "wind" node + ungate
+   birds/crickets from clear-only) fills §8.3's open hole; **season-keying the scale/timbre**
+   and letting the pad drop out for silence-as-rest lifts it a full grade.
+5. **[L] Make the story spine adventures, not turn-ins** — 1–2 flagship quests with a real
+   bespoke step (item combination / hidden location), a **quest-point tally** aggregating the
+   light content, and one **2-option choice fork** (the deferred Star-Metal choice) — pushes
+   the story's peaks from A− toward A and finally gives narrative autonomy.
+6. **[S] Two cheap high-propagation fixes** — rewrite `shade()` to **hue-shift** (darken +
+   rotate toward blue on shade, warm on highlight; §8.1's #1 rule, propagates through all
+   procedural art) and **preview the next unlock in the level-up banner** (`nextUnlock()`
+   already exists; completes §4.3).
+
+---
+
+# HarvestScape Design Scorecard — v2.0 Re-Audit (July 2026)  *(historical)*
 
 **Overall grade: A− (was B+)**
 
