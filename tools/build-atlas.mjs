@@ -340,7 +340,7 @@ ${ladder("🍳 Cooking", D.MASTERY_NPC?.Cooking, cookRows, D.MASTERY?.Cooking)}
 <p class="prose">Five tools (${D.TOOLS.join(", ")}), upgraded at Tom's forge. Power multiplies the work per swing.</p>
 ${table(["Tier", "Power", "Cost"],
   D.TOOL_TIERS.map((t, i) => [`<b>${esc(t)}</b>`, `×${D.TIER_POWER[i]}`,
-    D.TIER_COST[i] ? `${D.TIER_COST[i].g.toLocaleString("en-US")}g + ${D.TIER_COST[i].n} × ${esc(D.TIER_COST[i].ore)}` : "— (starting kit)"]))}
+    D.TIER_COST[i] ? `${D.TIER_COST[i].g.toLocaleString("en-US")}g + ${Object.entries(D.TIER_COST[i].mats).map(([m, n]) => `${n}× ${esc(m)}`).join(" + ")}` : "— (starting kit)"]))}
 </section>`;
 }
 

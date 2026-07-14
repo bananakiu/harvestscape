@@ -14,6 +14,56 @@
 
 ---
 
+## 2026-07-14 — "wood is too easy to maintain": nerf it, then build construction on top
+
+**Owner (near-verbatim):**
+
+> Wood is too easy to maintain, so let us change things. Make it so that the things that require
+> wood are ten times more, or perhaps five times more, and that they cost three times less … so
+> that they just don't make you too much money. Or, you know what, make them cost three times
+> less, not five times less. It's a little too harsh, but requirements should be like five times
+> more.
+>
+> Start to build this out, but I want a construction system similar to Harvest Moon, where you
+> could turn wood into lumber, and it will be different lumber types. There's wood, maple, oak,
+> willow, etc. Pine — whatever is in the game — and you'll need different types of lumber to
+> construct different things. The introduction to this construction could be through a quest,
+> specifically through building the chicken coop. This way, you could have a chicken coop and
+> eventually a barn, and then an area to have a horse for faster travel, just like in Harvest Moon.
+
+**Interpretation.** Two things bundled: an immediate economy fix, and a large new feature the fix
+sets up.
+
+*The rebalance (shipped as v3.20.0 "Timber").* The owner self-corrected mid-thought — settling on
+**requirements ×5** and **sell ÷3** ("three times less, not five" — 5× was "a little too harsh").
+Read against the code: the money problem is *selling raw wood* (the grove is a renewable faucet, so
+chop-and-sell is near-infinite easy coin), and "too easy to maintain" is that wood sinks barely dent
+a stockpile. So: cut wood's sell to ⅓ (kills the easy purse) and multiply what construction/craft/
+upgrade sinks demand by 5× (makes a log matter). Scoped the ×5 to *things you build* — daily
+noticeboard favours and the one-off driftwood story beat were left alone (×5 there is tedium, not
+economy; the ÷3 sell already right-sizes the favour payout). Flagged the one place ×5 bites hardest:
+`buyTool` charges wood *per tool*, so the Star Metal tier's premium-wood cost, already the heaviest
+sink, becomes a real endgame timber grind for a full 5-tool set — dial-back-able if the owner finds
+it too much.
+
+*The construction epic (building next).* Crucially, the map turned up two facts that shape the whole
+design: (1) **typed wood already exists** — 7 named species (Oak→`Wood`, Pine, Maple, Willow,
+Elderwood, Heartwood, Silverwood), so the owner's "different lumber types" map straight onto a
+**sawmill** that mills each raw wood → its **Lumber**. (2) **The Coop and Barn already exist**, but
+hard-coded into the farm from day one with no build step. To make the coop the construction on-ramp
+the owner wants, gate it behind a `coopBuilt` flag for *new* games (grant it to existing saves via
+`migrateSave` so nobody loses what they have) and introduce it via a build quest — reusing the
+established `proj_`-flag → idempotent-placement pattern (Rowan's Restoration Projects) and the
+`driftwood` "gather → report to NPC → cutscene consumes materials + sets a built flag" quest shape.
+Rowan (last keeper of the Guild of Nine Crafts, already owns the fund-a-build system) becomes the
+construction master — no new carpenter NPC needed. Planned ladder: Sawmill + Lumber → build the Coop
+(quest) → Barn → Horse stable (the first-ever movement-speed mechanic, for faster travel).
+
+**Produced:** v3.20.0 "Timber" (this rebalance; see CHANGELOG.md). Construction system: in progress —
+Sawmill/Lumber next, then the coop build quest, then barn + horse.
+
+---
+
 ## 2026-07-13 (late evening, cont.) — "the farm is now too big": shrink it; expansion goes on the roadmap
 
 **Owner (near-verbatim):**

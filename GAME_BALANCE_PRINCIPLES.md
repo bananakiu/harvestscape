@@ -58,7 +58,7 @@ Design sinks to demand **several resource types from several activities at once*
 
 When a drop becomes the fastest money-printer, cut **rate and unit value together, with several levers at once** (rarity + weighting + price), never one lever alone. And price secondary-gathering output *deliberately under* the farming core's gold-per-level trend (see §10).
 
-> *Anchors:* Gems: spawn 0.018→0.010→0.002 (v2.9.2, v3.16.0), payout reweighted from uniform toward cheap gems, average value ~312g→~150g. Wood: the whole timber ladder sits under the money crops on purpose — Wood 12, Willow 34, Elder Wood 95, Heartwood 210, Silverwood 340 — *"wood value must never outrun the money crops"* (`01-data.js`, the gem lesson). Willow's 34g is the point: the fast-XP camp trains the skill *without* printing money (v3.3.0 Phase 2).
+> *Anchors:* Gems: spawn 0.018→0.010→0.002 (v2.9.2, v3.16.0), payout reweighted from uniform toward cheap gems, average value ~312g→~150g. Wood: the whole timber ladder sits under the money crops on purpose — Wood 4, Willow 11, Elder Wood 32, Heartwood 70, Silverwood 113 (all cut to ~⅓ in v3.20) — *"wood value must never outrun the money crops"* (`01-data.js`, the gem lesson). Willow's 11g is the point: the fast-XP camp trains the skill *without* printing money (v3.3.0 Phase 2). *v3.20 "Timber" went further — sell ÷3 and every construction/craft/upgrade wood requirement ×5 — because the renewable grove made chop-and-sell too easy a purse; wood became a construction material, not an income loop, ahead of the lumber/building system it feeds.*
 
 ### 2.5 Anti-glut / demand — tax sameness, not any one item
 
@@ -102,7 +102,7 @@ The failure mode to fear is *not* "too grindy early" — it's "too cheap early."
 
 Space gather tiers on **clean, memorable breakpoints** (a new ore every 10 Mining levels: stone 1, copper 10, iron 20, gold 30, cobalt 40, star metal 50) and bump the *earliest* tier's XP so the pre-first-unlock grind isn't a slog (stone XP 8→12) (v3.17.0 *The Miner's Ladder*).
 
-Crucially, **separate the XP-efficient node from the gold-efficient one.** Willow is the fast-XP tree (a quick 8-HP chop) but priced cheap (34g); Heartwood is the slow, rare, premium timber (210g) (v3.3.0 Phase 2). Leveling should not automatically print money — that collapses back into the §2.1 failure.
+Crucially, **separate the XP-efficient node from the gold-efficient one.** Willow is the fast-XP tree (a quick 8-HP chop) but priced cheap (11g — a level-30 tree worth less than level-18 Maple's 17g); Heartwood is the slow, rare, premium timber (70g) (v3.3.0 Phase 2; sells cut to ⅓ in v3.20). Leveling should not automatically print money — that collapses back into the §2.1 failure.
 
 ### 3.4 Keep XP sources honest — wood must not out-earn the money crops
 
@@ -128,7 +128,7 @@ Gate power on the **skill the tool belongs to**, not only on hoardable materials
 
 ### 4.3 Multi-skill capstones as achievements
 
-Crown the endgame with rewards that demand **simultaneous mastery in several skills**, so no lone specialist can shortcut it. The Grand Feast (Cooking L90) needs Gulf Sturgeon + Yam + Everbloom — peaks in Fishing, Farming, and Cooking at once (v3.11.0). The Star Metal tool tier (power 5→7) consumes all four terminal deep resources in one recipe — 12,000g + 4 Star Metal Shard + 8 Cobalt + 8 Silverwood + 4 Heartwood (v3.12.0 *Star Metal*); v3.18.0 later added the required **Starstone**, so the top tool is now crowned by the rarest gem too — *"the mastery award in the end"* the owner asked for.
+Crown the endgame with rewards that demand **simultaneous mastery in several skills**, so no lone specialist can shortcut it. The Grand Feast (Cooking L90) needs Gulf Sturgeon + Yam + Everbloom — peaks in Fishing, Farming, and Cooking at once (v3.11.0). The Star Metal tool tier (power 5→7) consumes all four terminal deep resources in one recipe — 12,000g + 4 Star Metal Shard + 8 Cobalt + 40 Silverwood + 20 Heartwood (v3.12.0 *Star Metal*; premium wood ×5 in v3.20); v3.18.0 later added the required **Starstone**, so the top tool is now crowned by the rarest gem too — *"the mastery award in the end"* the owner asked for.
 
 ### 4.4 One honest limiter per venue
 
@@ -330,13 +330,15 @@ Trend: g/day rises ~7→67 across the curve; **Starfruit (62.5) is the deliberat
 
 | Tree | Lvl | HP | XP | Drop | Wood sell |
 |---|---|---|---|---|---|
-| Oak | 1 | 3 | 25 | Wood | 12 |
-| Pine | 8 | 6 | 60 | Pine Wood | 28 |
-| Maple | 18 | 11 | 115 | Maple Wood | 52 |
-| Willow | 30 | 8 | 150 | Willow Wood | 34 |
-| Elderwood | 45 | 16 | 260 | Elder Wood | 95 |
-| Heartwood | 70 | 24 | 520 | Heartwood | 210 |
-| Silverwood | 85 | 30 | 760 | Silverwood | 340 |
+| Oak | 1 | 3 | 25 | Wood | 4 |
+| Pine | 8 | 6 | 60 | Pine Wood | 9 |
+| Maple | 18 | 11 | 115 | Maple Wood | 17 |
+| Willow | 30 | 8 | 150 | Willow Wood | 11 |
+| Elderwood | 45 | 16 | 260 | Elder Wood | 32 |
+| Heartwood | 70 | 24 | 520 | Heartwood | 70 |
+| Silverwood | 85 | 30 | 760 | Silverwood | 113 |
+
+*Wood sell values cut to ~⅓ in v3.20 (the renewable grove made chop-and-sell too easy a purse); wood requirements ×5 across the construction/craft/upgrade sinks. Wood is now a construction material, not an income loop — its value is the XP and the timber you build with, not the coin.*
 
 Trees drop `n:2` logs each (+1 with Clean Fell / Mining-50-equivalent perks). Wood prices sit **below** the g/level trend on purpose (must not out-earn crops).
 
@@ -374,10 +376,10 @@ Cooked fish sells at `floor(sell×1.75)`; edible energy = `22 + fish.lvl`. Legen
 | Tier | Name | Skill lvl | Gold | Materials | Signature gem |
 |---|---|---|---|---|---|
 | 0 | Basic | 1 | — | — | — |
-| 1 | Copper | 10 | 300 | 5 Copper Ore, 10 Wood | — |
-| 2 | Iron | 20 | 1,200 | 5 Iron Ore, 10 Pine Wood | — |
-| 3 | Gold | 30 | 5,000 | 5 Gold Ore, 10 Maple Wood | +1 per-tool gem† |
-| 4 | Star Metal | 40 | 12,000 | 4 Star Metal Shard, 8 Cobalt Ore, 8 Silverwood, 4 Heartwood | +1 Starstone |
+| 1 | Copper | 10 | 300 | 5 Copper Ore, 50 Wood | — |
+| 2 | Iron | 20 | 1,200 | 5 Iron Ore, 50 Pine Wood | — |
+| 3 | Gold | 30 | 5,000 | 5 Gold Ore, 50 Maple Wood | +1 per-tool gem† |
+| 4 | Star Metal | 40 | 12,000 | 4 Star Metal Shard, 8 Cobalt Ore, 40 Silverwood, 20 Heartwood | +1 Starstone |
 
 †Tier-3 (Gold) signature gems: Hoe→Opal, Can→Topaz, Axe→Emerald, Pick→Ruby, Rod→**Pearl** (beach forage). Every upgrade spends wood + ore + coin across skills by design.
 
@@ -419,10 +421,10 @@ Gems were made ×5 rarer in v3.16 (0.010 → 0.002 coefficient). Ore-table by de
 
 | Floor | Gold | Materials |
 |---|---|---|
-| 5 | 500 | 20 Wood, 5 Copper Ore |
-| 10 | 1,500 | 15 Pine Wood, 5 Iron Ore |
-| 15 | 3,000 | 10 Maple Wood, 5 Gold Ore |
-| 20 | 6,000 | 12 Elder Wood, 10 Gold Ore, 1 Diamond |
+| 5 | 500 | 100 Wood, 5 Copper Ore |
+| 10 | 1,500 | 75 Pine Wood, 5 Iron Ore |
+| 15 | 3,000 | 50 Maple Wood, 5 Gold Ore |
+| 20 | 6,000 | 60 Elder Wood, 10 Gold Ore, 1 Diamond |
 | 20+n·5 | 6,000 × 2^(n) | (same as floor 20) |
 
 - **Staircase (Deep Run):** 25 Stone → drops you 3 floors.
@@ -456,9 +458,9 @@ Per-item, per-day. Cheap goods get up to 14 free units, luxuries as few as 3. A 
 | Bird Bath | 1,400 | **Golden Statue** | **300,000** |
 | Topiary | 2,000 | | |
 
-**Rowan's restoration projects** (~20k total): Minecart Line 8,000g (+20 Iron Ore, 30 Wood); Coast Boardwalk 5,000g; Grove Arbor 4,000g; Town Fountain 3,000g (+10 Stone, 2 Emerald).
+**Rowan's restoration projects** (~20k total): Minecart Line 8,000g (+20 Iron Ore, 150 Wood); Coast Boardwalk 5,000g (+200 Wood, 50 Pine Wood); Grove Arbor 4,000g (+50 Elder Wood, 75 Willow Wood); Town Fountain 3,000g (+10 Stone, 2 Emerald). *(Wood reqs ×5 in v3.20.)*
 
-**Other durable sinks:** Keg 900g (+8 Pine Wood, 2 Iron Ore, ×2.2 wine mult); Preserves Jar 550g (×1.6 jam); Beehive 700g (max 4); Sheep 500g (max 4) + Shears 250g one-time; fruit-tree saplings 850–1,300g; deep-lift/waystone pledges (§6–7). Wine sells at `2.2×` raw crop, jam at `1.6×` — both deliberately below the kitchen's best dishes.
+**Other durable sinks:** Keg 900g (+40 Pine Wood, 2 Iron Ore, ×2.2 wine mult); Preserves Jar 550g (+30 Wood, ×1.6 jam); Beehive 700g (max 4); Sheep 500g (max 4) + Shears 250g one-time; fruit-tree saplings 850–1,300g; deep-lift/waystone pledges (§6–7). Wine sells at `2.2×` raw crop, jam at `1.6×` — both deliberately below the kitchen's best dishes.
 
 ---
 

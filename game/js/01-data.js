@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.19.0", code: 56, codename: "The Way Down", date: "2026-07-14" };
+const VERSION = { name: "3.20.0", code: 57, codename: "Timber", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.20.0", code:57, date:"2026-07-14", name:"Timber", notes:[
+    { t:"balance", s:"Wood is worth a third of what it was. The renewable grove made chopping-and-selling a lazy purse, and wood was quietly one of the game's easiest incomes — so every log now sells for roughly ⅓ (Wood 12→4, Pine 28→9, Maple 52→17, Willow 34→11, Elder 95→32, Heartwood 210→70, Silverwood 340→113). Woodcutting still pays in what it always should have: the XP, and the timber itself." },
+    { t:"balance", s:"And the timber itself matters more: everything you build, craft, or upgrade now wants about five times the wood. Tool upgrades, kegs and jars, the Old Lift's restoration, and Rowan's civic projects all take a proper stack now — wood is a building material, not a rounding error. (Small daily favours on the noticeboard and one-off story errands were left alone; only the things you construct got heavier.)" },
+    { t:"balance", s:"Groundwork for what's coming: a real construction system — a sawmill that mills your logs into lumber, and buildings you raise plank by plank. Wood had to become precious before it could become lumber." },
+  ]},
   { v:"3.19.0", code:56, date:"2026-07-14", name:"The Way Down", notes:[
     { t:"new",     s:"The stairs down are hidden. There's no ladder waiting in the corner anymore — the way down is buried under a single rock, somewhere on the floor, and you won't know which until you break it open. So you work the whole floor, swinging at the plain grey stone, until one rock crumbles away over a black shaft. It's a little dungeon-crawl now, the way the old farm games did it — every floor a small search." },
     { t:"balance", s:"Ore is about three times rarer, and most of what you'll break is plain stone. So a copper vein actually feels like a find again — and to match, every ore is worth roughly three times the Mining XP it used to be. You swing more and strike ore less, but each strike counts for more. The way down is always diggable by anyone: whatever lies on the path to the stairs is guaranteed to be plain stone, so a green miner can never get walled off from descending." },
@@ -357,11 +362,11 @@ const HIVE_COST = 700, HIVE_RADIUS = 4, HIVE_CAP = 3, HIVE_MAX = 4;
 // Tom's Demand saturates per-product: forty jars of the same jam glut just like forty starfruit.
 const MACHINES = {
   keg: { name:"Keg",           days:3, mult:2.2, max:4,
-         cost:{ g:900, mats:{ "Pine Wood":8, "Iron Ore":2 } },
+         cost:{ g:900, mats:{ "Pine Wood":40, "Iron Ore":2 } },   // v3.20: wood ×5
          product: n => n + " Wine",
          blurb:"Ages a crop into wine over three days. Patience in a barrel." },
   jar: { name:"Preserves Jar", days:2, mult:1.6, max:6,
-         cost:{ g:550, mats:{ "Wood":6, "Copper Ore":2 } },
+         cost:{ g:550, mats:{ "Wood":30, "Copper Ore":2 } },   // v3.20: wood ×5
          product: n => n + " Jam",
          blurb:"Sets a crop into jam over two days. Summer, kept." },
 };
@@ -434,7 +439,7 @@ const LEGENDS = [
 const LEGEND_BY_ID = {}; LEGENDS.forEach(l => LEGEND_BY_ID[l.id] = l);
 
 // ---- SELL VALUES ----
-const ITEM_SELL = { "Wood":12, "Pine Wood":28, "Maple Wood":52, "Willow Wood":34, "Elder Wood":95, "Heartwood":210, "Silverwood":340,
+const ITEM_SELL = { "Wood":4, "Pine Wood":9, "Maple Wood":17, "Willow Wood":11, "Elder Wood":32, "Heartwood":70, "Silverwood":113,   // v3.20: wood sells for ~1/3 — the renewable grove made chop-and-sell too easy a purse; wood is a construction material now, not a money crop
   "Stone":3, "Copper Ore":30, "Iron Ore":68, "Gold Ore":165, "Cobalt Ore":300, "Star Metal Shard":450 };   // shard seats under Diamond (520) — an ore must never out-value a common gem (the Starstone is a class apart)
 FISH.forEach(f => { ITEM_SELL[f.name] = f.sell; ITEM_SELL["Cooked "+f.name] = Math.floor(f.sell*1.75); });
 LEGENDS.forEach(l => { ITEM_SELL[l.name] = l.sell; });   // trophies. You don't cook a Stormrider.
@@ -550,17 +555,17 @@ RECIPES.forEach(r => { ITEM_SELL[r.name] = r.sell; EDIBLE[r.name] = r.energy; })
 // Late-game gold has nowhere to go. These turn a pile of coin into things you can walk on.
 // Fund one, sleep, and it exists. ~16,000g of sinks in total.
 const PROJECTS = [
-  { id:"minecart", name:"The Minecart Line", gold:8000, items:{ "Iron Ore":20, "Wood":30 },
+  { id:"minecart", name:"The Minecart Line", gold:8000, items:{ "Iron Ore":20, "Wood":150 },
     blurb:"Re-lay the old rails from the cottage to the mine mouth. No more trudging the ridge.",
     done:"The rails are re-laid. A cart waits at each end." },
-  { id:"boardwalk", name:"The Coast Boardwalk", gold:5000, items:{ "Wood":40, "Pine Wood":10 },
+  { id:"boardwalk", name:"The Coast Boardwalk", gold:5000, items:{ "Wood":200, "Pine Wood":50 },
     blurb:"Plank the marsh path and hang lanterns. The coast stops being a hike.",
     done:"The boardwalk is laid, and the lanterns are lit." },
   { id:"fountain", name:"The Town Fountain", gold:3000, items:{ "Stone":10, "Emerald":2 },
     blurb:"A fountain by Tom's door, as there was once. Toss a coin; word of your wish gets around.",
     done:"The fountain runs again. Pip has already fallen in." },
   // the deep grove's timber gets a civic home — Elderwood's first sink outside the lift
-  { id:"arbor", name:"The Grove Arbor", gold:4000, items:{ "Elder Wood":10, "Willow Wood":15 },
+  { id:"arbor", name:"The Grove Arbor", gold:4000, items:{ "Elder Wood":50, "Willow Wood":75 },
     blurb:"Lantern-posts of elder and willow along the Deep Grove's footpath, the way the foresters kept it.",
     done:"The arbor stands. The grove's first ring glows kindly after dark." },
 ];
@@ -703,10 +708,10 @@ const TIER_LEVEL = [1, 10, 20, 30, 40];   // skill level required to reach each 
 // is an achievement across skills, not a purchase. (Owner playtest 2026-07-12: "right now it's
 // mining and gold and then you unlock everything else" — gold alone must never be the universal key.)
 const TIER_COST  = [null,
-  { g:300,   mats:{ "Copper Ore":5, "Wood":10 } },
-  { g:1200,  mats:{ "Iron Ore":5,  "Pine Wood":10 } },
-  { g:5000,  mats:{ "Gold Ore":5,  "Maple Wood":10 } },
-  { g:12000, mats:{ "Star Metal Shard":4, "Cobalt Ore":8, "Silverwood":8, "Heartwood":4, "Starstone":1 } }];   // v3.18: the star gem crowns the ultimate tool
+  { g:300,   mats:{ "Copper Ore":5, "Wood":50 } },        // v3.20: wood reqs ×5 (wood is a construction material now, not a rounding error)
+  { g:1200,  mats:{ "Iron Ore":5,  "Pine Wood":50 } },
+  { g:5000,  mats:{ "Gold Ore":5,  "Maple Wood":50 } },
+  { g:12000, mats:{ "Star Metal Shard":4, "Cobalt Ore":8, "Silverwood":40, "Heartwood":20, "Starstone":1 } }];   // v3.18: the star gem crowns the ultimate tool; v3.20: premium wood ×5 (note: paid per-tool, so a full 5-tool set is a real endgame timber grind)
 const TIER3_GEM  = { Hoe:"Opal", Can:"Topaz", Axe:"Emerald", Pick:"Ruby", Rod:"Pearl" };   // Hoe was Amethyst (now Gary-only)
 function toolCost(tool, tier){
   const base = TIER_COST[tier]; if(!base) return null;
@@ -723,14 +728,15 @@ const TIER_COL   = ["#b7a48c", "#c77b3f", "#d8c4bc", "#ffd75a", "#bfe4ff"];
 // deliberately sink wood + ore + gold together — the multi-skill economy in miniature — and the
 // deepest stops want a gem, giving gems a life beyond Tom's counter.
 function liftStopCost(n){
-  if(n === 5)  return { g:500,  mats:{ "Wood":20, "Copper Ore":5 } };
-  if(n === 10) return { g:1500, mats:{ "Pine Wood":15, "Iron Ore":5 } };
-  if(n === 15) return { g:3000, mats:{ "Maple Wood":10, "Gold Ore":5 } };
+  // v3.20: rebuilding the old lift is construction — its timber wants ×5 (paid in deposits via the Pledge Ledger)
+  if(n === 5)  return { g:500,  mats:{ "Wood":100, "Copper Ore":5 } };
+  if(n === 10) return { g:1500, mats:{ "Pine Wood":75, "Iron Ore":5 } };
+  if(n === 15) return { g:3000, mats:{ "Maple Wood":50, "Gold Ore":5 } };
   // the deep stops want the deep grove's timber — Elderwood replacing a second helping of maple
   // (Grove Depths Phase 2: the two deep venues feed each other)
-  if(n === 20) return { g:6000, mats:{ "Elder Wood":12, "Gold Ore":10, "Diamond":1 } };
+  if(n === 20) return { g:6000, mats:{ "Elder Wood":60, "Gold Ore":10, "Diamond":1 } };
   // past 20 the shaft is old beyond reckoning — each deeper stop doubles the 20-cost in gold
-  return { g: 6000 * Math.pow(2, (n-20)/5), mats:{ "Elder Wood":12, "Gold Ore":10, "Diamond":1 } };
+  return { g: 6000 * Math.pow(2, (n-20)/5), mats:{ "Elder Wood":60, "Gold Ore":10, "Diamond":1 } };
 }
 
 // ---- GROVE DEPTHS ----

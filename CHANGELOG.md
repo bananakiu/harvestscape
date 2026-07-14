@@ -51,6 +51,68 @@ live code (`XP_TABLE` `inc()`, `TIER_COST`/`TIER_LEVEL`, `GEM_SELL`/`GEM_WEIGHTS
 `WOOL_REGROW`, `DIFF_MAX`, `genMine` coefficients, the 30% Starstone roll) before shipping, so the
 doc's ladders are the numbers of record, not a paraphrase that can drift.
 
+## v3.20.0 — "Timber" · 2026-07-14 · tag `v3.20.0`
+
+Version code **57**. Owner-directed wood-economy rebalance — the first, self-contained step of a
+larger construction/lumber feature. The owner's words:
+
+> "Wood is too easy to maintain, so let us change things. Make it so that the things that require
+> wood are … five times more, and that they cost three times less [i.e. wood sells for ⅓] … so
+> that they just don't make you too much money."
+
+**The problem.** Woodcutting has a *renewable* venue — the Deep Grove regenerates ~370 trees every
+night, plus the farm's nightly top-up — so wood supply is effectively infinite (v2.9.1, §2.2 of the
+balance playbook). With wood also freely *sellable*, chop-and-sell had become one of the game's
+laziest incomes, and the wood-hungry sinks the v2.9.2 rebalance introduced were trivial to satisfy.
+The playbook's standing rule is *"wood value must never outrun the money crops"* and *"a gathering
+skill that also out-earns farming breaks the intended hierarchy"* (§2.4, §3.4). Wood had drifted
+toward being a soft money-printer.
+
+**The fix — two levers, opposite directions (`01-data.js`).**
+- **Sell values ÷3** across the whole timber ladder (`ITEM_SELL`): Wood 12→4, Pine Wood 28→9,
+  Maple Wood 52→17, Willow Wood 34→11, Elder Wood 95→32, Heartwood 210→70, Silverwood 340→113. The
+  ladder's *shape* is preserved uniformly, so the one deliberate anomaly survives intact: Willow
+  (11g, a level-30 tree) still seats *below* level-18 Maple (17g) — the fast-XP camp that trains the
+  skill without printing money. Woodcutting's reward is now honestly the **XP and the timber**, not
+  the coin — exactly as Willow was always designed to be.
+- **Requirements ×5** on everything you *build, craft, or upgrade* with wood, so a log is a real
+  material cost instead of a rounding error:
+  - Tool tiers (`TIER_COST`): Copper 10→50 Wood, Iron 10→50 Pine Wood, Gold 10→50 Maple Wood,
+    Star Metal 8→40 Silverwood + 4→20 Heartwood. *(Note: `buyTool` charges `TIER_COST` **per tool**,
+    so a completionist's full 5-tool set multiplies these again — the Star Metal tier becomes a
+    genuine endgame timber grind. Called out so it can be dialed back if it bites too hard; the rest
+    of the ×5 stands on its own.)*
+  - Cellar machines (`MACHINES`): Keg 8→40 Pine Wood, Preserves Jar 6→30 Wood.
+  - Old Lift restoration (`liftStopCost`): stop 5 20→100 Wood, stop 10 15→75 Pine Wood, stop 15
+    10→50 Maple Wood, stop 20+ 12→60 Elder Wood (paid in deposits via the Pledge Ledger, so a big
+    number is fine).
+  - Rowan's Restoration Projects (`PROJECTS`): Minecart 30→150 Wood; Boardwalk 40→200 Wood +
+    10→50 Pine Wood; Grove Arbor 10→50 Elder Wood + 15→75 Willow Wood.
+
+**Scoping decision — what was deliberately *not* ×5'd.** Two wood sinks are small, non-construction
+touches where ×5 would only add tedium without serving the "too much money" goal, and the ÷3 sell
+already right-sizes their payout:
+- **Noticeboard requests** ("bring Tom 8 Wood") — a *daily favour*, and its gold reward is
+  `max(60, round(sell·qty·1.4))`, so the ÷3 sell already cut its payout to a third. Leaving the
+  quantity at 8 keeps a daily errand from becoming a 40-log chore.
+- **The one-time `driftwood` Act II story quest** (12 Wood + 3 Pine Wood) — a fixed narrative beat;
+  ×5 would risk stalling the story behind a grind. Left as authored.
+
+**Why supply still holds.** These numbers are large but the grove is infinite by design — a full
+day's chopping still clears them. The change makes wood *matter to spend*, not *scarce to obtain*:
+you gather the same wood, it just no longer converts to easy coin and it buys fewer things per log.
+This is the deliberate groundwork for the construction/lumber system next — wood had to become a
+precious material before it could become typed lumber and raised buildings.
+
+**Docs in lockstep.** `GAME_BALANCE_PRINCIPLES.md` §2.4 (wood-ladder anchor), §4.4 (Star Metal tier),
+§10.3 (tree table sell column), §10.5 (tool-tier costs), §10.7 (lift-stop table) all updated to the
+new numbers of record.
+
+**Verification.** Syntax-checked; every consuming call reads its number from the table at call time
+(no consuming-code change needed, confirmed by the sink map); in-browser confirmation that
+`ITEM_SELL` and every cost table now report the new values and the shop renders them; adversarial
+review; console clean.
+
 ## v3.19.0 — "The Way Down" · 2026-07-14 · tag `v3.19.0`
 
 Version code **56**. Owner-directed, two coupled changes to how the mine plays:
