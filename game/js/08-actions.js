@@ -26,6 +26,8 @@ function tutoringTick(){
     tutTip("tip_mine","Swing your Pick at the rock for ore and gems. Find a ladder to go deeper.");
   if(curMap.id==="grove" && !state.flags.tip_grove)
     tutTip("tip_grove","The Grove regrows overnight — cut what you need. Older wood grows deeper in.");
+  if(curMap.id==="farm" && !state.flags.proj_coop && (state.stats.chopped||0) >= 4 && !state.flags.tip_build)
+    tutTip("tip_build","Logs become lumber at a Sawmill, and lumber raises buildings. Open the Journal's Ledger to build your first Coop — then hens can move in.");
   // contextual verb hints, keyed to what you're facing with the tool in hand
   const slot = HOTBAR[slotSel]; if(!slot) return;
   const tool = slot.tool;
@@ -528,6 +530,33 @@ function interact(){
         playSfx("plant"); pPuff(tx*TILE+8, ty*TILE+4, "#cbb98f", 5);
         return;
       }
+      case "sawmill": {
+        const M = MACHINES.sawmill;
+        if(obj.ready){                                        // collect the milled boards (the whole batch)
+          const n = obj.qty || 1;
+          give(M.product(obj.item), n); addXP("Woodcutting", 8);
+          delete obj.item; delete obj.qty; delete obj.days; delete obj.ready;
+          playSfx("get"); pSparkle(tx*TILE+8, ty*TILE, "#e0d3ac", 10);
+          return;
+        }
+        if(obj.item){                                         // still milling
+          const left = M.days - obj.days;
+          toast(`Milling ${obj.qty} ${obj.item.toLowerCase()} — ${left} more ${left===1?"night":"nights"}.`, "#cbb98f");
+          return;
+        }
+        // empty: mill the species you carry the MOST of, up to a batch — one button, no menus (cozy)
+        let best = null, bestN = 0;
+        for(const it in state.inv){
+          if(state.inv[it] > 0 && WOOD_NAMES.has(it) && state.inv[it] > bestN){ best = it; bestN = state.inv[it]; }
+        }
+        if(!best){ toast("It wants raw logs — chop a tree and bring the wood."); playSfx("error"); return; }
+        const n = Math.min(bestN, M.batch);
+        take(best, n);
+        obj.item = best; obj.qty = n; obj.days = 0; obj.ready = false;
+        toast(`The sawmill takes ${n} ${best.toLowerCase()} — ${WOOD_TO_LUMBER[best].toLowerCase()} by morning.`, "#cbb98f");
+        playSfx("plant"); pPuff(tx*TILE+8, ty*TILE+4, "#cbb98f", 5);
+        return;
+      }
       case "wrack": {                                  // what the storm took, the sea returns
         if(obj.pickedDay === state.day){ toast("Only weed and sand left in this one."); return; }
         obj.pickedDay = state.day;
@@ -980,7 +1009,7 @@ function digUp(tx, ty, obj){
     give("Beehive", 1, true);
     toast("You lift the hive. The bees will settle wherever you set it down.", "#e8a83a");
   } else if(MACHINES[obj.kind]){
-    if(obj.item) give(obj.item, 1);                 // nothing is ever taken: the load comes back out
+    if(obj.item) give(obj.item, obj.qty || 1);      // nothing is ever taken: the whole load comes back out
     give(MACHINES[obj.kind].name, 1, true);
     toast(`You heft the ${MACHINES[obj.kind].name.toLowerCase()}${obj.item ? " — its load comes back out unspoiled" : ""}.`, "#cbb98f");
   } else if(DECOR[obj.kind]){

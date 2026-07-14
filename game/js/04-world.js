@@ -142,6 +142,28 @@ function randiR(rng,a,b){ return a + Math.floor(rng()*(b-a+1)); }
 // ======================================================================
 //  FARM MAP GENERATOR (the persistent overworld)
 // ======================================================================
+// v3.21: the Coop is now a BUILT structure. This stamps it onto a farm map — called by genFarm only
+// when it's already built (old saves migrated to proj_coop), and by applyProjects() (from
+// completeProjects) the morning a new player raises it. Idempotent: it only ever re-sets the same fixed
+// tiles/warp/sign, safe every boot.
+function stampCoop(m){
+  if(!m) return;
+  const set = (x,y,v) => { if(x>=0&&y>=0&&x<m.w&&y<m.h) m.tiles[y*W+x]=v; };
+  for(let y=4;y<=4;y++) for(let x=14;x<=17;x++) set(x,y,T.ROOF);
+  for(let y=5;y<=6;y++) for(let x=14;x<=17;x++) set(x,y,T.WALL);
+  set(16,5,T.WALL);
+  set(15,6,T.DOOR); m.warps[key(15,6)] = { to:"coop", sx:6*TILE+8, sy:6*TILE, face:"down" };
+  m.objects[key(18,6)] = { kind:"sign", text:"The Coop" };
+}
+function stampBarn(m){
+  if(!m) return;
+  const set = (x,y,v) => { if(x>=0&&y>=0&&x<m.w&&y<m.h) m.tiles[y*W+x]=v; };
+  for(let y=3;y<=4;y++) for(let x=20;x<=25;x++) set(x,y,T.ROOF);
+  for(let y=5;y<=6;y++) for(let x=20;x<=25;x++) set(x,y,T.WALL);
+  set(21,5,T.WALL); set(23,5,T.WALL);
+  set(22,6,T.DOOR); m.warps[key(22,6)] = { to:"barn", sx:7*TILE+8, sy:7*TILE, face:"down" };
+  m.objects[key(26,6)] = { kind:"sign", text:"The Barn" };
+}
 function genFarm(m){
   const rng = makeRng(1337);
   const t = m.tiles; t.fill(T.GRASS);
@@ -172,14 +194,12 @@ function genFarm(m){
   // starter plot
   rect(6,9,11,11,T.TILLED);
 
-  // --- chicken coop ---
-  rect(14,4,17,4,T.ROOF); rect(14,5,17,6,T.WALL); door(15,6,"coop", 6*TILE+8, 6*TILE); set(16,5,T.WALL);
-  obj[key(18,6)] = { kind:"sign", text:"The Coop" };
+  // --- chicken coop (v3.21: built, not given — a new farm starts without it; you raise it via the
+  // Ledger. Old saves are migrated to proj_coop so this draws exactly as before.) ---
+  if(state && state.flags && state.flags.proj_coop) stampCoop(m);
 
-  // --- barn ---
-  rect(20,3,25,4,T.ROOF); rect(20,5,25,6,T.WALL); door(22,6,"barn", 7*TILE+8, 7*TILE);
-  set(21,5,T.WALL); set(23,5,T.WALL);
-  obj[key(26,6)] = { kind:"sign", text:"The Barn" };
+  // --- barn (v3.21: built via the Ledger, like the coop; old saves migrated to proj_barn keep it) ---
+  if(state && state.flags && state.flags.proj_barn) stampBarn(m);
 
   // paths — the farm's lane runs from the buildings out to the east road (the way to the village)
   for(let x=9;x<=45;x++) set(x,15,T.PATH);

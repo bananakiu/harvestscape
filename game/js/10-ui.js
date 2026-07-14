@@ -475,7 +475,7 @@ const MUSEUM = [
   { name:"The Shore",     items:()=>Object.keys(SHORE) },
   { name:"Farm & Forage", items:()=>["Field Salad","Frostberry","Berry Bun","Honey","Egg","Large Egg","Milk","Large Milk","Wool","Prize Fleece"] },   // Wool obtainable since v3.8 (sheep + shears); Prize Fleece is its friendship-tier prize
   { name:"The Kitchen",   items:()=>RECIPES.map(r=>r.name) },
-  { name:"Materials",     items:()=>["Wood","Pine Wood","Maple Wood","Willow Wood","Elder Wood","Heartwood","Silverwood","Stone","Copper Ore","Iron Ore","Gold Ore","Cobalt Ore","Star Metal Shard"] },
+  { name:"Materials",     items:()=>["Wood","Pine Wood","Maple Wood","Willow Wood","Elder Wood","Heartwood","Silverwood",...Object.values(WOOD_TO_LUMBER),"Stone","Copper Ore","Iron Ore","Gold Ore","Cobalt Ore","Star Metal Shard"] },   // + milled lumber (v3.21)
   { name:"The Canopy",    items:()=>Object.keys(CHARMS) },
 ];
 // (The Collection tile grid now lives in renderCollectionHtml, the Journal's Collection tab.)
@@ -704,25 +704,32 @@ function bramLedgerHtml(){
 // this session must not edit).
 function openProjects(){ _panelTab["questPanel"] = "ledger"; openPanel("questPanel", renderJournal); }
 function renderProjects(){ if(openPanels.has("questPanel") && _panelTab["questPanel"] === "ledger") renderJournal(); }
+function projectRowHtml(p){
+  const done = projectDone(p.id), pending = projectPending(p.id);
+  const cost = Object.entries(p.items).map(([it,n]) =>
+    `<span style="color:${(state.inv[it]||0)>=n?"var(--parch)":"#c98a6a"}">${n}× ${it}</span>`).join(" · ");
+  const goldOk = state.gold >= p.gold;
+  let html = `<div class="row"><span class="lead"><span>` +
+    `<span style="display:block;color:${done?"var(--gold-hi)":"var(--parch)"}">${done?"✔ ":pending?"🔨 ":""}${p.name}</span>` +
+    `<span class="sub" style="display:block;margin:.1em 0;">${done ? p.done : pending ? "The work begins at dawn." : p.blurb}</span>` +
+    (done||pending ? "" : `<span class="sub" style="display:block;">${cost}</span>`) +
+    `</span></span>`;
+  html += done || pending
+    ? `<span><span class="price" style="color:var(--gold-hi)">${done?"built":"pending"}</span></span>`
+    : `<span><span class="price" style="color:${goldOk?"var(--gold-hi)":"#c98a6a"}">${p.gold}g</span> ` +
+      `<button class="buy" ${canFund(p)?"":"disabled"} onclick="fundProject('${p.id}')">fund</button></span>`;
+  return html + `</div>`;
+}
 function projectsRowsHtml(){
-  let html = `<div class="secHead">🔨 Rowan's Ledger</div>`;
+  const builds = PROJECTS.filter(p => p.building), civic = PROJECTS.filter(p => !p.building);
+  // Farm construction (v3.21) — your own buildings, milled from lumber, raised by morning
+  let html = `<div class="secHead">🏗 Farm Construction</div>`;
+  html += `<div class="desc" style="margin-bottom:.4em;color:var(--ink-soft);">Mill your logs at the Sawmill, bring the lumber here, and Rowan will help you raise it.</div>`;
+  html += builds.map(projectRowHtml).join("");
+  // Rowan's civic restorations — coin turned back into the valley
+  html += `<div class="secHead" style="margin-top:.7em;">🔨 Rowan's Restorations</div>`;
   html += `<div class="desc" style="margin-bottom:.4em;color:var(--ink-soft);">“Coin is only stored work, child. Spend it and the valley remembers.” — Rowan</div>`;
-  for(const p of PROJECTS){
-    const done = projectDone(p.id), pending = projectPending(p.id);
-    const cost = Object.entries(p.items).map(([it,n]) =>
-      `<span style="color:${(state.inv[it]||0)>=n?"var(--parch)":"#c98a6a"}">${n}× ${it}</span>`).join(" · ");
-    const goldOk = state.gold >= p.gold;
-    html += `<div class="row"><span class="lead"><span>` +
-      `<span style="display:block;color:${done?"var(--gold-hi)":"var(--parch)"}">${done?"✔ ":pending?"🔨 ":""}${p.name}</span>` +
-      `<span class="sub" style="display:block;margin:.1em 0;">${done ? p.done : pending ? "The work begins at dawn." : p.blurb}</span>` +
-      (done||pending ? "" : `<span class="sub" style="display:block;">${cost}</span>`) +
-      `</span></span>`;
-    html += done || pending
-      ? `<span><span class="price" style="color:var(--gold-hi)">${done?"built":"pending"}</span></span>`
-      : `<span><span class="price" style="color:${goldOk?"var(--gold-hi)":"#c98a6a"}">${p.gold}g</span> ` +
-        `<button class="buy" ${canFund(p)?"":"disabled"} onclick="fundProject('${p.id}')">fund</button></span>`;
-    html += `</div>`;
-  }
+  html += civic.map(projectRowHtml).join("");
   if(!PROJECTS.filter(p=>!projectDone(p.id)).length)
     html += `<div style="margin-top:.4em;text-align:center;color:var(--gold-hi);">✦ Every page of the ledger is struck through. ✦</div>`;
   return html;
@@ -1137,7 +1144,7 @@ function showSleepCard(s){
   lines.push(`${w.icon} ${w.offer}`);
   if(s.fruited) lines.push(`🍎 ${s.fruited} tree${s.fruited>1?"s":""} bore fruit`);
   if(s.honeyed) lines.push(`🍯 ${s.honeyed} hive${s.honeyed>1?"s":""} filled with honey`);
-  if(s.cellared) lines.push(`🍶 ${s.cellared} cellar batch${s.cellared>1?"es":""} finished aging`);
+  if(s.cellared) lines.push(`🛠 ${s.cellared} workshop batch${s.cellared>1?"es":""} finished overnight`);
   if(s.grew) lines.push(`🌱 ${s.grew} crop${s.grew>1?"s":""} grew overnight`);
   if(s.ready) lines.push(`✔ ${s.ready} ready to harvest`);
   if(s.withered) lines.push(`🥀 ${s.withered} crop${s.withered>1?"s":""} withered with the season`);

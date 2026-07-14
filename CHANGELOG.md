@@ -51,6 +51,106 @@ live code (`XP_TABLE` `inc()`, `TIER_COST`/`TIER_LEVEL`, `GEM_SELL`/`GEM_WEIGHTS
 `WOOL_REGROW`, `DIFF_MAX`, `genMine` coefficients, the 30% Starstone roll) before shipping, so the
 doc's ladders are the numbers of record, not a paraphrase that can drift.
 
+## v3.21.0 — "The Sawmill" · 2026-07-14 · tag `v3.21.0`
+
+Version code **58**. Owner-directed: a Harvest Moon-style construction system — mill wood into typed
+lumber, and build farm structures from it, introduced through raising the chicken coop.
+
+> "I want a construction system similar to Harvest Moon, where you could turn wood into lumber, and
+> it will be different lumber types… you'll need different types of lumber to construct different
+> things. The introduction to this construction could be through … building the chicken coop. This
+> way, you could have a chicken coop and eventually a barn, and then an area to have a horse."
+
+This is the first of the construction arc (Sawmill + Lumber + Coop + Barn here; the Stable + horse
+follow). The owner chose **"start empty, build all"** — new farms begin as open land and are built up.
+
+**Two facts from the codebase map shaped the design.** (1) The game *already* had 7 named wood
+species (Oak→`Wood`, Pine, Maple, Willow, Elder, Heartwood, Silverwood), so "different lumber types"
+map straight onto them — no new taxonomy invented. (2) The Coop and Barn *already existed*, hard-coded
+into `genFarm` from day one — so "building the coop" required turning existing free structures into
+built ones (with care for existing saves).
+
+### Lumber (`01-data.js`, `03-art.js`)
+- **`WOOD_TO_LUMBER`** maps each raw species to a board: Oak Lumber, Pine Lumber, Maple Lumber,
+  Willow Lumber, Elder Lumber, and the premium **Heartwood Beam** / **Silverwood Beam**. `WOOD_NAMES`
+  and `LUMBER_NAMES` sets back it.
+- **Lumber sells for exactly its raw wood's value** — deliberately *no* value-add. Milling-to-sell
+  only burns a night for the same coin, so there's no wood money loop (the whole point of v3.20's
+  wood nerf); lumber is a thing you make to *build*. Over-milled boards still sell back at cost, so a
+  mistake is never a loss (cozy contract). Sprites: a stack of squared boards tinted per species,
+  distinct from the round raw log.
+
+### The Sawmill (`01-data.js` `MACHINES`, `08-actions.js`, `07-entities.js`)
+- A new artisan machine, cloned from the Cellar pattern but adapted: it takes **wood** (not crops),
+  mills a **batch** (up to `batch:10` logs of the species you carry the most of → that many boards)
+  in a single night (`days:1`), and its output feeds construction. 1,200g + 30 Wood + 3 Iron Ore,
+  `max:3`.
+- The generic MACHINES plumbing carries it for free — placement (`plantPermanent`), lift
+  (`digUp`, extended to return `obj.qty` boards), nightly tending (`tendCellar`), hotbar selection,
+  and the shop buy-row all treat it like any machine. Only the **load/collect interact** is
+  specialized (`case "sawmill"`): it stores `obj.item` + `obj.qty`, and keg/jar keep their own case
+  (still crops-only), so the two never interfere. The morning summary line was generalized from
+  "cellar batches finished aging" to "workshop batches finished overnight" to cover milled lumber.
+
+### Buildings become built (`01-data.js`, `04-world.js`, `14-story.js`, `10-ui.js`, `13-content.js`)
+- The Coop and Barn are now **PROJECTS entries tagged `building:true`** with a `site` rectangle. They
+  reuse the proven, idempotent Restoration-Projects funding machinery (`fundProject` →
+  `proj_<id>_pending` → overnight `completeProjects` → `applyProjects`). `genFarm` draws each only when
+  `state.flags.proj_coop` / `proj_barn` is set, via shared idempotent **`stampCoop(m)` / `stampBarn(m)`**
+  (the same tiles/door/warp/sign as before, factored out). `applyProjects` stamps them the morning
+  after funding.
+- **Coop**: 500g + 12 Oak Lumber + 15 Wood (the gentle on-ramp — all from oak, choppable at
+  Woodcutting 1, teaching the chop→mill→build loop). **Barn**: 1,800g + 18 Oak + 14 Pine + 8 Maple
+  Lumber + 30 Wood (stouter framing, varied lumber — "different lumber for different things").
+- **Cozy site guard** (`buildingSiteBlocked`): funding is refused if a crop or a placed object sits on
+  the building's footprint, with a message telling you to clear it — so raising a building can never
+  bury (take) something you made. Crops harvest in time, so it's a delay, never a lock.
+- **Animals gate on their building**: `buyChicken` needs `proj_coop`, `buyCow`/`buySheep` need
+  `proj_barn`, each with a message pointing to the Ledger.
+- **Ledger UI** (`projectsRowsHtml`) now renders a distinct **"🏗 Farm Construction"** section
+  (buildings) above **"🔨 Rowan's Restorations"** (civic), sharing one `projectRowHtml` row builder.
+
+### Save migration — the `bornUnbuilt` discriminator (`11-title.js`)
+The hard part: on reload, `migrateSave` can't tell "pre-v3.21 save (had a free coop)" from "new v3.21
+game (coop not built yet)" by `proj_coop` being absent alone — both lack it. Mirroring the existing
+`npxGame` era-flag pattern: **`startNewGame` stamps `state.flags.bornUnbuilt = true`** (this save was
+born in the construction era, farm empty). `migrateSave` then does
+`if(s.flags.bornUnbuilt === undefined){ bornUnbuilt=false; proj_coop=true; proj_barn=true; }` — so a
+**pre-v3.21 save keeps both buildings** (already baked into its persisted `state.farm`), while a
+**new-era save is skipped** (it must actually build them, and a save/reload can't gift a free coop).
+`freshState` deliberately carries none of these flags, so the discriminator never goes stale under the
+generic backfill (the "dead-code trap" the migrate comments repeatedly warn about).
+
+### Discovery nudge (`08-actions.js`)
+A one-shot `tutTip` (new-player saves only) fires once you've chopped ≥4 wood, pointing to the
+Sawmill→lumber→Ledger loop — so construction is discoverable without a forced quest interrupting the
+linear story chain. The animal-shop gates and the Ledger's own "Farm Construction" copy reinforce it.
+
+### Verification
+In-browser against a real save: migration granted `proj_coop`/`proj_barn` and kept both door warps;
+a fresh mock `genFarm` with the flags off produced **no** coop/barn door (empty new farm);
+`stampCoop`/`stampBarn` raised them; `tendCellar` milled Pine Wood → Pine Lumber overnight;
+`buildingSiteBlocked` caught a crop on the coop site and cleared after; `buyChicken` refused without a
+coop; the Ledger rendered both the built and the fundable views (screenshots); the Sawmill sprite
+renders in-world; console clean.
+
+**Adversarial review (three lenses) + fixes.** The review confirmed the `bornUnbuilt` migration is
+sound (no old-save strand, no free-coop gift via save/reload), then caught one real cozy-contract hole
+and several polish items, all fixed before shipping:
+- **The fund→build window (medium, fixed).** `buildingSiteBlocked` guarded only *fund* time. A player
+  could fund the coop on clear grass, then plant a crop (or place a machine) on the footprint that same
+  day; the overnight `stampCoop`/`stampBarn` would wall it over, permanently burying the crop — a
+  "nothing is ever taken" violation. Fix: `completeProjects` now **re-checks the site at build time**;
+  if it's re-occupied it leaves the project pending (doesn't stamp) and toasts the player to clear it,
+  retrying next morning — mirroring `put1`'s crop-safe "retry each morning" idempotence. Verified: a
+  crop on the site defers the build and survives; a clear site builds.
+- **Site over-reservation (low, fixed).** The building `site` rects included the sign's column, which
+  for the barn sat in the nightly ridge-rock respawn zone — a regrown rock there could spuriously block
+  funding. Tightened `site` to the exact structure rect plus an explicit `sign` tile, so only tiles the
+  stamp actually writes are guarded.
+- **Lumber Collection entry (low), a clearer "lift it with the axe" refusal for placed objects (nit),
+  and a stale `applyBuildings()` comment (nit)** — all fixed.
+
 ## v3.20.0 — "Timber" · 2026-07-14 · tag `v3.20.0`
 
 Version code **57**. Owner-directed wood-economy rebalance — the first, self-contained step of a

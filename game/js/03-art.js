@@ -543,6 +543,24 @@ function buildItems(){
   for(const w in woodCols){ mkSpr("item_"+w, 16, 16, g => {
     px(g,3,7,10,4,woodCols[w]); px(g,3,7,10,1,shade(woodCols[w],1.2)); px(g,3,10,10,1,shade(woodCols[w],.7));
     px(g,3,8,1,2,shade(woodCols[w],.6)); px(g,12,8,1,2,shade(woodCols[w],.6)); px(g,4,4,10,4,woodCols[w]); px(g,4,4,10,1,shade(woodCols[w],1.2)); }); }
+  // v3.21 LUMBER — a neat stack of squared boards, tinted by its source species (vs the round raw log)
+  for(const raw in WOOD_TO_LUMBER){ const c = woodCols[raw], lum = WOOD_TO_LUMBER[raw];
+    mkSpr("item_"+lum, 16, 16, g => {
+      px(g,3,5,10,2,c);            px(g,3,5,10,1,shade(c,1.25)); px(g,3,6,10,1,shade(c,.72));
+      px(g,3,8,10,2,shade(c,.94)); px(g,3,8,10,1,shade(c,1.15)); px(g,3,9,10,1,shade(c,.68));
+      px(g,3,11,10,2,c);           px(g,3,11,10,1,shade(c,1.2));  px(g,3,12,10,1,shade(c,.68));
+      px(g,3,5,1,8,shade(c,.55));  px(g,12,5,1,8,shade(c,.55)); }); }   // sawn end-grain edges
+  // the Sawmill, standing in the yard: a log on trestles under a bright circular blade
+  mkSpr("sawmill", 16, 18, g => {
+    px(g,2,13,12,2,"#7a5636"); px(g,2,12,12,1,"#96693e");                     // bench top
+    px(g,3,15,2,3,"#5f4028"); px(g,11,15,2,3,"#5f4028");                      // legs
+    px(g,3,9,7,3,"#a0774a"); px(g,3,9,7,1,shade("#a0774a",1.2)); px(g,3,10,1,1,"#5f4028");  // the log being cut
+    px(g,9,3,6,6,"#c8ccd2"); px(g,10,4,4,4,"#e6e9ee"); px(g,11,5,2,2,"#8f97a0");            // steel blade + hub
+    px(g,9,2,1,1,"#c8ccd2"); px(g,14,3,1,1,"#c8ccd2"); px(g,8,5,1,1,"#c8ccd2"); px(g,15,6,1,1,"#c8ccd2"); px(g,9,9,1,1,"#c8ccd2"); px(g,14,9,1,1,"#c8ccd2"); });  // teeth glints
+  mkSpr("item_Sawmill", 16, 16, g => {
+    px(g,2,6,10,4,"#c8ccd2"); px(g,2,6,10,1,"#e6e9ee");                        // blade
+    px(g,2,10,1,1,"#9098a0"); px(g,4,10,1,1,"#9098a0"); px(g,6,10,1,1,"#9098a0"); px(g,8,10,1,1,"#9098a0"); px(g,10,10,1,1,"#9098a0");  // teeth
+    px(g,11,4,3,5,"#8a5f38"); px(g,12,5,2,3,"#5f4028"); });                    // handle
   mkSpr("item_Stone", 16, 16, g => { px(g,4,6,8,7,"#9a9a9a"); px(g,3,8,10,4,"#8a8a8a"); px(g,5,5,5,3,"#a8a8a8"); px(g,4,12,9,1,"#6a6a6a"); });
   const oreCols = { "Copper Ore":"#c77b3f", "Iron Ore":"#bfa8a0", "Gold Ore":"#ffd75a", "Cobalt Ore":"#5a7ad0", "Star Metal Shard":"#c8ecff" };
   for(const o in oreCols){ mkSpr("item_"+o, 16, 16, g => {

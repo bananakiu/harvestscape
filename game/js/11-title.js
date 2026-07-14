@@ -136,6 +136,7 @@ function startNewGame(){
   state = freshState();
   state.farm = newMap("farm");
   state.flags.npxGame = true;   // this save gets the new-player experience (prologue, hints, tips)
+  state.flags.bornUnbuilt = true;   // v3.21: born in the construction era — the farm starts WITHOUT coop/barn; you raise them
   try { localStorage.setItem("hs_seen_version", VERSION.code); } catch(e){}  // new players start current
   startPrologue();
 }
@@ -203,6 +204,15 @@ function migrateSave(s){
     if(!s.discovered) s.discovered = {};
     for(const it in (s.inv||{})) s.discovered[it] = true;
     for(const l of LEGENDS) if(s.flags["caught_"+l.id]) s.discovered[l.name] = true;
+  }
+  // Construction (v3.21): the Coop and Barn became BUILT structures. Any save from before this — which
+  // always had both, baked into its farm — must keep them. `bornUnbuilt` marks a save born in the
+  // construction era (set in startNewGame); its absence means a pre-v3.21 save, so grant it both as
+  // already-built. New-era saves skip this (bornUnbuilt is defined), so they must actually raise them.
+  if(s.flags.bornUnbuilt === undefined){
+    s.flags.bornUnbuilt = false;
+    s.flags.proj_coop = true;
+    s.flags.proj_barn = true;
   }
   if(!s.market) s.market = {};                 // Tom's demand arrived in v2.0
   if(!WEATHERS[s.weather]) s.weather = "clear"; // old saves may hold a weather we no longer have

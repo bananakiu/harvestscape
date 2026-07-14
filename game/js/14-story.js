@@ -331,9 +331,28 @@ function canFund(p){
   for(const it in p.items) if((state.inv[it]||0) < p.items[it]) return false;
   return true;
 }
+// A building overwrites its footprint with walls — so it must never bury a crop or a placed object
+// (the cozy contract: nothing is ever taken). Refuse to fund until the site is clear.
+function buildingSiteBlocked(p){
+  if(!p.site || !state.farm) return null;
+  const [x0,y0,x1,y1] = p.site;
+  const tiles = [];
+  for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) tiles.push([x,y]);
+  if(p.sign) tiles.push(p.sign);   // the stamp also drops a sign object here — guard it too
+  for(const [x,y] of tiles){
+    const k = key(x,y);
+    if(state.farm.crops[k]) return "a crop is growing";
+    const o = state.farm.objects[k];
+    if(o && o.kind !== "sign") return o.kind==="beehive"||MACHINES[o.kind]||DECOR[o.kind]||FRUIT_TREES[o.kind]
+      ? "something you placed is in the way — lift it with the axe" : "something's in the way";
+  }
+  return null;
+}
 function fundProject(id){
   const p = PROJECT_BY_ID[id];
   if(!p || !canFund(p)){ playSfx("error"); return; }
+  const blocked = buildingSiteBlocked(p);
+  if(blocked){ toast(`Clear the ${p.name.replace(/^The /,"").toLowerCase()} site first — ${blocked}.`, "#c98a6a"); playSfx("error"); return; }
   state.gold -= p.gold;
   for(const it in p.items) take(it, p.items[it]);
   state.flags["proj_"+id+"_pending"] = true;
@@ -343,15 +362,20 @@ function fundProject(id){
 }
 // Called from newDay: pending work finishes overnight. Returns the names finished.
 function completeProjects(){
-  const finished = [];
+  const finished = [], deferred = [];
   for(const p of PROJECTS){
     if(state.flags["proj_"+p.id+"_pending"] && !state.flags["proj_"+p.id]){
+      // A building stamps solid walls over its footprint. If the player planted/placed something there
+      // AFTER funding (the site was clear then), DON'T bury it — leave the work pending and retry next
+      // morning, exactly like put1's crop-safe placement. Nothing is ever taken from the player.
+      if(p.building && buildingSiteBlocked(p)){ deferred.push(p); continue; }
       state.flags["proj_"+p.id] = true;
       delete state.flags["proj_"+p.id+"_pending"];
       finished.push(p);
     }
   }
   if(finished.length) applyProjects(state.farm);
+  if(deferred.length) setTimeout(() => toast(`Clear the ${deferred[0].name.replace(/^The /,"").toLowerCase()} site — the crew can't raise it over what's there. They'll try again tomorrow.`, "#c98a6a"), 1600);
   return finished;
 }
 // Idempotent world changes on the PERSISTENT farm map. Safe to run on every boot and after every
@@ -362,6 +386,8 @@ function applyProjects(farm){
   // never bury a growing crop under a solid object — the tile is re-tried each morning
   const put1 = (x,y,o) => { const k = key(x,y); if(!farm.objects[k] && !farm.crops[k]) farm.objects[k] = o; };
   if(state.flags.proj_minecart) put1(CART_A[0], CART_A[1], { kind:"railcart", to:"village" });
+  if(state.flags.proj_coop) stampCoop(farm);   // v3.21: raise the coop the morning after it's funded (idempotent)
+  if(state.flags.proj_barn) stampBarn(farm);   // v3.21: same for the barn
 }
 // The fountain: one coin a day buys you a little goodwill somewhere in the valley.
 function tossCoin(){

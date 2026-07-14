@@ -59,8 +59,10 @@ Rowan (last keeper of the Guild of Nine Crafts, already owns the fund-a-build sy
 construction master — no new carpenter NPC needed. Planned ladder: Sawmill + Lumber → build the Coop
 (quest) → Barn → Horse stable (the first-ever movement-speed mechanic, for faster travel).
 
-**Produced:** v3.20.0 "Timber" (this rebalance; see CHANGELOG.md). Construction system: in progress —
-Sawmill/Lumber next, then the coop build quest, then barn + horse.
+**Produced:** v3.20.0 "Timber" (the rebalance) and v3.21.0 "The Sawmill" (Lumber + Sawmill + the Coop
+*and* Barn made buildable — the owner chose "start empty, build all", so both fold into one release with
+a single `bornUnbuilt` save-migration; see CHANGELOG.md). Still to come: v3.22 the Stable + a horse for
+faster travel — the first-ever movement-speed mechanic.
 
 ---
 

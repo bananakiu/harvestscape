@@ -8,13 +8,19 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.20.0", code: 57, codename: "Timber", date: "2026-07-14" };
+const VERSION = { name: "3.21.0", code: 58, codename: "The Sawmill", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.21.0", code:58, date:"2026-07-14", name:"The Sawmill", notes:[
+    { t:"new",   s:"Build your farm, plank by plank. The new Sawmill mills your raw logs into lumber overnight — a whole stack at a time, each species its own board: oak, pine, maple, willow, elder, and the fine heartwood and silverwood beams. Lumber is what you build with." },
+    { t:"new",   s:"The Chicken Coop and the Barn are now yours to raise. Open the Journal's Ledger, spend your milled lumber and a little coin, and Rowan helps you frame them up by morning — the coop for hens, the barn for cows and sheep. A new farm starts as open land and grows into a homestead, the way it should." },
+    { t:"change", s:"Because of that, a brand-new farm no longer comes with the coop and barn already standing — you build them. (Every existing farm keeps both, exactly as they were; nothing you've made is lost.) Animals wait on their building now: a coop before hens, a barn before cows and sheep." },
+    { t:"note",  s:"Lumber sells for the same as the log it came from — there's no coin in milling, only building. Wood stays a material, not a money crop (see last patch). More to come: a stable, and a horse for the road." },
+  ]},
   { v:"3.20.0", code:57, date:"2026-07-14", name:"Timber", notes:[
     { t:"balance", s:"Wood is worth a third of what it was. The renewable grove made chopping-and-selling a lazy purse, and wood was quietly one of the game's easiest incomes — so every log now sells for roughly ⅓ (Wood 12→4, Pine 28→9, Maple 52→17, Willow 34→11, Elder 95→32, Heartwood 210→70, Silverwood 340→113). Woodcutting still pays in what it always should have: the XP, and the timber itself." },
     { t:"balance", s:"And the timber itself matters more: everything you build, craft, or upgrade now wants about five times the wood. Tool upgrades, kegs and jars, the Old Lift's restoration, and Rowan's civic projects all take a proper stack now — wood is a building material, not a rounding error. (Small daily favours on the noticeboard and one-off story errands were left alone; only the things you construct got heavier.)" },
@@ -354,6 +360,21 @@ const TREE_FRUIT_CAP   = 3;       // it holds three days of fruit, then waits fo
 // so the meadow is generous and your starfruit rows are not. Four hives is the valley's limit.
 const HIVE_COST = 700, HIVE_RADIUS = 4, HIVE_CAP = 3, HIVE_MAX = 4;
 
+// ---- LUMBER (construction material) ----
+// v3.21 "Raising the Coop": raw logs are milled at the Sawmill into typed Lumber, the currency of
+// construction. Each wood species mills to its own board — you need the right lumber for the right
+// build (Harvest Moon's carpentry). Lumber sells for EXACTLY its raw-wood value on purpose: there is
+// no profit in milling-to-sell (you'd only burn a night), so lumber is a thing you make to BUILD,
+// never a money loop — the whole point of the v3.20 wood nerf. Over-milled boards can still be sold
+// back at cost, so a mistake is never a loss (the cozy contract).
+const WOOD_TO_LUMBER = {
+  "Wood":"Oak Lumber", "Pine Wood":"Pine Lumber", "Maple Wood":"Maple Lumber",
+  "Willow Wood":"Willow Lumber", "Elder Wood":"Elder Lumber",
+  "Heartwood":"Heartwood Beam", "Silverwood":"Silverwood Beam",
+};
+const WOOD_NAMES = new Set(Object.keys(WOOD_TO_LUMBER));      // what the Sawmill will take
+const LUMBER_NAMES = new Set(Object.values(WOOD_TO_LUMBER));  // what it makes
+
 // ---- THE CELLAR (artisan machines) ----
 // A crop's second life: the keg ages anything into wine (slow, rich), the preserves jar sets it
 // into jam (quick, modest). The multipliers are deliberately shy of the kitchen's best dishes —
@@ -369,6 +390,12 @@ const MACHINES = {
          cost:{ g:550, mats:{ "Wood":30, "Copper Ore":2 } },   // v3.20: wood ×5
          product: n => n + " Jam",
          blurb:"Sets a crop into jam over two days. Summer, kept." },
+  // v3.21: the Sawmill mills raw logs into lumber. Unlike the keg/jar it takes WOOD (not crops), works
+  // a BATCH at once (up to sawBatch logs → that many boards) in a single night, and feeds construction.
+  sawmill: { name:"Sawmill", days:1, mult:1, max:3, batch:10,
+         cost:{ g:1200, mats:{ "Wood":30, "Iron Ore":3 } },
+         product: n => WOOD_TO_LUMBER[n],
+         blurb:"Mills a stack of raw logs into building lumber overnight. One species at a time." },
 };
 // what the machines will take: anything grown — crops and orchard fruit
 function machineLoadable(item){ return CROP_NAMES.has(item) || FRUIT_NAMES.has(item); }
@@ -480,6 +507,10 @@ for(const k in FRUIT_TREES){ const t = FRUIT_TREES[k];
 ITEM_SELL["Honey"] = 100; EDIBLE["Honey"] = 30;
 const FRUIT_NAMES = new Set(Object.values(FRUIT_TREES).map(t => t.fruit));
 
+// Lumber sells for its raw-wood value — milling adds no coin, only build-ability (see WOOD_TO_LUMBER).
+for(const raw in WOOD_TO_LUMBER) ITEM_SELL[WOOD_TO_LUMBER[raw]] = ITEM_SELL[raw];
+ITEM_SELL["Sawmill"] = 0;   // the machine itself isn't resold (mirrors Keg/Jar)
+
 // ---- the Cellar's products, generated for every growable ----
 // Wine 2.2× and Jam 1.6× the raw sell price (see MACHINES for why those sit under the kitchen's
 // dishes). Each product is a distinct item, so Tom's Demand gluts per product — and each gets an
@@ -555,6 +586,18 @@ RECIPES.forEach(r => { ITEM_SELL[r.name] = r.sell; EDIBLE[r.name] = r.energy; })
 // Late-game gold has nowhere to go. These turn a pile of coin into things you can walk on.
 // Fund one, sleep, and it exists. ~16,000g of sinks in total.
 const PROJECTS = [
+  // ---- FARM CONSTRUCTION (v3.21+) — building:true entries render under their own Ledger heading and
+  // stamp a structure onto the persistent farm when funded. The Coop is the on-ramp: it teaches the
+  // sawmill→lumber→build loop, and a new farm starts WITHOUT it (built here), while old saves keep theirs.
+  // site = the exact structure rect the stamp overwrites; sign = the one extra tile the sign object lands on.
+  // buildingSiteBlocked guards exactly these (no looser bbox — else a respawned ridge rock in the gap
+  // could spuriously block funding), and it is re-checked at build time so nothing is ever buried.
+  { id:"coop", name:"The Chicken Coop", gold:500, items:{ "Oak Lumber":12, "Wood":15 }, building:true, site:[14,4,17,6], sign:[18,6],
+    blurb:"Raise a coop from your own milled oak — Rowan will walk you through the joinery. Hens want a home before they'll come to stay.",
+    done:"The coop stands, snug and dry. Tom can sell you hens now." },
+  { id:"barn", name:"The Barn", gold:1800, items:{ "Oak Lumber":18, "Pine Lumber":14, "Maple Lumber":8, "Wood":30 }, building:true, site:[20,3,25,6], sign:[26,6],
+    blurb:"A proper barn takes stouter framing — oak sills, pine studs, maple for the beams. Cows and sheep will want the room.",
+    done:"The barn is raised, sound to the ridgepole. Tom can sell you cows and sheep now." },
   { id:"minecart", name:"The Minecart Line", gold:8000, items:{ "Iron Ore":20, "Wood":150 },
     blurb:"Re-lay the old rails from the cottage to the mine mouth. No more trudging the ridge.",
     done:"The rails are re-laid. A cart waits at each end." },
@@ -1196,6 +1239,9 @@ const EXAMINE_TILE = {
   }
   EXAMINE["Keg"] = "It ages whatever you trust it with.";
   EXAMINE["Preserves Jar"] = "A crock with a patient lid.";
+  EXAMINE["Sawmill"] = "Feed it logs at night; it gives back clean lumber by morning.";
+  for(const raw in WOOD_TO_LUMBER){ const lum = WOOD_TO_LUMBER[raw];
+    EXAMINE[lum] = `Milled from ${raw.toLowerCase()} — squared, stacked, and ready to build with.`; }
   EXAMINE_OBJ["keg"] = "Something in there is taking its time.";
   EXAMINE_OBJ["jar"] = "The lid says: not yet.";
   EXAMINE_OBJ["bench"] = "Worn smooth by years of sitting. Still room for one more.";

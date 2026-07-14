@@ -780,6 +780,7 @@ function petChicken(a){
   else toast("This hen has had enough fuss for today.");
 }
 function buyChicken(){
+  if(!state.flags.proj_coop){ toast("You'll want a coop first — raise one from the Ledger (Rowan can help)."); playSfx("error"); return; }
   if(state.animals.chickens.length >= 6){ toast("Your coop is full (6 hens)."); return; }
   if(state.gold < 300){ toast("Not enough coin (300g)."); playSfx("error"); return; }
   state.gold -= 300; state.animals.chickens.push({ friend:0, eggDay:0, petDay:0 });
@@ -801,6 +802,7 @@ function petCow(a){
   } else toast("She's been milked and fussed over already today.");
 }
 function buyCow(){
+  if(!state.flags.proj_barn){ toast("You'll need a barn first — raise one from the Ledger."); playSfx("error"); return; }
   if(!state.animals.cows) state.animals.cows = [];
   if(state.animals.cows.length >= 4){ toast("Your barn is full (4 cows)."); return; }
   if(state.gold < 600){ toast("Not enough coin (600g)."); playSfx("error"); return; }
@@ -837,6 +839,7 @@ function shearSheep(a){
   } else toast("This one's had plenty of fuss today.");
 }
 function buySheep(){
+  if(!state.flags.proj_barn){ toast("You'll need a barn first — raise one from the Ledger."); playSfx("error"); return; }
   if(!state.animals.sheep) state.animals.sheep = [];
   if(state.animals.sheep.length >= SHEEP_MAX){ toast(`Your barn's flock is full (${SHEEP_MAX} sheep).`); return; }
   if(state.gold < SHEEP_COST){ toast(`Not enough coin (${SHEEP_COST}g).`); playSfx("error"); return; }
