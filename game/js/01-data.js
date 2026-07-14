@@ -8,13 +8,16 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.12.0", code: 49, codename: "Star Metal", date: "2026-07-14" };
+const VERSION = { name: "3.13.0", code: 50, codename: "Homestead", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.13.0", code:50, date:"2026-07-14", name:"Homestead", notes:[
+    { t:"new",   s:"Make the farm yours. Tom's new Décor catalogue sells cosmetic pieces — flower beds, a garden bench, a bird bath, a sundial, a wishing well, a grand fountain — that you set down like a hive and lift again with the axe. At the top: a solid-gold statue of you for 300,000g, utterly pointless and utterly magnificent. Somewhere for a rich valley's coin to finally go." },
+  ]},
   { v:"3.12.0", code:49, date:"2026-07-14", name:"Star Metal", notes:[
     { t:"new",   s:"A fourth and final tool tier: Star Metal. Forged at Tom's from the valley's deepest and rarest finds — Star Metal Shards and Cobalt from the deep floors, Silverwood and Heartwood from the grove's heart — it's the strongest, gentlest tool there is. Now the deep mine and the old grove finally make something, not just money." },
   ]},
@@ -334,6 +337,25 @@ const MACHINES = {
 };
 // what the machines will take: anything grown — crops and orchard fruit
 function machineLoadable(item){ return CROP_NAMES.has(item) || FRUIT_NAMES.has(item); }
+
+// ---- DÉCOR (v3.13) ----
+// The economy's oldest hole (§3.6): late coin had nowhere to go once Rowan's ~20k of projects were
+// funded — and The Long Climb's faucets widened it. Décor is the sink: purely cosmetic pieces you
+// buy at Tom's and set on the farm like a hive, from a 350g flower bed to a deliberately absurd
+// 300,000g golden statue (the Golden-Clock flex — coin as pure status). Nothing functional, nothing
+// taken; you can always lift a piece back up with the axe. `kind` is the object kind AND sprite key.
+const DECOR = {
+  flowerbed:   { name:"Flower Bed",     cost:350,    blurb:"A tended bed of colour, blooming whatever the season." },
+  gardenbench: { name:"Garden Bench",   cost:600,    blurb:"A quiet place to sit and look at what you've made." },
+  stonelantern:{ name:"Stone Lantern",  cost:900,    blurb:"Weathered grey stone, patient in any weather." },
+  birdbath:    { name:"Bird Bath",      cost:1400,   blurb:"The valley's songbirds will find it within a day." },
+  topiary:     { name:"Topiary",        cost:2000,   blurb:"A hedge, clipped into something with opinions." },
+  sundial:     { name:"Sundial",        cost:2600,   blurb:"Tells the time, on the days the sun cooperates." },
+  wishingwell: { name:"Wishing Well",   cost:4000,   blurb:"Deep, cool, and full of other people's hopes." },
+  grandfountain:{name:"Grand Fountain", cost:8000,   blurb:"Three tiers of falling water. Frankly, a bit much — perfect." },
+  goldenstatue:{ name:"Golden Statue",  cost:300000, blurb:"A solid-gold likeness of you, valley's finest. Utterly pointless. Magnificent." },
+};
+const DECOR_MAX = 40;   // a generous cap so a farm can be dressed, but not infinitely spammed
 
 // ---- THE HUNT ----
 // Where a fish lives. The pond and the coast are different water, and the valley knows it.
@@ -1117,4 +1139,7 @@ const EXAMINE_TILE = {
   EXAMINE_OBJ["jar"] = "The lid says: not yet.";
   EXAMINE_OBJ["bench"] = "Worn smooth by years of sitting. Still room for one more.";
   EXAMINE_OBJ["plantpot"] = "Someone tends these — the blooms are always fresh.";
+  // décor (v3.13): the placed pieces read back their catalogue blurb (OBJ_TITLE set in 08-actions.js,
+  // where that map lives — it isn't defined yet during this file's load)
+  for(const k in DECOR){ EXAMINE_OBJ[k] = DECOR[k].blurb; EXAMINE[DECOR[k].name] = DECOR[k].blurb; }
 })();

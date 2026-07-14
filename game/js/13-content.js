@@ -864,6 +864,16 @@ function buyMachine(mk){
   playSfx("coin"); refreshHUD(); refreshHotbar(); renderShop();
 }
 
+// décor: a pure coin sink (§3.6). Buy a cosmetic piece; select it like a seed and set it on the farm.
+function buyDecor(dk){
+  const D = DECOR[dk]; if(!D) return;
+  if(state.gold < D.cost){ toast(`Not enough coin (${D.cost.toLocaleString()}g).`); playSfx("error"); return; }
+  state.gold -= D.cost; give(D.name, 1, true);
+  toast(D.cost >= 100000 ? "A solid-gold you. The valley will never let you hear the end of it. ✦"
+                         : `One ${D.name.toLowerCase()}. Select it like a seed and set it where it belongs.`, "#ffe6a0");
+  playSfx("coin"); refreshHUD(); refreshHotbar(); renderShop();
+}
+
 function buyBouquet(){
   if(state.gold < 500 || (state.inv["Bouquet"]||0) > 0){ return; }
   state.gold -= 500; give("Bouquet",1,true);

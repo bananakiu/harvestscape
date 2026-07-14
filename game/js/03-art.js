@@ -709,6 +709,45 @@ function buildInteriors(){
   });
   mkSpr("counter", 16, 16, g => { px(g,0,4,16,9,"#8a5f38"); px(g,0,4,16,2,"#a5763f"); px(g,0,11,16,2,"#5e4426");
     px(g,0,6,16,1,"#6e4a2a"); px(g,2,7,3,3,"#8fd06a"); px(g,7,7,3,3,"#ff9438"); px(g,12,7,2,3,"#ff4d55"); });
+
+  // --- DÉCOR (v3.13): each piece gets a world sprite spr[kind] AND a 16×16 backpack icon
+  // spr["item_<name>"]. For 16×16 pieces one drawing serves both; taller pieces pass a compact icon. ---
+  const mkDecor = (kind, name, w, h, fn, iconFn) => { mkSpr(kind, w, h, fn); mkSpr("item_"+name, 16, 16, iconFn || fn); };
+  mkDecor("flowerbed", "Flower Bed", 16, 16, g => {
+    px(g,1,10,14,5,"#6b4c2a"); px(g,1,10,14,1,"#7d5a35");
+    px(g,4,9,1,2,"#4f8a34"); px(g,7,8,1,3,"#4f8a34"); px(g,10,9,1,2,"#4f8a34"); px(g,13,8,1,3,"#4f8a34");
+    px(g,3,7,2,2,"#ff4d55"); px(g,3,6,1,1,"#ff9aa0"); px(g,6,6,2,2,"#ffd94a"); px(g,6,5,1,1,"#fff0a0");
+    px(g,9,7,2,2,"#5a6ad0"); px(g,9,6,1,1,"#9aa8ea"); px(g,12,6,2,2,"#ff9adf"); px(g,12,5,1,1,"#ffc0ec"); });
+  mkDecor("gardenbench", "Garden Bench", 16, 15, g => {
+    px(g,2,2,12,2,"#8a5f38"); px(g,2,2,12,1,"#a5763f"); px(g,3,4,1,5,"#6e4a2a"); px(g,12,4,1,5,"#6e4a2a"); px(g,7,4,1,4,"#6e4a2a");
+    px(g,1,8,14,3,"#9a6b3e"); px(g,1,8,14,1,"#b07d48"); px(g,2,11,2,4,"#5e4426"); px(g,12,11,2,4,"#5e4426"); });
+  mkDecor("stonelantern", "Stone Lantern", 16, 16, g => {
+    px(g,6,13,4,2,"#8a8378"); px(g,7,8,2,5,"#9a9186"); px(g,5,4,6,4,"#a9a094"); px(g,5,4,6,1,"#b3aa9e");
+    px(g,6,5,4,2,"#d8c68a"); px(g,4,2,8,2,"#9a9186"); px(g,6,1,4,1,"#a9a094"); });
+  mkDecor("birdbath", "Bird Bath", 16, 16, g => {
+    px(g,6,10,4,5,"#b3aa9e"); px(g,7,10,1,5,"#c9c0b4"); px(g,3,7,10,3,"#c9c0b4"); px(g,3,7,10,1,"#d8d0c4");
+    px(g,4,8,8,1,"#8fd3ff"); px(g,5,8,2,1,"#c9ecff"); });
+  mkDecor("topiary", "Topiary", 16, 18, g => {
+    px(g,5,14,6,4,"#b5622f"); px(g,5,14,6,1,"#d07d47"); px(g,7,11,2,4,"#6e4a2a");
+    px(g,3,3,10,9,"#3f7a2e"); px(g,2,5,12,5,"#4a8a3a"); px(g,4,4,4,3,"#5fa03e"); px(g,9,6,2,2,"#6fb04a"); },
+    g => { px(g,6,12,4,3,"#b5622f"); px(g,3,1,10,10,"#3f7a2e"); px(g,2,3,12,5,"#4a8a3a"); px(g,4,2,4,3,"#5fa03e"); });
+  mkDecor("sundial", "Sundial", 16, 16, g => {
+    px(g,4,11,8,3,"#9a9186"); px(g,4,11,8,1,"#a9a094"); px(g,3,8,10,3,"#c9c0b4"); px(g,3,8,10,1,"#d8d0c4");
+    px(g,8,4,1,5,"#6a6256"); px(g,7,8,2,1,"#7d7466"); px(g,4,9,1,1,"#6a6256"); px(g,11,9,1,1,"#6a6256"); });
+  mkDecor("wishingwell", "Wishing Well", 16, 20, g => {
+    px(g,3,12,10,7,"#8a8378"); px(g,3,12,10,1,"#a9a094"); px(g,4,15,1,4,"#6a6256"); px(g,8,15,1,4,"#6a6256"); px(g,11,13,1,5,"#6a6256");
+    px(g,4,13,8,3,"#3a4650"); px(g,5,3,1,10,"#8a5f38"); px(g,10,3,1,10,"#8a5f38"); px(g,2,1,12,2,"#a5763f"); px(g,4,3,8,1,"#6e4a2a"); },
+    g => { px(g,3,8,10,7,"#8a8378"); px(g,4,9,8,3,"#3a4650"); px(g,2,3,12,2,"#a5763f"); px(g,4,4,1,5,"#8a5f38"); px(g,11,4,1,5,"#8a5f38"); });
+  mkDecor("grandfountain", "Grand Fountain", 16, 20, g => {
+    px(g,2,15,12,4,"#b3aa9e"); px(g,2,15,12,1,"#c9c0b4"); px(g,3,16,10,2,"#8fd3ff");
+    px(g,4,11,8,4,"#c9c0b4"); px(g,4,11,8,1,"#d8d0c4"); px(g,5,12,6,1,"#8fd3ff");
+    px(g,5,6,6,5,"#c9c0b4"); px(g,7,2,2,5,"#8fd3ff"); px(g,6,3,1,2,"#c9ecff"); px(g,9,3,1,2,"#c9ecff"); },
+    g => { px(g,2,11,12,4,"#b3aa9e"); px(g,3,12,10,2,"#8fd3ff"); px(g,5,5,6,6,"#c9c0b4"); px(g,7,2,2,4,"#8fd3ff"); });
+  mkDecor("goldenstatue", "Golden Statue", 16, 24, g => {
+    px(g,3,20,10,4,"#8a8378"); px(g,3,20,10,1,"#a9a094"); px(g,4,18,8,2,"#9a9186");
+    px(g,6,4,4,4,"#ffe27a"); px(g,7,4,2,1,"#fff0a0"); px(g,5,8,6,9,"#ffd75a"); px(g,5,8,1,9,"#fff0a0"); px(g,10,8,1,9,"#c9922f");
+    px(g,4,10,1,5,"#ffd75a"); px(g,11,10,1,5,"#ffd75a"); px(g,5,17,6,3,"#e0b84a"); px(g,7,2,2,2,"#ffe27a"); },
+    g => { px(g,3,13,10,3,"#8a8378"); px(g,6,1,4,4,"#ffe27a"); px(g,5,5,6,8,"#ffd75a"); px(g,5,5,1,8,"#fff0a0"); px(g,10,5,1,8,"#c9922f"); });
   mkSpr("barrel", 16, 16, g => { px(g,4,3,8,12,"#8a5f38"); px(g,4,3,8,1,"#a5763f"); px(g,3,5,10,2,"#6e4a2a"); px(g,3,11,10,2,"#6e4a2a");
     px(g,5,3,1,12,"#a5763f"); px(g,10,3,1,12,"#6e4a2a"); });
   mkSpr("crate", 16, 16, g => { px(g,3,4,10,10,"#a5763f"); px(g,3,4,10,1,"#c29258"); px(g,3,13,10,1,"#7a5630");

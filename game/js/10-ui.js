@@ -733,7 +733,7 @@ function openShop(tab, silent){ _panelTab["shopPanel"] = tab || "sell"; openPane
   if(!silent) toast(pick(TOM_GREET), "#e9dcc0"); }
 function renderShop(){
   const b = $("shopPanel").querySelector(".body");
-  const shopTab = panelTabs("shopPanel", "shopTabs", [["sell","Sell"],["buy","Seeds & Food"],["tools","Tools"]], renderShop);
+  const shopTab = panelTabs("shopPanel", "shopTabs", [["sell","Sell"],["buy","Seeds & Food"],["tools","Tools"],["decor","Décor"]], renderShop);
   let html = "";
   if(shopTab === "sell"){
     const sellables = Object.keys(state.inv).filter(i => ITEM_SELL[i]);
@@ -798,6 +798,14 @@ function renderShop(){
     const sheep = (state.animals.sheep||[]).length;
     html += `<div class="row"><span class="lead" data-icon="item_Wool"><canvas></canvas><span>Sheep <span class="sub">shear a full coat every few days · shares the barn · ${sheep}/${SHEEP_MAX} sheep</span></span></span><span><span class="price">${SHEEP_COST}g</span> <button class="buy" ${state.gold>=SHEEP_COST&&sheep<SHEEP_MAX?"":"disabled"} onclick="buySheep()">buy</button></span></div>`;
     html += `<div class="row"><span class="lead" data-icon="item_Shears"><canvas></canvas><span>Shears <span class="sub">${state.flags.hasShears?"you own a pair — shear any sheep with E":"gather wool from your sheep · one and done"}</span></span></span><span><span class="price">${SHEARS_COST}g</span> <button class="buy" ${!state.flags.hasShears&&state.gold>=SHEARS_COST?"":"disabled"} onclick="buyShears()">${state.flags.hasShears?"owned":"buy"}</button></span></div>`;
+  } else if(shopTab === "decor"){
+    const placed = (state.farm ? Object.values(state.farm.objects) : []).filter(o => DECOR[o.kind]).length;
+    html += `<div class="desc" style="margin-bottom:.5em;color:var(--ink-soft);">Pieces to make the farm yours — buy one, then set it down like a hive (select it, press USE on open ground; the axe lifts it again). Purely for the joy of it. <span style="color:var(--gold-hi)">${placed}/${DECOR_MAX} placed.</span></div>`;
+    for(const k in DECOR){
+      const D = DECOR[k], own = state.inv[D.name]||0, vanity = D.cost >= 100000;
+      html += `<div class="row"><span class="lead" data-icon="item_${D.name}"><canvas></canvas><span style="${vanity?`color:${'#ffd75a'}`:''}">${D.name}${own?` <span class="sub" style="color:var(--gold-hi)">×${own} in bag</span>`:''} <span class="sub">${D.blurb}</span></span></span>` +
+        `<span><span class="price">${D.cost.toLocaleString()}g</span> <button class="buy" ${state.gold>=D.cost?"":"disabled"} onclick="buyDecor('${k}')">buy</button></span></div>`;
+    }
   } else {
     for(const tool of TOOLS){
       const cur = state.tools[tool];

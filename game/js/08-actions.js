@@ -50,20 +50,24 @@ function plantables(){
   for(const k in FRUIT_TREES) if((state.inv[FRUIT_TREES[k].name]||0) > 0) list.push("sap:"+k);
   if((state.inv["Beehive"]||0) > 0) list.push("hive");
   for(const k in MACHINES) if((state.inv[MACHINES[k].name]||0) > 0) list.push("mach:"+k);
+  for(const k in DECOR) if((state.inv[DECOR[k].name]||0) > 0) list.push("decor:"+k);
   return list;
 }
-const isSapSel  = s => typeof s === "string" && s.startsWith("sap:");
-const isHiveSel = s => s === "hive";
-const isMachSel = s => typeof s === "string" && s.startsWith("mach:");
+const isSapSel   = s => typeof s === "string" && s.startsWith("sap:");
+const isHiveSel  = s => s === "hive";
+const isMachSel  = s => typeof s === "string" && s.startsWith("mach:");
+const isDecorSel = s => typeof s === "string" && s.startsWith("decor:");
 function plantableName(sel){
   if(isHiveSel(sel)) return "Beehive";
   if(isMachSel(sel)) return MACHINES[sel.slice(5)].name;
+  if(isDecorSel(sel)) return DECOR[sel.slice(6)].name;
   if(isSapSel(sel)) return FRUIT_TREES[sel.slice(4)].name;
   return CROPS[sel] ? CROPS[sel].name + " Seeds" : "Seeds";
 }
 function plantableIcon(sel){
   if(isHiveSel(sel)) return "beehive";
   if(isMachSel(sel)) return "item_" + MACHINES[sel.slice(5)].name;
+  if(isDecorSel(sel)) return "item_" + DECOR[sel.slice(6)].name;
   if(isSapSel(sel)) return "sapling_" + sel.slice(4);
   return "item_" + (CROPS[sel] ? CROPS[sel].name : "Turnip") + " Seeds";
 }
@@ -188,6 +192,7 @@ const OBJ_TITLE  = { bed:"Bed", campfire:"Campfire", stove:"Stove", fireplace:"F
   crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift", olddoor:"A Planked Door", keg:"Keg", jar:"Preserves Jar", bench:"Bench", plantpot:"Flower Planter",
   deadfall:"Deadfall", westtrail:"The Trail West", easttrail:"The Trail Back", waystone:"Waystone", hearttree:"The Heart of the Forest",
   ancient:"Ancient Tree" };
+for(const k in DECOR) OBJ_TITLE[k] = DECOR[k].name;   // décor pieces (v3.13) examine under their proper name
 function npcAtTile(tx,ty){ if(!curMap||!curMap.npcs) return null;
   for(const n of curMap.npcs){ if(Math.floor(n.x/TILE)===tx && Math.floor(n.y/TILE)===ty) return n; } return null; }
 function objLook(obj){
@@ -283,7 +288,7 @@ function useTool(){
   }
   else if(tool === "Seeds"){
     // a tree or a hive goes in open ground, not a furrow, and it stays there for good
-    if(isSapSel(state.seedSel) || isHiveSel(state.seedSel) || isMachSel(state.seedSel)){ plantPermanent(tx, ty); return; }
+    if(isSapSel(state.seedSel) || isHiveSel(state.seedSel) || isMachSel(state.seedSel) || isDecorSel(state.seedSel)){ plantPermanent(tx, ty); return; }
     const c = CROPS[state.seedSel];
     if(skillLvl("Farming") < c.lvl){ toast(`Need Farming ${c.lvl} for ${c.name}.`, "#ff8a7a"); playSfx("error"); return; }
     if(!c.seasons.includes(curSeason())){ toast(`${c.name} only grows in ${c.seasons.join(" & ")}.`, "#ff8a7a"); playSfx("error"); return; }
@@ -296,7 +301,7 @@ function useTool(){
   }
   else if(tool === "Axe"){
     // an orchard tree or a hive can be dug up and carried off — so a misplacement is never forever
-    if(obj && (obj.kind === "fruittree" || obj.kind === "beehive" || MACHINES[obj.kind])){ digUp(tx, ty, obj); return; }
+    if(obj && (obj.kind === "fruittree" || obj.kind === "beehive" || MACHINES[obj.kind] || DECOR[obj.kind])){ digUp(tx, ty, obj); return; }
     // the deadfall — the grove's door west. Chopping THROUGH it is the way deeper, and the
     // door pays you: wood and XP on the fell. Its level req is the next ring's soft gate.
     if(obj && obj.kind === "deadfall"){
@@ -958,6 +963,9 @@ function digUp(tx, ty, obj){
     if(obj.item) give(obj.item, 1);                 // nothing is ever taken: the load comes back out
     give(MACHINES[obj.kind].name, 1, true);
     toast(`You heft the ${MACHINES[obj.kind].name.toLowerCase()}${obj.item ? " — its load comes back out unspoiled" : ""}.`, "#cbb98f");
+  } else if(DECOR[obj.kind]){
+    give(DECOR[obj.kind].name, 1, true);
+    toast(`You pack up the ${DECOR[obj.kind].name.toLowerCase()} to set somewhere new.`, "#cbb98f");
   } else {
     const t = FRUIT_TREES[obj.type];
     if(obj.fruit > 0 && t){ give(t.fruit, obj.fruit); }
@@ -999,6 +1007,21 @@ function plantPermanent(tx, ty){
     toast(`The ${M.name.toLowerCase()} is set. Bring it something grown.`, "#cbb98f");
     addXP("Farming", 20); playSfx("plant");
     pSparkle(tx*TILE+8, ty*TILE+8, "#cbb98f", 10);
+    normalizeSeedSel(); refreshHotbar(); refreshHUD();
+    return;
+  }
+  const dec = isDecorSel(state.seedSel) ? state.seedSel.slice(6) : null;   // "decor:flowerbed"
+  if(dec){
+    const D = DECOR[dec];
+    if(Object.values(curMap.objects).filter(o => DECOR[o.kind]).length >= DECOR_MAX){
+      toast(`Your homestead is beautifully full (${DECOR_MAX} pieces).`); playSfx("error"); return; }
+    if((state.inv[D.name]||0) < 1){ toast("You don't have one."); playSfx("error"); return; }
+    if(!spendEnergy(2)) return;
+    take(D.name);
+    curMap.objects[key(tx,ty)] = { kind:dec };   // kind is the DECOR key; spr[kind] draws it
+    setTile(tx,ty, T.GRASS);
+    toast(`The ${D.name.toLowerCase()} looks right at home.`, "#cbb98f"); playSfx("plant");
+    pSparkle(tx*TILE+8, ty*TILE+8, "#ffe6a0", 8);
     normalizeSeedSel(); refreshHotbar(); refreshHUD();
     return;
   }

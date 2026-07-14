@@ -22,6 +22,42 @@
 
 ---
 
+## v3.13.0 — "Homestead" · 2026-07-14 · tag `v3.13.0`
+
+Version code **50**. The fresh v3.11 audit's **#3 priority** and the Interlocking Economy's oldest
+hole (§3.6): late-game coin had nowhere to go once Rowan's ~20k of projects were funded — and The
+Long Climb's faucets (Grand Feast 5400g, Coelacanth, deep ore) *widened* the drought. Décor is the
+sink, and a beloved cozy-genre feature in its own right: dress the farm.
+
+### Added — a **Décor catalogue** (`DECOR`, `01-data.js`; new "Décor" tab at Tom's)
+- Nine placeable, purely-cosmetic pieces from a **350g Flower Bed** to a deliberately absurd
+  **300,000g Golden Statue of you** (the Golden-Clock flex — coin as pure status): Garden Bench,
+  Stone Lantern, Bird Bath, Topiary, Sundial, Wishing Well, Grand Fountain between them.
+- **Reuses the hive/machine placement path** end to end: `buyDecor` → the item enters your bag →
+  select it like a seed (`isDecorSel`) → set it on the farm with USE (`plantPermanent`'s new `dec`
+  branch, farm-only, capped at `DECOR_MAX=40`) → the **axe lifts it back** (`digUp`), so nothing is
+  ever lost (cozy contract). Each piece has a world sprite + a backpack icon; tall pieces
+  bottom-anchor through `drawObject`'s generic path.
+- Décor is **not sellable or giftable** (never enters `ITEM_SELL`), so the coin is a genuine sink —
+  you can move a statue but never refund it.
+
+### Save compat
+None needed — décor lives in `state.inv` + `state.farm.objects`, both already persisted; no new
+top-level state. (Verified the v3.2 farm-shrink migration guard skips décor-shaped saves, so placed
+pieces are never silently swept.)
+
+### Review-driven
+A focused adversarial pass cleared the economy (no refund exploit), persistence, placement guards
+(farm-only, occupied/doorway/reserved refusals inherited), kind-collisions, and tall-sprite anchoring.
+Its one LOW finding — placed pieces examined under their raw key ("goldenstatue") because `OBJ_TITLE`
+lacked décor names — is fixed (populated in 08-actions.js, where that map lives; doing it in
+01-data.js would have thrown at load, since `OBJ_TITLE` isn't defined yet during that file's IIFE).
+
+*Verified live: buy all nine (gold deducts exactly, 319,850g sunk); place (consumes item, blocks
+movement); axe lifts back to bag; `DECOR_MAX` cap; not sellable; examine title correct; the Décor
+tab and in-world sprites (well/fountain/statue) render cleanly; game loads with no load-order error;
+console clean. Atlas snapshot v3.13.0.*
+
 ## v3.12.0 — "Star Metal" · 2026-07-14 · tag `v3.12.0`
 
 Version code **49**. The **#1 ranked priority** from the fresh v3.11 design audit (and a gap the
