@@ -1,3 +1,83 @@
+# HarvestScape Design Scorecard
+
+## v3.23.0 "The Paddock" Re-Audit — 2026-07-14
+
+**Overall grade: A− (held) — but the frontier has moved.**
+
+Fresh four-pillar re-audit (Cozy base / RuneScape layer / Story+Whimsy / Presentation) + a synthesis
+pass against `GAME_DESIGN_PRINCIPLES.md` and `GAME_BALANCE_PRINCIPLES.md`, reading the live v3.23 code
+and the full v3.12→3.23 changelog with file-level evidence. ~12 releases shipped since the v3.11 audit
+below: the Star Metal 4th tool tier, Décor, Deep Run, the mine/ore/gem rebalances + hidden stairs, the
+wood rebalance, and the whole construction arc — Lumber, Sawmill, buildable Coop/Barn/Stable, and the
+rideable horse.
+
+**Verdict:** the two oldest economy holes the v3.11 audit named are **shipped-closed** — the terminal
+deep resources now feed the Star Metal tool (dead-currency → input, **C→B+**) and the late-gold drought
+is held shut by Décor's 300k statue + faucet-narrowing (**Interlocking Economy A−→A**). Visual Coziness
+rose (**A−→A**, warmer shadows) and the Mine's expedition tension (**B→A−**, Deep Run). **But the
+construction arc shipped systems-heavy and ceremony-light:** four releases added the homestead and the
+horse with *no* raise-ceremony, *no* NPC recognition, *no* story — so **Whimsy slipped A→A−** — and the
+RuneScape endgame still dead-ends (Mining L50–99 desert; terminal ores revert to a one-time faucet once
+five tools are forged). The frontier now is **finishing what shipped, not shipping more.**
+
+| Pillar | Dimension | v3.11 | v3.23 | Δ |
+|---|---|---|---|---|
+| Cozy base | Day Loop | A | **A** | — |
+| Cozy base | Interlocking Economy | A− | **A** | ▲ |
+| Cozy base | Pacing the Year | A | **A** | — |
+| Cozy base | Cozy Contract | A+ | **A+** | — |
+| RuneScape | Skill Progression | B+ | **B+** | — |
+| RuneScape | Mine / Expedition | B | **A−** | ▲ |
+| RuneScape | Terminal-resource loop | C | **B+** | ▲ |
+| RuneScape | Bespoke vs. numeric | B− | **B** | ▲ |
+| Story | Quests & Story | A− | **A−** | — |
+| Story | Whimsy & Tone | A | **A−** | ▼ |
+| Presentation | Visual Coziness | A− | **A** | ▲ |
+| Presentation | Juice / Game Feel | B+ | **B+** | — |
+| Presentation | Audio | B− | **B−** | — |
+| Presentation | UI | A | **A** | — |
+
+### Ranked priorities (next work) — muted-verifiable first (audio can't be judged while the build is muted)
+
+1. **[M] Building ceremony + one NPC recognition line each.** The construction arc's payoff is missing:
+   a raised coop/barn/stable completes with only a text line on the morning card (§5.5 ceremony + §8.2
+   acknowledgment both fail while tool-upgrades/legends *do* celebrate), and not one villager mentions the
+   transforming farm (§4.6 "saw your new barn!"). Banner + sparkle + shake at the site on raise; a
+   proj-flag-keyed line per NPC. *Closes a Presentation HIGH and a Story MEDIUM at once.*
+2. **[L] A 6th/7th deep ore tier (L70/L90) + a repeatable deep-only find.** Mining L50–99 is a 49-level
+   content desert — Star Metal L50 is the last mineable noun; the top half unlocks only passives. Add deep
+   veins + a repeatable geode/relic table on floors 40+ (the mine's canopy-nest analog, feeding the farm,
+   not gold). Couples to #3.
+3. **[M] A repeatable endgame material sink + a build recipe for the premium Beams.** The Star Metal tier
+   is the ONLY consumer of Cobalt/Star Metal Shard/Silverwood/Heartwood/Starstone; once five tools are
+   forged they revert to sell-only, and Heartwood/Silverwood Beam have *zero* build consumer. Ship one
+   repeatable sink (premium-beam estate line / Star-Metal décor) that also eats the new #2 ores.
+4. **[S] Recruit Mining/stone/gems into the building recipes.** The three buildings draw from Woodcutting
+   alone (§2.3/§3.2 cross-feed unmet); only the Sawmill recruits a second skill. Pure data edit to
+   `PROJECTS.items` — cheapest high-leverage fix on the board.
+5. **[M] "Rowan's Workshop" — the owner-requested construction questline.** The owner asked for construction
+   *introduced through a quest, specifically the coop* (DEVLOG); what shipped is a tip + a Ledger
+   transaction, and the coop blurb promises "Rowan will walk you through the joinery" but Rowan never speaks
+   (§4.4). Reuse the QUESTS/turn-in cutscene machinery.
+6. **[M] Fix the mounted-horse composite + mount/dismount juice + an examinable horse.** The mount reads as
+   "a person standing in front of a pony" (§8.1); the first-ever movement mechanic has no felt moment
+   (§8.2); the idle horse has no examine (§7). *One bundle closes two Presentation gaps + a Story one.*
+7. **[S] Squash-&-stretch on the player swing/land + watered crops.** The exact v3.11-named Juice gap, still
+   open (§8.2) — ~10 lines that change feel, not rules.
+8. **[M] A quest-point meta-currency + one bespoke-mechanic quest step.** Every objective is a numeric
+   threshold/flag (§4.4); no meta-currency sums the light content (quests, legends, pages, hearts).
+9. **[M] Give winter a renewable pillar** (season-gated workshop / civic build) — the construction epic only
+   fills the *first* winter; §9's thin-season gap persists.
+10. **[S] Housekeeping** — migrated-save stable z-overlap (footprint-exclusion only protected fresh saves);
+    7 hand-written lumber examines; palette-ramp hue audit.
+11. **[M — needs audio] Audio bed** — always-on wind floor, ungate ambience, seasonal musical identity (the
+    ~6-audit-stuck B−). Ranked last *only* because the build is being tested muted; promote it the moment
+    audio testing resumes.
+
+*The prior audit (v3.11) is kept below as history.*
+
+---
+
 # HarvestScape Design Scorecard — v3.11 Re-Audit (2026-07-14)
 
 **Overall grade: A− (held from v2.0 — but the floor underneath rose materially)**
