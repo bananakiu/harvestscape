@@ -587,6 +587,14 @@ function buildItems(){
     px(g,5,5,8,2,SB); px(g,6,5,6,1,SL);                                             // saddle blanket over the croup
     px(g,5,11,2,4,HL); px(g,11,11,2,4,HL); px(g,5,14,2,1,HH); px(g,11,14,2,1,HH); }); // hind legs
   mkSpr("item_Stone", 16, 16, g => { px(g,4,6,8,7,"#9a9a9a"); px(g,3,8,10,4,"#8a8a8a"); px(g,5,5,5,3,"#a8a8a8"); px(g,4,12,9,1,"#6a6a6a"); });
+  // v3.28 geode curios (Collection pieces from the deep)
+  mkSpr("item_Amber", 16, 16, g => { px(g,5,4,6,8,"#e0a02a"); px(g,4,6,8,5,"#d8951f"); px(g,5,4,6,1,"#f2c256"); px(g,6,5,3,4,"#f6d27a"); px(g,8,8,1,1,"#3a2410"); px(g,4,11,8,1,"#a56a12"); });
+  mkSpr("item_Obsidian", 16, 16, g => { px(g,5,4,6,9,"#2a2530"); px(g,4,6,8,5,"#211d28"); px(g,6,5,2,5,"#4a4458"); px(g,5,4,4,1,"#5a5468"); px(g,5,12,6,1,"#141018"); });
+  mkSpr("item_Trilobite", 16, 16, g => { px(g,3,4,10,8,"#8a8478"); px(g,3,4,10,1,"#a09a8c"); px(g,3,11,10,1,"#6a6458");   // stone tablet
+    px(g,6,5,4,6,"#6a5a44"); px(g,7,5,2,1,"#8a7a5c"); px(g,6,6,4,1,"#54462f"); px(g,6,8,4,1,"#54462f"); px(g,7,10,2,1,"#4a3c28"); });   // the trilobite
+  mkSpr("item_Quartz Cluster", 16, 16, g => { px(g,6,3,2,10,"#dff2ff"); px(g,4,6,2,7,"#c8e6fb"); px(g,9,5,2,8,"#eef8ff"); px(g,7,8,2,5,"#d0eafd"); px(g,4,12,8,1,"#a9c4da"); });
+  mkSpr("item_Geode Heart", 16, 16, g => { px(g,3,4,10,9,"#8a8a8a"); px(g,3,4,10,1,"#a2a2a2"); px(g,3,12,10,1,"#6a6a6a");   // stone shell
+    px(g,5,6,6,5,"#3a2f52"); px(g,6,6,4,1,"#c8b8ff"); px(g,6,7,1,3,"#a877e0"); px(g,9,7,1,3,"#a877e0"); px(g,7,8,2,2,"#e6d8ff"); });   // crystal-lined hollow
   const oreCols = { "Copper Ore":"#c77b3f", "Iron Ore":"#bfa8a0", "Gold Ore":"#ffd75a", "Cobalt Ore":"#5a7ad0", "Star Metal Shard":"#c8ecff" };
   for(const o in oreCols){ mkSpr("item_"+o, 16, 16, g => {
     px(g,4,6,8,7,"#7d7d7d"); px(g,3,8,10,4,"#6e6e6e"); px(g,5,5,5,3,"#8a8a8a");
@@ -998,6 +1006,10 @@ function buildMineArt(){
     px(g,6,8,2,3,"#a877e0"); px(g,9,9,2,2,"#3ec878"); px(g,7,10,1,1,"#e0455a"); px(g,6,8,1,1,"#d8b8f0"); });
   mkSpr("crystal", 16, 16, g => { px(g,6,4,4,10,"#8fd3ff"); px(g,4,8,3,6,"#7fc0f0"); px(g,10,7,3,7,"#a9e0ff");
     px(g,7,4,1,9,"#d8f0ff"); px(g,6,4,1,1,"#ffffff"); px(g,5,13,7,2,"#3d3846"); });
+  // v3.28 geode — a rounded nodule with a hairline crack and a glint of crystal, waiting for a pick
+  mkSpr("geode", 16, 16, g => { px(g,3,5,10,9,"#7a7268"); px(g,2,7,12,6,"#6a635a"); px(g,4,4,8,3,"#8a8278");
+    px(g,4,4,8,1,"#9a9288"); px(g,3,13,10,1,"#4e4840");
+    px(g,8,5,1,8,"#4a4448"); px(g,7,8,1,1,"#c8b8ff"); px(g,9,9,1,1,"#8fe8c8"); });   // the crack + crystal winks
   mkSpr("torch", 16, 16, g => { px(g,7,6,2,9,"#6e4a2a"); px(g,6,3,4,5,"#ff8a3a"); px(g,7,1,2,4,"#ffd75a"); px(g,7,2,1,2,"#fff0a0"); });
   mkSpr("beam", 16, 16, g => { px(g,2,0,3,16,"#6e4a2a"); px(g,11,0,3,16,"#6e4a2a"); px(g,0,0,16,3,"#7a5630"); px(g,0,0,16,1,"#96703f"); });
   mkSpr("minecart", 16, 16, g => { px(g,2,6,12,6,"#5f5f5f"); px(g,2,6,12,2,"#7a7a7a"); px(g,3,8,10,3,"#3a3a42");

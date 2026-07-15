@@ -51,6 +51,47 @@ live code (`XP_TABLE` `inc()`, `TIER_COST`/`TIER_LEVEL`, `GEM_SELL`/`GEM_WEIGHTS
 `WOOL_REGROW`, `DIFF_MAX`, `genMine` coefficients, the 30% Starstone roll) before shipping, so the
 doc's ladders are the numbers of record, not a paraphrase that can drift.
 
+## v3.28.0 — "Geodes" · 2026-07-14 · tag `v3.28.0`
+
+Version code **65**. First half of the v3.23 re-audit's **#2** (the RuneScape endgame dead-end): Mining
+L50–99 is a 49-level content desert — Star Metal Vein L50 is the last mineable noun and the deep mine had
+no *repeatable* treasure feeding the farm the way the grove's canopy nests do. This adds that treasure
+(and softens the richness clamp so deep runs finally out-pay camping, balance §6), cozily and *without*
+re-opening the gem/gold faucet the economy spent v3.16–3.20 nerfing.
+
+### The geode — the mine's canopy nest (`13-content.js`, `08-actions.js`)
+- Past **floor 25**, a rare **geode** sits among the stone (`geodeP = 0.004`, ~0.25/floor). Crack it with
+  the Pick and it splits open — `crackGeode`: **56% a mineral curio** (Amber / Obsidian / Trilobite /
+  Quartz Cluster), **30% a gem** (via the existing cheap-weighted `pickGem`), **10% a rare Geode Heart**,
+  **4% a Starstone**. It's the mine's answer to the grove's nests — Collection first, coin a distant
+  second, so the deep pays in *wonder* rather than becoming a gold faucet (curios sell 26–90g and never
+  out-earn a worked field; the gem/Starstone tail is bounded by how rare geodes are). Mined through the
+  gemrock branch (hp `6 + depth/4`), so it depletes and cracks exactly once.
+
+### The Deep — a new Collection page (`01-data.js`, `10-ui.js`, `03-art.js`)
+- Five new curios with hand-written examine flavor and pixel sprites (amber with a gnat, black obsidian, a
+  trilobite fossil, a quartz cluster, a crystal-lined Geode Heart), grouped under a new **"The Deep"**
+  Collection category between Materials and The Canopy — a completionist reason to keep diving.
+
+### Deeper is richer (`13-content.js`)
+- The **ore** density clamp moved from `min(depth,20)` to `min(depth,40)`, so a run keeps enriching with
+  ore all the way to floor 40 instead of plateauing at 20 — the frontier finally out-pays shallow camping
+  (§6), the exact gap the re-audit flagged for the Mine. **Gem** density was deliberately left clamped at
+  `min(depth,20)`: doubling it at floor 40 would re-open the gem-gold faucet the economy spent v3.16–3.20
+  nerfing (the one number the pre-ship review flagged to eyeball), so deep runs get richer in *material*,
+  not in *coin*.
+
+### Verification & a caught bug
+In-browser (muted): geodes spawn only past floor 25 (5 over 20 floors at depth 30; **0** on shallow floors);
+`crackGeode` runs over 200 cracks without error and drops curios; all six sprites register; **the "The
+Deep" Collection page renders with all five curio sprites** (screenshot); examine reads for the geode and
+each curio; console clean. **A load-order (TDZ) bug was caught and fixed pre-ship:** the curios' `EXAMINE`
+lines were first written at line ~537, *before* `const EXAMINE` (line ~1089) — a runtime crash that broke
+everything after it in `01-data.js` and that `new Function` syntax-checks can't see (CLAUDE.md: "const
+initialization order still matters"). Moved them below the declaration; the game now initializes fully
+(`CROPS`/`RECIPES`/`EXAMINE` all present). Focused adversarial review (load-order sweep / crack-mine
+correctness / balance of the clamp + faucet / regression).
+
 ## v3.27.0 — "Rowan's Workshop" · 2026-07-14 · tag `v3.27.0`
 
 Version code **64**. Closes the v3.23 re-audit's **#5** and the *original* owner request the construction

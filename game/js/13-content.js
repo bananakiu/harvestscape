@@ -158,14 +158,19 @@ function genMine(m){
     // v3.19 — valuable veins are ~3× rarer than before (and worth ~3× the XP — see ORES): a vein is a
     // real find now, not wallpaper. Plain stone is DENSE — it's the rock you dig through to hunt the
     // hidden stairs, and it feeds Deep Run staircases.
-    const oreP  = 0.03 * (1 + 0.02*Math.min(depth,20)) * oreBoost;
-    const gemP  = 0.002 * Math.min(depth,20) * gemBoost;
-    const rockP = 0.24;   // plain stone filler
-    if(r < gemP){ put(m,x,y, rng() < (0.30 + depth*0.008) ? "crystal" : "gemrock", {hp:3+Math.floor(depth/2)}); }
-    else if(r < gemP + oreP){ const k = oreTable[randiR(rng,0,oreTable.length-1)]; put(m,x,y,k,{hp:ORES[k].hp}); }
-    else if(r < gemP + oreP + rockP){ put(m,x,y,"stone",{hp:ORES.stone.hp}); }
-    else if(r < gemP + oreP + rockP + 0.03){ put(m,x,y, rng()<0.5?"rubble":"minecart"); }
-    else if(r < gemP + oreP + rockP + 0.045){ put(m,x,y,"beam"); }
+    // v3.28: the richness curve reaches deeper now — density keeps climbing to floor 40, not 20, so a
+    // deep run stays a frontier (balance §6: deeper must out-pay camping), and a rare GEODE appears past
+    // floor 25 — the mine's canopy-nest, a repeatable reason to dive that pays in curios, not coin.
+    const oreP    = 0.03 * (1 + 0.02*Math.min(depth,40)) * oreBoost;   // ore keeps enriching to floor 40 (deeper out-pays camping)
+    const gemP    = 0.002 * Math.min(depth,20) * gemBoost;             // gems stay clamped at 20 — never re-open the gem-gold faucet the economy nerfed
+    const geodeP  = depth >= 25 ? 0.004 : 0;
+    const rockP   = 0.24;   // plain stone filler
+    if(r < geodeP){ put(m,x,y,"geode",{hp:6+Math.floor(depth/4)}); }
+    else if(r < geodeP + gemP){ put(m,x,y, rng() < (0.30 + depth*0.008) ? "crystal" : "gemrock", {hp:3+Math.floor(depth/2)}); }
+    else if(r < geodeP + gemP + oreP){ const k = oreTable[randiR(rng,0,oreTable.length-1)]; put(m,x,y,k,{hp:ORES[k].hp}); }
+    else if(r < geodeP + gemP + oreP + rockP){ put(m,x,y,"stone",{hp:ORES.stone.hp}); }
+    else if(r < geodeP + gemP + oreP + rockP + 0.03){ put(m,x,y, rng()<0.5?"rubble":"minecart"); }
+    else if(r < geodeP + gemP + oreP + rockP + 0.045){ put(m,x,y,"beam"); }
   }
   // torches on some wall edges for light (never over an existing object — would trap the player)
   for(const [x,y] of floors){ if(!m.objects[key(x,y)] && rng()<0.04){ const above=m.tiles[(y-1)*W+x]; if(above===T.MWALL) put(m,x,y,"torch"); } }

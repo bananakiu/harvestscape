@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.27.0", code: 64, codename: "Rowan's Workshop", date: "2026-07-14" };
+const VERSION = { name: "3.28.0", code: 65, codename: "Geodes", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.28.0", code:65, date:"2026-07-14", name:"Geodes", notes:[
+    { t:"new", s:"The deep mine gives up more than ore now. Past floor 25, a rare geode sits among the stone — a plain round nodule with a crack of crystal showing through. Crack it with your pick and it splits open on something worth keeping: amber with a gnat inside, a trilobite older than any story, black obsidian, a fist of quartz — or, one in a while, a gem grown in the dark, or the rarest thing of all." },
+    { t:"new", s:"There's a new page in your Collection for them — The Deep. And the mine rewards the long climb more honestly: the ore keeps growing richer all the way down to floor 40, not just to 20, so diving deep is finally worth more than camping shallow." },
+  ]},
   { v:"3.27.0", code:64, date:"2026-07-14", name:"Rowan's Workshop", notes:[
     { t:"new", s:"Construction has a voice at last. The first time you raise the coop, Elder Rowan comes to see it — and tells you what you didn't know you'd learned: that the making of a home was the tenth craft the old Guild never counted. His workshop is open again, and it's yours." },
     { t:"new", s:"And the first board you ever mill at the Sawmill comes with a word from him about timber and patience — a small welcome to the carpenter's trade. The coop that taught you to build was always meant to be a beginning." },
@@ -524,6 +528,12 @@ ITEM_SELL["Amethyst"] = 75;   // Gary — kept sellable (Pip will "KNOW"), but h
 const SHORE = { Shell:22, Coral:48, Seaweed:14, Clam:38, Pearl:260 };
 for(const s in SHORE) ITEM_SELL[s] = SHORE[s];
 EDIBLE["Clam"] = 20;
+// v3.28 "Geodes": the mine's canopy-nest — a rare deep geode cracks into a curio for the shelf. These
+// are Collection pieces first, coin a distant second (they never out-earn the field), so the deep pays
+// in wonder, not gold. GEODE_CURIOS are the common set; a Geode Heart is the rare prize.
+const GEODE_CURIOS = ["Amber","Obsidian","Trilobite","Quartz Cluster"];
+const SPECIMENS = { Amber:40, Obsidian:26, Trilobite:58, "Quartz Cluster":34, "Geode Heart":90 };
+for(const s in SPECIMENS) ITEM_SELL[s] = SPECIMENS[s];   // (their EXAMINE lines live after `const EXAMINE`, below)
 ITEM_SELL["Frostberry"] = 40;             // winter forage — the valley still gives, just less
 EDIBLE["Frostberry"] = 20;
 for(const k in FRUIT_TREES){ const t = FRUIT_TREES[k];
@@ -1077,6 +1087,12 @@ const HOWTO_TEXT =
 
 // ---- EXAMINE TEXT (RuneScape-style "look" flavor; generated, then hand-tuned) ----
 const EXAMINE = {
+  // v3.28 geode curios
+  "Amber": "A drop of old sun, hardened. There's a gnat in this one, older than the valley.",
+  "Obsidian": "Volcanic glass, black as the deep. It takes an edge you could shave with.",
+  "Trilobite": "A little armoured creature, curled in stone since before there were stories.",
+  "Quartz Cluster": "A fist of clear crystal points, cold and perfect. It catches the lamplight and keeps it.",
+  "Geode Heart": "A plain stone, hollow, its whole inside grown over with crystal. The mine's best-kept secret.",
   "Turnip": "A turnip. Spring's least ambitious vegetable.",
   "Potato": "Knobbly, dependable, and wearing good honest dirt.",
   "Wheat": "Golden stalks, still whispering about the summer wind.",
@@ -1211,6 +1227,7 @@ const EXAMINE = {
   "The Forester's Band": "The old forester's own ring, willow-leaf worked in gold. The whole wood remembers it.",
 };
 const EXAMINE_OBJ = {
+  "geode": "A round, plain nodule — but it's hollow, and something catches the lamplight through the crack. Worth a pick.",
   "bed": "The quilt is worn thin and warmer for it.",
   "campfire": "A ring of stones around a friendly little blaze.",
   "stove": "Cast iron, and always hungry for firewood.",

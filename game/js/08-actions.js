@@ -85,7 +85,7 @@ function tutoringTick(){
     tutTip("hint_can","SPACE waters the soil — young crops drink every day.");
   else if(tool==="Axe" && obj && TREES[obj.kind])
     tutTip("hint_axe","Face the tree and press SPACE to chop — it trains Woodcutting.");
-  else if(tool==="Pick" && obj && (ORES[obj.kind]||obj.kind==="gemrock"||obj.kind==="crystal"))
+  else if(tool==="Pick" && obj && (ORES[obj.kind]||obj.kind==="gemrock"||obj.kind==="crystal"||obj.kind==="geode"))
     tutTip("hint_pick","Press SPACE to mine. A better pick breaks the rock faster.");
   else if(tool==="Rod" && tt===T.WATER)
     tutTip("hint_rod","Face the water and press SPACE to cast your line.");
@@ -238,7 +238,7 @@ function spendEnergy(n){
 const TILE_NAME  = { 0:"GRASS",1:"DIRT",2:"TILLED",3:"WATERED",4:"WATER",5:"PATH",11:"SAND",12:"FLOWERGRASS",15:"BRIDGE",16:"TALLGRASS" };
 const TILE_TITLE = { GRASS:"Grass", DIRT:"Bare Earth", TILLED:"Tilled Soil", WATERED:"Watered Soil", WATER:"Water",
                      PATH:"Path", SAND:"Sand", FLOWERGRASS:"Wildflowers", TALLGRASS:"Tall Grass", BRIDGE:"Bridge" };
-const OBJ_TITLE  = { bed:"Bed", campfire:"Campfire", stove:"Stove", fireplace:"Fireplace", counter:"Counter",
+const OBJ_TITLE  = { geode:"Geode", bed:"Bed", campfire:"Campfire", stove:"Stove", fireplace:"Fireplace", counter:"Counter",
   stall:"Market Stall", shipbin:"Shipping Bin", sign:"Sign", noticeboard:"Noticeboard", ledger:"The Valley Ledger",
   fountain:"Fountain", boardwalk:"Boardwalk", railcart:"Minecart", memorial:"Standing Stone", berrybush:"Berry Bush",
   frostberry:"Frostberry Bush", fruittree:"Fruit Tree", beehive:"Beehive", torch:"Torch", lamp:"Lamp", lantern:"Lantern",
@@ -431,15 +431,16 @@ function useTool(){
   }
   else if(tool === "Pick"){
     const freeSwing = hasMastery("Mining",25) && chance(0.20);          // ★ Sure Grip
-    if(obj && (obj.kind==="gemrock" || obj.kind==="crystal")){
+    if(obj && (obj.kind==="gemrock" || obj.kind==="crystal" || obj.kind==="geode")){
       if(!freeSwing && !spendEnergy(2)) return;
       if(freeSwing) floatText(state.px, state.py-30, "free swing", "#b6f27a");
       obj.hp -= power; obj.shakeT = 0.2; cam.shake = 2.4; hitstop = 0.05; playSfx("mine");
-      pChips(tx*TILE+8, ty*TILE+8, "#6a6472", 5); pSparkle(tx*TILE+8, ty*TILE+8, "#c8a0f0", 4);
-      if(obj.hp <= 0){ delete curMap.objects[key(tx,ty)]; const g = pickGem();
-        give(g,1);
-        addXP("Mining", hasMastery("Mining",75) ? 138 : 55);            // ★ Gemcutter
-        bump("mined"); bump("gems"); pSparkle(tx*TILE+8, ty*TILE+8, GEMS[g], 12); playSfx("ore"); }
+      pChips(tx*TILE+8, ty*TILE+8, "#6a6472", 5); pSparkle(tx*TILE+8, ty*TILE+8, obj.kind==="geode"?"#c8b8ff":"#c8a0f0", 4);
+      if(obj.hp <= 0){ delete curMap.objects[key(tx,ty)];
+        if(obj.kind==="geode"){ crackGeode(tx, ty); addXP("Mining", 90); bump("mined"); }
+        else { const g = pickGem(); give(g,1);
+          addXP("Mining", hasMastery("Mining",75) ? 138 : 55);            // ★ Gemcutter
+          bump("mined"); bump("gems"); pSparkle(tx*TILE+8, ty*TILE+8, GEMS[g], 12); playSfx("ore"); } }
       refreshHUD(); return;
     }
     if(!obj || !ORES[obj.kind]){ toast("Face a rock to mine."); return; }
@@ -695,6 +696,22 @@ function forageNode(x, y, obj, item, skill, xp){
   pSparkle(x*TILE+8, y*TILE+6, "#8fd06a", n>1 ? 10 : 6);
 }
 
+// ---- v3.28 geodes: the mine's answer to the grove's canopy nests ----
+// A rare deep-floor nodule that cracks into a curio for the shelf (mostly), a gem grown in the dark
+// (sometimes), a rare Geode Heart, or — one in twenty-five — a Starstone. Collection first, coin a
+// distant second, so the deep pays in wonder without becoming a gold faucet.
+function crackGeode(tx, ty){
+  playSfx("get"); pSparkle(tx*TILE+8, ty*TILE+8, "#c8b8ff", 16); pChips(tx*TILE+8, ty*TILE+8, "#8a8278", 6);
+  const r = Math.random();
+  if(r < 0.56){ const s = pick(GEODE_CURIOS); give(s, 1);
+    banner("💎 The geode splits open", s + " — one for the shelf."); }
+  else if(r < 0.86){ const g = pickGem(); give(g, 1); pSparkle(tx*TILE+8, ty*TILE+8, GEMS[g], 12);
+    banner("💎 The geode splits open", "A " + g.toLowerCase() + ", grown in the dark."); }
+  else if(r < 0.96){ give("Geode Heart", 1);
+    banner("💠 The geode splits open", "A Geode Heart — hollow, its whole inside crystal. A rare thing."); }
+  else { give("Starstone", 1); pSparkle(tx*TILE+8, ty*TILE+8, "#c8b8ff", 20); playSfx("quest");
+    banner("✦ The geode splits open", "A Starstone, deep in the rock — the rarest fallen light."); }
+}
 // ---- canopy nests (Grove Depths Phase 3) ----
 // Felling a grove tree sometimes shakes a nest loose — RS's birds' nests, in forest language.
 // Tiers: seeds/food (most), a charm (uncommon), a fruit sapling (rare), and once per valley,

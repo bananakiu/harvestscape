@@ -476,6 +476,7 @@ const MUSEUM = [
   { name:"Farm & Forage", items:()=>["Field Salad","Frostberry","Berry Bun","Honey","Egg","Large Egg","Milk","Large Milk","Wool","Prize Fleece"] },   // Wool obtainable since v3.8 (sheep + shears); Prize Fleece is its friendship-tier prize
   { name:"The Kitchen",   items:()=>RECIPES.map(r=>r.name) },
   { name:"Materials",     items:()=>["Wood","Pine Wood","Maple Wood","Willow Wood","Elder Wood","Heartwood","Silverwood",...Object.values(WOOD_TO_LUMBER),"Stone","Copper Ore","Iron Ore","Gold Ore","Cobalt Ore","Star Metal Shard"] },   // + milled lumber (v3.21)
+  { name:"The Deep",      items:()=>[...GEODE_CURIOS, "Geode Heart"] },   // v3.28: geode curios from the deep mine
   { name:"The Canopy",    items:()=>Object.keys(CHARMS) },
 ];
 // (The Collection tile grid now lives in renderCollectionHtml, the Journal's Collection tab.)
