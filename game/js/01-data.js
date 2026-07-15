@@ -8,13 +8,16 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.30.0", code: 67, codename: "Loose Ends", date: "2026-07-14" };
+const VERSION = { name: "3.31.0", code: 68, codename: "Ice Fishing", date: "2026-07-16" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.31.0", code:68, date:"2026-07-16", name:"Ice Fishing", notes:[
+    { t:"new", s:"Winter has its own catches now. When the water skins over with ice, two fish rise that you'll see no other season: the Frostfin off the pond and coast, and the rare Glassperch out on the deep coast. They bite only in winter — a reason to keep casting through the cold, when the fields are asleep. Both join the Almanac and the Collection like any fish, and cook up just as well." },
+  ]},
   { v:"3.30.0", code:67, date:"2026-07-14", name:"Loose Ends", notes:[
     { t:"polish", s:"Small tidying. Each kind of lumber now has its own word when you examine it — oak, pine, maple, willow, elder, and the fine heartwood and silverwood beams, each described in its own right instead of one shared line." },
     { t:"fix", s:"On older farms where the stable was built before a recent fix, a stray bit of ridge rock could sit against its back wall. It's cleared now, so the stable stands clean." },
@@ -370,6 +373,15 @@ const FISH = [
   { name:"Silvergill",    lvl:55, xp:300, sell:1080, pal:["#a8b0bc","#e8ecf2"] },
   { name:"Gulf Sturgeon", lvl:70, xp:420, sell:1300, pal:["#5a6a5a","#9ab090"] },
   { name:"Coelacanth",    lvl:85, xp:620, sell:1800, pal:["#2f4a6a","#5a7a9a"] },   // a living fossil — the deep's trophy (trimmed from 2200 so fishing doesn't out-earn the farm base)
+  // ---- Winter ice fishing (v3.31) ----
+  // Winter is the one crop-less season: farming, orchards and the apiary all suspend, leaving no
+  // *renewable* reason unique to the cold. (There's a winter LEGEND — Frostjaw — but a legend is a
+  // one-and-done catch, not a loop.) These two bite ONLY in Winter (the `season` field, gated in
+  // hookFish's pool) — the frozen coast's own renewable pull. A modest premium for their 28-day
+  // window; each still auto-inherits its Cooked variant, EDIBLE, the Almanac, Tom's demand,
+  // gifting, and the Collection, exactly like every other fish.
+  { name:"Frostfin",      lvl:15, xp:80,  sell:300,  pal:["#8fc0d8","#e0f2fa"], season:"Winter" },   // early-mid; pond + coast
+  { name:"Glassperch",    lvl:48, xp:300, sell:1000, pal:["#a8c4d8","#eef6fb"], season:"Winter" },   // late trophy; coast only — sits between Moonperch (780) and Silvergill (1080)
 ];
 
 const CROP_NAMES = new Set(Object.keys(CROPS).map(k => CROPS[k].name));
@@ -479,10 +491,10 @@ const STAIR_DROP  = 3;    // floors a Staircase drops you
 // ---- THE HUNT ----
 // Where a fish lives. The pond and the coast are different water, and the valley knows it.
 const WATER = {
-  pond:  ["Sardine", "Bass", "Trout",  "Golden Koi"],   // trout are a river fish; no salmon inland
+  pond:  ["Sardine", "Bass", "Trout",  "Frostfin", "Golden Koi"],   // trout are a river fish; no salmon inland — Frostfin bites only in winter (season-gated in the pool)
   // the deep-water rarities (v3.10) rise only off the open sea, and only for anglers who've grown
   // into them (the f.lvl filter) — so the coast stays worth casting from L34 all the way to L85
-  coast: ["Sardine", "Bass", "Salmon", "Golden Koi", "Moonperch", "Silvergill", "Gulf Sturgeon", "Coelacanth"],
+  coast: ["Sardine", "Bass", "Salmon", "Frostfin", "Golden Koi", "Moonperch", "Silvergill", "Glassperch", "Gulf Sturgeon", "Coelacanth"],   // Frostfin + Glassperch are winter-only (season-gated in the pool); pool re-sorts by sell, so order here is just for reading
 };
 
 // Five fish that rise only under exact conditions. Bram knows all five, and will tell you one
@@ -1160,6 +1172,8 @@ const EXAMINE = {
   "Silvergill": "So bright it seems lit from within — a mirror with fins.",
   "Gulf Sturgeon": "Ancient, armoured, and heavier than any two ordinary fish.",
   "Coelacanth": "A living fossil. It was old when the valley was young.",
+  "Frostfin": "It only rises when the water skins over with ice — blue as the cold morning it's caught in.",
+  "Glassperch": "So clear you can see the winter light straight through it. Comes up once a year, and only to the patient.",
   "Cooked Sardine": "Fried whole, and crunched from head to tail.",
   "Cooked Bass": "Firm white flakes, honestly earned.",
   "Cooked Trout": "Pan-browned and river-sweet.",
@@ -1169,6 +1183,8 @@ const EXAMINE = {
   "Cooked Silvergill": "Delicate to the point of showing off.",
   "Cooked Gulf Sturgeon": "A steak, really. It could feed the whole plaza.",
   "Cooked Coelacanth": "You cooked a living fossil. The valley will talk for weeks.",
+  "Cooked Frostfin": "Seared hot against the cold — sweet, firm, and gone too fast.",
+  "Cooked Glassperch": "Winter on a plate. Delicate enough that Bram forgets to grumble.",
   "Sunfleck": "It only shows at spring dawn. This one showed.",
   "Moonscale": "Only the summer midnight ever gives one up.",
   "Whitefin": "Comes in on the fall fog, when no one's looking.",

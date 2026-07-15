@@ -916,7 +916,10 @@ function hookFish(){
 
   // ---- the ordinary catch: the pond and the coast hold different fish ----
   const names = WATER[waterHere()] || WATER.coast;
-  let pool = names.map(n => FISH.find(x => x.name === n)).filter(f => f && f.lvl <= lvl);
+  // season-gated fish (the winter ice-fishing catches, v3.31) only enter the pool in their season;
+  // every other fish has no `season` and is always eligible.
+  const seas = curSeason();
+  let pool = names.map(n => FISH.find(x => x.name === n)).filter(f => f && f.lvl <= lvl && (!f.season || f.season === seas));
   if(!pool.length) pool = [FISH[0]];
   pool.sort((a,b) => a.sell - b.sell);
   const night = fishHour() >= 20 || fishHour() < 6 ? 0.7 : 0;   // the big ones move after dark

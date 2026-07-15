@@ -67,7 +67,11 @@ five tools are forged). The frontier now is **finishing what shipped, not shippi
 8. **[M] A quest-point meta-currency + one bespoke-mechanic quest step.** Every objective is a numeric
    threshold/flag (§4.4); no meta-currency sums the light content (quests, legends, pages, hearts).
 9. **[M] Give winter a renewable pillar** (season-gated workshop / civic build) — the construction epic only
-   fills the *first* winter; §9's thin-season gap persists.
+   fills the *first* winter; §9's thin-season gap persists. ✅ **Shipped v3.31.0** — winter ice fishing:
+   two winter-exclusive fish (Frostfin L15/300g pond+coast, Glassperch L48/1000g coast) gated by a new
+   `FISH.season` field, so the frozen coast has a *renewable* catch that no other season gives. (A lighter,
+   more cozy-native answer than a workshop/civic build — reuses the fish system whole; more winter-specific
+   loops can still layer on later.)
 10. **[S] Housekeeping** — migrated-save stable z-overlap (footprint-exclusion only protected fresh saves);
     7 hand-written lumber examines; palette-ramp hue audit.
 11. **[M — needs audio] Audio bed** — always-on wind floor, ungate ambience, seasonal musical identity (the

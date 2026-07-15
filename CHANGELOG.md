@@ -22,6 +22,52 @@
 
 ---
 
+## v3.31.0 — "Ice Fishing" · 2026-07-16 · tag `v3.31.0`
+
+Winter's renewable pillar (design-audit priority **#9**). Two winter-exclusive fish —
+**Frostfin** (L15, 300g, pond + coast) and **Glassperch** (L48, 1000g, coast only).
+
+**Why.** Winter is the one structurally thin season. Farming stops (crops not in
+`season.includes("Winter")` are cleared at the turn), the orchard drops its fruit, and the
+apiary yields nothing (`hiveYield` returns 0 in winter). What's left — fishing, mining,
+woodcutting — all works in winter but is *identical* to every other season, so winter had no
+renewable reason that was *its own*. The four-pillar re-audit flagged this: winter needs a
+season-specific loop, not just "the other seasons, minus farming."
+
+There *is* a winter catch already — the legend **Frostjaw** — but a legend is a one-and-done
+trophy (`caught_<id>` flag), not a loop. So the gap is specifically a **renewable** winter pull.
+
+**The fix — winter ice fishing.** Fishing is the natural cozy fit for a frozen coast, and the
+fish system already auto-inherits everything a new catch needs. Two fish were the smallest change
+that turns winter fishing from "same as summer" into "the only time these bite":
+
+- **Data:** `FISH` gains a `season` field (legends already had one; regular fish never did). Two
+  entries carry `season:"Winter"`; every existing fish has no `season` and stays always-eligible.
+- **Gate:** one clause in `hookFish`'s pool builder — `(!f.season || f.season === curSeason())` —
+  so a season-gated fish only enters the pool in its season. `WATER.pond`/`WATER.coast` list the
+  new fish; the season filter does the actual gating (verified: winter coast has both, summer coast
+  has neither, pond winter gets Frostfin only since Glassperch is coast-only, and the L48 Glassperch
+  stays level-gated out for a low-level angler even in winter).
+- **Everything else is free.** Sprites (`drawFish` + palette), the Cooked variant, `ITEM_SELL`
+  (raw + ×1.75 cooked), `EDIBLE` (22 + lvl), `EXAMINE` flavor (raw + cooked, hand-written), the
+  Almanac, Tom's per-item demand pricing, gifting, and the Collection "Fish" category all pick the
+  new fish up with no extra wiring — the same reason the v3.10 deep-water fish were cheap to add.
+
+**Balance.** Season-gated means a 28-day window per year, so a modest premium is the reward for
+casting through the cold, not a faucet. Frostfin (300g @ L15) sits just above Salmon (240 @ L20);
+Glassperch (1000g @ L48) sits between Moonperch (780 @ L40) and Silvergill (1080 @ L55) — squarely
+on the existing fishing value curve, not above it. No new gold sink or income spike; winter simply
+gains two catches to complete and a reason to keep a rod on the frozen coast.
+
+**Cozy contract.** Untouched — nothing hazardous, nothing taken; just two more fish to find, and
+only when the water skins over with ice.
+
+Files: `game/js/01-data.js` (FISH ×2 + `season`, WATER pools, EXAMINE ×4, VERSION, in-game
+CHANGELOG), `game/js/08-actions.js` (season clause in `hookFish`). Verified in-browser (muted):
+season gate across seasons + levels, all auto-integrations, and both sprites (+ cooked) rendering.
+
+---
+
 ## Reference docs — `GAME_BALANCE_PRINCIPLES.md`, the balancing playbook · 2026-07-14
 
 Docs-only; no game change, no version bump, no atlas regen. Adds one new reference doc,
