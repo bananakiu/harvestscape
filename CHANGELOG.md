@@ -51,6 +51,36 @@ live code (`XP_TABLE` `inc()`, `TIER_COST`/`TIER_LEVEL`, `GEM_SELL`/`GEM_WEIGHTS
 `WOOL_REGROW`, `DIFF_MAX`, `genMine` coefficients, the 30% Starstone roll) before shipping, so the
 doc's ladders are the numbers of record, not a paraphrase that can drift.
 
+## v3.23.0 — "The Paddock" · 2026-07-14 · tag `v3.23.0`
+
+Version code **60**. A small polish pass on v3.22 — the gap I flagged shipping "The Stable": the stable
+stood empty until you pressed **H**, so you never actually *saw* the horse the release was about.
+
+**Your horse, visible by the stable (`07-entities.js`, `renderWorld`).** A single **render-only** entity
+draws an idle horse standing in the stable's open stall whenever `curMap.id==="farm" &&
+state.flags.proj_stable && !state.mounted` — with a slow "breath" bob (`Math.sin(animT*1.3)`). It reuses
+the same `drawHorse` used for the ridden mount (side sprite facing left, into the farm). Press **H** near it
+to ride out; dismount and it's back at the stall — which is exactly what the "ambles back to the stable"
+dismount line already promises.
+
+**Why render-only, not a world object.** Two real advantages over placing a `{kind:"horse"}` object:
+(1) **Save-robust** — it shows immediately for any save that built the stable back in v3.22, with *no*
+migration to add a horse object to an already-persisted `state.farm` (a v3.22 stable has no horse object).
+(2) **No new surface** — no collision/`WALKABLE_OBJ`, no `INTERACT_KINDS`, no phantom "E" prompt hovering
+over an invisible horse while mounted, no add/remove-on-mount bookkeeping. The `!state.mounted` guard makes
+show/hide automatic: verified `drawHorse` is called **exactly once** whether idle or ridden — never a
+double horse. The horse is non-blocking (you can walk past it, like the coop/barn animals), and y-sorts
+into the entity list so the player passing in front draws over it.
+
+Mounting is unchanged (still **H**, per the control hint and the stable's build blurb). E-to-mount by
+walking up to the horse is a possible future touch, but it would reintroduce the world-object surface this
+release deliberately avoids.
+
+**Verification.** In-browser (audio muted throughout, per the owner's standing request): the idle horse
+renders by the stable (screenshot); it disappears when mounted (the ridden horse draws instead — 1 draw
+call in each state, never 2); the "What's New" panel shows v3.23.0; console clean. Single focused
+adversarial review (position/guard/z-order/exception safety).
+
 ## v3.22.0 — "The Stable" · 2026-07-14 · tag `v3.22.0`
 
 Version code **59**. Owner-directed, the capstone of the construction arc: *"an area to have a horse

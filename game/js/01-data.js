@@ -8,13 +8,16 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.22.0", code: 59, codename: "The Stable", date: "2026-07-14" };
+const VERSION = { name: "3.23.0", code: 60, codename: "The Paddock", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.23.0", code:60, date:"2026-07-14", name:"The Paddock", notes:[
+    { t:"polish", s:"Your horse is home. Once the stable stands, it waits in the stall — you can see it there whenever you're not out riding, breathing slow in the sun. Press H nearby to swing up; hop down and it's back at the stable, as ever." },
+  ]},
   { v:"3.22.0", code:59, date:"2026-07-14", name:"The Stable", notes:[
     { t:"new",   s:"A horse of your own. Raise the Stable from the Ledger — milled oak, pine, and maple — and then, out in the open, press H to swing up and ride. The valley gets a good deal smaller: a horse covers ground the better part of twice as fast." },
     { t:"new",   s:"Press H again to hop down, and your horse ambles back to the stable — it's never lost and never hungry, the cozy way. Step into any building and you dismount at the door (no riding through the kitchen). You can't work from the saddle; hop down to swing a tool." },

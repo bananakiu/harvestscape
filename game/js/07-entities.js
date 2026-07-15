@@ -217,6 +217,15 @@ function renderWorld(){
     drawChar("player", state.px, state.py, state.face, p, bob);
     if(!state.mounted) drawHeldTool(state.px, state.py, state.face);   // no tool-swinging from the saddle
   }});
+  // v3.23: your horse waits by the stable when you're not riding it — render-only (drawn whenever the
+  // stable stands, so it shows immediately for saves that built it in v3.22). Press H out here to ride.
+  if(curMap.id === "farm" && state.flags && state.flags.proj_stable && !state.mounted){
+    const hx = 29*TILE + 16, hy = 6*TILE + 10;   // standing in the open stall
+    ents.push({ y: hy, draw: () => {
+      const breath = Math.sin(animT * 1.3) > 0.6 ? -1 : 0;   // a slow, idle breath
+      drawHorse(hx, hy + breath, "left", false);
+    }});
+  }
   for(const n of curMap.npcs){
     ents.push({ y: n.y, draw: () => {
       drawChar(NPCDEF[n.id].spr, n.x, n.y, n.face, poseFor(n.walk, n.moving, false), bobFor(n.walk, n.moving));
