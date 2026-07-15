@@ -20,12 +20,14 @@ function rideToggle(){
   if(!curMap || !curMap.outdoor){ toast("No room to ride in here — take it outside."); playSfx("error"); return; }
   state.mounted = true;
   toast("You swing up into the saddle. 🐎", "#e8d18a"); playSfx("select");
+  pPuff(state.px, state.py+4, "#c7ac7a", 7); pRing(state.px, state.py+5, "#e8d8b8"); cam.shake = 1.6;   // v3.26: a felt mount
   refreshHUD();
 }
 function dismountHorse(announce){
   if(!state.mounted) return;
   state.mounted = false;
-  if(announce){ toast("You hop down; your horse ambles back to the stable.", "#cbb98f"); playSfx("step"); }
+  if(announce){ toast("You hop down; your horse ambles back to the stable.", "#cbb98f"); playSfx("step");
+    pPuff(state.px, state.py+4, "#c7ac7a", 6); cam.shake = 1.1; }   // v3.26: dust as you land
   refreshHUD();
 }
 // ---- v3.24: the raise ceremony ----
@@ -265,6 +267,25 @@ function objLook(obj){
   if(t) return { title: OBJ_TITLE[k] || k, text: t };
   return null;
 }
+// v3.26: your horse gets a name the first time you look at it, and a rotating deadpan word.
+const HORSE_NAMES = ["Biscuit","Clover","Marble","Pumpkin","Dandelion","Rusty","Willow","Juniper","Chestnut","Pepper"];
+function horseLook(tx, ty){
+  if(!state.flags.proj_stable) return null;
+  const atStall = curMap && curMap.id==="farm" && ty===6 && (tx===29 || tx===30);   // facing it in the open stall
+  if(!state.mounted && !atStall) return null;
+  if(!state.flags.horseName) state.flags.horseName = HORSE_NAMES[Math.abs(state.day*7 + 13) % HORSE_NAMES.length];
+  const nm = state.flags.horseName;
+  const lines = state.mounted ? [
+    nm + " plods along, unbothered by any of your plans.",
+    "From up here the whole valley looks small and yours. " + nm + " disagrees — " + nm + " is thinking about grass.",
+    nm + " snorts. You choose to read it as agreement.",
+  ] : [
+    nm + " stands in the stall, tail flicking, waiting for you to have an idea.",
+    nm + " watches you with the calm certainty of an animal who knows breakfast is coming.",
+    "Your horse, " + nm + " — good coat, kind eye, strong opinions about carrots.",
+  ];
+  return { title: nm, text: lines[Math.abs(Math.floor(animT/2)) % lines.length] };
+}
 function examineFacing(){
   if(!curMap) return null;
   const [tx,ty] = facingTile(); const k = key(tx,ty), tt = tileAt(tx,ty), obj = objAt(tx,ty);
@@ -274,6 +295,8 @@ function examineFacing(){
   const npc = npcAtTile(tx,ty);
   if(npc){ return { title:(NPCDEF[npc.id]&&NPCDEF[npc.id].name)||npc.id, text: EXAMINE_NPC[npc.id]||"One of the valley's own." }; }
   if(obj){ const o = objLook(obj); if(o) return o; }
+  const h = horseLook(tx, ty);   // v3.26: the horse (stall or saddle) before falling through to the bare tile
+  if(h) return h;
   const nm = TILE_NAME[tt];
   if(nm) return { title: TILE_TITLE[nm]||nm, text: EXAMINE_TILE[nm]||"" };
   return null;

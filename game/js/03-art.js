@@ -564,21 +564,27 @@ function buildItems(){
   // v3.22 THE HORSE — the mount you ride (drawn under the rider). Three facings; 'side' is mirrored
   // for left. A warm bay coat with a dark mane, tail, and hooves. 22×16 so the body has room.
   const HB="#8a5a3a", HM="#4f3320", HL="#7a4a30", HH="#2e1d12";               // body, mane/tail, leg, hoof
+  const SB="#9a4636", SL="#5a3a2a";                                          // saddle blanket, saddle leather
   mkSpr("horse_side", 22, 16, g => {
-    px(g,4,5,13,5,HB); px(g,4,5,13,1,shade(HB,1.18)); px(g,4,9,13,1,shade(HB,.72));   // barrel
-    px(g,16,3,3,4,HB); px(g,18,2,3,3,HB); px(g,20,3,1,2,HM);                          // neck + head + muzzle
-    px(g,15,1,2,5,HM);                                                                // mane
-    px(g,2,4,2,7,HM);                                                                 // tail
-    px(g,5,10,2,4,HL); px(g,9,10,2,4,HL); px(g,13,10,2,4,HL);                         // legs
-    px(g,5,13,2,1,HH); px(g,9,13,2,1,HH); px(g,13,13,2,1,HH); });                     // hooves
+    px(g,3,5,14,5,HB); px(g,3,5,14,1,shade(HB,1.18)); px(g,3,9,14,1,shade(HB,.72));   // barrel (longer, beefier)
+    px(g,16,2,3,5,HB); px(g,18,1,3,3,HB); px(g,20,2,1,2,HM);                          // neck + head + muzzle
+    px(g,15,0,2,6,HM);                                                                // mane
+    px(g,1,4,3,7,HM);                                                                 // tail
+    px(g,7,4,7,2,SB); px(g,7,4,7,1,shade(SB,1.2));                                    // saddle blanket
+    px(g,8,3,5,2,SL); px(g,8,3,5,1,shade(SL,1.35));                                   // saddle seat (where the rider sits)
+    px(g,9,6,1,3,SL); px(g,9,9,2,1,HH);                                               // stirrup strap + iron
+    px(g,4,10,2,4,HL); px(g,8,10,2,4,HL); px(g,13,10,2,4,HL); px(g,15,10,1,3,HL);     // legs (four, staggered)
+    px(g,4,13,2,1,HH); px(g,8,13,2,1,HH); px(g,13,13,2,1,HH); });                     // hooves
   mkSpr("horse_down", 18, 16, g => {   // facing the camera
     px(g,4,4,10,7,HB); px(g,4,4,10,1,shade(HB,1.18)); px(g,4,10,10,1,shade(HB,.72));  // chest/body
     px(g,6,1,6,4,HB); px(g,5,1,1,3,HM); px(g,12,1,1,3,HM);                            // head + ears/mane
     px(g,8,3,1,1,HH); px(g,10,3,1,1,HH);                                             // eyes
+    px(g,6,5,6,2,SB); px(g,7,5,4,1,SL);                                              // saddle blanket over the withers
     px(g,5,11,2,4,HL); px(g,11,11,2,4,HL); px(g,5,14,2,1,HH); px(g,11,14,2,1,HH); }); // front legs
   mkSpr("horse_up", 18, 16, g => {     // rump toward camera
     px(g,4,4,10,7,HB); px(g,4,4,10,1,shade(HB,1.18)); px(g,4,10,10,1,shade(HB,.72));  // rump/body
     px(g,7,0,4,4,HM); px(g,8,4,2,3,HM);                                              // tail down the back
+    px(g,5,5,8,2,SB); px(g,6,5,6,1,SL);                                             // saddle blanket over the croup
     px(g,5,11,2,4,HL); px(g,11,11,2,4,HL); px(g,5,14,2,1,HH); px(g,11,14,2,1,HH); }); // hind legs
   mkSpr("item_Stone", 16, 16, g => { px(g,4,6,8,7,"#9a9a9a"); px(g,3,8,10,4,"#8a8a8a"); px(g,5,5,5,3,"#a8a8a8"); px(g,4,12,9,1,"#6a6a6a"); });
   const oreCols = { "Copper Ore":"#c77b3f", "Iron Ore":"#bfa8a0", "Gold Ore":"#ffd75a", "Cobalt Ore":"#5a7ad0", "Star Metal Shard":"#c8ecff" };

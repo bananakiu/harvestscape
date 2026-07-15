@@ -51,6 +51,38 @@ live code (`XP_TABLE` `inc()`, `TIER_COST`/`TIER_LEVEL`, `GEM_SELL`/`GEM_WEIGHTS
 `WOOL_REGROW`, `DIFF_MAX`, `genMine` coefficients, the 30% Starstone roll) before shipping, so the
 doc's ladders are the numbers of record, not a paraphrase that can drift.
 
+## v3.26.0 — "In the Saddle" · 2026-07-14 · tag `v3.26.0`
+
+Version code **63**. Closes the v3.23 re-audit's **#6** — three horse gaps in one bundle: the mounted
+composite read as "a rider floating above a pony" (§8.1), the game's first movement mechanic had no felt
+moment (§8.2), and the idle horse had no examine, reopening the "#1 free whimsy channel" on the
+most-looked-at new object (§7).
+
+### A properly tacked horse (`03-art.js`)
+- `horse_side/down/up` redrawn with a **saddle blanket + saddle leather seat + stirrup**, a beefier
+  barrel, and four staggered legs. The saddle seat sits exactly where the rider lands (rider `bob -= 8`),
+  so mounted now reads as *riding* — the rider straddles the horse instead of standing in front of it —
+  and the v3.23 idle stall horse now reads as *tacked up, waiting*. Same canvas sizes; the left-flip mirror
+  and mounted alignment are unchanged.
+
+### A felt mount/dismount (`08-actions.js`)
+- Swinging up now kicks a dust `pPuff` + a `pRing` + `cam.shake=1.6`; hopping down does the same, lighter.
+  The dust is gated behind the *announced* dismount only — the silent auto-dismount `setMap` fires when you
+  ride into a building never spawns particles or shake mid-fade.
+
+### An examinable, named horse (`08-actions.js`)
+- Examine your horse — in the open stall (facing it) or from the saddle — and it gets a name the first time
+  (Biscuit, Clover, Pumpkin…, set once in `state.flags.horseName`), plus a rotating deadpan line about its
+  frank opinions on grass and carrots. `horseLook` is checked in `examineFacing` **after** the crop/NPC/object
+  checks and before the bare-tile fallback, so it only speaks for the stall horse or for empty ground while
+  mounted — examining a tree or a neighbour from horseback still shows the tree or the neighbour.
+
+### Verification
+In-browser (muted): the mounted side-view shows the rider seated on a saddled horse (screenshot); examine
+returns the named horse both mounted and at the stall ("Biscuit…"); mount fires dust + ring + `cam.shake`,
+dismount fires dust + shade, neither errors; console clean. Focused adversarial review (horseLook gating /
+mount-juice silent-dismount safety / sprite bounds / regression).
+
 ## v3.25.0 — "Spring in the Step" · 2026-07-14 · tag `v3.25.0`
 
 Version code **62**. Closes the v3.23 re-audit's **#7** — the exact Juice gap the *v3.11* audit already

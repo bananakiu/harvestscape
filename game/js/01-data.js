@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.25.0", code: 62, codename: "Spring in the Step", date: "2026-07-14" };
+const VERSION = { name: "3.26.0", code: 63, codename: "In the Saddle", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.26.0", code:63, date:"2026-07-14", name:"In the Saddle", notes:[
+    { t:"polish", s:"Your horse is properly tacked up now — a saddle, a red blanket, a stirrup — so riding looks like riding, not perching. Swinging up kicks a little dust and gives a good thump, and hopping down does the same." },
+    { t:"new",    s:"And your horse has a name. Look at it (Examine) — in the stall or from the saddle — and you'll meet Biscuit, or Clover, or whoever it turns out to be, along with its frank opinions about grass and carrots." },
+  ]},
   { v:"3.25.0", code:62, date:"2026-07-14", name:"Spring in the Step", notes:[
     { t:"polish", s:"A little more life in the small motions. Water a growing crop and it gives a quick, happy stretch — a gulp and a bounce back — the moment it drinks. And your swing lands with a touch more weight, a subtle squash on the impact. Nothing changes but the feel, and the feel is better." },
   ]},
