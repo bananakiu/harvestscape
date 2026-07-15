@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.29.0", code: 66, codename: "Starfall", date: "2026-07-14" };
+const VERSION = { name: "3.30.0", code: 67, codename: "Loose Ends", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.30.0", code:67, date:"2026-07-14", name:"Loose Ends", notes:[
+    { t:"polish", s:"Small tidying. Each kind of lumber now has its own word when you examine it — oak, pine, maple, willow, elder, and the fine heartwood and silverwood beams, each described in its own right instead of one shared line." },
+    { t:"fix", s:"On older farms where the stable was built before a recent fix, a stray bit of ridge rock could sit against its back wall. It's cleared now, so the stable stands clean." },
+  ]},
   { v:"3.29.0", code:66, date:"2026-07-14", name:"Starfall", notes:[
     { t:"new", s:"The deepest treasures finally have somewhere to go. Once your tools are forged, the rarest stock — star metal, cobalt, your heartwood and silverwood beams, a Starstone, even a geode's crystal heart — had nothing left to become. Now they become wonders: three prestige monuments in Tom's décor catalogue, framed from the deep itself." },
     { t:"new", s:"A Crystal Spire lit from within, a Star Metal Obelisk on a silverwood plinth pointing back the way it fell, and a Great Telescope with a Starstone for its lens — the Guild kept one once, Rowan says, to watch for the next star. Set as many as your farm can hold. The deep keeps paying forward." },
@@ -1303,8 +1307,14 @@ const EXAMINE_TILE = {
   EXAMINE["Keg"] = "It ages whatever you trust it with.";
   EXAMINE["Preserves Jar"] = "A crock with a patient lid.";
   EXAMINE["Sawmill"] = "Feed it logs at night; it gives back clean lumber by morning.";
-  for(const raw in WOOD_TO_LUMBER){ const lum = WOOD_TO_LUMBER[raw];
-    EXAMINE[lum] = `Milled from ${raw.toLowerCase()} — squared, stacked, and ready to build with.`; }
+  // v3.30: each board gets its own word (the raw woods had bespoke lines; the lumber shouldn't step down)
+  EXAMINE["Oak Lumber"] = "Honest oak boards, planed smooth. What every good building starts as.";
+  EXAMINE["Pine Lumber"] = "Pale, straight pine planks — light, clean, and quick to raise.";
+  EXAMINE["Maple Lumber"] = "Close-grained maple, milled true. It carries a beam's weight without a groan.";
+  EXAMINE["Willow Lumber"] = "Springy willow boards, cut cheap and plentiful — the workhorse of the woodpile.";
+  EXAMINE["Elder Lumber"] = "Dark elder boards from the deep grove, close and heavy. Old wood remembers.";
+  EXAMINE["Heartwood Beam"] = "A single beam of heartwood, dense as iron and twice as stubborn. It will outlast you.";
+  EXAMINE["Silverwood Beam"] = "A silverwood beam, pale and faintly luminous. The finest timber the valley grows.";
   EXAMINE_OBJ["keg"] = "Something in there is taking its time.";
   EXAMINE_OBJ["jar"] = "The lid says: not yet.";
   EXAMINE_OBJ["bench"] = "Worn smooth by years of sitting. Still room for one more.";

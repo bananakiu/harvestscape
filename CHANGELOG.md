@@ -51,6 +51,29 @@ live code (`XP_TABLE` `inc()`, `TIER_COST`/`TIER_LEVEL`, `GEM_SELL`/`GEM_WEIGHTS
 `WOOL_REGROW`, `DIFF_MAX`, `genMine` coefficients, the 30% Starstone roll) before shipping, so the
 doc's ladders are the numbers of record, not a paraphrase that can drift.
 
+## v3.30.0 — "Loose Ends" · 2026-07-14 · tag `v3.30.0`
+
+Version code **67**. The v3.23 re-audit's **#10** — small verifiable tails, batched.
+
+- **Bespoke lumber examines (`01-data.js`).** The seven milled boards shared one templated examine line
+  (`"Milled from <x> — squared, stacked…"`), a tone step-down from the raw woods' hand-written flavor
+  (§7). Replaced with seven distinct lines — honest oak, pale quick pine, close-grained maple, springy
+  cheap willow, dark elder from the deep grove, stubborn heartwood, luminous silverwood.
+- **Migrated-save stable z-overlap (`11-title.js` `migrateSave`, fix).** The v3.28 `onStableSite`
+  respawn-exclusion stops *new* ridge rocks landing on the stable footprint, but a save whose stable was
+  built *before* that fix could already have a rock sitting on the footprint, drawing over the stable's
+  back wall (§8.1). `migrateSave` now clears any ore object whose tile falls in the stable's `site` rect
+  (the wall tile stays), so the stable stands clean on load. Verified directly: footprint rocks cleared,
+  off-site rocks untouched.
+
+(The re-audit's third #10 item — a hue audit of a few hand-authored shadow ramps against the v3.14
+hue-shifted `shade()` — is deferred: it needs per-ramp art judgment, not a mechanical sweep, and is
+lower-value than the remaining structural items.)
+
+Verified in-browser (muted): all seven lumber examines are distinct and non-templated; the `migrateSave`
+ore-clear removes footprint rocks and keeps off-site ones; console clean. (No separate review agent — the
+change is a set of examine strings plus one guarded, directly-verified rect loop.)
+
 ## v3.29.0 — "Starfall" · 2026-07-14 · tag `v3.29.0`
 
 Version code **66**. Closes the v3.23 re-audit's **#3** — the terminal-resource dead-end. The Star Metal

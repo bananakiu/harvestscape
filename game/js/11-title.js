@@ -188,6 +188,12 @@ function migrateSave(s){
   for(const k in f){ if(s[k] === undefined) s[k] = f[k]; }
   s.mounted = false;   // v3.22: never load mid-ride (a stale saddle would strand the speed/sprite)
   if(s.farm && s.farm.crops) for(const k in s.farm.crops) delete s.farm.crops[k].wt;   // v3.25: wt is a session-relative water-pop stamp; never carry it across loads (phantom pop)
+  // v3.30: on a save whose stable was built before the v3.28 ore-respawn exclusion, a ridge rock may sit
+  // on the stable footprint, drawing over its back wall. Clear any ore object there — the wall tile stays.
+  if(s.farm && s.farm.objects && s.flags && s.flags.proj_stable && PROJECT_BY_ID.stable){
+    const st = PROJECT_BY_ID.stable.site;
+    for(let y=st[1]; y<=st[3]; y++) for(let x=st[0]; x<=st[2]; x++){ const k = x+","+y; const o = s.farm.objects[k]; if(o && ORES[o.kind]) delete s.farm.objects[k]; }
+  }
   for(const k in f.stats){ if(s.stats[k] === undefined) s.stats[k] = 0; }
   for(const t of TOOLS){ if(s.tools[t] === undefined) s.tools[t] = 0; }
   if(s.skills) for(const sk in f.skills){ if(s.skills[sk] === undefined) s.skills[sk] = 0; }
