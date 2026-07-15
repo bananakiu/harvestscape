@@ -332,6 +332,20 @@ function canFund(p){
   for(const it in p.items) if((state.inv[it]||0) < p.items[it]) return false;
   return true;
 }
+// v3.27 "Rowan's Workshop": the owner asked for construction introduced through a quest — through
+// building the coop. The coop is the on-ramp, so the first time you raise it Rowan comes to see it and
+// delivers the joinery scene the coop's own blurb promises ("Rowan will walk you through the joinery").
+// Fired once from maybeBuildCeremony (not the linear quest spine — a cutscene keyed to the build event).
+function coopRaiseScene(){
+  return [
+    { type:"sfx", name:"upgrade" },
+    { type:"sparkle", x:15, y:5, color:"#ffe6a0", n:22 },
+    { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"So you've gone and raised it yourself. Let me look… Oak sills. A stone footing, level and true. The joints pegged, not nailed. Child — you've a carpenter's hands and never knew it." },
+    { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"The Guild counted nine crafts, and I kept every ledger. It never counted the tenth: the making of a place that holds the weather out and the warmth in. A coop. A barn. A home. That was always the one that mattered most." },
+    { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"Mill your timber at the Sawmill, bring the lumber to my ledger, and we'll raise whatever the valley wants next — a barn for the herd, a stable and a horse for the coast road. The old workshop is open again, and it's yours." },
+    { type:"banner", big:"🏗 The Coop is raised", small:"Rowan's Workshop is open — build on, from the Ledger.", t:2.8 },
+  ];
+}
 // A building overwrites its footprint with walls — so it must never bury a crop or a placed object
 // (the cozy contract: nothing is ever taken). Refuse to fund until the site is clear.
 function buildingSiteBlocked(p){

@@ -42,6 +42,11 @@ function maybeBuildCeremony(){
   if(animT - _lastRaiseAt < 3.2) return;         // two raised the same night: space them so each banner is seen
   _lastRaiseAt = animT;
   const p = pendingRaise.shift();
+  // v3.27: the coop is the construction on-ramp — the first time it's raised, Rowan comes to see it and
+  // delivers the joinery scene the coop's blurb promised (the owner's "introduce construction via the coop").
+  if(p.id === "coop" && !state.flags.coopSceneSeen && typeof coopRaiseScene === "function"){
+    state.flags.coopSceneSeen = true; startCutscene(coopRaiseScene()); return;
+  }
   const s = p.site || [15,5,15,5];
   const cx = ((s[0]+s[2])/2)*TILE + 8, cy = ((s[1]+s[3])/2)*TILE + 8;
   banner("🏗 " + p.name.replace(/^The /,"") + " raised!", p.done);
@@ -605,6 +610,9 @@ function interact(){
           give(M.product(obj.item), n); addXP("Woodcutting", 8);
           delete obj.item; delete obj.qty; delete obj.days; delete obj.ready;
           playSfx("get"); pSparkle(tx*TILE+8, ty*TILE, "#e0d3ac", 10);
+          // v3.27 "First Timber": the carpentry theme, introduced the moment you hold your first board
+          if(!state.flags.firstTimber){ state.flags.firstTimber = true;
+            showDialog("First Timber", "You lift the first fresh-cut board off the bed, still warm from the blade. Elder Rowan's words come back to you: “Timber's only a tree that's decided what it wants to become. Your part is to agree with it.”\n\nBring lumber to the Ledger, and raise what the valley needs.", "port_rowan"); }
           return;
         }
         if(obj.item){                                         // still milling

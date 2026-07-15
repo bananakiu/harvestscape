@@ -51,6 +51,37 @@ live code (`XP_TABLE` `inc()`, `TIER_COST`/`TIER_LEVEL`, `GEM_SELL`/`GEM_WEIGHTS
 `WOOL_REGROW`, `DIFF_MAX`, `genMine` coefficients, the 30% Starstone roll) before shipping, so the
 doc's ladders are the numbers of record, not a paraphrase that can drift.
 
+## v3.27.0 — "Rowan's Workshop" · 2026-07-14 · tag `v3.27.0`
+
+Version code **64**. Closes the v3.23 re-audit's **#5** and the *original* owner request the construction
+arc had quietly dropped: *"the introduction to construction could be through a quest, specifically through
+building the chicken coop."* What shipped in v3.21 was a tip + a Ledger transaction — and the coop's own
+blurb writes a cheque ("Rowan will walk you through the joinery") the game never cashed (§4.4). This gives
+construction a voice, **without touching the fragile linear `QUESTS` spine** — two beats keyed to build
+events, reusing the existing `startCutscene` machinery.
+
+### The joinery scene (`14-story.js` `coopRaiseScene`, `08-actions.js`)
+- The **first time you raise the coop**, Elder Rowan comes to see it: a short cutscene (sfx → a sparkle
+  over the new roof → three of his lines → the raise banner) where he reads the oak sills and stone footing,
+  tells you the making of a home was the *tenth craft the Guild never counted*, and declares his workshop
+  open — build on from the Ledger. It's hooked in `maybeBuildCeremony` (`p.id==="coop" &&
+  !state.flags.coopSceneSeen`), so it replaces the plain banner for the coop's first raise and fires once;
+  the barn and stable keep the v3.24 banner ceremony. Because it fires from the raise queue, it lands the
+  same safe moment the ceremony does — on the farm, after the sleep card — never mid-fade (guarded by
+  `paused` + `curMap.id==="farm"`). `startCutscene` sets `paused`, so the loop can't re-enter it. Existing
+  saves that already built the coop simply never queue it (it's an on-ramp for new builders).
+
+### First Timber (`08-actions.js` Sawmill collect)
+- The **first board you ever mill** comes with a one-time reflection in Rowan's voice — timber as "a tree
+  that's decided what it wants to become" — a small welcome to the carpenter's trade that points you to the
+  Ledger. Gated on `state.flags.firstTimber`; the lumber is given first, so the beat never eats the reward.
+
+### Verification
+In-browser (muted): the coop-raise scene fires once (Elder Rowan portrait + cinematic letterbox +
+sparkle over the coop — screenshot), sets `coopSceneSeen`, and a second coop / the barn fall back to the
+banner; First Timber fires once; console clean. Focused adversarial review (cutscene-from-loop re-entrancy /
+timing & existing-save behaviour / scene well-formedness / First-Timber gate / regression).
+
 ## v3.26.0 — "In the Saddle" · 2026-07-14 · tag `v3.26.0`
 
 Version code **63**. Closes the v3.23 re-audit's **#6** — three horse gaps in one bundle: the mounted

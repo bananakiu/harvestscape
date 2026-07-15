@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.26.0", code: 63, codename: "In the Saddle", date: "2026-07-14" };
+const VERSION = { name: "3.27.0", code: 64, codename: "Rowan's Workshop", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.27.0", code:64, date:"2026-07-14", name:"Rowan's Workshop", notes:[
+    { t:"new", s:"Construction has a voice at last. The first time you raise the coop, Elder Rowan comes to see it — and tells you what you didn't know you'd learned: that the making of a home was the tenth craft the old Guild never counted. His workshop is open again, and it's yours." },
+    { t:"new", s:"And the first board you ever mill at the Sawmill comes with a word from him about timber and patience — a small welcome to the carpenter's trade. The coop that taught you to build was always meant to be a beginning." },
+  ]},
   { v:"3.26.0", code:63, date:"2026-07-14", name:"In the Saddle", notes:[
     { t:"polish", s:"Your horse is properly tacked up now — a saddle, a red blanket, a stirrup — so riding looks like riding, not perching. Swinging up kicks a little dust and gives a good thump, and hopping down does the same." },
     { t:"new",    s:"And your horse has a name. Look at it (Examine) — in the stall or from the saddle — and you'll meet Biscuit, or Clover, or whoever it turns out to be, along with its frank opinions about grass and carrots." },
