@@ -197,7 +197,13 @@ function renderWorld(){
     const c = curMap.crops[k], cfg = CROPS[c.type];
     let stage = Math.min(3, Math.floor(c.days / cfg.days * 3)); if(c.days >= cfg.days) stage = 3;
     const sway = Math.sin(animT*2 + cx*1.3 + cy) * (stage>=2?0.8:0.3);
-    ctx.save(); ctx.translate(cx*TILE+8+sway, cy*TILE+16); ctx.drawImage(spr["crop_"+c.type+"_"+stage], -8, -16); ctx.restore();
+    ctx.save(); ctx.translate(cx*TILE+8+sway, cy*TILE+16);
+    // v3.25: the frame it drinks, a quick stretch-pop — anchored at the base so the roots stay put
+    if(c.wt !== undefined){ const kk = (animT - c.wt) / 0.45;
+      if(kk >= 0 && kk < 1){ const e = 1 - (1-kk)*(1-kk); ctx.scale(1 - (1-e)*0.15, 1 + (1-e)*0.28); }
+      else if(kk >= 1) delete c.wt;   // pop finished — drop the transient stamp so it's never saved/replayed
+    }
+    ctx.drawImage(spr["crop_"+c.type+"_"+stage], -8, -16); ctx.restore();
     if(c.days >= cfg.days && Math.floor(animT*3)%2) px(ctx, cx*TILE+11, cy*TILE+1, 2, 2, "#fff6b0");
   }
 
@@ -214,7 +220,11 @@ function renderWorld(){
     let bob = 0;
     if(swingT<=0){ if(moving) bob = (p===1||p===2)?-1:0; else if(fishing.state==="idle") bob = Math.sin(animT*2.5)>0.55?-1:0; }
     if(state.mounted){ drawHorse(state.px, state.py, state.face, moving); bob -= 8; }   // v3.22: ride up on its back
-    drawChar("player", state.px, state.py, state.face, p, bob);
+    // v3.25: a little vertical squash at the swing's impact — anchored at the feet, ease in and out
+    const sqy = swingT > 0 ? 1 - Math.sin((0.26 - swingT) / 0.26 * Math.PI) * 0.12 : 1;
+    if(sqy !== 1){ ctx.save(); ctx.translate(0, state.py); ctx.scale(1, sqy); ctx.translate(0, -state.py);
+      drawChar("player", state.px, state.py, state.face, p, bob); ctx.restore(); }
+    else drawChar("player", state.px, state.py, state.face, p, bob);
     if(!state.mounted) drawHeldTool(state.px, state.py, state.face);   // no tool-swinging from the saddle
   }});
   // v3.23: your horse waits by the stable when you're not riding it — render-only (drawn whenever the

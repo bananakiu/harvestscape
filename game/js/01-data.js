@@ -8,13 +8,16 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.24.0", code: 61, codename: "Raising the Roof", date: "2026-07-14" };
+const VERSION = { name: "3.25.0", code: 62, codename: "Spring in the Step", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.25.0", code:62, date:"2026-07-14", name:"Spring in the Step", notes:[
+    { t:"polish", s:"A little more life in the small motions. Water a growing crop and it gives a quick, happy stretch — a gulp and a bounce back — the moment it drinks. And your swing lands with a touch more weight, a subtle squash on the impact. Nothing changes but the feel, and the feel is better." },
+  ]},
   { v:"3.24.0", code:61, date:"2026-07-14", name:"Raising the Roof", notes:[
     { t:"new",     s:"Raising a building is a moment now. Step out the morning your coop, barn, or stable is finished and the whole farm cheers it up — a banner, a shower of sparks over the new roof, a good solid thump. The homestead you build deserved a little ceremony." },
     { t:"new",     s:"And the valley notices. The first time you visit after you've built something, the neighbours have words for it — Tom about the coop that lets him sell you hens, Pip already naming a chicken, Rowan on the carpentry in your hands, Maya about seeing you ride past. They've been watching you make a home." },

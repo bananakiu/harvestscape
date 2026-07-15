@@ -187,6 +187,7 @@ function migrateSave(s){
   const f = freshState();
   for(const k in f){ if(s[k] === undefined) s[k] = f[k]; }
   s.mounted = false;   // v3.22: never load mid-ride (a stale saddle would strand the speed/sprite)
+  if(s.farm && s.farm.crops) for(const k in s.farm.crops) delete s.farm.crops[k].wt;   // v3.25: wt is a session-relative water-pop stamp; never carry it across loads (phantom pop)
   for(const k in f.stats){ if(s.stats[k] === undefined) s.stats[k] = 0; }
   for(const t of TOOLS){ if(s.tools[t] === undefined) s.tools[t] = 0; }
   if(s.skills) for(const sk in f.skills){ if(s.skills[sk] === undefined) s.skills[sk] = 0; }

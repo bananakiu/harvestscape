@@ -51,6 +51,41 @@ live code (`XP_TABLE` `inc()`, `TIER_COST`/`TIER_LEVEL`, `GEM_SELL`/`GEM_WEIGHTS
 `WOOL_REGROW`, `DIFF_MAX`, `genMine` coefficients, the 30% Starstone roll) before shipping, so the
 doc's ladders are the numbers of record, not a paraphrase that can drift.
 
+## v3.25.0 — "Spring in the Step" · 2026-07-14 · tag `v3.25.0`
+
+Version code **62**. Closes the v3.23 re-audit's **#7** — the exact Juice gap the *v3.11* audit already
+named and no release had touched: the game's only scale-overshoot was the item-pop icon; player motion
+was integer-bob only and crops merely swayed. §8.2 explicitly lists *watered crops* as a squash-&-stretch
+site. This is pure *feel* — no rule, timing, or balance change.
+
+### Watered-crop stretch-pop (`07-entities.js` `drawCrops`, `08-actions.js` Can)
+- The frame a growing crop drinks, it gives a quick happy stretch — a gulp up and a bounce back. When the
+  Can waters a tilled tile that holds a crop, the crop is stamped `cr.wt = animT`; `drawCrops` then eases a
+  `ctx.scale(0.85→1 width, 1.28→1 height)` over ~0.45 s (`e = 1-(1-kk)²`), **anchored at the base** (the
+  translate sits at the crop's foot) so the roots stay planted and only the leaves spring. `.wt` is a
+  transient session-relative stamp: a value carried over from a prior session (large vs the fresh small
+  `animT`) simply fails the `kk ∈ [0,1)` guard — no pop, no NaN, nothing to migrate.
+
+### Player swing impact-squash (`07-entities.js` player entity)
+- The swing lands with a little weight now: while `swingT > 0` the player `drawChar` is wrapped in a
+  `ctx.scale(1, sqy)` anchored at the feet, `sqy` dipping to ~0.88 at mid-swing (`sin` ease) and back to 1
+  — a subtle compress on the impact. Player-only (keyed off the global `swingT`, applied solely in the
+  player entity block, so NPCs/animals never squash); can't collide with the mounted-horse draw since tool
+  use is blocked from the saddle.
+
+### Verification
+In-browser (muted): a staged row of turnips watered across the pop window renders the stretch gradient
+(freshest = tallest), the swing squash path runs, `.wt` stamps on watering; no render errors on any path;
+console clean. Focused adversarial review (ctx save/restore balance · NPC isolation · `.wt` persistence ·
+transform anchoring) — save/restore, isolation, and anchoring all verified clean; it caught one real
+(cosmetic) defect, fixed:
+- **Phantom cross-session pop (fixed).** `cr.wt` rides along in `saveGame`'s `JSON.stringify(state)`, and
+  since `animT` resets to 0 each load and climbs, a stored `wt` would eventually be *swept through* the
+  `[0,1)` window — replaying the drink-pop ~`wt` seconds into a later session with no watering. Fixed the
+  way `s.mounted` already is: `migrateSave` strips `wt` from every `farm.crops` entry on load, and
+  `drawCrops` deletes it the moment the pop completes (`kk ≥ 1`), so it's never persisted or replayed.
+  Verified: a finished-pop stamp is deleted, a fresh one kept, and no loaded crop carries a stale `wt`.
+
 ## v3.24.0 — "Raising the Roof" · 2026-07-14 · tag `v3.24.0`
 
 Version code **61**. First release of the **"finish what shipped"** arc the v3.23 re-audit named: the

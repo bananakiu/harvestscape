@@ -328,7 +328,9 @@ function useTool(){
     // ritual, it just stops being a per-tile tax. Row runs perpendicular to the way you face.
     let watered = 0;
     for(const [x,y] of canTiles(tx, ty, tier, state.face)){
-      if(tileAt(x,y)===T.TILLED){ setTile(x,y,T.WATERED); watered++; pDrops(x*TILE+8, y*TILE+8, 5); }
+      if(tileAt(x,y)===T.TILLED){ setTile(x,y,T.WATERED); watered++; pDrops(x*TILE+8, y*TILE+8, 5);
+        const cr = curMap.crops[key(x,y)]; if(cr) cr.wt = animT;   // v3.25: the crop drinks — a little stretch-pop (drawCrops reads .wt)
+      }
     }
     if(watered){ addXP("Farming", watered); bump("watered", watered); playSfx("water"); }
     else toast("Nothing to water there.");
