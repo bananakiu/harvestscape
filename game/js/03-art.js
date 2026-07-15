@@ -561,6 +561,25 @@ function buildItems(){
     px(g,2,6,10,4,"#c8ccd2"); px(g,2,6,10,1,"#e6e9ee");                        // blade
     px(g,2,10,1,1,"#9098a0"); px(g,4,10,1,1,"#9098a0"); px(g,6,10,1,1,"#9098a0"); px(g,8,10,1,1,"#9098a0"); px(g,10,10,1,1,"#9098a0");  // teeth
     px(g,11,4,3,5,"#8a5f38"); px(g,12,5,2,3,"#5f4028"); });                    // handle
+  // v3.22 THE HORSE — the mount you ride (drawn under the rider). Three facings; 'side' is mirrored
+  // for left. A warm bay coat with a dark mane, tail, and hooves. 22×16 so the body has room.
+  const HB="#8a5a3a", HM="#4f3320", HL="#7a4a30", HH="#2e1d12";               // body, mane/tail, leg, hoof
+  mkSpr("horse_side", 22, 16, g => {
+    px(g,4,5,13,5,HB); px(g,4,5,13,1,shade(HB,1.18)); px(g,4,9,13,1,shade(HB,.72));   // barrel
+    px(g,16,3,3,4,HB); px(g,18,2,3,3,HB); px(g,20,3,1,2,HM);                          // neck + head + muzzle
+    px(g,15,1,2,5,HM);                                                                // mane
+    px(g,2,4,2,7,HM);                                                                 // tail
+    px(g,5,10,2,4,HL); px(g,9,10,2,4,HL); px(g,13,10,2,4,HL);                         // legs
+    px(g,5,13,2,1,HH); px(g,9,13,2,1,HH); px(g,13,13,2,1,HH); });                     // hooves
+  mkSpr("horse_down", 18, 16, g => {   // facing the camera
+    px(g,4,4,10,7,HB); px(g,4,4,10,1,shade(HB,1.18)); px(g,4,10,10,1,shade(HB,.72));  // chest/body
+    px(g,6,1,6,4,HB); px(g,5,1,1,3,HM); px(g,12,1,1,3,HM);                            // head + ears/mane
+    px(g,8,3,1,1,HH); px(g,10,3,1,1,HH);                                             // eyes
+    px(g,5,11,2,4,HL); px(g,11,11,2,4,HL); px(g,5,14,2,1,HH); px(g,11,14,2,1,HH); }); // front legs
+  mkSpr("horse_up", 18, 16, g => {     // rump toward camera
+    px(g,4,4,10,7,HB); px(g,4,4,10,1,shade(HB,1.18)); px(g,4,10,10,1,shade(HB,.72));  // rump/body
+    px(g,7,0,4,4,HM); px(g,8,4,2,3,HM);                                              // tail down the back
+    px(g,5,11,2,4,HL); px(g,11,11,2,4,HL); px(g,5,14,2,1,HH); px(g,11,14,2,1,HH); }); // hind legs
   mkSpr("item_Stone", 16, 16, g => { px(g,4,6,8,7,"#9a9a9a"); px(g,3,8,10,4,"#8a8a8a"); px(g,5,5,5,3,"#a8a8a8"); px(g,4,12,9,1,"#6a6a6a"); });
   const oreCols = { "Copper Ore":"#c77b3f", "Iron Ore":"#bfa8a0", "Gold Ore":"#ffd75a", "Cobalt Ore":"#5a7ad0", "Star Metal Shard":"#c8ecff" };
   for(const o in oreCols){ mkSpr("item_"+o, 16, 16, g => {

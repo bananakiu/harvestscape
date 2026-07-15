@@ -186,6 +186,7 @@ function migrateSave(s){
   }
   const f = freshState();
   for(const k in f){ if(s[k] === undefined) s[k] = f[k]; }
+  s.mounted = false;   // v3.22: never load mid-ride (a stale saddle would strand the speed/sprite)
   for(const k in f.stats){ if(s.stats[k] === undefined) s.stats[k] = 0; }
   for(const t of TOOLS){ if(s.tools[t] === undefined) s.tools[t] = 0; }
   if(s.skills) for(const sk in f.skills){ if(s.skills[sk] === undefined) s.skills[sk] = 0; }

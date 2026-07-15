@@ -8,6 +8,26 @@ const HOTBAR = [ { tool:"Hoe" }, { tool:"Can" }, { tool:"Axe" }, { tool:"Pick" }
 let slotSel = 0;
 function selectSlot(i){ if(i<0||i>=HOTBAR.length) return; slotSel = i; playSfx("select"); refreshHotbar(); }
 
+// ---- v3.22: the horse ----
+// Press H outdoors to mount (once the Stable is built); H again — or stepping into any building —
+// to dismount. Cozy contract: the horse is never lost, never hungry; it's always waiting at the stable.
+function rideToggle(){
+  if(gameMode!=="play" || paused) return;              // not during fades, sleep, or the title
+  if(typeof isCutscene==="function" && isCutscene()) return;   // not mid-scene/festival
+  if(state.mounted){ dismountHorse(true); return; }
+  if(fishing.state !== "idle"){ toast("Reel your line in first — you can't ride mid-cast.", "#cbb98f"); playSfx("error"); return; }
+  if(!state.flags.proj_stable){ toast("You'll want a stable first — raise one from the Ledger."); playSfx("error"); return; }
+  if(!curMap || !curMap.outdoor){ toast("No room to ride in here — take it outside."); playSfx("error"); return; }
+  state.mounted = true;
+  toast("You swing up into the saddle. 🐎", "#e8d18a"); playSfx("select");
+  refreshHUD();
+}
+function dismountHorse(announce){
+  if(!state.mounted) return;
+  state.mounted = false;
+  if(announce){ toast("You hop down; your horse ambles back to the stable.", "#cbb98f"); playSfx("step"); }
+  refreshHUD();
+}
 // ---- new-player tutoring: one-shot, contextual, only on a save born in the NPX era ----
 function tutTip(flag, text){
   if(!state || !state.flags.npxGame || state.flags[flag]) return;
@@ -263,6 +283,7 @@ function canTiles(tx, ty, tier, face){
 
 function useTool(){
   if(gameMode!=="play" || paused || uiBlocking()) return;
+  if(state.mounted){ toast("Hop down first — press H to dismount.", "#cbb98f"); return; }   // v3.22: no working from the saddle
   const tool = HOTBAR[slotSel].tool;
   const [tx,ty] = facingTile();
   const tt = tileAt(tx,ty), obj = objAt(tx,ty);
@@ -1170,10 +1191,22 @@ function respawnNodes(m){
   }
   for(let i=0;i<4 && rocks+i<24;i++){
     const x=26+Math.floor(rng()*18), y=1+Math.floor(rng()*4), k=key(x,y), g=m.tiles[y*W+x];
+    // v3.22: the Stable's build footprint sits on this ridge band — never drop ore on it, or a
+    // respawned rock would block funding (or defer the just-funded raise, since this runs before
+    // completeProjects in newDay). Keeps the headline build always fundable.
+    if(onStableSite(x,y)) continue;
     if((g===T.GRASS||g===T.FLOWERGRASS||g===T.TALLGRASS)&&!m.objects[k]){
       const r=rng(), kind=r<.68?"stone":r<.9?"copper":"iron"; m.objects[k]={kind,hp:ORES[kind].hp};   // v3.17: matches genFarm — stone-heavy, no surface gold
     }
   }
+}
+// The Stable's footprint (+ its sign tile) — kept clear of the nightly ore respawn so the build is
+// never spuriously blocked. Reads the site straight from PROJECTS so it can't drift.
+function onStableSite(x,y){
+  const p = PROJECT_BY_ID.stable; if(!p || !p.site) return false;
+  const s = p.site;
+  if(x>=s[0] && x<=s[2] && y>=s[1] && y<=s[3]) return true;
+  return p.sign && x===p.sign[0] && y===p.sign[1];
 }
 function updateTime(dt){
   if(gameMode!=="play" || paused) return;

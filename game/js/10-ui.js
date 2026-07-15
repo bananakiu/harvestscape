@@ -1189,7 +1189,7 @@ function setControlsHint(){
   // Line 1 = left-hand world verbs (all reachable without leaving WASD); line 2 = right-hand menus.
   $("controlsHint").innerHTML =
     `<b>Move</b> <kbd>WASD</kbd> · <b>Use tool</b> <kbd>Space</kbd> · <b>Interact / harvest / talk</b> <kbd>E</kbd> · <b>Examine</b> <kbd>Q</kbd> · <b>Cycle seeds</b> <kbd>R</kbd> · <b>Eat</b> <kbd>F</kbd> · <b>Gift Maya</b> <kbd>G</kbd><br>` +
-    `<b>Skills</b> <kbd>K</kbd> · <b>Backpack</b> <kbd>I</kbd> · <b>Journal</b> <kbd>J</kbd> · slots <kbd>1</kbd>–<kbd>6</kbd> · Enter buildings, the mine &amp; the coast · <b>Sleep</b> in your bed indoors`;
+    `<b>Skills</b> <kbd>K</kbd> · <b>Backpack</b> <kbd>I</kbd> · <b>Journal</b> <kbd>J</kbd> · <b>Ride</b> <kbd>H</kbd> · slots <kbd>1</kbd>–<kbd>6</kbd> · Enter buildings, the mine &amp; the coast · <b>Sleep</b> in your bed indoors`;
 }
 
 // ---- INPUT ----
@@ -1244,6 +1244,7 @@ document.addEventListener("keydown", e => {
   else if(k === "r"){ if(!uiBlocking()) cycleSeed(); }
   else if(k === "f"){ if(!uiBlocking()) eatFood(); }
   else if(k === "g"){ if(!uiBlocking()) giveGift(); }
+  else if(k === "h"){ if(!uiBlocking()) rideToggle(); }   // v3.22: mount/dismount the horse
   else if(k === "q" || k === "x"){ examine(); }   // Q is the WASD-native primary; X kept as a legacy alias
   else if(k === "m"){ setMusicEnabled(!SND.enabled); toast("Music "+(SND.enabled?"on":"off")); }
   else if(k === "escape"){ if(dlg.open) closeDialog(); else closeAllPanels(); }

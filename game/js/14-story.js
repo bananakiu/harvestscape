@@ -98,6 +98,7 @@ function cutActor(id){
   return (curMap.npcs && curMap.npcs.find(n=>n.id===id)) || null;
 }
 function startCutscene(steps, onEnd){
+  if(state && state.mounted && typeof dismountHorse === "function") dismountHorse(false);   // v3.22: no scene plays out on horseback
   cutscene = { steps, i:-1, onEnd, waiting:null, timer:0, move:null };
   paused = true; $("stage").classList.add("cine");
   cutNext();
@@ -388,6 +389,7 @@ function applyProjects(farm){
   if(state.flags.proj_minecart) put1(CART_A[0], CART_A[1], { kind:"railcart", to:"village" });
   if(state.flags.proj_coop) stampCoop(farm);   // v3.21: raise the coop the morning after it's funded (idempotent)
   if(state.flags.proj_barn) stampBarn(farm);   // v3.21: same for the barn
+  if(state.flags.proj_stable) stampStable(farm);   // v3.22: the stable
 }
 // The fountain: one coin a day buys you a little goodwill somewhere in the valley.
 function tossCoin(){

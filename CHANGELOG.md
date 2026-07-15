@@ -51,6 +51,63 @@ live code (`XP_TABLE` `inc()`, `TIER_COST`/`TIER_LEVEL`, `GEM_SELL`/`GEM_WEIGHTS
 `WOOL_REGROW`, `DIFF_MAX`, `genMine` coefficients, the 30% Starstone roll) before shipping, so the
 doc's ladders are the numbers of record, not a paraphrase that can drift.
 
+## v3.22.0 — "The Stable" · 2026-07-14 · tag `v3.22.0`
+
+Version code **59**. Owner-directed, the capstone of the construction arc: *"an area to have a horse
+for faster travel, just like in Harvest Moon."* Confirmed as a rideable mount (vs. point-to-point fast
+travel). This is the game's **first-ever movement-speed mechanic** — until now the player has moved at a
+single flat 68 px/s everywhere, with no mount, sprint, or terrain modifier.
+
+### The Stable (a new building — no save migration)
+- A third construction project (`PROJECTS`, `building:true`): **3,000g + 20 Oak + 16 Pine + 12 Maple
+  Lumber + 40 Wood**, raised through the Ledger's "Farm Construction" panel exactly like the coop/barn,
+  via a shared idempotent `stampStable(m)` (roof + back wall + sign; an *open-fronted* stall, no interior
+  to enter — the horse is summoned, not stabled-and-entered). Because the stable **never existed before**,
+  no migration is needed: `proj_stable` defaults unset for every save, so new and old alike must build it
+  (contrast the coop/barn, which needed the `bornUnbuilt` discriminator because they used to be free).
+- Site guard reused: the tightened `site`/`sign` footprint feeds the same `buildingSiteBlocked` +
+  build-time re-check, so raising the stable never buries a crop either.
+
+### The horse (`08-actions.js`, `07-entities.js`, `04-world.js`, `10-ui.js`)
+- **`state.mounted`** — a transient flag (in `freshState`; force-reset to `false` in `migrateSave`, since
+  you're never mid-ride on load). **Press `H`** (`rideToggle`) out in the open to mount once the stable is
+  built; `H` again to dismount. Guards: no stable → nudge to the Ledger; indoors → "take it outside."
+- **Faster travel:** `updatePlayer`'s lone speed constant becomes `state.mounted ? 118 : 68` (~1.75×).
+- **Cozy contract, kept whole:** the horse is *summoned*, not a world object that can be lost or stranded
+  on a daily-regenerating map — dismount anywhere and "your horse ambles back to the stable." Stepping into
+  any non-outdoor map **auto-dismounts** at the door (`setMap`), so you never ride through an interior.
+  Tool use is blocked from the saddle (`useTool` early-returns with a "hop down (H)" hint) — no invisible
+  tool-swings. Nothing is ever taken; the horse is never hungry.
+- **Art:** three procedural horse sprites — `horse_side` (mirrored for left), `horse_down`, `horse_up` — a
+  warm bay coat with dark mane/tail/hooves. The rider is drawn lifted onto the horse's back
+  (`drawHorse` beneath `drawChar`, rider `bob -= 8`), the horse's body/legs showing below. Tuned in-browser
+  across all four facings (the first pass had the rider occluding the mount entirely — a pure z/lift issue,
+  not a missing sprite).
+- **Discoverability:** the control hint gains **Ride `H`**, and the stable's build blurb + `done` message
+  tell you to press `H`.
+
+### Verification
+In-browser (audio muted throughout, per the owner's request): the Stable stamps correctly and gates behind
+`proj_stable`; `rideToggle` mounts/dismounts; entering the cottage auto-dismounts; speed reads 118 mounted
+/ 68 afoot; `useTool` is blocked mounted; the riding sprite renders in all facings (screenshots); console
+clean. Note: the preview tab's rAF loop is suspended while backgrounded, so frames were forced via
+`renderWorld()` for capture — an artifact of the harness, not the game.
+
+**Adversarial review (three lenses) + fixes.** The review confirmed the `mounted` lifecycle and the
+no-migration stable are sound, and caught one real defect plus polish, all fixed:
+- **Stable site on the ore-respawn ridge (medium, fixed).** The stable's footprint (x28-31, y3-5) is the
+  first building placed on the surface ore band (`respawnNodes` repopulates x26-43, y1-4), and that runs
+  *before* `completeProjects` in `newDay` — so an overnight-respawned rock could block funding, or defer a
+  just-funded raise ("the work begins at dawn" … then "clear the site"). Fixed by excluding the stable
+  footprint from the ore respawn (`onStableSite`, reading the site straight from `PROJECTS` so it can't
+  drift) — the headline build is now always fundable. (Coop/barn sit west of x26 and never hit this.)
+- **`rideToggle` guards (low/nit, fixed).** Mounting was gated only by `uiBlocking()`, which is false during
+  the inline fishing minigame and other non-panel states — so you could mount mid-cast, and cutscene/paused
+  windows weren't covered. `rideToggle` now early-returns on `gameMode!=="play" || paused`, on an active
+  cutscene, and refuses to mount while a line is out (mirroring `useTool`'s from-the-saddle block).
+- **Cutscenes dismount you (nit, fixed).** `startCutscene` now dismounts first, so a festival or story scene
+  never plays out on horseback. Plus a defensive `state &&` on the `setMap` auto-dismount (boot-safety).
+
 ## v3.21.0 — "The Sawmill" · 2026-07-14 · tag `v3.21.0`
 
 Version code **58**. Owner-directed: a Harvest Moon-style construction system — mill wood into typed

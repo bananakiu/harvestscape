@@ -59,10 +59,12 @@ Rowan (last keeper of the Guild of Nine Crafts, already owns the fund-a-build sy
 construction master — no new carpenter NPC needed. Planned ladder: Sawmill + Lumber → build the Coop
 (quest) → Barn → Horse stable (the first-ever movement-speed mechanic, for faster travel).
 
-**Produced:** v3.20.0 "Timber" (the rebalance) and v3.21.0 "The Sawmill" (Lumber + Sawmill + the Coop
-*and* Barn made buildable — the owner chose "start empty, build all", so both fold into one release with
-a single `bornUnbuilt` save-migration; see CHANGELOG.md). Still to come: v3.22 the Stable + a horse for
-faster travel — the first-ever movement-speed mechanic.
+**Produced:** the full arc, three releases — v3.20.0 "Timber" (the wood rebalance), v3.21.0 "The Sawmill"
+(Lumber + Sawmill + Coop *and* Barn made buildable, one `bornUnbuilt` save-migration), and v3.22.0 "The
+Stable" (a buildable stable + a rideable horse — the first-ever movement-speed mechanic, press H to ride,
+auto-dismount indoors, the horse summoned rather than a losable world object). "Start empty, build all"
+is now real: a new farm is open land you grow into a homestead — coop, barn, stable — all framed from your
+own milled lumber. See CHANGELOG.md for each.
 
 ---
 

@@ -22,6 +22,7 @@ function freshState(){
     tools:{ Hoe:0, Can:0, Axe:0, Pick:0, Rod:0 },
     rel:{},                               // per-NPC relationship { points, talkedDay, giftedDay }
     animals:{ chickens:[], cows:[], sheep:[] },   // each: { friend, eggDay|milkDay|woolDay, petDay }
+    mounted:false,                        // v3.22: are you riding the horse right now (transient; reset on load)
     mineDepth:0, mineBest:0,
     groveRing:0, groveBest:0,              // the Deep Grove's rings — mirrors mineDepth/mineBest
     pledges:{},                            // the Pledge Ledger: id → { gPaid, mats:{item:n} } (see 01-data.js)
@@ -82,6 +83,7 @@ function clearMapCache(){ mapCache = {}; }
 function setMap(id, sx, sy, face){
   curMap = getMap(id);
   state.map = id;
+  if(state && state.mounted && !curMap.outdoor) dismountHorse(false);   // v3.22: the horse waits outside — no riding indoors
   if(sx !== undefined){ state.px = sx; state.py = sy; }
   if(face) state.face = face;
   spawnMapNpcs(curMap);
@@ -164,6 +166,15 @@ function stampBarn(m){
   set(22,6,T.DOOR); m.warps[key(22,6)] = { to:"barn", sx:7*TILE+8, sy:7*TILE, face:"down" };
   m.objects[key(26,6)] = { kind:"sign", text:"The Barn" };
 }
+// v3.22: the Stable — an open-fronted stall, no interior (the horse is summoned with H, not entered).
+// Roof + a back wall; the front row stays open ground where your horse stands.
+function stampStable(m){
+  if(!m) return;
+  const set = (x,y,v) => { if(x>=0&&y>=0&&x<m.w&&y<m.h) m.tiles[y*W+x]=v; };
+  for(let y=3;y<=4;y++) for(let x=28;x<=31;x++) set(x,y,T.ROOF);
+  for(let x=28;x<=31;x++) set(x,5,T.WALL);
+  m.objects[key(32,6)] = { kind:"sign", text:"The Stable" };
+}
 function genFarm(m){
   const rng = makeRng(1337);
   const t = m.tiles; t.fill(T.GRASS);
@@ -200,6 +211,8 @@ function genFarm(m){
 
   // --- barn (v3.21: built via the Ledger, like the coop; old saves migrated to proj_barn keep it) ---
   if(state && state.flags && state.flags.proj_barn) stampBarn(m);
+  // --- stable (v3.22: a new build; nobody starts with it) ---
+  if(state && state.flags && state.flags.proj_stable) stampStable(m);
 
   // paths — the farm's lane runs from the buildings out to the east road (the way to the village)
   for(let x=9;x<=45;x++) set(x,15,T.PATH);

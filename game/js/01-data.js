@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.21.0", code: 58, codename: "The Sawmill", date: "2026-07-14" };
+const VERSION = { name: "3.22.0", code: 59, codename: "The Stable", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.22.0", code:59, date:"2026-07-14", name:"The Stable", notes:[
+    { t:"new",   s:"A horse of your own. Raise the Stable from the Ledger — milled oak, pine, and maple — and then, out in the open, press H to swing up and ride. The valley gets a good deal smaller: a horse covers ground the better part of twice as fast." },
+    { t:"new",   s:"Press H again to hop down, and your horse ambles back to the stable — it's never lost and never hungry, the cozy way. Step into any building and you dismount at the door (no riding through the kitchen). You can't work from the saddle; hop down to swing a tool." },
+    { t:"note",  s:"That completes the homestead you build from the ground up: a coop for hens, a barn for cows and sheep, and now a stable and a horse — all framed from your own lumber." },
+  ]},
   { v:"3.21.0", code:58, date:"2026-07-14", name:"The Sawmill", notes:[
     { t:"new",   s:"Build your farm, plank by plank. The new Sawmill mills your raw logs into lumber overnight — a whole stack at a time, each species its own board: oak, pine, maple, willow, elder, and the fine heartwood and silverwood beams. Lumber is what you build with." },
     { t:"new",   s:"The Chicken Coop and the Barn are now yours to raise. Open the Journal's Ledger, spend your milled lumber and a little coin, and Rowan helps you frame them up by morning — the coop for hens, the barn for cows and sheep. A new farm starts as open land and grows into a homestead, the way it should." },
@@ -598,6 +603,11 @@ const PROJECTS = [
   { id:"barn", name:"The Barn", gold:1800, items:{ "Oak Lumber":18, "Pine Lumber":14, "Maple Lumber":8, "Wood":30 }, building:true, site:[20,3,25,6], sign:[26,6],
     blurb:"A proper barn takes stouter framing — oak sills, pine studs, maple for the beams. Cows and sheep will want the room.",
     done:"The barn is raised, sound to the ridgepole. Tom can sell you cows and sheep now." },
+  // v3.22: a wholly NEW structure (never existed) — no save migration needed; proj_stable defaults
+  // unset for every save, so old and new alike must build it. Unlocks the horse (press H to ride).
+  { id:"stable", name:"The Stable", gold:3000, items:{ "Oak Lumber":20, "Pine Lumber":16, "Maple Lumber":12, "Wood":40 }, building:true, site:[28,3,31,5], sign:[32,6],
+    blurb:"An open-fronted stall for a horse of your own. Once it stands, press H out in the open to swing up and ride — the valley gets a good deal smaller.",
+    done:"The stable stands, straw down and rail up. Press H outdoors to call your horse and ride." },
   { id:"minecart", name:"The Minecart Line", gold:8000, items:{ "Iron Ore":20, "Wood":150 },
     blurb:"Re-lay the old rails from the cottage to the mine mouth. No more trudging the ridge.",
     done:"The rails are re-laid. A cart waits at each end." },

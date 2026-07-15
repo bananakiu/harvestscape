@@ -60,7 +60,7 @@ function updatePlayer(dt){
   if(dx < 0) state.face = "left"; else if(dx > 0) state.face = "right";
 
   const len = Math.hypot(dx,dy) || 1;
-  const sp = 68 * dt;
+  const sp = (state.mounted ? 118 : 68) * dt;   // v3.22: a horse covers ground ~1.75× faster
   const nx = state.px + dx/len*sp, ny = state.py + dy/len*sp;
   const okX = !blockedAt(nx, state.py), okY = !blockedAt(state.px, ny);
   if(okX) state.px = clamp(nx, 5, curMap.w*TILE-5);
@@ -98,6 +98,19 @@ function drawChar(name, x, y, face, pose, yoff=0){
   ctx.fillStyle = "rgba(0,0,0,0.20)";
   ctx.beginPath(); ctx.ellipse(Math.round(x), Math.round(y+1), 6, 2.4, 0, 0, 7); ctx.fill();
   if(face === "left"){ ctx.save(); ctx.scale(-1,1); ctx.drawImage(s, -dx-16, dy); ctx.restore(); }
+  else ctx.drawImage(s, dx, dy);
+}
+// v3.22: the mount, drawn beneath the rider (see the ride-draw block below)
+function drawHorse(x, y, face, moving){
+  const f = (face==="left"||face==="right") ? "side" : face;   // side | down | up
+  const s = spr["horse_"+f];
+  if(!s) return;
+  const w = s.width;
+  const gait = moving ? (Math.sin(walkCycle*1.4) > 0 ? -1 : 0) : 0;   // a little canter
+  const dx = Math.round(x - w/2), dy = Math.round(y - 11 + gait);   // body sits at the rider's feet; hooves near the shadow
+  ctx.fillStyle = "rgba(0,0,0,0.22)";
+  ctx.beginPath(); ctx.ellipse(Math.round(x), Math.round(y+2), 9, 3, 0, 0, 7); ctx.fill();
+  if(face === "left"){ ctx.save(); ctx.scale(-1,1); ctx.drawImage(s, -dx-w, dy); ctx.restore(); }
   else ctx.drawImage(s, dx, dy);
 }
 function bobFor(walk, mov){
@@ -200,8 +213,9 @@ function renderWorld(){
     const p = poseFor(walkCycle, moving, swingT>0);
     let bob = 0;
     if(swingT<=0){ if(moving) bob = (p===1||p===2)?-1:0; else if(fishing.state==="idle") bob = Math.sin(animT*2.5)>0.55?-1:0; }
+    if(state.mounted){ drawHorse(state.px, state.py, state.face, moving); bob -= 8; }   // v3.22: ride up on its back
     drawChar("player", state.px, state.py, state.face, p, bob);
-    drawHeldTool(state.px, state.py, state.face);
+    if(!state.mounted) drawHeldTool(state.px, state.py, state.face);   // no tool-swinging from the saddle
   }});
   for(const n of curMap.npcs){
     ents.push({ y: n.y, draw: () => {
