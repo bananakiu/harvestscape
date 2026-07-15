@@ -808,6 +808,22 @@ function buildInteriors(){
     px(g,6,4,4,4,"#ffe27a"); px(g,7,4,2,1,"#fff0a0"); px(g,5,8,6,9,"#ffd75a"); px(g,5,8,1,9,"#fff0a0"); px(g,10,8,1,9,"#c9922f");
     px(g,4,10,1,5,"#ffd75a"); px(g,11,10,1,5,"#ffd75a"); px(g,5,17,6,3,"#e0b84a"); px(g,7,2,2,2,"#ffe27a"); },
     g => { px(g,3,13,10,3,"#8a8378"); px(g,6,1,4,4,"#ffe27a"); px(g,5,5,6,8,"#ffd75a"); px(g,5,5,1,8,"#fff0a0"); px(g,10,5,1,8,"#c9922f"); });
+  // v3.29 the STAR TIER — prestige monuments framed from the deep's terminal materials
+  mkDecor("crystalspire", "Crystal Spire", 16, 20, g => {
+    px(g,4,16,8,3,"#8a8378"); px(g,4,16,8,1,"#a9a094");                                   // stone base
+    px(g,6,4,4,12,"#a877e0"); px(g,7,2,2,14,"#c8b8ff"); px(g,5,8,2,7,"#8f6fd0"); px(g,9,7,2,8,"#b898f0"); // crystals
+    px(g,7,1,1,3,"#e6d8ff"); px(g,8,3,1,1,"#ffffff"); },                                  // glowing tip
+    g => { px(g,4,12,8,3,"#8a8378"); px(g,6,2,4,10,"#a877e0"); px(g,7,1,2,11,"#c8b8ff"); px(g,7,0,1,2,"#e6d8ff"); });
+  mkDecor("starobelisk", "Star Metal Obelisk", 16, 22, g => {
+    px(g,3,18,10,3,"#b8ccd6"); px(g,3,18,10,1,"#d0e0ea"); px(g,4,16,8,2,"#a8bcc8");        // silverwood plinth
+    px(g,6,4,4,12,"#a8c8e8"); px(g,7,4,2,12,"#c8ecff"); px(g,6,4,4,1,"#e6f4ff");           // star-metal spire
+    px(g,7,1,2,3,"#c8ecff"); px(g,8,1,1,1,"#ffffff"); },                                  // tip glint
+    g => { px(g,3,13,10,3,"#b8ccd6"); px(g,6,2,4,11,"#a8c8e8"); px(g,7,2,2,11,"#c8ecff"); px(g,7,1,2,1,"#ffffff"); });
+  mkDecor("observatory", "Great Telescope", 16, 20, g => {
+    px(g,4,15,2,4,"#3a3a44"); px(g,10,15,2,4,"#3a3a44"); px(g,7,14,2,5,"#4a4a54");         // tripod legs
+    px(g,6,12,4,3,"#4a6ac8"); px(g,6,12,4,1,"#5a7ad0");                                    // cobalt mount
+    px(g,4,6,8,4,"#c9922f"); px(g,4,6,8,1,"#e0b84a"); px(g,11,4,2,3,"#c8b8ff"); px(g,5,7,1,1,"#fff0a0"); },  // brass tube + starstone lens
+    g => { px(g,4,11,2,3,"#3a3a44"); px(g,10,11,2,3,"#3a3a44"); px(g,4,4,8,4,"#c9922f"); px(g,11,3,2,3,"#c8b8ff"); });
   mkSpr("barrel", 16, 16, g => { px(g,4,3,8,12,"#8a5f38"); px(g,4,3,8,1,"#a5763f"); px(g,3,5,10,2,"#6e4a2a"); px(g,3,11,10,2,"#6e4a2a");
     px(g,5,3,1,12,"#a5763f"); px(g,10,3,1,12,"#6e4a2a"); });
   mkSpr("crate", 16, 16, g => { px(g,3,4,10,10,"#a5763f"); px(g,3,4,10,1,"#c29258"); px(g,3,13,10,1,"#7a5630");

@@ -51,6 +51,38 @@ live code (`XP_TABLE` `inc()`, `TIER_COST`/`TIER_LEVEL`, `GEM_SELL`/`GEM_WEIGHTS
 `WOOL_REGROW`, `DIFF_MAX`, `genMine` coefficients, the 30% Starstone roll) before shipping, so the
 doc's ladders are the numbers of record, not a paraphrase that can drift.
 
+## v3.29.0 — "Starfall" · 2026-07-14 · tag `v3.29.0`
+
+Version code **66**. Closes the v3.23 re-audit's **#3** — the terminal-resource dead-end. The Star Metal
+tool tier was the *only* consumer of Cobalt / Star Metal Shard / Silverwood / Heartwood / Starstone, and
+the Heartwood/Silverwood **Beams** the Sawmill makes had *zero* build recipe — so once the tools were
+forged, the deepest ores, woods, and beams reverted to sell-only, re-breaking §3.5 (rewards are inputs).
+This gives them a **repeatable** downstream sink, together with the v3.28 geode this completes the mine's
+endgame loop.
+
+### The star tier — prestige monuments from the deep (`01-data.js` `DECOR`, `13-content.js`, `10-ui.js`, `03-art.js`)
+- Three new décor pieces in Tom's catalogue, each **costed in terminal materials** as well as coin:
+  - **Crystal Spire** — 6,000g + 4 Geode Heart + 10 Gold Ore (a sink for v3.28's rare geode prize).
+  - **Star Metal Obelisk** — 8,000g + 4 Star Metal Shard + 6 **Silverwood Beam**.
+  - **Great Telescope** — 12,000g + 8 Cobalt Ore + 6 **Heartwood Beam** + 1 Starstone.
+- Between them they consume every terminal material the tools left stranded *plus* both orphaned Beams,
+  and they're **repeatable** — placed like any décor up to the `DECOR_MAX` cap — so the deep keeps paying
+  forward instead of dead-ending. The décor system gained an optional `mats:{}` field: `buyDecor` now
+  checks materials (after gold, before any deduction — a failed buy takes nothing) and `take()`s them on
+  purchase; the shop shows the per-material requirement colored by what you hold. Existing gold-only décor
+  is unchanged (`D.mats` absent → same as before).
+- Cozy/exploit-safe: the monuments are pure prestige — never entered in `ITEM_SELL`, so there's no
+  buy-with-materials-then-sell-for-gold laundering loop; the axe lifts them back like any décor (no
+  material is ever destroyed).
+
+### Verification
+In-browser (muted): the three star pieces show the correct gold + material costs; `buyDecor` **refuses**
+the obelisk without its Star Metal Shard / Silverwood Beam and, once granted, buys it and **consumes 4
+Shard + 6 Beam**; all six sprites (placed + carried) register; the three monuments render distinctly
+on the farm (screenshot — a violet crystal spire, a pale star-metal obelisk, a brass telescope); console
+clean. Focused adversarial review (buyDecor atomicity / no-sell-exploit / load-order / sprite bounds /
+render).
+
 ## v3.28.0 — "Geodes" · 2026-07-14 · tag `v3.28.0`
 
 Version code **65**. First half of the v3.23 re-audit's **#2** (the RuneScape endgame dead-end): Mining

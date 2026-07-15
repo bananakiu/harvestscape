@@ -811,8 +811,11 @@ function renderShop(){
     html += `<div class="desc" style="margin-bottom:.5em;color:var(--ink-soft);">Pieces to make the farm yours — buy one, then set it down like a hive (select it, press USE on open ground; the axe lifts it again). Purely for the joy of it. <span style="color:var(--gold-hi)">${placed}/${DECOR_MAX} placed.</span></div>`;
     for(const k in DECOR){
       const D = DECOR[k], own = state.inv[D.name]||0, vanity = D.cost >= 100000;
-      html += `<div class="row"><span class="lead" data-icon="item_${D.name}"><canvas></canvas><span style="${vanity?`color:${'#ffd75a'}`:''}">${D.name}${own?` <span class="sub" style="color:var(--gold-hi)">×${own} in bag</span>`:''} <span class="sub">${D.blurb}</span></span></span>` +
-        `<span><span class="price">${D.cost.toLocaleString()}g</span> <button class="buy" ${state.gold>=D.cost?"":"disabled"} onclick="buyDecor('${k}')">buy</button></span></div>`;
+      const matsOk = !D.mats || Object.keys(D.mats).every(it => (state.inv[it]||0) >= D.mats[it]);   // v3.29
+      const matStr = D.mats ? "<br>" + Object.keys(D.mats).map(it => { const have=state.inv[it]||0, need=D.mats[it];
+        return `${need} ${it} <span style="color:${have>=need?'#8fd06a':'#c98a6a'}">(${have})</span>`; }).join(" + ") : "";
+      html += `<div class="row"><span class="lead" data-icon="item_${D.name}"><canvas></canvas><span style="${vanity?`color:${'#ffd75a'}`:''}">${D.name}${own?` <span class="sub" style="color:var(--gold-hi)">×${own} in bag</span>`:''} <span class="sub">${D.blurb}${matStr}</span></span></span>` +
+        `<span><span class="price">${D.cost.toLocaleString()}g</span> <button class="buy" ${state.gold>=D.cost&&matsOk?"":"disabled"} onclick="buyDecor('${k}')">buy</button></span></div>`;
     }
   } else {
     for(const tool of TOOLS){

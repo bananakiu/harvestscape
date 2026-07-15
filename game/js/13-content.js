@@ -909,7 +909,11 @@ function buyMachine(mk){
 function buyDecor(dk){
   const D = DECOR[dk]; if(!D) return;
   if(state.gold < D.cost){ toast(`Not enough coin (${D.cost.toLocaleString()}g).`); playSfx("error"); return; }
-  state.gold -= D.cost; give(D.name, 1, true);
+  if(D.mats && !Object.keys(D.mats).every(it => (state.inv[it]||0) >= D.mats[it])){
+    toast("You're short on materials for that one — the deep's finest doesn't come cheap."); playSfx("error"); return; }   // v3.29
+  state.gold -= D.cost;
+  if(D.mats) for(const it in D.mats) take(it, D.mats[it]);   // v3.29: the star tier eats terminal materials
+  give(D.name, 1, true);
   toast(D.cost >= 100000 ? "A solid-gold you. The valley will never let you hear the end of it. ✦"
                          : `One ${D.name.toLowerCase()}. Select it like a seed and set it where it belongs.`, "#ffe6a0");
   playSfx("coin"); refreshHUD(); refreshHotbar(); renderShop();

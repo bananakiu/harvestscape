@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.28.0", code: 65, codename: "Geodes", date: "2026-07-14" };
+const VERSION = { name: "3.29.0", code: 66, codename: "Starfall", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.29.0", code:66, date:"2026-07-14", name:"Starfall", notes:[
+    { t:"new", s:"The deepest treasures finally have somewhere to go. Once your tools are forged, the rarest stock — star metal, cobalt, your heartwood and silverwood beams, a Starstone, even a geode's crystal heart — had nothing left to become. Now they become wonders: three prestige monuments in Tom's décor catalogue, framed from the deep itself." },
+    { t:"new", s:"A Crystal Spire lit from within, a Star Metal Obelisk on a silverwood plinth pointing back the way it fell, and a Great Telescope with a Starstone for its lens — the Guild kept one once, Rowan says, to watch for the next star. Set as many as your farm can hold. The deep keeps paying forward." },
+  ]},
   { v:"3.28.0", code:65, date:"2026-07-14", name:"Geodes", notes:[
     { t:"new", s:"The deep mine gives up more than ore now. Past floor 25, a rare geode sits among the stone — a plain round nodule with a crack of crystal showing through. Crack it with your pick and it splits open on something worth keeping: amber with a gnat inside, a trilobite older than any story, black obsidian, a fist of quartz — or, one in a while, a gem grown in the dark, or the rarest thing of all." },
     { t:"new", s:"There's a new page in your Collection for them — The Deep. And the mine rewards the long climb more honestly: the ore keeps growing richer all the way down to floor 40, not just to 20, so diving deep is finally worth more than camping shallow." },
@@ -444,6 +448,17 @@ const DECOR = {
   wishingwell: { name:"Wishing Well",   cost:4000,   blurb:"Deep, cool, and full of other people's hopes." },
   grandfountain:{name:"Grand Fountain", cost:8000,   blurb:"Three tiers of falling water. Frankly, a bit much — perfect." },
   goldenstatue:{ name:"Golden Statue",  cost:300000, blurb:"A solid-gold likeness of you, valley's finest. Utterly pointless. Magnificent." },
+  // v3.29 — the STAR TIER: prestige monuments framed from the deep's terminal materials. This is the
+  // downstream loop the Star Metal tools left open (§3.5): once the tools are forged, Star Metal Shard,
+  // Cobalt, the Heartwood/Silverwood Beams, Starstone, and Geode Hearts had no consumer and reverted to
+  // sell-only. Now they build wonders. Repeatable (placed like any décor, up to the cap) — a real
+  // endgame sink for both coin AND the rarest stock, so the deep keeps paying forward.
+  crystalspire:{ name:"Crystal Spire",   cost:6000,   mats:{ "Geode Heart":4, "Gold Ore":10 },
+                 blurb:"A spire of geode-crystal, lit from within by the mine's own light." },
+  starobelisk: { name:"Star Metal Obelisk", cost:8000, mats:{ "Star Metal Shard":4, "Silverwood Beam":6 },
+                 blurb:"A finger of star metal on a silverwood plinth, pointing back the way it fell." },
+  observatory: { name:"Great Telescope", cost:12000,  mats:{ "Cobalt Ore":8, "Heartwood Beam":6, "Starstone":1 },
+                 blurb:"Brass and cobalt, a Starstone for its lens. Rowan says the Guild kept one, once — to watch for the next star to fall." },
 };
 const DECOR_MAX = 40;   // a generous cap so a farm can be dressed, but not infinitely spammed
 
