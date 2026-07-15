@@ -51,6 +51,61 @@ live code (`XP_TABLE` `inc()`, `TIER_COST`/`TIER_LEVEL`, `GEM_SELL`/`GEM_WEIGHTS
 `WOOL_REGROW`, `DIFF_MAX`, `genMine` coefficients, the 30% Starstone roll) before shipping, so the
 doc's ladders are the numbers of record, not a paraphrase that can drift.
 
+## v3.24.0 — "Raising the Roof" · 2026-07-14 · tag `v3.24.0`
+
+Version code **61**. First release of the **"finish what shipped"** arc the v3.23 re-audit named: the
+construction epic (v3.21–23) added the homestead and the horse but landed *systems-heavy and
+ceremony-light* — a raised building completed with only a text line on the morning card, no villager
+ever mentioned the transforming farm, and the buildings drew from Woodcutting alone. This closes the
+audit's **#1** (a Presentation HIGH + a Story MEDIUM) and **#4** (cross-skill interlock) together.
+
+### The raise ceremony — the payoff moment the arc was missing (`08-actions.js`, `12-game.js`)
+- A building the crews finish overnight now gets a real moment, fired the instant you **see** it: a
+  `pendingRaise` queue is filled in `newDay` (`built.filter(p => p.building)`), and a new
+  `maybeBuildCeremony()` in the game loop holds until you've dismissed the sleep card and stepped onto
+  the farm (you wake in the cottage interior, so its `curMap.id !== "farm"` guard defers it), then fires
+  `banner("🏗 <Building> raised!", <done line>)` + a triple `pSparkle` burst over the structure's site +
+  `cam.shake` + the upgrade sting. The bible's ceremony (§5.5) and acknowledgment (§8.2) tests, which
+  tool-upgrades and legends already passed, now pass on the biggest builds too.
+- Why a queue rather than firing in `newDay`: the raise happens overnight, but the *feeling* should
+  land when the farm is in view — not behind the sleep-card overlay. The queue is a module var (not
+  persisted), guarded by `paused`/`uiBlocking()`/`isCutscene()`, so it can't fire mid-transition,
+  double-fire, or be lost (it waits patiently if you linger in the village).
+
+### The valley notices — one-time NPC recognition (`13-content.js`)
+- `NPC_RECOG`: the first time you talk to a villager after you've built something, they *notice* — one
+  warm, one-time line each (§4.6 "saw your new barn!"): Tom on the coop (hens to sell) and the barn
+  (dairy trade), Pip already naming a chicken, Rowan on the carpentry in your hands, Maya on seeing you
+  ride past. Checked in `npcLine` **after** `npcStory` (an active story beat always speaks first) and
+  gated by an `ack_*` flag so it fires exactly once, then falls back to the normal per-heart lines. On a
+  migrated save that already has buildings, it plays as a nice retroactive nod the next time you visit.
+
+### Buildings draw on more than the axe (`01-data.js` `PROJECTS`)
+- Cross-skill interlock (GBP §2.3 / GDP §3.2), escalating with the build: **Coop +8 Stone** (a footing),
+  **Barn +20 Stone +4 Iron Ore** (footings + nails), **Stable +24 Stone +6 Iron Ore +1 Emerald**
+  (fittings + a gem set in the gate-post). Pure data — `fundProject`/`canFund`/the Ledger/the atlas all
+  handle arbitrary item maps. Stone is abundant so the Coop stays an early build; the ore/gem escalation
+  mirrors the oak→pine→maple lumber ladder and makes the homestead crave your mining as well as your
+  woodcutting, honoring the v3.20 wood-nerf's "make gathering matter to spend."
+
+### Verification
+In-browser (muted): version 3.24.0; the three buildings show the new cross-skill costs in the Ledger and
+the atlas; the ceremony fires on the farm (`banner` element takes class `show` with "🏗 <Building>
+raised!" + the done line, sparkles render over the site, `cam.shake` set, `pendingRaise` consumed 1→0);
+console clean. Focused adversarial review (ceremony lifecycle / NPC-recognition timing /
+economy-soft-lock / regression) — verdict clean on the ceremony, economy, and soft-lock, and it caught
+that the recognition lines were reachability-broken as first written, fixed before shipping:
+- **Recognition reliability (medium, fixed).** The recognition check lived in `npcLine`, but `npcLine` is
+  reached only after `npcStory`, whose unconditional plaza/festival filler swallowed it — and Tom, the NPC
+  the notes lead with, is only reachable via the store *counter* object (`openShop`), never `npcLine` at
+  all. So most of the promised nods never fired. Refactored into a `pendingRecog(id)` helper called from
+  **`talkNpc`** (before the generic line, after story turn-ins/heart-events so those still win) *and* from
+  **Tom's counter path** (his "fine coop you raised!" line now fires when you visit his store). Verified:
+  all five nods resolve; `npcLine` no longer double-handles them; each fires exactly once.
+- **Two buildings, one banner (low, fixed).** Funding coop + barn the same day queued two ceremonies that
+  fired on consecutive frames, so the first "raised!" banner was clobbered before it could be read. Added a
+  ~3.2 s cooldown (via `animT`) between raises so each banner lands.
+
 ## v3.23.0 — "The Paddock" · 2026-07-14 · tag `v3.23.0`
 
 Version code **60**. A small polish pass on v3.22 — the gap I flagged shipping "The Stable": the stable

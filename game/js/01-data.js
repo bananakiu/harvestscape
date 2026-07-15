@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.23.0", code: 60, codename: "The Paddock", date: "2026-07-14" };
+const VERSION = { name: "3.24.0", code: 61, codename: "Raising the Roof", date: "2026-07-14" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.24.0", code:61, date:"2026-07-14", name:"Raising the Roof", notes:[
+    { t:"new",     s:"Raising a building is a moment now. Step out the morning your coop, barn, or stable is finished and the whole farm cheers it up — a banner, a shower of sparks over the new roof, a good solid thump. The homestead you build deserved a little ceremony." },
+    { t:"new",     s:"And the valley notices. The first time you visit after you've built something, the neighbours have words for it — Tom about the coop that lets him sell you hens, Pip already naming a chicken, Rowan on the carpentry in your hands, Maya about seeing you ride past. They've been watching you make a home." },
+    { t:"balance", s:"Buildings ask for more than timber now — a coop wants a stone footing; a barn, stone and iron for its nails; a stable, stone, iron, and an emerald set in the gate-post. Raising the homestead draws on your mining as well as your axe, the way real building does." },
+  ]},
   { v:"3.23.0", code:60, date:"2026-07-14", name:"The Paddock", notes:[
     { t:"polish", s:"Your horse is home. Once the stable stands, it waits in the stall — you can see it there whenever you're not out riding, breathing slow in the sun. Press H nearby to swing up; hop down and it's back at the stable, as ever." },
   ]},
@@ -600,16 +605,18 @@ const PROJECTS = [
   // site = the exact structure rect the stamp overwrites; sign = the one extra tile the sign object lands on.
   // buildingSiteBlocked guards exactly these (no looser bbox — else a respawned ridge rock in the gap
   // could spuriously block funding), and it is re-checked at build time so nothing is ever buried.
-  { id:"coop", name:"The Chicken Coop", gold:500, items:{ "Oak Lumber":12, "Wood":15 }, building:true, site:[14,4,17,6], sign:[18,6],
-    blurb:"Raise a coop from your own milled oak — Rowan will walk you through the joinery. Hens want a home before they'll come to stay.",
+  // v3.24: buildings pull from MORE than Woodcutting — a stone foundation, iron footings, a gem fitting —
+  // so raising the homestead craves several skills' output (cross-feed), escalating coop→barn→stable.
+  { id:"coop", name:"The Chicken Coop", gold:500, items:{ "Oak Lumber":12, "Wood":15, "Stone":8 }, building:true, site:[14,4,17,6], sign:[18,6],
+    blurb:"Raise a coop from your own milled oak on a footing of stone — Rowan will walk you through the joinery. Hens want a home before they'll come to stay.",
     done:"The coop stands, snug and dry. Tom can sell you hens now." },
-  { id:"barn", name:"The Barn", gold:1800, items:{ "Oak Lumber":18, "Pine Lumber":14, "Maple Lumber":8, "Wood":30 }, building:true, site:[20,3,25,6], sign:[26,6],
-    blurb:"A proper barn takes stouter framing — oak sills, pine studs, maple for the beams. Cows and sheep will want the room.",
+  { id:"barn", name:"The Barn", gold:1800, items:{ "Oak Lumber":18, "Pine Lumber":14, "Maple Lumber":8, "Wood":30, "Stone":20, "Iron Ore":4 }, building:true, site:[20,3,25,6], sign:[26,6],
+    blurb:"A proper barn takes stouter framing — oak sills, pine studs, maple beams, stone footings, iron for the nails. Cows and sheep will want the room.",
     done:"The barn is raised, sound to the ridgepole. Tom can sell you cows and sheep now." },
   // v3.22: a wholly NEW structure (never existed) — no save migration needed; proj_stable defaults
   // unset for every save, so old and new alike must build it. Unlocks the horse (press H to ride).
-  { id:"stable", name:"The Stable", gold:3000, items:{ "Oak Lumber":20, "Pine Lumber":16, "Maple Lumber":12, "Wood":40 }, building:true, site:[28,3,31,5], sign:[32,6],
-    blurb:"An open-fronted stall for a horse of your own. Once it stands, press H out in the open to swing up and ride — the valley gets a good deal smaller.",
+  { id:"stable", name:"The Stable", gold:3000, items:{ "Oak Lumber":20, "Pine Lumber":16, "Maple Lumber":12, "Wood":40, "Stone":24, "Iron Ore":6, "Emerald":1 }, building:true, site:[28,3,31,5], sign:[32,6],
+    blurb:"An open-fronted stall for a horse of your own — timber and stone, iron fittings, an emerald set in the gate-post for luck. Once it stands, press H out in the open to swing up and ride; the valley gets a good deal smaller.",
     done:"The stable stands, straw down and rail up. Press H outdoors to call your horse and ride." },
   { id:"minecart", name:"The Minecart Line", gold:8000, items:{ "Iron Ore":20, "Wood":150 },
     blurb:"Re-lay the old rails from the cottage to the mine mouth. No more trudging the ridge.",

@@ -661,8 +661,26 @@ function npcStory(id){
   }
   return null;
 }
+// v3.24: the first time you talk to a villager after you've raised something, they NOTICE — one warm,
+// one-time line each (§4.6 "saw your new barn!"). After the ack flag is set they fall back to normal lines.
+const NPC_RECOG = [
+  { npc:"tom",   flag:"proj_coop",   ack:"ack_tom_coop",     line:"Say — that's a fine coop you raised! Means I can start selling you hens now. Folk'll have fresh eggs on the table again." },
+  { npc:"pip",   flag:"proj_coop",   ack:"ack_pip_coop",     line:"You built a COOP! Are there chickens yet?? Can I name one? I'm gonna name one Sir Cluckington and he'll be the BRAVEST hen!" },
+  { npc:"tom",   flag:"proj_barn",   ack:"ack_tom_barn",     line:"A whole barn now, cows and sheep both — you're running a proper farm. My wife down the coast will be thrilled for the milk trade." },
+  { npc:"rowan", flag:"proj_stable", ack:"ack_rowan_stable", line:"You framed a stable with your own milled beams, stone footing and all. The old carpentry lives in your hands, it seems. That was the tenth craft, though the Guild never counted it. Ride well." },
+  { npc:"maya",  flag:"proj_stable", ack:"ack_maya_stable",  line:"I saw you ride past this morning — you looked so free, mane and all. The valley feels bigger and smaller at once now. Take me along the coast road someday? ♥" },
+];
+// Returns a one-time recognition line for `id` (and marks it said), or null. Called from talkNpc AND
+// Tom's counter path — deliberately NOT from npcLine, so it can never be swallowed by npcStory's
+// unconditional plaza/festival filler (Tom in the store is only reachable via the counter object, and
+// plaza-Tom/Rowan/Maya would otherwise get their story-filler line first). Story turn-ins and heart
+// events already return earlier in talkNpc, so this can't preempt anything quest-critical.
+function pendingRecog(id){
+  for(const r of NPC_RECOG){ if(r.npc===id && state.flags[r.flag] && !state.flags[r.ack]){ state.flags[r.ack] = true; return r.line; } }
+  return null;
+}
 function npcLine(id, h){
-  const st = npcStory(id); if(st) return st;
+  const st = npcStory(id); if(st) return st;   // an active story beat always speaks first
   const arr = NPC_LINES[id] || ["…"];
   let idx = Math.min(arr.length-1, h);
   if(id === "rowan"){
@@ -931,6 +949,8 @@ function talkNpc(id){
     return;
   }
   if(tryFulfillRequest(id)) return;           // scripted scenes always outrank the noticeboard
+  const rec = pendingRecog(id);               // v3.24: "saw your new barn!" — a one-time nod, before the filler line
+  if(rec){ showDialog(def.name + "   " + heartStr(heartsOf(id)), rec, def.portrait); return; }
   showDialog(def.name + "   " + heartStr(heartsOf(id)), npcLine(id, heartsOf(id)), def.portrait);
 }
 function giftPref(def, item){

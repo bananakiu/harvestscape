@@ -28,6 +28,24 @@ function dismountHorse(announce){
   if(announce){ toast("You hop down; your horse ambles back to the stable.", "#cbb98f"); playSfx("step"); }
   refreshHUD();
 }
+// ---- v3.24: the raise ceremony ----
+// A building the crews finished overnight deserves a real moment — but the payoff should land when the
+// player actually SEES it, i.e. the first farm frame after they wake and leave the cottage. So newDay
+// queues the raised buildings here, and the game loop fires the banner/sparkle/shake once they're out.
+let pendingRaise = [], _lastRaiseAt = -99;
+function maybeBuildCeremony(){
+  if(!pendingRaise.length) return;
+  if(gameMode!=="play" || paused || uiBlocking() || (typeof isCutscene==="function" && isCutscene())) return;
+  if(!curMap || curMap.id !== "farm") return;   // wait until they step onto the farm and can see it
+  if(animT - _lastRaiseAt < 3.2) return;         // two raised the same night: space them so each banner is seen
+  _lastRaiseAt = animT;
+  const p = pendingRaise.shift();
+  const s = p.site || [15,5,15,5];
+  const cx = ((s[0]+s[2])/2)*TILE + 8, cy = ((s[1]+s[3])/2)*TILE + 8;
+  banner("🏗 " + p.name.replace(/^The /,"") + " raised!", p.done);
+  pSparkle(cx, cy, "#ffe6a0", 26); pSparkle(cx-14, cy+6, "#cbb98f", 12); pSparkle(cx+14, cy+6, "#cbb98f", 12);
+  cam.shake = 2.6; playSfx("upgrade");
+}
 // ---- new-player tutoring: one-shot, contextual, only on a save born in the NPX era ----
 function tutTip(flag, text){
   if(!state || !state.flags.npxGame || state.flags[flag]) return;
@@ -477,6 +495,10 @@ function interact(){
         // and his noticeboard requests both have to be reachable from here.
         if(tryTurnIn("tom")) return;
         if(tryFulfillRequest("tom")) return;
+        // v3.24: Tom's the shopkeeper — you reach him at the counter, not as a walkable NPC, so his
+        // "fine coop you raised!" nod has to fire from here or it never plays.
+        const recTom = pendingRecog("tom");
+        if(recTom){ showDialog(NPCDEF.tom.name + "   " + heartStr(heartsOf("tom")), recTom, NPCDEF.tom.portrait); return; }
         openShop(); return;
       }
       case "shipbin": toast("Shipping bin — sell your goods here.", "#e9dcc0"); openShop("sell", true); return;
@@ -999,6 +1021,7 @@ function newDay(){
   const orchard = tendOrchard(farm);// trees age; the ones in season set fruit; the hives fill
   const cellared = tendCellar(farm);// the kegs and jars age their loads one night
   const built = completeProjects(); // Rowan's crews worked through the night
+  pendingRaise = pendingRaise.concat(built.filter(p => p.building));   // v3.24: a raised building earns a ceremony when you next step onto the farm
   applyProjects(farm);              // re-try any placement a crop was sitting on yesterday
   rollWeather();                    // today becomes what was forecast last night; tomorrow is re-rolled
   // Rain waters your fields. Snow does not — the ground is frozen, and the Almanac says so plainly.

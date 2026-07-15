@@ -28,6 +28,7 @@ function loop(ts){
         maybeSeasonalFestival();        // a festival window can open while you stand on the sand
         maybeLanternTest();             // the midpoint beat fires the first time you enter the village at 5 wings
         maybePlazaLife();               // Tom steps out for a midday stretch — the plaza's third face
+        maybeBuildCeremony();           // v3.24: the banner/sparkle when you step out to a newly-raised building
       }
     }
     updateParticles(dt);
