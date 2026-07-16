@@ -473,7 +473,7 @@ const MUSEUM = [
   { name:"The Legends",   items:()=>LEGENDS.map(l=>l.name) },
   { name:"Gems",          items:()=>Object.keys(GEM_SELL) },
   { name:"The Shore",     items:()=>Object.keys(SHORE) },
-  { name:"Farm & Forage", items:()=>["Field Salad","Frostberry","Berry Bun","Honey","Egg","Large Egg","Milk","Large Milk","Wool","Prize Fleece"] },   // Wool obtainable since v3.8 (sheep + shears); Prize Fleece is its friendship-tier prize
+  { name:"Farm & Forage", items:()=>["Field Salad","Frostberry","Berry Bun","Honey","Egg","Large Egg","Milk","Large Milk","Cheese","Fine Cheese","Wool","Prize Fleece"] },   // Wool since v3.8; Cheese/Fine Cheese v3.33 (the press)
   { name:"The Kitchen",   items:()=>RECIPES.map(r=>r.name) },
   { name:"Materials",     items:()=>["Wood","Pine Wood","Maple Wood","Willow Wood","Elder Wood","Heartwood","Silverwood",...Object.values(WOOD_TO_LUMBER),"Stone","Copper Ore","Iron Ore","Gold Ore","Cobalt Ore","Star Metal Shard"] },   // + milled lumber (v3.21)
   { name:"The Deep",      items:()=>[...GEODE_CURIOS, "Geode Heart"] },   // v3.28: geode curios from the deep mine
@@ -780,7 +780,7 @@ function renderShop(){
     }
     html += `<div class="row"><span class="lead" data-icon="item_Berry Bun"><canvas></canvas><span>Berry Bun <span class="sub">+34 energy</span></span></span><span><span class="price">30g</span> <button class="buy" ${state.gold>=30?"":"disabled"} onclick="buyFood('Berry Bun',30)">buy</button></span></div>`;
     html += `<div class="row"><span class="lead" data-icon="item_Field Salad"><canvas></canvas><span>Field Salad <span class="sub">+26 energy</span></span></span><span><span class="price">24g</span> <button class="buy" ${state.gold>=24?"":"disabled"} onclick="buyFood('Field Salad',24)">buy</button></span></div>`;
-    html += `<div class="row"><span class="lead" data-icon="item_Milk"><canvas></canvas><span>Milk <span class="sub">fresh from the coast dairy · for cooking</span></span></span><span><span class="price">120g</span> <button class="buy" ${state.gold>=120?"":"disabled"} onclick="buyFood('Milk',120)">buy</button></span></div>`;
+    html += `<div class="row"><span class="lead" data-icon="item_Milk"><canvas></canvas><span>Milk <span class="sub">fresh from the coast dairy · for cooking</span></span></span><span><span class="price">160g</span> <button class="buy" ${state.gold>=160?"":"disabled"} onclick="buyFood('Milk',160)">buy</button></span></div>`;
     if(anyConfided() && !state.flags.married){
       const hasBq = (state.inv["Bouquet"]||0)>0;
       html += `<h2 style="font-size:1em;color:var(--rose);margin:.4em 0 .2em;">COURTSHIP</h2>`;
@@ -798,6 +798,9 @@ function renderShop(){
     // the Cellar: machines that give a crop a second life (wood + ore + coin, like every good tool)
     for(const mk in MACHINES){
       const M = MACHINES[mk];
+      // v3.33: the press only reaches the shelf AFTER the dairy's gift — "your first press is a
+      // gift; more are on his shelf after that" must be true, not just printed (§3.4).
+      if(mk === "press" && !state.flags.ack_tom_press) continue;
       const matStr = Object.keys(M.cost.mats).map(it => { const have=state.inv[it]||0, need=M.cost.mats[it];
         return `${need} ${it} <span style="color:${have>=need?'#8fd06a':'#c98a6a'}">(${have})</span>`; }).join(" + ");
       const can = state.gold >= M.cost.g && Object.keys(M.cost.mats).every(it => (state.inv[it]||0) >= M.cost.mats[it]);

@@ -561,6 +561,26 @@ function buildItems(){
     px(g,2,6,10,4,"#c8ccd2"); px(g,2,6,10,1,"#e6e9ee");                        // blade
     px(g,2,10,1,1,"#9098a0"); px(g,4,10,1,1,"#9098a0"); px(g,6,10,1,1,"#9098a0"); px(g,8,10,1,1,"#9098a0"); px(g,10,10,1,1,"#9098a0");  // teeth
     px(g,11,4,3,5,"#8a5f38"); px(g,12,5,2,3,"#5f4028"); });                    // handle
+  // v3.33 THE CHEESE PRESS — oak frame, iron screw, a wheel waiting under the plate
+  mkSpr("press", 16, 18, g => {
+    px(g,3,15,10,2,"#7a5636"); px(g,3,15,10,1,"#96693e");                      // base board
+    px(g,3,4,2,11,"#8a6a42"); px(g,11,4,2,11,"#8a6a42"); px(g,3,4,1,11,"#a0774a"); // oak uprights
+    px(g,3,3,10,2,"#8a6a42"); px(g,3,3,10,1,"#a0774a");                        // crossbeam
+    px(g,7,5,2,4,"#8f97a0"); px(g,7,5,1,4,"#c8ccd2"); px(g,6,2,4,2,"#6a7078"); // iron screw + T-handle
+    px(g,5,9,6,2,"#c8ccd2"); px(g,5,9,6,1,"#e6e9ee");                          // the plate
+    px(g,5,11,6,3,"#f0d890"); px(g,5,11,6,1,"#fbe9b0"); px(g,5,13,6,1,"#d8bc6a"); });  // the wheel, pressing
+  mkSpr("item_Cheese Press", 16, 16, g => {
+    px(g,4,13,8,2,"#7a5636");                                                  // base
+    px(g,4,3,2,10,"#8a6a42"); px(g,10,3,2,10,"#8a6a42"); px(g,4,2,8,2,"#8a6a42"); px(g,4,2,8,1,"#a0774a");  // frame
+    px(g,7,4,2,3,"#8f97a0"); px(g,6,7,4,1,"#c8ccd2");                          // screw + plate
+    px(g,5,8,6,4,"#f0d890"); px(g,5,8,6,1,"#fbe9b0"); });                      // the wheel
+  mkSpr("item_Cheese", 16, 16, g => {
+    px(g,3,6,10,6,"#f0d890"); px(g,3,6,10,1,"#fbe9b0"); px(g,3,11,10,1,"#d8bc6a");   // the wheel
+    px(g,10,6,3,3,"#fbe9b0"); px(g,5,8,1,1,"#d8bc6a"); px(g,8,9,1,1,"#d8bc6a"); px(g,11,8,1,1,"#d8bc6a"); });  // cut face + eyes
+  mkSpr("item_Fine Cheese", 16, 16, g => {
+    px(g,3,5,10,7,"#e8c268"); px(g,3,5,10,1,"#f6dc90"); px(g,3,11,10,1,"#c09a48");   // a deeper, aged wheel
+    px(g,3,8,10,1,"#b08838"); px(g,6,7,1,1,"#c09a48"); px(g,9,9,1,1,"#c09a48");      // the rind band + eyes
+    px(g,11,4,2,2,"#c94f4f"); });                                              // wax seal — the dairy's mark
   // v3.22 THE HORSE — the mount you ride (drawn under the rider). Three facings; 'side' is mirrored
   // for left. A warm bay coat with a dark mane, tail, and hooves. 22×16 so the body has room.
   const HB="#8a5a3a", HM="#4f3320", HL="#7a4a30", HH="#2e1d12";               // body, mane/tail, leg, hoof

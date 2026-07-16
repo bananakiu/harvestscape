@@ -22,6 +22,66 @@
 
 ---
 
+## v3.33.0 — "The Dairy" · 2026-07-16 · tag `v3.33.0`
+
+The v3.32 re-audit's **#1 priority**: the Cheese Press, closing the barn's dead-end produce
+(§3.5 — Milk and Large Milk were the last goods with no processing chain) and §3.4's
+"gift the first machine" rule in one release.
+
+**The machine.** `MACHINES.press` — Milk→Cheese (135g), Large Milk→Fine Cheese (250g), one
+night, max 2. Both wheels are ×1.5 on the keg discipline (processed goods earn their margin
+from the wait). One night — the fastest per-night rate in the cellar — is deliberate: unlike
+crops, the input is capped by cow count, so the press can't be scaled into a faucet the way a
+keg wall can. Cost is **Oak Lumber 6 + Iron Ore 2 + 1,100g** — built from *milled* lumber so
+the sawmill chain feeds it (the cross-skill rule the buildings follow).
+
+**The refactor that made it possible.** The keg/jar/sawmill all took "anything grown" via one
+global `machineLoadable()`. A milk machine broke that assumption, so each `MACHINES` entry now
+declares `accepts(n)` + `wants` (its own error line); the shared interact branch became
+`case "keg": case "jar": case "press":` reading `M.accepts`/`M.wants`. `machineLoadable`
+survives as the growable predicate keg/jar delegate to. Everything else — placement, lifting
+(`digUp`), the nightly `tendCellar` tick, the shop row, the hotbar — was already generic over
+`MACHINES` and needed zero changes (verified, not assumed).
+
+**The gift.** Tom's v3.24 barn-recognition line ("my wife down the coast will be thrilled for
+the milk trade") gets paid off: a second `NPC_RECOG` entry on the same `proj_barn` flag —
+first-unacked-wins, so the promise and the parcel land as two separate visits — carries a new
+`give:` field, and `pendingRecog` now hands the item over with the line. The first press is
+the dairy's gift; more are on Tom's shelf after that.
+
+**Adversarial review found 9 issues; all fixed pre-ship.** The instructive ones:
+- **The economy one:** Cheese at 135g vs Tom's 120g shop Milk was the game's *first*
+  buy-low-sell-high loop from a shop staple (+15g/press/night, riskless) — a direct violation of
+  the balance playbook's "craft only from player-gathered inputs" rule. Shop Milk is now **160g**
+  (still there for cooking; pressing bought milk is now a 25g loss). Farm milk keeps the honest
+  ×1.5.
+- **The promise ones:** the shop listed the press unconditionally, making the release note
+  ("your first press is a gift; more on his shelf after that") false for anyone who opened the
+  shop first — the row and `buyMachine` are now gated on `ack_tom_press`. And the gift itself
+  now carries a `when:` guard (a `NPC_RECOG` entry can wait for its moment) so a surplus press
+  can never be forced on an owner.
+- **The integration ones:** `INTERACT_KINDS` (the floating "E" cue), `OBJ_TITLE`, and
+  `EXAMINE_OBJ` all hardcode kinds — the press was missing from every one (a placed press
+  examined as *grass*). All added; the sawmill's identical pre-existing `EXAMINE_OBJ`/`OBJ_TITLE`
+  gap fixed in passing. Plus three text bugs: the placement toast said "bring it something
+  grown" (now uses the machine's own `wants`), "1 nights" (singular fixed), and
+  "2 cheese presss" (plural now says *presses*).
+
+Verified in-browser (muted): wants-toast with no milk, best-pail selection (Large Milk over
+Milk), overnight → Fine Cheese collect, plain Milk → Cheese, Tom's gift (line + press + ack,
+skipped for owners, fires for non-owners), shop hidden-then-shown around the gift, blocked
+pre-gift purchase, keg regression (still takes Turnip, never Milk), generic `tendCellar` tick
+confirmed in code, placement/load/cap toast wording, all four sprites screenshotted, museum
+entries, clean console. (Cache-buster went to v=71 — bumped twice this release since files
+changed again after the first bump; the number's job is to change, not to match the version code.)
+
+*Dev-save note:* the localStorage test save on the dev machine was clobbered during
+verification (the game's unload-save raced two snapshot restores; the third attempt wrote a
+stale `undefined`). It was a throwaway day-1 test save — rebuilt fresh via `startNewGame()`.
+Lesson recorded for future sessions: neutralize `saveGame` *before* restoring a snapshot.
+
+---
+
 ## Design re-audit — v3.32 scorecard refresh · 2026-07-16
 
 Docs-only; no game change, no version bump, no atlas regen. Fresh four-pillar graded audit

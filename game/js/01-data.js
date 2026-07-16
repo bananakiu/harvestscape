@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.32.0", code: 69, codename: "The Storyteller", date: "2026-07-16" };
+const VERSION = { name: "3.33.0", code: 70, codename: "The Dairy", date: "2026-07-16" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.33.0", code:70, date:"2026-07-16", name:"The Dairy", notes:[
+    { t:"new", s:"The barn's milk finally has somewhere to go. A new Cheese Press sets a pail into a wheel of cheese overnight — plain milk into Cheese, a well-loved cow's brimming pail into Fine Cheese. Load it like a keg; both wheels keep, eat well, and sell honestly." },
+    { t:"new", s:"Your first press is a gift. Once the barn is up, talk to Tom — his wife runs the dairy down the coast, and she's sent something up for the farm that supplies her milk. More presses are on his shelf after that, built from oak lumber and iron." },
+  ]},
   { v:"3.32.0", code:69, date:"2026-07-16", name:"The Storyteller", notes:[
     { t:"new", s:"Quest Points. Every task in the valley's book now weighs something — a point for an errand, more for the great ones — and the Journal's Quests page keeps the count. Each completed quest announces its points, and old saves get full credit for everything already done." },
     { t:"new", s:"One more letter. After the coast road ends where it ends, a last envelope from Grandpa turns up behind the seed drawer — older and softer than the rest, with a riddle in it instead of a task. Follow it with your hoe. What you find is his, and now it's yours to wear." },
@@ -435,19 +439,34 @@ const LUMBER_NAMES = new Set(Object.values(WOOD_TO_LUMBER));  // what it makes
 // ingredients + attention) or the field itself. And because every product is its own item name,
 // Tom's Demand saturates per-product: forty jars of the same jam glut just like forty starfruit.
 const MACHINES = {
+  // v3.33: each machine declares what it ACCEPTS (and how it asks for it) instead of the old
+  // shared machineLoadable() — the Cheese Press takes animal produce, not crops, so the predicate
+  // had to move onto the machine. machineLoadable (below) survives as the growable test keg/jar use.
   keg: { name:"Keg",           days:3, mult:2.2, max:4,
          cost:{ g:900, mats:{ "Pine Wood":40, "Iron Ore":2 } },   // v3.20: wood ×5
          product: n => n + " Wine",
+         accepts: n => machineLoadable(n), wants:"something grown — a crop or an orchard fruit",
          blurb:"Ages a crop into wine over three days. Patience in a barrel." },
   jar: { name:"Preserves Jar", days:2, mult:1.6, max:6,
          cost:{ g:550, mats:{ "Wood":30, "Copper Ore":2 } },   // v3.20: wood ×5
          product: n => n + " Jam",
+         accepts: n => machineLoadable(n), wants:"something grown — a crop or an orchard fruit",
          blurb:"Sets a crop into jam over two days. Summer, kept." },
+  // v3.33 "The Dairy": the barn's produce finally has a second life (§3.5 — Milk and Large Milk
+  // were the last dead-end goods). One night, ×1.5 — the fastest per-night rate of the cellar,
+  // because the input is capped by cows, not fields. Built from LUMBER so the sawmill chain feeds
+  // it (cross-skill, like the buildings). The FIRST press is Tom's gift — see NPC_RECOG.
+  press: { name:"Cheese Press", days:1, mult:1.5, max:2,
+         cost:{ g:1100, mats:{ "Oak Lumber":6, "Iron Ore":2 } },
+         product: n => n === "Milk" ? "Cheese" : "Fine Cheese",
+         accepts: n => n === "Milk" || n === "Large Milk", wants:"a pail of milk — the cows make the good stuff",
+         blurb:"Sets a pail of milk into a wheel of cheese overnight. The barn's answer to the keg." },
   // v3.21: the Sawmill mills raw logs into lumber. Unlike the keg/jar it takes WOOD (not crops), works
   // a BATCH at once (up to sawBatch logs → that many boards) in a single night, and feeds construction.
   sawmill: { name:"Sawmill", days:1, mult:1, max:3, batch:10,
          cost:{ g:1200, mats:{ "Wood":30, "Iron Ore":3 } },
          product: n => WOOD_TO_LUMBER[n],
+         wants:"a stack of raw logs — one species at a time",   // v3.33: used by the placement toast (its load branch has its own line)
          blurb:"Mills a stack of raw logs into building lumber overnight. One species at a time." },
 };
 // what the machines will take: anything grown — crops and orchard fruit
@@ -613,6 +632,10 @@ ITEM_SELL["Bram's Oilskin"] = 0;          // the Hunt's crown — faster bites, 
 // ---- ANIMAL PRODUCE ----
 ITEM_SELL["Egg"] = 55; ITEM_SELL["Large Egg"] = 95; ITEM_SELL["Milk"] = 90; ITEM_SELL["Large Milk"] = 165; ITEM_SELL["Wool"] = 120; ITEM_SELL["Prize Fleece"] = 220;
 EDIBLE["Egg"] = 16; EDIBLE["Milk"] = 22; EDIBLE["Large Milk"] = 40;
+// v3.33: the press's wheels — Milk×1.5 and Large Milk×~1.5, on the keg discipline (processed goods
+// earn their margin from the wait, never from thin air)
+ITEM_SELL["Cheese"] = 135; ITEM_SELL["Fine Cheese"] = 250;
+EDIBLE["Cheese"] = 30; EDIBLE["Fine Cheese"] = 50;
 // Sheep (v3.8): the barn's third resident, and the honest source that finally makes Wool obtainable.
 // Wool is priced above milk but regrows over several days, not daily — a coat is worth the wait, and
 // this keeps a flock of sheep from out-earning the whole field. Shears are a one-time buy at Tom's
@@ -1268,6 +1291,9 @@ const EXAMINE = {
   "Large Egg": "A generous egg from a contented hen.",
   "Milk": "A pail of white, still faintly warm.",
   "Large Milk": "A brimming pail from a well-loved cow.",
+  "Cheese": "A small wheel, waxed and patient. The barn, kept.",
+  "Fine Cheese": "Aged from a well-loved cow's best pail. Tom's wife would call it competition.",
+  "Cheese Press": "An oak-and-iron press from the coast dairy. It knows exactly what to do with a pail.",
   "Wool": "Soft, warm, and freshly off the sheep.",
   "Prize Fleece": "The finest coat in the valley — only a truly cherished sheep grows one.",
   "Shears": "Well-oiled, sharp, and shepherd-approved. A sheep never minds.",
@@ -1358,6 +1384,8 @@ const EXAMINE_TILE = {
   EXAMINE["Silverwood Beam"] = "A silverwood beam, pale and faintly luminous. The finest timber the valley grows.";
   EXAMINE_OBJ["keg"] = "Something in there is taking its time.";
   EXAMINE_OBJ["jar"] = "The lid says: not yet.";
+  EXAMINE_OBJ["sawmill"] = "Sawdust in the bed, and an edge that means it.";                        // v3.33: was falling through to the grass under it
+  EXAMINE_OBJ["press"] = "Oak and iron from the coast dairy. The screw turns slow, and that's the whole trick.";
   EXAMINE_OBJ["bench"] = "Worn smooth by years of sitting. Still room for one more.";
   EXAMINE_OBJ["plantpot"] = "Someone tends these — the blooms are always fresh.";
   // décor (v3.13): the placed pieces read back their catalogue blurb (OBJ_TITLE set in 08-actions.js,

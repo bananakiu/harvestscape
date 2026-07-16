@@ -243,7 +243,7 @@ const OBJ_TITLE  = { geode:"Geode", bed:"Bed", campfire:"Campfire", stove:"Stove
   stall:"Market Stall", shipbin:"Shipping Bin", sign:"Sign", noticeboard:"Noticeboard", ledger:"The Valley Ledger",
   fountain:"Fountain", boardwalk:"Boardwalk", railcart:"Minecart", memorial:"Standing Stone", berrybush:"Berry Bush",
   frostberry:"Frostberry Bush", fruittree:"Fruit Tree", beehive:"Beehive", torch:"Torch", lamp:"Lamp", lantern:"Lantern",
-  crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift", olddoor:"A Planked Door", keg:"Keg", jar:"Preserves Jar", bench:"Bench", plantpot:"Flower Planter",
+  crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift", olddoor:"A Planked Door", keg:"Keg", jar:"Preserves Jar", sawmill:"Sawmill", press:"Cheese Press", bench:"Bench", plantpot:"Flower Planter",
   deadfall:"Deadfall", westtrail:"The Trail West", easttrail:"The Trail Back", waystone:"Waystone", hearttree:"The Heart of the Forest",
   ancient:"Ancient Tree" };
 for(const k in DECOR) OBJ_TITLE[k] = DECOR[k].name;   // décor pieces (v3.13) examine under their proper name
@@ -600,7 +600,7 @@ function interact(){
         playSfx("get"); pSparkle(tx*TILE+8, ty*TILE, "#e8a83a", 6*n);
         return;
       }
-      case "keg": case "jar": {
+      case "keg": case "jar": case "press": {
         const M = MACHINES[obj.kind];
         if(obj.ready){                                        // collect the finished product
           const prod = M.product(obj.item);
@@ -613,15 +613,16 @@ function interact(){
           toast(`The ${obj.item.toLowerCase()} needs ${M.days - obj.days} more ${M.days-obj.days===1?"night":"nights"}.`, "#cbb98f");
           return;
         }
-        // empty: load the best growable you're carrying — one button, no menus (cozy contract)
+        // empty: load the best thing this machine will take — one button, no menus (cozy contract).
+        // v3.33: what it takes is the MACHINE's business (M.accepts) — the press wants milk, not crops.
         let best = null;
         for(const it in state.inv){
-          if(state.inv[it] > 0 && machineLoadable(it) && (!best || (ITEM_SELL[it]||0) > (ITEM_SELL[best]||0))) best = it;
+          if(state.inv[it] > 0 && M.accepts(it) && (!best || (ITEM_SELL[it]||0) > (ITEM_SELL[best]||0))) best = it;
         }
-        if(!best){ toast("It wants something grown — a crop or an orchard fruit."); playSfx("error"); return; }
+        if(!best){ toast("It wants " + M.wants + "."); playSfx("error"); return; }
         take(best);
         obj.item = best; obj.days = 0; obj.ready = false;
-        toast(`The ${M.name.toLowerCase()} takes your ${best.toLowerCase()}. ${M.days} nights.`, "#cbb98f");
+        toast(`The ${M.name.toLowerCase()} takes your ${best.toLowerCase()}. ${M.days} ${M.days===1?"night":"nights"}.`, "#cbb98f");
         playSfx("plant"); pPuff(tx*TILE+8, ty*TILE+4, "#cbb98f", 5);
         return;
       }
@@ -1167,13 +1168,14 @@ function plantPermanent(tx, ty){
   if(mach){
     const M = MACHINES[mach];
     if(Object.values(curMap.objects).filter(o => o.kind === mach).length >= M.max){
-      toast(`${M.max} ${M.name.toLowerCase()}s is plenty for one cellar.`); playSfx("error"); return; }
+      const plural = M.name.toLowerCase() + (M.name.endsWith("s") ? "es" : "s");   // v3.33: "presses", not "presss"
+      toast(`${M.max} ${plural} is plenty for one cellar.`); playSfx("error"); return; }
     if((state.inv[M.name]||0) < 1){ toast("You don't have one."); playSfx("error"); return; }
     if(!spendEnergy(2)) return;
     take(M.name);
-    curMap.objects[key(tx,ty)] = { kind:mach };   // empty until you load it (interact with a crop in your bag)
+    curMap.objects[key(tx,ty)] = { kind:mach };   // empty until you load it (interact with its input in your bag)
     setTile(tx,ty, T.GRASS);
-    toast(`The ${M.name.toLowerCase()} is set. Bring it something grown.`, "#cbb98f");
+    toast(`The ${M.name.toLowerCase()} is set. Bring it ${M.wants || "something grown"}.`, "#cbb98f");   // v3.33: the machine says what it eats
     addXP("Farming", 20); playSfx("plant");
     pSparkle(tx*TILE+8, ty*TILE+8, "#cbb98f", 10);
     normalizeSeedSel(); refreshHotbar(); refreshHUD();

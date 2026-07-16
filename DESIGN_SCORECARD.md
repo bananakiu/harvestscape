@@ -57,6 +57,8 @@ last nine releases built.
    Tom's gift** — his own v3.24 milk-trade line is the delivery. Closes §3.3's canonical chain,
    §3.4's gift-the-first-machine, and the §3.5 dead-end in one release. → `01-data.js`
    (MACHINES/ITEM_SELL/EXAMINE), `08-actions.js` (load path), `03-art.js`, `13-content.js` (Tom beat).
+   ✅ **Shipped v3.33.0** — Cheese Press (milk-only; egg→mayo deliberately deferred to keep the
+   fiction clean), the accepts/wants per-machine refactor, and Tom's gift paying off the v3.24 line.
 2. **[M] Name the flock — animal bonds visible, indoors and out.** *(Cozy + Story)* Names at purchase
    (paying off Pip's "Sir Cluckington" line), species examines via the v3.26 horseLook pattern,
    hearts in the pet toast, a recognition moment at the first Large Egg/Milk/Fleece — plus the

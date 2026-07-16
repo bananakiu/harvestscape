@@ -672,6 +672,13 @@ const NPC_RECOG = [
   { npc:"tom",   flag:"proj_coop",   ack:"ack_tom_coop",     line:"Say — that's a fine coop you raised! Means I can start selling you hens now. Folk'll have fresh eggs on the table again." },
   { npc:"pip",   flag:"proj_coop",   ack:"ack_pip_coop",     line:"You built a COOP! Are there chickens yet?? Can I name one? I'm gonna name one Sir Cluckington and he'll be the BRAVEST hen!" },
   { npc:"tom",   flag:"proj_barn",   ack:"ack_tom_barn",     line:"A whole barn now, cows and sheep both — you're running a proper farm. My wife down the coast will be thrilled for the milk trade." },
+  // v3.33: the milk-trade line above gets paid off — the FIRST Cheese Press arrives as a gift from
+  // the dairy down the coast (§3.4: the first machine of a chain should be given, not sold). Listed
+  // AFTER the barn line and sharing its flag, so the two land as separate visits: the promise, then
+  // the parcel. give: makes pendingRecog hand the item over with the line.
+  { npc:"tom",   flag:"proj_barn",   ack:"ack_tom_press",    give:"Cheese Press",
+    when: () => (state.inv["Cheese Press"]||0) === 0 && !(state.farm && Object.values(state.farm.objects).some(o => o.kind === "press")),   // never force a surplus press
+    line:"That milk trade I mentioned? My wife sent one of her old presses up from the dairy — says any farm that supplies her milk ought to be making its own cheese. It's yours. Set it down like a hive." },
   { npc:"rowan", flag:"proj_stable", ack:"ack_rowan_stable", line:"You framed a stable with your own milled beams, stone footing and all. The old carpentry lives in your hands, it seems. That was the tenth craft, though the Guild never counted it. Ride well." },
   { npc:"maya",  flag:"proj_stable", ack:"ack_maya_stable",  line:"I saw you ride past this morning — you looked so free, mane and all. The valley feels bigger and smaller at once now. Take me along the coast road someday? ♥" },
 ];
@@ -681,7 +688,11 @@ const NPC_RECOG = [
 // plaza-Tom/Rowan/Maya would otherwise get their story-filler line first). Story turn-ins and heart
 // events already return earlier in talkNpc, so this can't preempt anything quest-critical.
 function pendingRecog(id){
-  for(const r of NPC_RECOG){ if(r.npc===id && state.flags[r.flag] && !state.flags[r.ack]){ state.flags[r.ack] = true; return r.line; } }
+  for(const r of NPC_RECOG){ if(r.npc===id && state.flags[r.flag] && !state.flags[r.ack]){
+    if(r.when && !r.when()) continue;                       // v3.33: an entry can wait for its moment (or never come — the press gift skips owners)
+    state.flags[r.ack] = true;
+    if(r.give){ give(r.give, 1, true); playSfx("gift"); pSparkle(state.px, state.py-14, "#ffe6a0", 12); }   // v3.33: a recognition can carry a parcel
+    return r.line; } }
   return null;
 }
 function npcLine(id, h){
@@ -896,6 +907,7 @@ function buyHive(){
 // the Cellar's machines cost wood + ore + coin, like every good tool since Tempered Tools
 function buyMachine(mk){
   const M = MACHINES[mk]; if(!M) return;
+  if(mk === "press" && !state.flags.ack_tom_press){ playSfx("error"); return; }   // v3.33: the first press is the dairy's gift, never a purchase
   if(state.gold < M.cost.g || !Object.keys(M.cost.mats).every(it => (state.inv[it]||0) >= M.cost.mats[it])){
     playSfx("error"); return; }
   state.gold -= M.cost.g;
