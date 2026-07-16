@@ -908,6 +908,7 @@ function buyMachine(mk){
 // décor: a pure coin sink (§3.6). Buy a cosmetic piece; select it like a seed and set it on the farm.
 function buyDecor(dk){
   const D = DECOR[dk]; if(!D) return;
+  if(D.qpGate && !state.flags.qpAllTold){ toast("Tom keeps that one for whoever finishes the valley's whole book of tasks."); playSfx("error"); return; }   // v3.32: the quest cape
   if(state.gold < D.cost){ toast(`Not enough coin (${D.cost.toLocaleString()}g).`); playSfx("error"); return; }
   if(D.mats && !Object.keys(D.mats).every(it => (state.inv[it]||0) >= D.mats[it])){
     toast("You're short on materials for that one — the deep's finest doesn't come cheap."); playSfx("error"); return; }   // v3.29

@@ -508,6 +508,14 @@ function journalQuestsHtml(){
   WINGS.forEach(w => { const on = w.lit();
     html += `<span style="color:${on?"var(--gold-hi)":"var(--ink-soft)"}">${on?"◆":"◇"} ${w.name}</span>`; });
   html += `</div></div>`;
+  // ★ Quest Points (v3.32) — the ledger's one number, right where the story lives
+  const qpNow = questPoints(), qpAll = questPointsTotal();
+  html += `<div class="jq"><h3 style="color:var(--gold-hi)">✦ Quest Points — ${qpNow}/${qpAll}</h3>` +
+          `<div class="desc" style="color:var(--ink-soft)">` +
+          (state.flags.qpAllTold
+            ? `Every story told. The Storyteller's Banner is yours — Tom keeps it behind the counter.`
+            : `Every task in the valley's book weighs a point or more. Fill the book, and Tom will have something for the teller.`) +
+          `</div></div>`;
   html += `<div class="actHead">${ACT_TITLES[1]}</div>`;
   let act2Open = false;
   QUESTS.forEach((q, idx) => {
@@ -811,11 +819,15 @@ function renderShop(){
     html += `<div class="desc" style="margin-bottom:.5em;color:var(--ink-soft);">Pieces to make the farm yours — buy one, then set it down like a hive (select it, press USE on open ground; the axe lifts it again). Purely for the joy of it. <span style="color:var(--gold-hi)">${placed}/${DECOR_MAX} placed.</span></div>`;
     for(const k in DECOR){
       const D = DECOR[k], own = state.inv[D.name]||0, vanity = D.cost >= 100000;
+      // The Storyteller's Banner (v3.32) shows LOCKED, not hidden — a quest cape you can't see
+      // isn't worth chasing. The row itself is the advertisement.
+      const qpLocked = D.qpGate && !state.flags.qpAllTold;
       const matsOk = !D.mats || Object.keys(D.mats).every(it => (state.inv[it]||0) >= D.mats[it]);   // v3.29
       const matStr = D.mats ? "<br>" + Object.keys(D.mats).map(it => { const have=state.inv[it]||0, need=D.mats[it];
         return `${need} ${it} <span style="color:${have>=need?'#8fd06a':'#c98a6a'}">(${have})</span>`; }).join(" + ") : "";
-      html += `<div class="row"><span class="lead" data-icon="item_${D.name}"><canvas></canvas><span style="${vanity?`color:${'#ffd75a'}`:''}">${D.name}${own?` <span class="sub" style="color:var(--gold-hi)">×${own} in bag</span>`:''} <span class="sub">${D.blurb}${matStr}</span></span></span>` +
-        `<span><span class="price">${D.cost.toLocaleString()}g</span> <button class="buy" ${state.gold>=D.cost&&matsOk?"":"disabled"} onclick="buyDecor('${k}')">buy</button></span></div>`;
+      const blurb = qpLocked ? `“Not for sale — not to you, not yet. Finish every task the valley's book ever asks, and we'll talk.” <span style="color:var(--gold-hi)">✦ ${questPoints()}/${questPointsTotal()} Quest Points</span>` : D.blurb;
+      html += `<div class="row"><span class="lead" data-icon="item_${D.name}"><canvas></canvas><span style="${vanity||D.qpGate?`color:${'#ffd75a'}`:''}">${qpLocked?"🔒 ":""}${D.name}${own?` <span class="sub" style="color:var(--gold-hi)">×${own} in bag</span>`:''} <span class="sub">${blurb}${matStr}</span></span></span>` +
+        `<span><span class="price">${D.cost.toLocaleString()}g</span> <button class="buy" ${state.gold>=D.cost&&matsOk&&!qpLocked?"":"disabled"} onclick="buyDecor('${k}')">${qpLocked?"locked":"buy"}</button></span></div>`;
     }
   } else {
     for(const tool of TOOLS){

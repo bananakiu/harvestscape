@@ -824,6 +824,13 @@ function buildInteriors(){
     px(g,6,12,4,3,"#4a6ac8"); px(g,6,12,4,1,"#5a7ad0");                                    // cobalt mount
     px(g,4,6,8,4,"#c9922f"); px(g,4,6,8,1,"#e0b84a"); px(g,11,4,2,3,"#c8b8ff"); px(g,5,7,1,1,"#fff0a0"); },  // brass tube + starstone lens
     g => { px(g,4,11,2,3,"#3a3a44"); px(g,10,11,2,3,"#3a3a44"); px(g,4,4,8,4,"#c9922f"); px(g,11,3,2,3,"#c8b8ff"); });
+  mkDecor("storybanner", "Storyteller's Banner", 16, 24, g => {                       // v3.32: the quest cape, flown
+    px(g,7,2,2,20,"#7a5734"); px(g,7,2,1,20,"#9a744a");                               // the pole
+    px(g,6,1,4,1,"#c9a44a"); px(g,7,0,2,1,"#ffce5a");                                 // gilt finial
+    px(g,9,3,6,9,"#b03a3a"); px(g,9,3,6,1,"#d05a4a"); px(g,14,3,1,9,"#8a2a2a");       // the cloth
+    px(g,9,12,4,2,"#b03a3a"); px(g,9,14,2,1,"#8a2a2a");                               // swallowtail
+    px(g,10,5,3,1,"#ffce5a"); px(g,11,4,1,3,"#ffce5a"); px(g,10,8,4,1,"#ffe089"); },  // the gold star + underline
+    g => { px(g,7,1,2,13,"#7a5734"); px(g,9,2,5,7,"#b03a3a"); px(g,9,2,5,1,"#d05a4a"); px(g,10,4,3,1,"#ffce5a"); px(g,11,3,1,3,"#ffce5a"); });
   mkSpr("barrel", 16, 16, g => { px(g,4,3,8,12,"#8a5f38"); px(g,4,3,8,1,"#a5763f"); px(g,3,5,10,2,"#6e4a2a"); px(g,3,11,10,2,"#6e4a2a");
     px(g,5,3,1,12,"#a5763f"); px(g,10,3,1,12,"#6e4a2a"); });
   mkSpr("crate", 16, 16, g => { px(g,3,4,10,10,"#a5763f"); px(g,3,4,10,1,"#c29258"); px(g,3,13,10,1,"#7a5630");
@@ -999,6 +1006,12 @@ function buildGroveArt(){
   mkSpr("item_The Forester's Band", 16, 16, g => {
     px(g,4,5,8,8,"#ffce5a"); g.clearRect(6,7,4,4); px(g,4,5,8,1,"#ffe089");          // the gold band
     px(g,6,3,4,3,"#57ad57"); px(g,7,2,2,2,"#6ab86a"); px(g,7,4,1,1,"#b6f27a"); });   // the willow leaf
+  mkSpr("item_Grandpa's Pocketwatch", 16, 16, g => {                                  // v3.32: dug up where his letter said
+    px(g,7,1,2,2,"#c9a44a"); px(g,7,0,2,1,"#e0bc5a");                                // winding crown + loop
+    px(g,4,3,8,10,"#ffce5a"); px(g,5,3,6,1,"#ffe089"); px(g,5,12,6,1,"#c9922f");     // gold case
+    px(g,5,4,6,8,"#f4ead0"); px(g,5,4,6,1,"#fffbe8");                                // the face
+    px(g,8,6,1,3,"#6a5a3a"); px(g,9,8,2,1,"#6a5a3a"); px(g,8,8,1,1,"#8a6a3a");       // hands, still keeping his time
+    px(g,3,12,2,1,"#c9a44a"); px(g,2,13,2,1,"#e0bc5a"); px(g,1,14,2,1,"#c9a44a"); });// a curl of chain
   // the Heart of the Forest: pale-barked, older than the road, faintly aglow
   mkSpr("hearttree", 20, 32, g => {
     px(g,7,18,6,13,"#c9b8a0"); px(g,7,18,1,13,"#e0d4c0"); px(g,12,18,1,13,"#9a8a70"); // pale trunk

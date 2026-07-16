@@ -171,6 +171,7 @@ function addXP(skill, amt){
     if(charmActive("The Forester's Band")) amt = Math.round(amt * 1.08);
   }
   if(skill === "Mining" && charmActive("Amber Beetle")) amt = Math.round(amt * 1.05);
+  if(skill === "Farming" && charmActive("Grandpa's Pocketwatch")) amt = Math.round(amt * 1.05);   // his time, well spent (v3.32)
   const before = levelFor(state.skills[skill]);
   state.skills[skill] += amt;
   floatText(state.px + rand(-4,4), state.py - 22, "+"+amt+" "+skill.slice(0,4).toLowerCase(), "#9fd8ff");
@@ -338,6 +339,26 @@ function useTool(){
 
   if(tool === "Hoe"){
     if(curMap.id !== "farm"){ toast("This isn't your land to till — crops only grow on the farm."); return; }
+    // ★ One Last Letter (v3.32): grandpa's riddle — "under the sign that bears our name, a single
+    // step below it" = the farm sign at (3,8), so the dig is (3,9). Fires on the SWING at the spot,
+    // deliberately ignoring tile state: an already-tilled tile isn't in TILLABLE and a growing crop
+    // blocks tilling, so gating on a successful till could soft-block the story. The swing itself
+    // finds the box. Quest-active guard so an early swing there is just a till (nothing to find
+    // until the letter has told you to look). The hit test covers the hoe's WHOLE swing (a wide
+    // tier's canTiles row/block can break the riddle tile while facing a neighbour — the right
+    // answer must never read as a miss) and the player's own feet (standing on the spot and
+    // swinging at the sign is the most literal reading of the riddle; honor it).
+    const lq = curQuest();
+    if(lq && lq.id === "one-last-letter" && !state.flags.keepsakeFound &&
+       (canTiles(tx, ty, tier, state.face).some(([x,y]) => x === 3 && y === 9) ||
+        (Math.floor(state.px/TILE) === 3 && Math.floor(state.py/TILE) === 9))){
+      state.flags.keepsakeFound = true;
+      give("Grandpa's Pocketwatch", 1, true);
+      pSparkle(3*TILE+8, 9*TILE+4, "#ffd75a", 22); playSfx("legend"); cam.shake = 2;   // always at the dig spot, whatever tile the swing centred on
+      showDialog("Grandpa's Letter", "Your hoe rings against a little tin box. Inside, wrapped in waxed paper: his pocketwatch — still ticking. On the lid, scratched small: “Time was never the thing to save. Days are. Spend them here.”", null);
+      checkQuests();   // the find is the turn-in — the sender is gone, and that's the point
+      return;
+    }
     // A better hoe breaks more ground per swing — the tiers used to do nothing whatsoever.
     const tiles = canTiles(tx, ty, tier, state.face).filter(([x,y]) => {
       const t2 = tileAt(x,y);
@@ -746,7 +767,9 @@ function maybeNest(tx, ty, guaranteed){
     return;
   }
   if(tier === "charm"){
-    const unowned = Object.keys(CHARMS).filter(c => c !== "The Forester's Band" && !state.discovered[c]);
+    // the Band and the Pocketwatch (v3.32) have their own stories — never from a nest
+    const unowned = Object.keys(CHARMS).filter(c => c !== "The Forester's Band" && c !== "Grandpa's Pocketwatch" && !state.discovered[c]);
+    if(!unowned.length){ give("Berry Bun", 2); toast("A nest tumbles down — berries, baked hard by the sun.", "#cbb98f"); return; }   // every charm already found
     const c = unowned[Math.floor(Math.random()*unowned.length)];
     give(c, 1);
     banner("🪺 Something glints in the nest", c + " — " + CHARMS[c].effect + ". Wear it from your Backpack (I).");

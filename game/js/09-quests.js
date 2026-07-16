@@ -6,6 +6,15 @@
 function totalLevel(){ let t=0; for(const s in state.skills) t += skillLvl(s); return t; }
 function curQuest(){ return QUESTS[state.questIdx] || null; }
 
+// ---- Quest Points (v3.32) — the RuneScape ledger ----
+// Every quest weighs something (q.qp, default 1); the sum is the valley's one number for
+// "how much of the story you've lived." Derived from questIdx — the chain is strictly linear,
+// so completed quests are exactly QUESTS.slice(0, questIdx). No save field, no migration, and
+// retroactively right for every existing save (state.questDone is write-only and was backfilled
+// empty on old saves, so it is deliberately NOT the source of truth here).
+function questPoints(){ let t=0; const n=Math.min(state.questIdx, QUESTS.length); for(let i=0;i<n;i++) t += QUESTS[i].qp||1; return t; }
+function questPointsTotal(){ return QUESTS.reduce((t,q)=>t+(q.qp||1),0); }
+
 // Which act the player is in — used to frame the tracker, journal, and Continue recap so the
 // two-act structure is visible in casual play. Act I runs through the finale ("Wake the Valley").
 const ACT_TITLES = { 1:"Act I — The Quiet Valley", 2:"Act II — The Empty Chair" };
@@ -90,6 +99,14 @@ function checkQuests(){
       if(safety++ > 12) break;
     } else break;
   }
+  // ★ the last page of the ledger (v3.32) — once every quest in the book is done, Tom unlocks
+  // the Storyteller's Banner (the quest cape). Flag, not a QP compare: cozy contract says the
+  // banner stays earned even if later releases append more quests to the book.
+  if(!state.flags.qpAllTold && state.questIdx >= QUESTS.length){
+    state.flags.qpAllTold = true;
+    setTimeout(() => { banner("✦ Every Story Told ✦", questPoints() + " Quest Points — the valley's whole book. Tom has kept something for the teller.");
+      playSfx("legend"); }, 3600);   // let the final quest's own banner (3.2s) finish first
+  }
   _questGuard = false;
   refreshQuestTracker();
 }
@@ -136,9 +153,13 @@ function completeQuest(q){
     paused = true; state.flags.festivalPending = true;   // lock control through the ~2s handoff
     setTimeout(startFestival, 1100);
   } else {
-    banner("✔ " + q.title, r.gold ? ("Reward: " + r.gold + "g" + (r.msg?" · "+r.msg:"")) : (r.msg||"Nicely done."));
+    // the QP leads the reward line (v3.32) — the ledger should be FELT at every completion,
+    // not discovered later in a panel. (The finale keeps its own banner; its 4 QP still count.)
+    const qp = q.qp || 1;
+    banner("✔ " + q.title, "✦ +" + qp + " QP" + (r.gold ? " · " + r.gold + "g" : "") + (r.msg ? " · " + r.msg : ""));
   }
   if(r.gold) floatText(state.px, state.py-24, "+"+r.gold+"g", "#ffce5a");
+  floatText(state.px, state.py-34, "✦ +" + (q.qp||1) + " QP", "#e8d18a");
   refreshHUD();
 }
 

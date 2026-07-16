@@ -22,6 +22,71 @@
 
 ---
 
+## v3.32.0 — "The Storyteller" · 2026-07-16 · tag `v3.32.0`
+
+Design-audit priority **#8**: a quest-point meta-currency + one bespoke-mechanic quest step.
+Three pieces that land as one feature — Quest Points, Grandpa's last riddle, and the quest cape.
+
+**Why.** Two audit findings (§4.4): every quest objective in the game is a numeric threshold or a
+flag someone else sets — nothing asks the *player* to solve anything — and nothing sums the light
+content into a chase-able meta-goal the way RuneScape's Quest Points do. The fix is deliberately
+RuneScape-shaped, since that's the game's stated progression identity.
+
+**1 — Quest Points.** Every `QUESTS` entry gains a `qp` weight (errands 1, capstones 2–3, the
+finale 4; **26 total** across 15 quests). The critical design call: `questPoints()` **derives the
+sum from `state.questIdx`** — the chain is strictly linear, so completed quests are exactly
+`QUESTS.slice(0, questIdx)`. No new save field, no migration, and retroactively correct for every
+existing save. (`state.questDone` was deliberately rejected as the source of truth: it's
+write-only, and old saves had it backfilled *empty* by migrateSave's generic loop, which would
+have zeroed a veteran's ledger.) Completion now banners `✦ +N QP` first — the ledger is felt at
+every turn-in, not discovered in a panel — and the Journal's Quests tab carries a
+`✦ Quest Points — X/26` header in the existing wings-strip style.
+
+**2 — One Last Letter (the bespoke step).** A 15th quest, **appended, never inserted** —
+`questIdx` is a raw index, so a mid-chain insert corrupts every save. Grandpa's last envelope
+holds a *riddle* ("under the sign that bears our name — a single step below it"), pointing at the
+farm sign genFarm always stamps at (3,8): the player must read the world and **dig at (3,9) with
+the hoe**. Mechanics that matter:
+- The hook sits at the top of the Hoe branch and fires **on the swing at the spot, ignoring tile
+  state** — an already-tilled tile isn't in `TILLABLE` and a growing crop blocks tilling, so
+  gating on a successful till could soft-block the story (cozy contract).
+- The objective flag `keepsakeFound` is brand new, so a finished save can't instant-complete the
+  quest (the scout flagged this exact trap: `checkQuests` auto-advances NPC-less givers the moment
+  objectives pass).
+- The giver is "Grandpa's Letter" (not in `QUEST_GIVER_NPC`), so **the find is the turn-in** — no
+  report-in; the sender is gone, and that's the point.
+- The keepsake is **Grandpa's Pocketwatch**, a charm (+5% Farming XP in `addXP`, the established
+  Wren-Feather pattern; `sell:0` once-per-valley like the Forester's Band). It's excluded from the
+  canopy-nest charm pool (its story is the dig), and that pool got an empty-pool fallback while I
+  was there (pre-existing edge: all charms discovered → `give(undefined)`).
+
+**3 — The quest cape.** `DECOR.storybanner` ("Storyteller's Banner", 500g — the cape-vendor nod)
+gated by `flags.qpAllTold`, which `checkQuests` sets once `questIdx >= QUESTS.length`. A flag, not
+a QP compare, on purpose: if later releases append more quests, the banner **stays earned** —
+nothing is ever taken. In Tom's décor tab it renders **locked, not hidden** (🔒 + Tom's refusal
+line + live `✦ X/26 Quest Points`): a quest cape you can't see isn't worth chasing. `buyDecor`
+carries the same guard server-side.
+
+**Review findings (adversarial pass), both fixed before ship:**
+- The dig hook originally keyed on `facingTile()` alone — but a tier-1+ hoe's `canTiles` sweep
+  can *till the riddle tile while facing a neighbour* (the right answer reading as a miss), and
+  standing ON (3,9) targets the sign and toasts "Can't till there." The hit test now covers the
+  hoe's whole swing area **and** the player's own feet — the correct answer can never feel wrong.
+- The banner's bespoke examine line was dead code: the v3.13 décor IIFE stamps
+  `EXAMINE[name] = blurb` for every DECOR entry *after* the literal. The line now assigns after
+  that loop (the v3.30 lumber pattern), so the owner reads the earned line, not the shop tease.
+
+Verified in-browser (muted): the full dig cascade in one swing (flag → pocketwatch → auto-complete
+→ 26/26 → qpAllTold → grandpa's dialog + `✦ +2 QP` float, screenshotted), the two review scenarios
+(wide-sweep + standing-on-spot) firing and two negatives (far swing; quest inactive) not, charm XP
+105 vs 100, locked row + guard block at 8/26, unlock + purchase at 26/26, journal header in both
+states, both sprites, nest exclusion, clean console. Files: 01-data (qp ×15, quest, charm, décor,
+EXAMINE, VERSION, in-game CHANGELOG), 09-quests (questPoints/questPointsTotal, QP banner,
+qpAllTold), 08-actions (dig hook, addXP charm, nest pool), 10-ui (journal header, locked shop row),
+13-content (buyDecor guard), 03-art (pocketwatch + banner sprites).
+
+---
+
 ## v3.31.0 — "Ice Fishing" · 2026-07-16 · tag `v3.31.0`
 
 Winter's renewable pillar (design-audit priority **#9**). Two winter-exclusive fish —

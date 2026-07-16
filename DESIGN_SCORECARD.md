@@ -66,6 +66,11 @@ five tools are forged). The frontier now is **finishing what shipped, not shippi
    open (§8.2) — ~10 lines that change feel, not rules.
 8. **[M] A quest-point meta-currency + one bespoke-mechanic quest step.** Every objective is a numeric
    threshold/flag (§4.4); no meta-currency sums the light content (quests, legends, pages, hearts).
+   ✅ **Shipped v3.32.0** — Quest Points (26 across 15 quests, derived from questIdx so old saves get
+   full retroactive credit), felt at every turn-in (`✦ +N QP` banner) and summed in the Journal; the
+   bespoke step is "One Last Letter" (grandpa's riddle → dig at the farm sign with the hoe — the first
+   objective the player *solves* rather than grinds); the chase closes with the Storyteller's Banner,
+   Tom's QP-gated quest cape, shown locked in the catalogue so it advertises itself.
 9. **[M] Give winter a renewable pillar** (season-gated workshop / civic build) — the construction epic only
    fills the *first* winter; §9's thin-season gap persists. ✅ **Shipped v3.31.0** — winter ice fishing:
    two winter-exclusive fish (Frostfin L15/300g pond+coast, Glassperch L48/1000g coast) gated by a new

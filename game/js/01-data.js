@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.31.0", code: 68, codename: "Ice Fishing", date: "2026-07-16" };
+const VERSION = { name: "3.32.0", code: 69, codename: "The Storyteller", date: "2026-07-16" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.32.0", code:69, date:"2026-07-16", name:"The Storyteller", notes:[
+    { t:"new", s:"Quest Points. Every task in the valley's book now weighs something — a point for an errand, more for the great ones — and the Journal's Quests page keeps the count. Each completed quest announces its points, and old saves get full credit for everything already done." },
+    { t:"new", s:"One more letter. After the coast road ends where it ends, a last envelope from Grandpa turns up behind the seed drawer — older and softer than the rest, with a riddle in it instead of a task. Follow it with your hoe. What you find is his, and now it's yours to wear." },
+    { t:"new", s:"For whoever fills the whole book: Tom keeps the Storyteller's Banner behind the counter. You'll see it in his décor catalogue long before you can buy it — that's the point." },
+  ]},
   { v:"3.31.0", code:68, date:"2026-07-16", name:"Ice Fishing", notes:[
     { t:"new", s:"Winter has its own catches now. When the water skins over with ice, two fish rise that you'll see no other season: the Frostfin off the pond and coast, and the rare Glassperch out on the deep coast. They bite only in winter — a reason to keep casting through the cold, when the fields are asleep. Both join the Almanac and the Collection like any fish, and cook up just as well." },
   ]},
@@ -475,6 +480,11 @@ const DECOR = {
                  blurb:"A finger of star metal on a silverwood plinth, pointing back the way it fell." },
   observatory: { name:"Great Telescope", cost:12000,  mats:{ "Cobalt Ore":8, "Heartwood Beam":6, "Starstone":1 },
                  blurb:"Brass and cobalt, a Starstone for its lens. Rowan says the Guild kept one, once — to watch for the next star to fall." },
+  // The Storyteller's Banner (v3.32) — the quest cape. Tom shows it locked until every quest in
+  // the book is done (state.flags.qpAllTold, set in checkQuests); price is the RuneScape nod —
+  // you earned it, but the vendor still charges for the cloth.
+  storybanner: { name:"Storyteller's Banner", cost:500, qpGate:true,
+                 blurb:"Every task the valley ever asked — done, and told. It flies for the teller." },
 };
 const DECOR_MAX = 40;   // a generous cap so a farm can be dressed, but not infinitely spammed
 
@@ -968,6 +978,7 @@ const CHARMS = {
   "Amber Beetle":        { sell:150, effect:"+5% Mining XP while worn" },
   "Lantern Charm":       { sell:100, effect:"your light reaches a little farther" },
   "The Forester's Band": { sell:0,   effect:"+8% Woodcutting XP and an extra log, now and then" },  // once per valley
+  "Grandpa's Pocketwatch": { sell:0, effect:"+5% Farming XP while worn" },   // dug up where his last letter said (v3.32) — once per valley, never in a nest
 };
 for(const c in CHARMS) ITEM_SELL[c] = CHARMS[c].sell;
 function charmActive(name){ return state.charm === name && (state.inv[name]||0) > 0; }
@@ -1003,65 +1014,67 @@ const TOM_GREET = [
 // ---- QUEST CHAIN (the story spine) ----
 // obj kinds: {stat,goal} | {level:{skill,n}} | {heart:n} | {gold:n}
 //            | {totalLevel:n} | {talk:npcId} | {mineDepth:n} | {flag:name}
+// qp: Quest Points (v3.32) — the RuneScape ledger. Weighted by heft (finale 4, capstones 2-3,
+// errands 1); questPoints() in 09-quests.js derives the total from questIdx, so no save field.
 const QUESTS = [
-  { id:"first-sprout", title:"First Sprout", giver:"Grandpa's Letter",
+  { id:"first-sprout", qp:1, title:"First Sprout", giver:"Grandpa's Letter",
     desc:"“Tend it, and it'll tend to you.” Wake the soil in the plot below your cottage.",
     obj:[ {text:"Till a patch of soil", stat:"tilled", goal:1},
           {text:"Plant a seed", stat:"planted", goal:1},
           {text:"Water your crop", stat:"watered", goal:1} ],
     reward:{ gold:60, items:{"Turnip Seeds":4}, msg:"Grandpa tucked seeds into the envelope." } },
 
-  { id:"good-harvest", title:"A Good Harvest", giver:"Grandpa's Letter",
+  { id:"good-harvest", qp:1, title:"A Good Harvest", giver:"Grandpa's Letter",
     desc:"Patience, sun, and water. Bring in your very first crops.",
     obj:[ {text:"Harvest 3 crops", stat:"harvested", goal:3} ],
     reward:{ gold:120, items:{"Carrot Seeds":3}, msg:"Word spreads; Tom sends carrot seeds." } },
 
-  { id:"meet-tom", title:"Coin & Company", giver:"Tom",
+  { id:"meet-tom", qp:1, title:"Coin & Company", giver:"Tom",
     desc:"A valley is its people. Step inside Tom's store, east down the road, and let him talk your ear off.",
     obj:[ {text:"Visit Tom's store & say hello", talk:"tom"},
           {text:"Sell him the valley's good things — 250g earned", stat:"earned", goal:250} ],
     reward:{ gold:100, items:{"Berry Bun":3}, msg:"“First proper trade this counter's seen in months.” Tom rounds up, with a wink." } },
 
-  { id:"old-keeper", title:"The Old Keeper", giver:"Willowbrook",
+  { id:"old-keeper", qp:1, title:"The Old Keeper", giver:"Willowbrook",
     desc:"An old man keeps the shuttered Guild Hall in the north of town. Go and hear him out.",
     obj:[ {text:"Speak with Elder Rowan at the Guild Hall", talk:"rowan"} ],
     reward:{ gold:80, items:{"Guild Seal":1}, msg:"Rowan presses a worn Guild Seal into your hand." } },
 
-  { id:"neighborly", title:"Neighborly", giver:"Maya",
+  { id:"neighborly", qp:1, title:"Neighborly", giver:"Maya",
     desc:"Maya walks the south meadow by day. A valley grows warmer with friends.",
     obj:[ {text:"Reach 2 hearts with Maya", heart:2} ],
     reward:{ gold:120, items:{"Strawberry Seeds":3}, msg:"Strawberries — her favorite, if you were wondering." } },
 
-  { id:"prove-crafts", title:"Prove the Crafts", giver:"Elder Rowan",
+  { id:"prove-crafts", qp:2, title:"Prove the Crafts", giver:"Elder Rowan",
     desc:"“Anyone can hold a seal. Show me the crafts still live in someone's hands — the field, the axe, the pick. Then we'll talk about wings.”",
     obj:[ {text:"Show him a farmer's hands — Farming 10", level:{skill:"Farming",n:10}},
           {text:"Show him a forester's swing — Woodcutting 8", level:{skill:"Woodcutting",n:8}},
           {text:"Show him a miner's eye — Mining 8", level:{skill:"Mining",n:8}} ],
     reward:{ gold:250, items:{"Iron Ore":4}, msg:"Rowan stands at the wall a long moment. Three wings, flickering. “Well,” he says. “Well.”" } },
 
-  { id:"the-coast", title:"Salt & Silver", giver:"Bram",
+  { id:"the-coast", qp:1, title:"Salt & Silver", giver:"Bram",
     desc:"Follow the village's south path to the coast. An old fisher tends the Fishing wing — mostly by ignoring it, and everyone else.",
     obj:[ {text:"Meet Bram at the coast", talk:"bram"},
           {text:"Fish beside him until he nods — Fishing 10", level:{skill:"Fishing",n:10}} ],
     reward:{ gold:300, items:{"Cooked Salmon":2}, msg:"Bram grunts. From him, that's a medal." } },
 
-  { id:"into-deep", title:"Into the Deep", giver:"Elder Rowan",
+  { id:"into-deep", qp:2, title:"Into the Deep", giver:"Elder Rowan",
     desc:"“The mine remembers the Guild's founding — it's all still down there, past the easy seams. Go deep enough that the mountain learns your name.”",
     obj:[ {text:"Go down past the easy seams — mine floor 5", mineDepth:5},
           {text:"Swing until the mountain knows you — 25 rocks mined", stat:"mined", goal:25} ],
     reward:{ gold:300, items:{"Gold Ore":3}, msg:"“Deep enough,” Rowan says, and for a moment he looks young. “Now I can tell you what's down there.”" } },
 
-  { id:"star-metal", title:"The Founding Gift", giver:"Elder Rowan",
+  { id:"star-metal", qp:2, title:"The Founding Gift", giver:"Elder Rowan",
     desc:"Deep in the mine a sealed vault holds Star Metal — the Guild's heart. Break it open (Mining 20) and recover it.",
     obj:[ {text:"Recover the Star Metal from the vault", flag:"foundVault"} ],
     reward:{ gold:400, items:{"Emerald":1}, msg:"The Mining wing blazes to life." } },
 
-  { id:"master-tools", title:"Master Smith", giver:"Tom",
+  { id:"master-tools", qp:2, title:"Master Smith", giver:"Tom",
     desc:"“Your grandpa's kit got him by, bless him — but the Guild deserves better iron. Bring me the makings and we'll build you something worthy.”",
     obj:[ {text:"Let Tom improve your kit — 3 tool upgrades", stat:"toolUpgrades", goal:3} ],
     reward:{ gold:250, items:{"Gold Ore":3}, msg:"Tom turns the tool over twice and whistles. “Now THAT would've made your grandpa jealous.”" } },
 
-  { id:"wake-valley", title:"Wake the Valley", giver:"The Valley",
+  { id:"wake-valley", qp:4, title:"Wake the Valley", giver:"The Valley",
     desc:"They said Willowbrook was finished. Light every wing and bring the Grand Festival back to the coast.",
     obj:[ {text:"Let every craft live in you — total level 60", totalLevel:60},
           {text:"Let Maya believe it's real — 4 hearts", heart:4},
@@ -1070,25 +1083,36 @@ const QUESTS = [
     finale:true },
 
   // ---------- ACT TWO: the empty chair ----------
-  { id:"long-way-home", title:"The Long Way Home", giver:"Elder Rowan",
+  { id:"long-way-home", qp:2, title:"The Long Way Home", giver:"Elder Rowan",
     desc:"The lanterns are lit and the valley is whole — save for one empty chair. Rowan would like a word.",
     obj:[ {text:"Light the lanterns at the Grand Festival", flag:"festivalDone"},
           {text:"Learn what Bram has been carrying", flag:"knowsElias"} ],
     reward:{ gold:200, msg:"Rowan asks you to do a hard, kind thing." },
     act2:true },
 
-  { id:"driftwood", title:"Driftwood & Waxed Paper", giver:"Bram",
+  { id:"driftwood", qp:1, title:"Driftwood & Waxed Paper", giver:"Bram",
     desc:"“If the festival ever comes back… I'll make them again.” Bring Bram the wood for his water lanterns.",
     obj:[ {text:"Bring 12 Wood", item:"Wood", n:12},
           {text:"Bring 3 Pine Wood", item:"Pine Wood", n:3} ],
     reward:{ gold:250, msg:"Bram's hands remember the folds." },
     act2:true },
 
-  { id:"coast-road", title:"The Coast Road", giver:"Maya",
+  { id:"coast-road", qp:3, title:"The Coast Road", giver:"Maya",
     desc:"Forty miles north, a ferryman has spent eleven years counting the days he didn't come home.",
     obj:[ {text:"Reach 5 hearts with Maya", heart:5},
           {text:"Bram folds the water lanterns", flag:"lanternsFolded"} ],
     reward:{ gold:500, msg:"" },
+    act2:true },
+
+  // ---- the epilogue (v3.32): the one quest step that isn't a number ----
+  // Appended, never inserted — questIdx is a raw index into this array, so any mid-chain insert
+  // would corrupt every existing save. The objective flag is brand new, so a finished save can't
+  // auto-complete it; the giver isn't in QUEST_GIVER_NPC, so the find IS the turn-in (the sender
+  // is gone — that's the point). The dig hook lives at the top of the Hoe branch in 08-actions.js.
+  { id:"one-last-letter", qp:2, title:"One Last Letter", giver:"Grandpa's Letter",
+    desc:"Tucked behind the seed drawer — one more envelope, older and softer than the rest. “If you're reading this, the farm is yours now, and I'd wager the valley is too. I left you one thing more. Look under the sign that bears our name — a single step below it. Bring your hoe.”",
+    obj:[ {text:"Follow Grandpa's last riddle", flag:"keepsakeFound"} ],
+    reward:{ msg:"The last envelope goes back in the drawer, lighter now." },
     act2:true },
 ];
 const FINALE_IDX = QUESTS.findIndex(q => q.finale);
@@ -1185,6 +1209,7 @@ const EXAMINE = {
   "Cooked Coelacanth": "You cooked a living fossil. The valley will talk for weeks.",
   "Cooked Frostfin": "Seared hot against the cold — sweet, firm, and gone too fast.",
   "Cooked Glassperch": "Winter on a plate. Delicate enough that Bram forgets to grumble.",
+  "Grandpa's Pocketwatch": "Still ticking. He wound it the morning he buried it, and it's kept his time ever since.",
   "Sunfleck": "It only shows at spring dawn. This one showed.",
   "Moonscale": "Only the summer midnight ever gives one up.",
   "Whitefin": "Comes in on the fall fog, when no one's looking.",
@@ -1338,4 +1363,9 @@ const EXAMINE_TILE = {
   // décor (v3.13): the placed pieces read back their catalogue blurb (OBJ_TITLE set in 08-actions.js,
   // where that map lives — it isn't defined yet during this file's load)
   for(const k in DECOR){ EXAMINE_OBJ[k] = DECOR[k].blurb; EXAMINE[DECOR[k].name] = DECOR[k].blurb; }
+  // v3.32: the quest cape earns a bespoke line — assigned AFTER the loop above, which would
+  // otherwise clobber it with the catalogue blurb (Tom's locked-shop tease reads differently
+  // from what the earned thing should say to its owner).
+  EXAMINE["Storyteller's Banner"] = EXAMINE_OBJ["storybanner"] =
+    "Every task done, every story told. Some capes are earned; this one was lived.";
 })();
