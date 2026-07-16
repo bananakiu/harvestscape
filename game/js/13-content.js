@@ -15,6 +15,7 @@ const MAPS = {
   guild:     { w:17, h:11, name:"Guild of Nine Crafts",  subtitle:"once, the heart of the valley", music:"cozy", bg:"#12100b", gen:genGuild },
   mine:      { w:24, h:16, name:"The Old Mine",          subtitle:"",                 music:"mine", bg:"#050406", gen:genMine },   // v3.16: ~half the old 34×22 — smaller floors lean on descending + the checkpoints
   beach:     { w:46, h:24, outdoor:true, name:"Willowbrook Coast", subtitle:"salt on the breeze", music:"beach", bg:"#2f4a63", gen:genBeach },
+  coastroad: { w:46, h:26, outdoor:true, name:"The Coast Road", subtitle:"north, by the sea", music:"beach", bg:"#2f4a63", gen:genCoastRoad },   // v3.36 — WORLD_EXPANSION.md area 1
   grove:     { w:44, h:30, outdoor:true, name:"The Deep Grove", subtitle:"the forest gives, and grows back", music:"auto", bg:"#0d150c", gen:genGrove },
   village:   { w:40, h:28, outdoor:true, name:"Willowbrook Village", subtitle:"the valley's beating heart", music:"auto", bg:"#101408", gen:genVillage },
 };
@@ -227,6 +228,58 @@ function genMine(m){
   }
   m.subtitle = "Floor " + depth + "  ·  the way down is here somewhere";
   m.meta.up = {x:ux,y:uy};   // entry (diagnostic only; nothing reads meta). No fixed down-portal now — the way down hides under the stairs rock.
+}
+// ---- The Coast Road (v3.36) — WORLD_EXPANSION.md area 1 ----
+// The shoreline continuing east of the beach: the road along the headland, the Gullwater river
+// cutting down to its estuary, the old plank ford, and the ferry landing where the road to
+// Marrow Point leaves the map (drawn continuing — the forty miles STAY forty miles). Daily regen
+// via mapCache like the beach: the LAYOUT is a fixed seed so the road never moves; only the
+// forage nodes reshuffle with the day.
+function genCoastRoad(m){
+  const layout = makeRng(777);                    // fixed: road, river, landing never move
+  const rng = makeRng(888 + state.day*13);        // daily: forage + driftwood reshuffle
+  const t = m.tiles;
+  // ground: headland grass, then sand, then the sea along the south (the beach's own shoreline sine)
+  for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++){
+    const shore = m.h-7 - Math.round(Math.sin(x*0.45)*1.3);
+    if(y >= shore) t[y*W+x]=T.WATER;
+    else if(y >= m.h-10) t[y*W+x]=T.SAND;
+    else t[y*W+x] = layout()<0.10 ? T.FLOWERGRASS : T.GRASS;
+  }
+  // borders: top + east walled; west walled except the road band (the way back to the beach)
+  for(let x=0;x<m.w;x++) t[0*W+x]=T.IWALL;
+  for(let y=0;y<m.h;y++){ t[y*W+0]=T.IWALL; t[y*W+m.w-1]=T.IWALL; }
+  // the road: one honest line of packed earth from the beach to the landing
+  for(let x=0;x<=44;x++) t[8*W+x]=T.PATH;
+  for(const wy of [7,8,9]){ t[wy*W+0]=T.PATH; m.warps[key(0,wy)] = { to:"beach", sx:43*TILE, sy:6*TILE+8, face:"left", auto:true }; }
+  put(m, 2, 7, "sign", {text:"← Willowbrook Coast"});
+  // the Gullwater: down from the hills, under the ford, out to the sea — the estuary
+  for(let y=1;y<m.h;y++){ for(const gx of [27,28,29]) if(t[y*W+gx]!==T.IWALL) t[y*W+gx]=T.WATER; }
+  for(let y=m.h-10;y<m.h;y++){ for(const gx of [26,30]) if(t[y*W+gx]===T.SAND) t[y*W+gx]=T.WATER; }   // the mouth widens
+  for(const gx of [27,28,29]) t[8*W+gx]=T.BRIDGE;   // the old plank ford carries the road over
+  put(m, 25, 7, "sign", {text:"The Gullwater — mind the boards"});
+  // the ferry landing: a grey plank dock into the sea, kept good for a boat that never comes (yet)
+  for(let y=15;y<=19;y++) for(let x=39;x<=41;x++) t[y*W+x]=T.WOOD;
+  put(m, 40, 19, "mooring");
+  put(m, 37, 14, "sign", {text:"FERRY — Marrow Pt. · no service"});
+  // the milestone at the road's east end — the road is drawn continuing past it into the wall
+  put(m, 43, 7, "milestone");
+  // the roadside shrine, halfway along
+  put(m, 14, 7, "shrine");
+  // headland trees (fixed layout — a landmark tree is a landmark)
+  for(let i=0;i<10;i++){ const x=randiR(layout,3,42), y=randiR(layout,2,6);
+    if(t[y*W+x]===T.GRASS && !m.objects[key(x,y)]) put(m, x, y, layout()<0.5?"pine":"oak"); }
+  for(let i=0;i<6;i++){ const x=randiR(layout,3,24), y=randiR(layout,10,13);
+    if(t[y*W+x]===T.GRASS && !m.objects[key(x,y)]) put(m, x, y, "bush"); }
+  // daily forage: samphire on the sand, sea holly on the headland
+  for(let i=0;i<7;i++){ const x=randiR(rng,3,43), y=m.h-10+randiR(rng,0,2);
+    if(t[y*W+x]===T.SAND && !m.objects[key(x,y)]) put(m, x, y, "samphirenode"); }
+  for(let i=0;i<5;i++){ const x=randiR(rng,3,43), y=randiR(rng,2,6);
+    if(t[y*W+x]===T.GRASS && !m.objects[key(x,y)]) put(m, x, y, "hollynode"); }
+  for(let i=0;i<4;i++){ const x=randiR(rng,3,43), y=m.h-10;
+    if(t[y*W+x]===T.SAND && !m.objects[key(x,y)]) put(m, x, y, "driftwood"); }
+  // keep the road and the ford approach clear of everything above
+  for(let x=0;x<=44;x++) for(const wy of [7,8,9]) if(m.objects[key(x,wy)] && !["sign","milestone","shrine"].includes(m.objects[key(x,wy)].kind)) delete m.objects[key(x,wy)];
 }
 function doWarp(w){
   if(!w) return;
@@ -510,9 +563,15 @@ function genBeach(m){
   t[0*W+ex]=T.DOOR;
   m.warps[key(ex, 1)] = { to:"village", sx:20*TILE+8, sy:26*TILE, face:"up", auto:true };
   put(m, ex-2, 1, "sign", {text:"↑ Back to the village"});
+  // v3.36: the east edge opens onto the Coast Road — the shoreline continues (WORLD_EXPANSION.md).
+  // The sign sits at x = m.w-3 (43) deliberately: the palm loop below reaches only to m.w-4, so
+  // the landmark can never be overwritten by a palm and flicker out for a day (review fix).
+  for(const wy of [5,6,7]){ t[wy*W+(m.w-1)]=T.PATH; m.warps[key(m.w-1, wy)] = { to:"coastroad", sx:2*TILE, sy:8*TILE, face:"right", auto:true }; }
+  put(m, m.w-3, 5, "sign", {text:"→ The Coast Road · Marrow Pt. 39 mi"});
   // palms + driftwood
   for(let i=0;i<8;i++){ const x=randiR(rng,3,m.w-4), y=randiR(rng,3,m.h-12); if(t[y*W+x]===T.GRASS||t[y*W+x]===T.SAND) put(m,x,y,"palm"); }
   for(let y=1;y<=5;y++) delete m.objects[key(ex,y)];   // a palm must never seal the village door's approach
+  for(let y=4;y<=8;y++) for(let x=m.w-4;x<m.w;x++) if(m.objects[key(x,y)] && m.objects[key(x,y)].kind==="palm") delete m.objects[key(x,y)];   // …nor the road east
   for(let i=0;i<5;i++){ const x=randiR(rng,3,m.w-4), y=m.h-9; put(m,x,y,"driftwood"); }
   // forage nodes near the tideline
   for(let i=0;i<14;i++){ const x=randiR(rng,3,m.w-4), y=m.h-9+randiR(rng,0,1);
@@ -719,6 +778,14 @@ function pendingRecog(id){
 }
 function npcLine(id, h){
   const st = npcStory(id); if(st) return st;   // an active story beat always speaks first
+  // v3.36: Elias at the ferry landing speaks to WHERE he is — the place he sailed from,
+  // faced at last from the shore side. Location beats heart-tier here, deliberately.
+  if(id === "elias" && curMap && curMap.id === "coastroad") return pick([
+    "Thirty-nine miles. I used to do it before lunch. …The boards are still good. I check them, time to time.",
+    "From the water, this landing is the first thing you see of home. I looked at it eleven years from the wrong side.",
+    "A boat could dock here tomorrow, you know. Wouldn't take much. A rope. A reason.",
+    "Bram thinks I come up here to be sad. I come up here because the wind's honest. …And to be a little sad.",
+  ]);
   const arr = NPC_LINES[id] || ["…"];
   let idx = Math.min(arr.length-1, h);
   if(id === "rowan"){
@@ -737,8 +804,15 @@ function spawnMapNpcs(m){
   const h = curHour();
   if(m.id==="farm"){
     // v3: the neighbours stroll their own plaza now, not your field. The farm keeps only Elias —
-    // he came home, and he fishes the pond his daughter grew up beside.
-    if(state.flags.act2Done && h>=7 && h<19) m.npcs.push(mkNpc("elias", 32*TILE, 25*TILE, {face:"right"}));
+    // he came home, and he fishes the pond his daughter grew up beside. Every fourth day (v3.36)
+    // he walks the coast road instead, to stand at the landing he sailed from — see below.
+    if(state.flags.act2Done && h>=7 && h<19 && state.day % 4 !== 0) m.npcs.push(mkNpc("elias", 32*TILE, 25*TILE, {face:"right"}));
+  } else if(m.id==="coastroad"){
+    // v3.36: the ferryman at the ferry landing, looking the other way for once — north, toward
+    // the town he finally left. Same hours as his pond days; only the fourth days — and never on
+    // a festival date (review fix: the beach cast includes him all day on those dates, and the
+    // Star-Watch lands on a %4 day EVERY year; a festival always outranks the landing).
+    if(state.flags.act2Done && h>=7 && h<19 && state.day % 4 === 0 && !beachEvent()) m.npcs.push(mkNpc("elias", 40*TILE, 16*TILE, {face:"down"}));
   } else if(m.id==="village"){
     if(h>=7 && h<18.5) m.npcs.push(mkNpc("maya", 24*TILE, 12*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));
     if(h>=8 && h<19)   m.npcs.push(mkNpc("pip",  17*TILE, 16*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));

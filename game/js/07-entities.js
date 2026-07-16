@@ -126,7 +126,8 @@ function drawPrompt(cx, cy){
 const INTERACT_KINDS = new Set(["campfire","stove","counter","stall","shipbin","sign","berrybush","frostberry","wrack","chest","noticeboard","fruittree","beehive","bench",
   "ledger","railcart","boardwalk","fountain",
   "bed","ladderup","ladderdown","mineentrance","shellnode","coralnode","seaweednode","sealeddoor","desk","memorial",
-  "waystone","westtrail","easttrail","deadfall","hearttree","lift","olddoor","keg","jar","sawmill","press"]);
+  "waystone","westtrail","easttrail","deadfall","hearttree","lift","olddoor","keg","jar","sawmill","press",
+  "milestone","shrine","mooring","samphirenode","hollynode"]);   // v3.36: the Coast Road's landmarks + forage
 function facingInteractable(fx, fy){
   const w = warpAt(fx,fy); if(w && !w.auto) return true;
   const crop = curMap.crops[key(fx,fy)];

@@ -22,6 +22,68 @@
 
 ---
 
+## v3.36.0 — "The Coast Road" · 2026-07-16 · tag `v3.36.0`
+
+**The world grows** — `WORLD_EXPANSION.md` area 1, the first new map since the Grove Depths
+(v3.3), and the owner's direction call made real: build where the fiction already points.
+
+**The map.** `coastroad`, 46×26 outdoor, east along the shore from the beach: the headland,
+the packed-earth road, and the **Gullwater** — the valley's first river — coming down under a
+plank ford to its estuary. At the road's end: the weathered ferry landing (grey plank dock,
+mooring post), a roadside shrine, and the milestone: **MARROW POINT — 39**. The road is drawn
+running on past the boundary; Act II's forty miles stay forty miles, permanently — the landing
+is where the map *chooses* to stop, and the milestone says why.
+
+**Generation discipline (the beach model, split seeds):** the *layout* (road, river, ford,
+landing, trees) sits on a fixed seed — landmarks never move — while the forage nodes reshuffle
+on a daily seed. Daily regen via `mapCache`; zero persistence work, zero migrateSave.
+
+**River fishing.** `waterHere()` learns two new contexts on this map — the channel is
+`"river"`, the mouth and shore are `"estuary"` (split at the player's row: you fish the bank
+you stand on). New fish on the existing value curve: **Chub** (L8/85g), **Grayling**
+(L35/680g — between Koi and Moonperch), and the **Rainrunner** (L25/550g) — the Stormrider's
+*cousin*, a regular fish gated `weather:"storm"` exactly as the winter fish are season-gated
+(the pool filter grew one clause). Trout is rehomed to the river its examine always claimed,
+kept in the pond table too so no save's routine breaks mid-season. The estuary carries the
+salmon run and the Gulf Sturgeon. The beach's +1 pool bonus deliberately does NOT apply here —
+the river differentiates by species, not tier.
+
+**The rest.** Daily roadside forage (samphire on the tideline, sea holly on the headland — both
+priced inside the shore curve, both in the Collection); landmark examines with real stories in
+them; and **Elias walks up every fourth day** to stand at the landing he sailed from, with four
+location-specific lines that beat his heart-tier dialogue while he's there (the farm-pond spawn
+yields those days, so he's never in two places).
+
+**Registration** (everything the atlas throws without): MAPS, MAP_REGION + a seventh world-map
+region, WORLD_MAP node, the CSS grid gains a `coastroad` cell, MAP_ACCESS prose, sprites ×7.
+
+**Adversarial review found 4 issues; all fixed pre-ship:**
+- **A duplicated east-band block in genBeach** — an artifact of an interrupted session turn:
+  the band edit landed twice, shipping TWO adjacent Coast Road signs with mismatched mileage
+  strings. Merged to one block. (Process note: after any interrupted turn, re-read the region
+  you were editing before resuming — the first half may already be on disk.)
+- **The palm loop could eat the sign** — `put()` has no occupancy guard and the palm range
+  covers (42,5); a verifier re-simulated the exact RNG stream over 400 days and named the ten
+  days the landmark would have flickered out. The surviving sign sits at x=43 — one column past
+  the palm loop's reach — with a comment saying exactly why.
+- **Elias double-booked on festival dates** — the Star-Watch lands on a `%4` day *every year*
+  (YEAR_DAYS ≡ 0 mod 4, so festival residues are permanent), putting him in the beach cast and
+  at the landing simultaneously. The landing spawn now yields to `beachEvent()` — a festival
+  always outranks the landing, matching how the world map already resolves it.
+- **The river pool was empty below Fishing 8** — every other water has a level-1 anchor; without
+  one, a beginner's every cast fell through to the pre-existing `FISH[0]` fallback and the
+  flagship river handed out sea Sardines. The Gullwater now has its **Minnow** (L1, 18g —
+  "barely a mouthful, endlessly pleased with itself").
+
+Verified in-browser (muted): full geometry spot-checks (road/ford/river/sea/dock/landmarks/
+warps both directions/road-clear sweep), both fishing contexts by position, the storm gate
+(Rainrunner in the storm pool only), Elias's fourth-day spawn + landing lines + festival
+stand-down, exactly one sign at (43,5) across all ten flagged palm-collision day-seeds, the
+Minnow anchoring the level-1 river pool, atlas regen (12 maps), clean console, and screenshots
+of the ford and the landing.
+
+---
+
 ## Planning — `WORLD_EXPANSION.md`, the world-expansion plan · 2026-07-16
 
 Docs-only; no game change, no version bump, no atlas regen. Adds `WORLD_EXPANSION.md` and links

@@ -37,6 +37,20 @@ from those existing hooks rather than invent unmoored ones.
 
 **Produced:** `WORLD_EXPANSION.md` (the plan), linked back here once the first area ships.
 
+**Follow-up (same day) — the plan's open questions, answered:**
+
+> you can make up a name
+>
+> ferry cadence make it calendar-fixed visits for some other mechanic to exist in the game
+>
+> Star Metal fragments can be sold
+
+Decisions taken: the dairy keeper is **Nell** (checked against every existing name pool — no
+collision with NPCs, HORSE_NAMES, or ANIMAL_NAMES). The ferry runs on **calendar-fixed visits**
+— the owner explicitly wants a calendar-driven mechanic to exist in the game, distinct from the
+pledge pattern (this shapes the Coast Road's v2 layer). **Star Metal fragments are sellable** at
+Starfall Ridge v1, no crafting gate. Plan updated in place.
+
 **Owner (near-verbatim):**
 
 > Wood is too easy to maintain, so let us change things. Make it so that the things that require

@@ -1111,6 +1111,30 @@ function buildBeachArt(){
   mkSpr("shellnode", 16, 16, g => { px(g,4,8,8,5,"#f0dcc0"); px(g,4,8,8,1,"#fff0dc"); for(let i=0;i<4;i++) px(g,5+i*2,8,1,5,"#d8b8a0"); px(g,7,7,2,1,"#f0dcc0"); });
   mkSpr("starfish", 16, 16, g => { px(g,7,4,2,9,"#ff9438"); px(g,3,8,10,2,"#ff9438"); px(g,5,6,1,1,"#ff9438"); px(g,10,6,1,1,"#ff9438"); px(g,5,11,1,1,"#ff9438"); px(g,10,11,1,1,"#ff9438"); px(g,7,7,2,2,"#ffbe6a"); });
   mkSpr("driftwood", 16, 16, g => { px(g,2,8,12,3,"#c9b499"); px(g,2,8,12,1,"#ddccb0"); px(g,4,7,2,1,"#c9b499"); px(g,10,11,3,1,"#a08f70"); });
+  // v3.36 THE COAST ROAD — its landmarks and forage
+  mkSpr("milestone", 16, 16, g => {                                                     // squat granite, carved face
+    px(g,5,4,6,10,"#9a948a"); px(g,5,4,6,1,"#b8b2a6"); px(g,5,3,6,1,"#b8b2a6");
+    px(g,6,6,4,1,"#6a655c"); px(g,6,8,4,1,"#6a655c"); px(g,7,10,2,1,"#6a655c");         // the worn carving
+    px(g,4,13,8,2,"#7a746a"); px(g,10,5,1,9,"#7a746a"); });                             // base + shadowed edge
+  mkSpr("shrine", 16, 18, g => {                                                        // knee-high stone hollow with a shelf
+    px(g,3,6,10,10,"#8a8478"); px(g,3,6,10,1,"#a8a296"); px(g,4,4,8,2,"#9a948a");       // body + cap
+    g.clearRect(5,9,6,5); px(g,5,13,6,1,"#6a655c");                                     // the hollow + shelf
+    px(g,6,11,1,1,"#d8d0c0"); px(g,8,11,1,2,"#c9788a"); px(g,9,12,1,1,"#c9a44a"); });   // pebble, flower, biscuit
+  mkSpr("mooring", 16, 16, g => {                                                       // salt-silvered post + rope loop
+    px(g,6,3,3,11,"#8a8890"); px(g,6,3,3,1,"#a8a6ae"); px(g,6,3,1,11,"#a8a6ae");
+    px(g,5,5,5,2,"#b09a6a"); px(g,5,7,1,2,"#b09a6a"); px(g,9,7,1,2,"#b09a6a"); px(g,5,9,5,1,"#98845a"); });
+  mkSpr("samphirenode", 16, 16, g => {                                                  // salty green spears on sand
+    for(let i=0;i<4;i++){ const x=4+i*2; px(g,x,8,1,5,"#57ad74"); px(g,x,7,1,2,"#7cc98a"); px(g,x+1,9,1,2,"#3f8a5a"); }
+    px(g,4,13,8,1,"#c9b06a"); });
+  mkSpr("hollynode", 16, 16, g => {                                                     // steel-blue bloom, stubborn
+    px(g,7,5,2,2,"#7a9ac8"); px(g,6,6,1,1,"#7a9ac8"); px(g,9,6,1,1,"#7a9ac8"); px(g,7,4,2,1,"#a8c0e0");
+    px(g,7,7,1,6,"#5a7a4a"); px(g,5,9,2,1,"#5a7a4a"); px(g,9,10,2,1,"#5a7a4a"); px(g,8,6,1,1,"#dce8f8"); });
+  mkSpr("item_Samphire", 16, 16, g => {
+    for(let i=0;i<3;i++){ const x=5+i*2; px(g,x,4,1,8,"#57ad74"); px(g,x,3,1,2,"#7cc98a"); px(g,x+1,6,1,2,"#3f8a5a"); }
+    px(g,4,12,8,1,"#3f8a5a"); });
+  mkSpr("item_Sea Holly", 16, 16, g => {
+    px(g,6,3,4,3,"#7a9ac8"); px(g,7,2,2,1,"#a8c0e0"); px(g,5,4,1,1,"#7a9ac8"); px(g,10,4,1,1,"#7a9ac8"); px(g,7,4,2,1,"#dce8f8");
+    px(g,7,6,2,7,"#5a7a4a"); px(g,5,8,2,1,"#5a7a4a"); px(g,9,9,2,1,"#5a7a4a"); });
   mkSpr("coralnode", 16, 16, g => { px(g,6,8,2,6,"#ff7d9c"); px(g,4,9,2,5,"#ff9ab0"); px(g,9,7,2,7,"#ff5a7a"); px(g,7,6,2,3,"#ffbecb"); px(g,5,13,7,2,"#c9b06a"); });
   mkSpr("seaweednode", 16, 16, g => { for(let i=0;i<4;i++){ const x=4+i*2; px(g,x,7,1,7,"#3f8a5a"); px(g,x,7,1,3,"#57ad74"); } px(g,4,13,8,1,"#c9b06a"); });
   mkSpr("stage", 16, 16, g => { px(g,0,4,16,10,"#8a5f38"); px(g,0,4,16,2,"#a5763f"); px(g,0,12,16,2,"#5e4426"); for(let x=2;x<16;x+=4) px(g,x,6,1,6,"#6e4a2a"); });

@@ -472,7 +472,7 @@ const MUSEUM = [
   { name:"Fish",          items:()=>FISH.map(f=>f.name) },
   { name:"The Legends",   items:()=>LEGENDS.map(l=>l.name) },
   { name:"Gems",          items:()=>Object.keys(GEM_SELL) },
-  { name:"The Shore",     items:()=>Object.keys(SHORE) },
+  { name:"The Shore",     items:()=>[...Object.keys(SHORE), ...Object.keys(ROADSIDE)] },   // + the coast road's forage (v3.36)
   { name:"Farm & Forage", items:()=>["Field Salad","Frostberry","Berry Bun","Honey","Egg","Large Egg","Milk","Large Milk","Cheese","Fine Cheese","Wool","Prize Fleece"] },   // Wool since v3.8; Cheese/Fine Cheese v3.33 (the press)
   { name:"The Kitchen",   items:()=>RECIPES.map(r=>r.name) },
   { name:"Materials",     items:()=>["Wood","Pine Wood","Maple Wood","Willow Wood","Elder Wood","Heartwood","Silverwood",...Object.values(WOOD_TO_LUMBER),"Stone","Copper Ore","Iron Ore","Gold Ore","Cobalt Ore","Star Metal Shard"] },   // + milled lumber (v3.21)
@@ -576,11 +576,12 @@ const WORLD_MAP = [
   { id:"guild",   area:"guild",   label:"Guild of Nine Crafts",sub:"the valley's heart" },
   { id:"mine",    area:"mine",    label:"The Old Mine",       sub:"ore & gems" },
   { id:"coast",   area:"coast",   label:"Willowbrook Coast",  sub:"fishing & festivals" },
+  { id:"coastroad", area:"coastroad", label:"The Coast Road", sub:"the Gullwater · the landing" },   // v3.36
 ];
-// every live map id folds onto one of the six board regions
+// every live map id folds onto one of the seven board regions
 const MAP_REGION = { farm:"farm", cottage:"farm", coop:"farm", barn:"farm",
   village:"village", store:"village", mayahouse:"village", guild:"guild",
-  mine:"mine", beach:"coast", grove:"grove" };
+  mine:"mine", beach:"coast", grove:"grove", coastroad:"coastroad" };
 // Where each neighbour is right now — inferred read-only from the spawn schedule (spawnMapNpcs,
 // 13-content.js). Live NPC entities only exist on the loaded map, so the map reconstructs their
 // whereabouts from the same clock rules rather than reading entities off other maps.
@@ -593,7 +594,8 @@ function npcRegionNow(id){
     case "bram":  return "coast";
     case "maya":  return "village";
     case "pip":   return "village";
-    case "elias": return (state.flags && state.flags.act2Done && h >= 7 && h < 19) ? "farm" : null;
+    case "elias": return (state.flags && state.flags.act2Done && h >= 7 && h < 19)
+      ? (state.day % 4 === 0 ? "coastroad" : "farm") : null;   // v3.36: fourth days he walks to the landing
   }
   return null;
 }

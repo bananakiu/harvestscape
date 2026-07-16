@@ -5,7 +5,8 @@
 > renewable verb. Owner's call (DEVLOG, 2026-07-16): *"the world feels small — start planning
 > to build out more areas."*
 >
-> **Status.** PLANNED — nothing built yet. Line references are against v3.35.0.
+> **Status.** Area 1 (The Coast Road) **SHIPPED in v3.36.0**; areas 2–3 planned.
+> Line references are against v3.35.0.
 
 ---
 
@@ -102,10 +103,11 @@ the "gentleman from the coast" (01-data.js:837), Tom's wife up with cheese cultu
 Area 3), post from the player's mother. v3: a board-request strand around the ferry + a
 seasonal salmon-run week. Marrow Point stays off-map forever, deliberately.
 
-**Open questions for the owner.** (a) Ferry cadence — calendar-fixed or pledge-funded?
-(b) Does the storm rarity tie into the Stormrider legendary itself, or stay a cousin?
-(c) Ride-through: should the beach→coastroad warp preserve mount (it does by default —
-confirm that's wanted through a story-adjacent space)?
+**Owner decisions (2026-07-16).** (a) Ferry cadence: **calendar-fixed visits** — the owner
+wants a calendar-driven mechanic to exist in the game (distinct from the pledge pattern); the
+v2 ferry docks on fixed calendar days. (b) The storm rarity stays a *cousin* of Stormrider
+(weather-gated regular fish), not the legend itself. (c) Ride-through: mount preserved —
+default kept.
 
 ---
 
@@ -143,9 +145,9 @@ replacement faucet); shards spawn at dusk and persist all night so staying up is
 never a DPS requirement against the sleep loop. Wind and snow are dressing only — no cold, no
 stamina drain, ever.
 
-**Open questions.** (a) Should Star Metal fragments craft into anything at v1, or is v1
-sell/keep only pending the Rowan chain? (b) Panorama fidelity budget — one screenshot-iterated
-scene, or three (dawn/day/night)?
+**Owner decisions (2026-07-16).** (a) Star Metal fragments are **sellable** at v1 — no
+crafting gate pending the Rowan chain. (b) Panorama budget still open — default: one
+screenshot-iterated scene, hour-tinted.
 
 ---
 
@@ -174,10 +176,10 @@ inhabitants bar — this is the release's real cost and the reason it goes last.
 the cheese cellar (age Cheese → Aged Cheese on the keg discipline); Bram's boat as a
 pledge-funded ferry beach⇄Butterbrook.
 
-**Open questions.** (a) **Her name** — the candidates disagreed (Nell vs Hazel); nothing in
-shipped dialogue names her, so this is the owner's call and should be made before the Coast
-Road v2 ferry mentions her. (b) Hearts at v1 or deferred? (c) Signage discipline: north =
-Marrow Point / Act II, south = Butterbrook — confirm the two coast directions read distinctly.
+**Owner decisions (2026-07-16).** (a) **Her name is Nell** (owner delegated; "Hazel" was
+rejected — it's already in ANIMAL_NAMES, and the dairy keeper must never share a name with a
+cow). (b) Hearts at v1 still open — default: deferred, voice-first. (c) Signage discipline
+stands: north = Marrow Point / Act II, south = Butterbrook.
 
 ---
 

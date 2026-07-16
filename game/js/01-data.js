@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.35.0", code: 72, codename: "The Flock", date: "2026-07-16" };
+const VERSION = { name: "3.36.0", code: 73, codename: "The Coast Road", date: "2026-07-16" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.36.0", code:73, date:"2026-07-16", name:"The Coast Road", notes:[
+    { t:"new", s:"The world grows. East along the shore past Bram's coast, a new road follows the headland: the Coast Road. The Gullwater river comes down to meet the sea there — the first river in the valley — with an old plank ford, a roadside shrine, and at the road's end, a weathered ferry landing and a milestone that reads MARROW POINT — 39. The road runs on north past the landing. You can't. That's rather the point." },
+    { t:"new", s:"River fishing. The Gullwater holds its own catch — the cheerful Chub, the Grayling (the lady of the stream), and the Trout, finally home in moving water. Where the river meets the sea, the estuary mixes river fish with the salmon run. And when a storm is on the sea, something rare runs upriver — Bram always said the rain brings things with it." },
+    { t:"new", s:"Roadside forage grows back daily: salty samphire on the tideline, sea holly on the headland. And every fourth day, someone walks up the road to stand at the landing and look north, the way he never used to." },
+  ]},
   { v:"3.35.0", code:72, date:"2026-07-16", name:"The Flock", notes:[
     { t:"new", s:"Every animal has a name now. New arrivals are named at the counter; the animals you already keep found their names too — and your very first hen turns out to have been Sir Cluckington all along, exactly as Pip promised. Pet toasts show each animal's hearts, examining one (Q) tells you how the friendship is going in its own words, and the first time a well-loved animal gives its best — a large egg, a brimming pail, a prize fleece — the moment gets its due." },
     { t:"new", s:"On clear days the flock goes out. Hens scratch in front of the coop, cows and sheep take the grass by the barn — and the morning egg, pail, and coat can all be gathered right there in the yard. They keep close to home, and head in when the weather turns (and through the winter)." },
@@ -399,6 +404,16 @@ const FISH = [
   // gifting, and the Collection, exactly like every other fish.
   { name:"Frostfin",      lvl:15, xp:80,  sell:300,  pal:["#8fc0d8","#e0f2fa"], season:"Winter" },   // early-mid; pond + coast
   { name:"Glassperch",    lvl:48, xp:300, sell:1000, pal:["#a8c4d8","#eef6fb"], season:"Winter" },   // late trophy; coast only — sits between Moonperch (780) and Silvergill (1080)
+  // ---- The Coast Road (v3.36) — the Gullwater's fish ----
+  // The river finally exists (WORLD_EXPANSION.md), so the river fish do too. Chub is the friendly
+  // early catch; Grayling the river's pride (between Koi 620 and Moonperch 780 — on-curve, no new
+  // faucet); Rainrunner is the Stormrider's COUSIN — a regular fish that only runs upriver in a
+  // storm (`weather` field, gated in hookFish exactly like the winter fish's `season`), cashing
+  // Bram's old line about what the rain brings up the stream.
+  { name:"Minnow",        lvl:1,  xp:12,  sell:18,   pal:["#9aa8b0","#d8e2e8"] },   // the river's own level-1 anchor (review fix: without one, beginners' casts fell through to the Sardine fallback — a sea fish in the flagship river)
+  { name:"Chub",          lvl:8,  xp:28,  sell:85,   pal:["#8a9a6a","#c8d8a8"] },
+  { name:"Grayling",      lvl:35, xp:210, sell:680,  pal:["#9a8ac8","#d8d0f0"] },
+  { name:"Rainrunner",    lvl:25, xp:240, sell:550,  pal:["#5a7a9a","#a8d0e8"], weather:"storm" },
 ];
 
 const CROP_NAMES = new Set(Object.keys(CROPS).map(k => CROPS[k].name));
@@ -532,6 +547,11 @@ const WATER = {
   // the deep-water rarities (v3.10) rise only off the open sea, and only for anglers who've grown
   // into them (the f.lvl filter) — so the coast stays worth casting from L34 all the way to L85
   coast: ["Sardine", "Bass", "Salmon", "Frostfin", "Golden Koi", "Moonperch", "Silvergill", "Glassperch", "Gulf Sturgeon", "Coelacanth"],   // Frostfin + Glassperch are winter-only (season-gated in the pool); pool re-sorts by sell, so order here is just for reading
+  // v3.36 The Coast Road: the Gullwater runs on one map only (WORLD_EXPANSION.md's one-river rule).
+  // Trout is REHOMED here — its examine always called it a river fish — but stays in the pond table
+  // too for now, so no save's routine breaks mid-season; the pond copy can retire in a later pass.
+  river:   ["Minnow", "Chub", "Trout", "Rainrunner", "Grayling"],
+  estuary: ["Sardine", "Chub", "Salmon", "Rainrunner", "Grayling", "Gulf Sturgeon"],   // brackish mouth — the sea-run overlap, where "fresh off the sea-run" is literally true
 };
 
 // Five fish that rise only under exact conditions. Bram knows all five, and will tell you one
@@ -596,6 +616,11 @@ ITEM_SELL["Amethyst"] = 75;   // Gary — kept sellable (Pip will "KNOW"), but h
 const SHORE = { Shell:22, Coral:48, Seaweed:14, Clam:38, Pearl:260 };
 for(const s in SHORE) ITEM_SELL[s] = SHORE[s];
 EDIBLE["Clam"] = 20;
+// v3.36 The Coast Road: roadside forage — real coastal plants, priced as small daily treats
+// on the shore curve (Seaweed 14 … Coral 48), never a faucet.
+const ROADSIDE = { Samphire:55, "Sea Holly":40 };
+for(const s in ROADSIDE) ITEM_SELL[s] = ROADSIDE[s];
+EDIBLE["Samphire"] = 14;   // crisp, salty — the coast's pocket snack
 // v3.28 "Geodes": the mine's canopy-nest — a rare deep geode cracks into a curio for the shelf. These
 // are Collection pieces first, coin a distant second (they never out-earn the field), so the deep pays
 // in wonder, not gold. GEODE_CURIOS are the common set; a Geode Heart is the rare prize.
@@ -1229,6 +1254,12 @@ const EXAMINE = {
   "Coelacanth": "A living fossil. It was old when the valley was young.",
   "Frostfin": "It only rises when the water skins over with ice — blue as the cold morning it's caught in.",
   "Glassperch": "So clear you can see the winter light straight through it. Comes up once a year, and only to the patient.",
+  "Minnow": "Barely a mouthful, endlessly pleased with itself. Every river starts somewhere.",
+  "Chub": "A cheerful, blunt-headed river fish. Takes anything, regrets nothing.",
+  "Grayling": "The lady of the stream — a sail of a fin, violet in the right light. The Gullwater's pride.",
+  "Rainrunner": "It runs up the river only when the storm is on the sea. Bram always said the rain brings something with it.",
+  "Samphire": "Crisp green spears from the tideline, salty as the wind that grew them.",
+  "Sea Holly": "A steel-blue bloom that thrives on salt and neglect. Maya would paint it; Bram would call it a weed.",
   "Cooked Sardine": "Fried whole, and crunched from head to tail.",
   "Cooked Bass": "Firm white flakes, honestly earned.",
   "Cooked Trout": "Pan-browned and river-sweet.",
@@ -1240,6 +1271,10 @@ const EXAMINE = {
   "Cooked Coelacanth": "You cooked a living fossil. The valley will talk for weeks.",
   "Cooked Frostfin": "Seared hot against the cold — sweet, firm, and gone too fast.",
   "Cooked Glassperch": "Winter on a plate. Delicate enough that Bram forgets to grumble.",
+  "Cooked Minnow": "Three bites, generously counted. Crisp, though.",
+  "Cooked Chub": "Humble and honest, like everything else off the road.",
+  "Cooked Grayling": "Thyme-white flesh with a whisper of the mountain the water came from.",
+  "Cooked Rainrunner": "Tastes faintly of the storm it rode in on. In a good way, mostly.",
   "Grandpa's Pocketwatch": "Still ticking. He wound it the morning he buried it, and it's kept his time ever since.",
   "Sunfleck": "It only shows at spring dawn. This one showed.",
   "Moonscale": "Only the summer midnight ever gives one up.",
@@ -1394,6 +1429,12 @@ const EXAMINE_TILE = {
   EXAMINE_OBJ["jar"] = "The lid says: not yet.";
   EXAMINE_OBJ["sawmill"] = "Sawdust in the bed, and an edge that means it.";                        // v3.33: was falling through to the grass under it
   EXAMINE_OBJ["press"] = "Oak and iron from the coast dairy. The screw turns slow, and that's the whole trick.";
+  // v3.36 The Coast Road landmarks (the full stories live in their interact dialogs)
+  EXAMINE_OBJ["milestone"] = "MARROW POINT — 39. The carving has outlasted everyone who cut it.";
+  EXAMINE_OBJ["shrine"] = "Leave what you can spare; take what you need. Today: a pebble, a flower, half a biscuit.";
+  EXAMINE_OBJ["mooring"] = "Nothing has tied up here in years. Somebody keeps the boards good anyway.";
+  EXAMINE_OBJ["samphirenode"] = "Salty green spears, growing where only the tide waters them.";
+  EXAMINE_OBJ["hollynode"] = "Steel-blue and stubborn — the headland's one flower.";
   EXAMINE_OBJ["bench"] = "Worn smooth by years of sitting. Still room for one more.";
   EXAMINE_OBJ["plantpot"] = "Someone tends these — the blooms are always fresh.";
   // décor (v3.13): the placed pieces read back their catalogue blurb (OBJ_TITLE set in 08-actions.js,

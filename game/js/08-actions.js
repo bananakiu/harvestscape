@@ -244,6 +244,7 @@ const OBJ_TITLE  = { geode:"Geode", bed:"Bed", campfire:"Campfire", stove:"Stove
   fountain:"Fountain", boardwalk:"Boardwalk", railcart:"Minecart", memorial:"Standing Stone", berrybush:"Berry Bush",
   frostberry:"Frostberry Bush", fruittree:"Fruit Tree", beehive:"Beehive", torch:"Torch", lamp:"Lamp", lantern:"Lantern",
   crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift", olddoor:"A Planked Door", keg:"Keg", jar:"Preserves Jar", sawmill:"Sawmill", press:"Cheese Press", bench:"Bench", plantpot:"Flower Planter",
+  milestone:"The Milestone", shrine:"Roadside Shrine", mooring:"The Ferry Landing", samphirenode:"Samphire", hollynode:"Sea Holly",
   deadfall:"Deadfall", westtrail:"The Trail West", easttrail:"The Trail Back", waystone:"Waystone", hearttree:"The Heart of the Forest",
   ancient:"Ancient Tree" };
 for(const k in DECOR) OBJ_TITLE[k] = DECOR[k].name;   // décor pieces (v3.13) examine under their proper name
@@ -713,6 +714,11 @@ function interact(){
       case "shellnode": forageNode(tx,ty,obj, chance(0.5)?"Shell":"Clam","Fishing",8); return;
       case "seaweednode": forageNode(tx,ty,obj,"Seaweed","Fishing",6); return;
       case "coralnode": forageNode(tx,ty,obj, chance(0.12)?"Pearl":"Coral","Fishing",12); return;
+      case "samphirenode": forageNode(tx,ty,obj,"Samphire","Fishing",8); return;   // v3.36: the road's tideline forage
+      case "hollynode": forageNode(tx,ty,obj,"Sea Holly","Fishing",6); return;
+      case "milestone": showDialog("The Milestone", "A squat granite post, older than the Guild, its face worn soft by forty-odd years of salt wind. The carving is still plain enough:\n\nMARROW POINT — 39\n\nThe road runs on north past the landing, thin and patient, until the headland takes it out of sight. Thirty-nine miles. Elias walked it in eleven years; his father sailed it in a day.", null); return;
+      case "shrine": showDialog("The Roadside Shrine", "A knee-high stone hollow with a shelf, kept by nobody and tended by everyone — travellers leave what they can spare and take what they need. Today there's a smooth pebble, a dried flower, and half a biscuit, hard as the milestone.\n\nYou tidy the shelf a little. The wind approves.", null); return;
+      case "mooring": showDialog("The Ferry Landing", "Grey planks, salt-silvered, solid underfoot — somebody keeps the boards good even though nothing has tied up here in years. The mooring post still wears a loop of rope, spliced and re-spliced.\n\nThe water slaps the pilings, patient as a clock. A ferry could dock here tomorrow, if a ferry were ever minded to.", null); return;
       case "ladderup": mineUp(); return;
       case "lift": openLift(); return;
       case "ladderdown": mineDown(); return;
@@ -942,8 +948,14 @@ function reelOrCatch(){
 function endFishing(){ fishing.state = "idle"; fishing.fish = null; fishHold = false; setReelUI(false); }
 
 // The bite is hooked: pick the fish, then open the reel-in minigame.
-// which water you're standing at
-const waterHere = () => curMap.id === "beach" ? "coast" : "pond";
+// which water you're standing at. On the Coast Road (v3.36) the Gullwater splits in two: the
+// channel up north is "river"; the mouth, the sand, and the dock are "estuary" — the brackish
+// stretch where the sea-run overlap lives. The player's own row decides (you fish the bank
+// you stand on), with the split at y14 — the sand line.
+const waterHere = () =>
+  curMap.id === "beach" ? "coast" :
+  curMap.id === "coastroad" ? (Math.floor(state.py/TILE) >= 14 ? "estuary" : "river") :
+  "pond";
 // the raw clock hour, 6..26 — night wraps past midnight, which is why we don't use curHour()
 const fishHour = () => state.time / 60;
 
@@ -985,9 +997,10 @@ function hookFish(){
   // ---- the ordinary catch: the pond and the coast hold different fish ----
   const names = WATER[waterHere()] || WATER.coast;
   // season-gated fish (the winter ice-fishing catches, v3.31) only enter the pool in their season;
-  // every other fish has no `season` and is always eligible.
+  // weather-gated fish (the Rainrunner, v3.36) only in their weather. Everything else is always in.
   const seas = curSeason();
-  let pool = names.map(n => FISH.find(x => x.name === n)).filter(f => f && f.lvl <= lvl && (!f.season || f.season === seas));
+  let pool = names.map(n => FISH.find(x => x.name === n)).filter(f => f && f.lvl <= lvl &&
+    (!f.season || f.season === seas) && (!f.weather || f.weather === state.weather));
   if(!pool.length) pool = [FISH[0]];
   pool.sort((a,b) => a.sell - b.sell);
   const night = fishHour() >= 20 || fishHour() < 6 ? 0.7 : 0;   // the big ones move after dark

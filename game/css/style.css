@@ -496,10 +496,10 @@ body{
   display:grid; gap:.4em; margin:.1em 0 .5em;
   grid-template-columns:repeat(4,1fr);
   grid-template-areas:
-    ".     .     guild   mine"
-    "grove farm  village mine"
-    "grove farm  village .   "
-    ".     .     coast   .   ";
+    ".     .     guild   mine     "
+    "grove farm  village mine     "
+    "grove farm  village .        "
+    ".     .     coast   coastroad";
 }
 .wmNode{
   position:relative; display:flex; flex-direction:column; gap:.12em;

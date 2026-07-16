@@ -134,6 +134,7 @@ const MAP_ACCESS = {
   guild: "North of the village plaza. Elder Rowan keeps the nine dark wings; the story's heart.",
   mine: "The village's north ridge. Endless floors, regenerated daily. The Old Lift beside each floor's ladder rides to the surface free; every 5th floor's stop can be restored (wood + ore + gold) to skip down forever. Time stands still underground. The sealed vault waits below (Mining 20).",
   beach: "The village's south path. Bram's coast — salmon water, shore forage, festivals, and every finale.",
+  coastroad: "East along the shore from the coast (v3.36). The Gullwater river and its estuary — river fishing's home water — the plank ford, roadside forage (samphire, sea holly), and the old ferry landing where the milestone reads MARROW POINT — 39. Elias walks up every fourth day. The road runs on north; the map never will.",
   grove: "West, through the farm's treeline. Nine rings of forest, each older and rarer than the last — chop through the deadfall (its WC req is the ring's gate) to go deeper; waystones on rings 1/3/6/9 teleport between funded stones. Regrows nightly; ring 9 is the Heart of the Forest.",
 };
 for (const id of Object.keys(D.MAPS || {}))
