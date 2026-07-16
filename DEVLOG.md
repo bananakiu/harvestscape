@@ -14,7 +14,22 @@
 
 ---
 
-## 2026-07-17 — "the path to the star tools is too difficult": stretch the tool ladder
+## 2026-07-17 — "match the tiers of the rocks with the tiers of the trees": one ladder
+
+**Owner (near-verbatim):**
+
+> match the tiers of the rocks with the tiers of the trees (so higher requirements where possible)
+
+**Interpretation.** Immediately after v3.37 the two gathering ladders disagreed: rocks ran
+1/10/20/30/40/50/60, trees ran 1/8/18/30/45/70/85. "Match, higher where possible" = one unified
+ladder taking the higher value at every rung: **1 / 10 / 20 / 30 / 45 / 70 / 85** for both. This
+also exposes and fixes the mirror image of the v3.37 bug: the Star axe (tool gate WC 60) needed
+silverwood that takes WC 85 to chop — backwards, in the other skill. With tools re-seated on the
+unified ladder, every tier's ore AND wood are gatherable exactly at that tier's own level.
+Nothing owned is touched — gates rise for future upgrades only; tool indices don't shift, so no
+migration this time.
+
+**Produced:** v3.38.0, logged in CHANGELOG.md.
 
 **Owner (near-verbatim):**
 

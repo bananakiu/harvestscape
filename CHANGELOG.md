@@ -22,6 +22,37 @@
 
 ---
 
+## v3.38.0 — "One Ladder" · 2026-07-17 · tag `v3.38.0`
+
+Owner balance call (DEVLOG, same day as v3.37): *"match the tiers of the rocks with the tiers
+of the trees (so higher requirements where possible)."*
+
+**The diagnosis.** After v3.37 the two gathering ladders disagreed — rocks 1/10/20/30/40/50/60,
+trees 1/8/18/30/45/70/85 — and the disagreement hid a mirror image of the exact bug v3.37 fixed:
+the Star **axe** (tool gate WC 60) required silverwood that takes **WC 85** to chop. v3.37
+straightened the ore side; the tree side was still backwards.
+
+**The fix — one ladder, two skills.** Both ladders (and the tool tiers) now sit on
+**1 / 10 / 20 / 30 / 45 / 70 / 85** — the *higher* of the two old values at every rung, per the
+owner's parenthetical. Rung for rung: oak↔stone, pine↔copper, maple↔iron, willow↔gold,
+elderwood↔cobalt, heartwood↔deepsilver, silverwood↔star metal.
+- Trees: pine 8→10, maple 18→20 (the rest already sat on the unified rungs).
+- Rocks: cobalt 45, deepsilver 70, star metal 85. XP/hp untouched — only gates moved.
+- `TIER_LEVEL` → [1,10,20,30,45,70,85]: **no tool anywhere asks for an ore or wood above its own
+  level, in either skill.** No index shift this time → no migration; forged tools untouched.
+- Mine bands re-seat: deepsilver from floor 50, star metal below 65 — each arriving ~15-20 floors
+  before its level, the shallow bands' own lead ("desire ahead of ability", the grove's rule —
+  whose invariant survives the tree raises: ring 3's gate 12 still covers pine@10, ring 4's
+  gate 20 covers maple@20).
+
+A side effect worth naming: this quietly delivers the v3.32 audit's **#4** ("Mining 50–99 is a
+desert") — the signature skill now has live targets at 45, 70, and 85, exactly like the axe.
+
+Verified in-browser (muted): both ladders + tool gates read back unified, upgrade transactions
+at the new gates, depth bands, ring-invariant spot-check, clean console.
+
+---
+
 ## v3.37.0 — "The Long Ladder" · 2026-07-17 · tag `v3.37.0`
 
 Owner balance call (DEVLOG 2026-07-17): *"the path to the star tools is too difficult, there

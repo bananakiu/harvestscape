@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.37.0", code: 74, codename: "The Long Ladder", date: "2026-07-17" };
+const VERSION = { name: "3.38.0", code: 75, codename: "One Ladder", date: "2026-07-17" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.38.0", code:75, date:"2026-07-17", name:"One Ladder", notes:[
+    { t:"balance", s:"The rocks and the trees climb the same ladder now. Mining and Woodcutting share one set of rungs — 1, 10, 20, 30, 45, 70, 85 — pairing each ore with its timber: copper with pine, iron with maple, gold with willow, cobalt with elderwood, deepsilver with heartwood, and star metal with silverwood at the very top. Where the two ladders disagreed, the higher rung won: pine and maple ask a little more; cobalt, deepsilver and star metal ask what their timber always did." },
+    { t:"balance", s:"Tool tiers sit on the same rungs — so no tool anywhere asks for an ore or a wood above its own level, in either skill. (The star axe used to want silverwood forty-odd levels before you could chop it. No longer.) Anything already forged is untouched, as always." },
+    { t:"balance", s:"The deep floors re-seat to match: deepsilver veins from floor 50, star metal only below 65 — each arriving a stretch before you can mine it, the way the shallow floors always have. Something you can't cut yet, standing right there, is the point." },
+  ]},
   { v:"3.37.0", code:74, date:"2026-07-17", name:"The Long Ladder", notes:[
     { t:"balance", s:"The climb to the star tools is stairs now, not a cliff. Two new tool tiers sit between Gold and Star Metal — Cobalt at level 40, forged from cobalt and willow, and Deepsilver at 50, from a new pale ore in the deep floors and the grove's dark elder boards. Star Metal moves to level 60, where its own ore now lives — the silverwood and the Starstone come at the top of a long ladder, not one step after gold." },
     { t:"new", s:"A new ore: Deepsilver, in veins from floor 35 down — it holds the lamplight a moment longer than it should. Star metal now runs deeper (floor 45 and below), and every ore still arrives one rung per ten levels." },
@@ -352,10 +357,15 @@ const CROPS = {
 // chop, cheap wood); Elderwood is the premium timber the late-game sinks ask for; Heartwood is
 // the yew/magic analog — slow, sparse, an event to find. Sell prices sit BELOW the g-per-level
 // trend on purpose (the gem lesson, 2026-07-12): wood value must never outrun the money crops.
+// v3.38 (owner call: "match the tiers of the rocks with the tiers of the trees, higher where
+// possible"): ONE ladder for both gathering skills — 1 / 10 / 20 / 30 / 45 / 70 / 85, the higher
+// of the two old ladders at every rung. Pine 8→10 and Maple 18→20 here; the rocks moved up to
+// meet elderwood/heartwood/silverwood on their side. Rung for rung, oak↔stone, pine↔copper,
+// maple↔iron, willow↔gold, elderwood↔cobalt, heartwood↔deepsilver, silverwood↔star metal.
 const TREES = {
   oak:       { name:"Oak",       lvl:1,  hp:3,  xp:25,  drop:"Wood",        n:2, pal:["#3f8a3f","#57ad57","#2f6a2f"] },
-  pine:      { name:"Pine",      lvl:8,  hp:6,  xp:60,  drop:"Pine Wood",   n:2, pal:["#2f6a52","#3f8f6a","#204a3a"] },
-  maple:     { name:"Maple",     lvl:18, hp:11, xp:115, drop:"Maple Wood",  n:2, pal:["#b8683a","#d68a52","#8a4a28"] },
+  pine:      { name:"Pine",      lvl:10, hp:6,  xp:60,  drop:"Pine Wood",   n:2, pal:["#2f6a52","#3f8f6a","#204a3a"] },
+  maple:     { name:"Maple",     lvl:20, hp:11, xp:115, drop:"Maple Wood",  n:2, pal:["#b8683a","#d68a52","#8a4a28"] },
   willow:    { name:"Willow",    lvl:30, hp:8,  xp:150, drop:"Willow Wood", n:2, pal:["#4a8a4a","#6ab86a","#3a6a3a"] },
   elderwood: { name:"Elderwood", lvl:45, hp:16, xp:260, drop:"Elder Wood",  n:2, pal:["#2c5a6a","#3f7a8a","#1e4250"] },
   heartwood: { name:"Heartwood", lvl:70, hp:24, xp:520, drop:"Heartwood",   n:2, pal:["#5a9a7a","#7ac8a0","#3f7a5c"] },
@@ -381,14 +391,13 @@ const ORES = {
   // and L70, the heart of the old 71-level dead zone. They spawn only on the deep ore table (below),
   // so shallow floors read exactly as tuned; a low miner facing one gets the "come back stronger"
   // gate, same as Gold today. Rock + cracked sprites auto-generate from `gem`; the drop is a sink.
-  cobalt:    { name:"Cobalt Vein",     lvl:40, hp:16, xp:720,  drop:"Cobalt Ore",       gem:"#6a8ad8", col:"#4a6ac8" },
-  // v3.37 (owner call: "the path to the star tools is too difficult… fill in the mining ores a
-  // bit and move star ores and tools higher"): Deepsilver slots in at 50 and Star Metal moves to
-  // 60 — the ore ladder stays "a new ore every 10 levels", and each tool tier's signature ore is
-  // now minable exactly at that tier's own level (star metal fed an L40 tool from an L50 ore —
-  // backwards; no longer).
-  deepsilver:{ name:"Deepsilver Vein", lvl:50, hp:19, xp:1050, drop:"Deepsilver Ore",   gem:"#c8d8e8", col:"#9ab0c8" },
-  starmetal: { name:"Star Metal Vein", lvl:60, hp:22, xp:1560, drop:"Star Metal Shard", gem:"#c8ecff", col:"#a8c8e8" },
+  // v3.38 (owner call, one day after v3.37's stretch): the rock ladder now matches the TREE
+  // ladder rung for rung — 1/10/20/30/45/70/85, the higher of the two old ladders at every slot.
+  // Cobalt 40→45 (elderwood's rung), Deepsilver 50→70 (heartwood's), Star Metal 60→85
+  // (silverwood's). One ladder, two skills, and no tier anywhere feeds a tool it out-levels.
+  cobalt:    { name:"Cobalt Vein",     lvl:45, hp:16, xp:720,  drop:"Cobalt Ore",       gem:"#6a8ad8", col:"#4a6ac8" },
+  deepsilver:{ name:"Deepsilver Vein", lvl:70, hp:19, xp:1050, drop:"Deepsilver Ore",   gem:"#c8d8e8", col:"#9ab0c8" },
+  starmetal: { name:"Star Metal Vein", lvl:85, hp:22, xp:1560, drop:"Star Metal Shard", gem:"#c8ecff", col:"#a8c8e8" },
 };
 
 // ---- FISH ----
@@ -887,21 +896,23 @@ const TOOL_ICON = { Hoe:"hoe", Can:"can", Axe:"axe", Pick:"pick", Rod:"rod" };
 // four, so the deepest veins and the rarest timber finally forge something. It's a transformative
 // unlock (§4.2), not another same-verb bump: a jump in power that only a master miner + woodcutter
 // can even gather the materials for.
-// v3.37 (owner call): the ladder gains two rungs between Gold and Star Metal — Cobalt at 40 and
-// Deepsilver at 50 — and Star Metal moves to 60. The old jump was a cliff: silverwood beams and a
-// Starstone one step after Gold ("kinda unreasonable to need silverwood for the upgrade right
-// after gold tools"). Now the climb is stairs, each rung fed by the ore that unlocks at its own
-// level, with the wood ladder rising alongside (Wood → Pine → Maple → Willow → Elder → the
-// silverwood/heartwood crown). Existing Star tools are remapped, never downgraded (migrateSave).
+// v3.37 (owner call): the ladder gains two rungs between Gold and Star Metal — Cobalt and
+// Deepsilver. The old jump was a cliff: silverwood beams and a Starstone one step after Gold
+// ("kinda unreasonable to need silverwood for the upgrade right after gold tools"). Existing
+// Star tools were remapped at the insertion, never downgraded (migrateSave, flags.ladder6).
+// v3.38 (owner call, next day): rocks, trees, and tools all sit on ONE ladder now —
+// 1/10/20/30/45/70/85 — so every tier's ore AND wood are gatherable exactly at that tier's own
+// level in their own skills. (v3.37 fixed the ore side; the tree side was still backwards — a
+// WC-60 Star axe needing WC-85 silverwood. No longer, in either direction.)
 const TOOL_TIERS = ["Basic", "Copper", "Iron", "Gold", "Cobalt", "Deepsilver", "Star Metal"];
 const TIER_POWER = [1, 2, 3, 5, 7, 9, 11];   // old Star owners land on 11 — a small buff; cozy contract says never a nerf
 const MAX_TIER = TOOL_TIERS.length - 1;   // = 6; used everywhere instead of a hardcoded number
 // v3.17 — a tool upgrade now needs SKILL, not just materials + coin. Gathering a pile of ore never
 // makes sense as the sole gate for an OP tool; you must have earned the level in that tool's own
-// craft. Clean & memorable, matching the ore ladder: Copper 10, Iron 20, Gold 30, Cobalt 40,
-// Deepsilver 50, Star Metal 60.
+// craft. Clean & memorable, matching the unified gathering ladder: Copper 10, Iron 20, Gold 30,
+// Cobalt 45, Deepsilver 70, Star Metal 85 (v3.38).
 const TOOL_SKILL = { Hoe:"Farming", Can:"Farming", Axe:"Woodcutting", Pick:"Mining", Rod:"Fishing" };
-const TIER_LEVEL = [1, 10, 20, 30, 40, 50, 60];   // skill level required to reach each tier (index = tier)
+const TIER_LEVEL = [1, 10, 20, 30, 45, 70, 85];   // v3.38: the unified ladder — each tier's level IS its ore's and its wood's level, in every skill
 // Tool tiers cost wood + ore + gold — and the top tiers a signature gem / the deep materials — so
 // every upgrade needs Mining AND Woodcutting progress (and the Rod's Pearl, the beach). A gold tool
 // is an achievement across skills, not a purchase. (Owner playtest 2026-07-12: "right now it's
