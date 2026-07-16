@@ -1,5 +1,118 @@
 # HarvestScape Design Scorecard
 
+## v3.32.0 "The Storyteller" Re-Audit — 2026-07-16
+
+**Overall grade: A− (held, fourth audit running) — the debts named in v3.23 are paid; the frontier
+has moved from systems to inhabitants.**
+
+Fresh four-pillar re-audit (Cozy base / RuneScape layer / Story+Whimsy / Presentation) + a synthesis
+pass against `GAME_DESIGN_PRINCIPLES.md` and `GAME_BALANCE_PRINCIPLES.md`, reading the live v3.32
+code and the v3.24→v3.32 changelog with file-level evidence. Nine releases shipped since the v3.23
+audit below — and its ranked list was substantially executed, not just acknowledged (#1, #3–#10 all
+shipped-closed; only #2 shipped by half and #11 stays audio-deferred).
+
+**Verdict:** the contract stays A+-grade, the economy is the tightest it has ever been (the star
+tier closes the terminal-material loop; winter finally has a renewable on-curve identity; the tool
+ladder is a genuine multi-skill endgame), and Whimsy's v3.23 slip is verifiably repaired — the
+ceremony debt, Rowan's joinery scene, the recognition lines, and Quest Points all shipped as
+specified. What blocks A is one pattern repeating across all four pillars: **the most-touched
+living things are the least written.** The barn animals the player pets every morning have no
+names, no voice, no visible friendship, and produce that terminates; Elias — Act II's emotional
+payload — has no heart events and no birthday; the wedding is a banner; Mining's back half is
+still a 49-level desert; and the three newest systems (ice fishing, geodes, monuments) shipped
+mechanically complete but fictionally silent. Every one of these is cheap relative to what the
+last nine releases built.
+
+| Pillar | Grade | Verdict |
+|---|---|---|
+| Cozy base | **A−** | Day loop, contract, and processing chains are textbook; the barn is the thin room — nameless animals, dead-end produce, a static cottage. |
+| RuneScape progression | **A−** | Terminal loop and tool ladder now exemplary; Mining 50–99 and the 86–99 tail across all skills still pay nothing, and the balance playbook's appendix is 14 releases stale. |
+| Story & whimsy | **A−** | Whimsy recovered to A-grade work; the letters and the epilogue riddle are the repo's best writing — but Elias, the wedding, and page 9's final instruction are unpaid cheques. |
+| Presentation | **A−** | Lighting, juice, and gtext discipline are A-grade; fishing has zero player-side animation and the title screen promises idle life the world doesn't deliver. |
+
+### What v3.24→v3.32 actually bought
+
+- **The v3.23 ranked list was substantially executed:** raise ceremony + NPC_RECOG, star-tier sinks
+  eating both orphaned Beams, cross-skill building recipes, Rowan's Workshop, mount fixes + horse
+  examine, squash/stretch, Quest Points + the "One Last Letter" bespoke riddle, ice fishing.
+- **The terminal-resource economy went from one-shot to repeatable:** geodes (floor 25+, curio-first
+  crack table) plus star monuments consuming Geode Heart / Star Metal / Cobalt / both Beams /
+  Starstone — deep runs now pay in Collection wonder and prestige inputs, not gold.
+- **Winter is no longer "other seasons minus farming":** season-gated fish priced exactly on the
+  ladder, the ×1.25 winter premium, two winter crops, and a legend.
+- **Quest Points shipped cozy-contract-correct** — derived from questIdx so old saves get full
+  retroactive credit, felt at every turn-in, capped by a quest cape shown locked-not-hidden. But
+  it's a progress bar wearing a currency's name: one consumer, zero player choice encoded.
+- **Only half of v3.23's #2 shipped:** geodes enriched the deep *venue*, but no L70/L90 ore ever
+  landed on the Mining *curve* — the signature skill still grinds its back half on two passives.
+- **A new defect class emerged: shipped ≠ integrated.** Ice fishing, geodes, and 12,000g monuments
+  all work and all have examines — and Bram, Pip, and NPC_RECOG (the exact voice channels built for
+  this) say nothing about any of them.
+
+### Ranked build priorities (bible-impact × feasibility)
+
+1. **[M] The dairy chain — a Cheese Press for the barn's dead-end produce.** *(Cozy)* Fourth machine
+   (Milk→Cheese, Large Milk→Fine Cheese, ~1.5× under the kitchen per keg discipline; optionally
+   Egg→Mayo), widen `machineLoadable` to a per-machine accepts-set, and route the **first press as
+   Tom's gift** — his own v3.24 milk-trade line is the delivery. Closes §3.3's canonical chain,
+   §3.4's gift-the-first-machine, and the §3.5 dead-end in one release. → `01-data.js`
+   (MACHINES/ITEM_SELL/EXAMINE), `08-actions.js` (load path), `03-art.js`, `13-content.js` (Tom beat).
+2. **[M] Name the flock — animal bonds visible, indoors and out.** *(Cozy + Story)* Names at purchase
+   (paying off Pip's "Sir Cluckington" line), species examines via the v3.26 horseLook pattern,
+   hearts in the pet toast, a recognition moment at the first Large Egg/Milk/Fleece — plus the
+   fair-weather yard: flock rendered outdoors on clear days (render-side, stall-horse pattern, no
+   new save state). → `13-content.js` (pet/buy fns, spawnAnimals), `08-actions.js` (animalLook),
+   `01-data.js`, `07-entities.js`.
+3. **[S] Give the voiceless systems their voice.** *(Story)* Bram tips and reacts to the winter fish;
+   Pip reacts to the first geode curio ("Gary gets a friend"); NPC_RECOG entries per star monument
+   (Pip begging to use the Great Telescope). Pure text on delivery channels that already exist — the
+   cheapest §7/§4.6 yield on the board. → `13-content.js`, `08-actions.js` (first-catch/first-place
+   flags, firstTimber pattern).
+4. **[M] The deep veins — Mining L70 + L90 ores, with sinks in the same release.** *(Progression)*
+   Two veins on floors 45+/55+ extending the oreTable bands, XP on the v3.19 ×3 scale, prices
+   monotonic under gem-class neighbours, folded into new star-tier/estate recipes from day one so
+   they're inputs, never a faucet. Completes the three-audits-old #2. → `01-data.js`
+   (ORES/ITEM_SELL/DECOR), `13-content.js` (oreTable), `03-art.js`, atlas + GBP appendix regen.
+5. **[M] A wedding the valley shows up for.** *(Story)* Next-day beach wedding via the
+   seasonal-festival machinery, NPC_RECOG-style lines for the three non-spouse villagers, and a
+   marriage branch in `spawnMapNpcs` so Maya's "moving my sketchbooks in tonight" promise is kept.
+   → `14-story.js`, `13-content.js` (spawnMapNpcs, NPC_RECOG, genCottage dressing).
+6. **[M] Finish the cast's heart ladders: Elias, then Tom and Pip's capstones.** *(Story)* Elias gets
+   HEART_EVENTS (h3: opening Aldous's eleven-year-old letter; h5: the Golden Koi at dusk), a
+   birthday, and deeper NPC_LINES; Tom h6 frames the turnip; Pip h6 makes you co-keeper of Gary.
+   Act II's payload character currently pays zero at every heart tier. → `14-story.js`,
+   `01-data.js` (BIRTHDAYS), `13-content.js`.
+7. **[M] Fishing cast-and-rod animation bundle.** *(Presentation)* Rod in hand across the whole
+   fishing lifecycle, a 1px line to the bobber, cast pose on `startFishing`, rod-tip jitter + 1px
+   lean against `fishV` during the reel. The flagship attentive verb stops reading as a statue next
+   to a cork. → `07-entities.js` (~40 lines), `08-actions.js` (~5 lines).
+8. **[S] Page 9's missing verb — write to her.** *(Story)* One-time desk interact after page 9, the
+   letter written for the player, a reply 5–7 days later on the morning card. → `14-story.js`,
+   `08-actions.js` (newDay delivery).
+9. **[S] Re-sync GAME_BALANCE_PRINCIPLES.md §10 to live code.** *(Progression/infra)* The appendix's
+   ORES XP, oreP formula, and everything since v3.19 are stale; geodes, star-tier costs, QP, and the
+   winter premium are absent. Every future balance change routes through these numbers — cheapest
+   repair with the widest blast radius. → `GAME_BALANCE_PRINCIPLES.md`.
+10. **[S] Interior time-of-day grading.** *(Presentation)* Lerp the hard-coded interior ambient by
+    nightFactor so evenings indoors go dim-and-warm — the "#1 cozy engine" currently switches off at
+    every doorway, exactly where the wind-down happens. → `06-weather.js` (~4 lines + tuning).
+11. **[M] Idle-life pass: chimney smoke, fleeing butterflies, snow footprints, horse gait.**
+    *(Presentation)* Three read-only ambient systems + the 2-frame horse gait on the chicken's
+    pattern. Delivers the ambient life the title screen already promises. → `06-weather.js`,
+    `05-particles.js`, `07-entities.js`, `03-art.js`.
+12. **[M — deferred] Audio bed.** The ~7-audit B− (wind floor, ungated ambience, seasonal identity)
+    stays ranked last **only** because the build is still tested muted; promote it to the top third
+    the moment audio testing resumes.
+
+*Explicitly deferred, still live on the backlog:* the second festival per season (§9's 2/season
+floor, three audits open), the Snug Cottage house tier [L], gold-star harvests, QP-as-real-currency
++ achievement diaries (the remaining §4.4/§4.5 structures), the one narrative choice fork, the
+ramp-hue audit, and tool wind-up timing. The first three are the strongest candidates for v3.34+.
+
+*The prior audit (v3.23) is kept below as history.*
+
+---
+
 ## v3.23.0 "The Paddock" Re-Audit — 2026-07-14
 
 **Overall grade: A− (held) — but the frontier has moved.**

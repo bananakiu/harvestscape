@@ -22,6 +22,27 @@
 
 ---
 
+## Design re-audit — v3.32 scorecard refresh · 2026-07-16
+
+Docs-only; no game change, no version bump, no atlas regen. Fresh four-pillar graded audit
+(Cozy base / Progression / Story+Whimsy / Presentation, four independent auditors + a synthesis
+pass) of the v3.32.0 build against `GAME_DESIGN_PRINCIPLES.md` and `GAME_BALANCE_PRINCIPLES.md`,
+written into `DESIGN_SCORECARD.md` above the v3.23 section (kept as history).
+
+**Why now.** The v3.23 audit's 11-item ranked list is exhausted — #1 and #3–#10 shipped across
+v3.24→v3.32, #2 shipped by half (geodes, but no L70/L90 ore), #11 remains audio-deferred. The
+audit→build→re-audit loop needs a fresh ranked list to aim the next arc.
+
+**Headline:** overall **A− held** (fourth audit running), floor materially higher. The new
+cross-pillar thesis: *the most-touched living things are the least written* — nameless barn
+animals with dead-end produce, Elias with no heart events, a banner-only wedding, Mining's
+49-level back-half desert, and three new systems (ice fishing, geodes, monuments) that work
+mechanically but that no NPC ever mentions ("shipped ≠ integrated" — a new defect class the next
+arc should close). Twelve ranked priorities follow in the scorecard; #1 is the Cheese Press dairy
+chain, #2 naming the flock, #3 the voiceless-systems text pass.
+
+---
+
 ## v3.32.0 — "The Storyteller" · 2026-07-16 · tag `v3.32.0`
 
 Design-audit priority **#8**: a quest-point meta-currency + one bespoke-mechanic quest step.
