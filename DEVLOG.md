@@ -14,7 +14,28 @@
 
 ---
 
-## 2026-07-16 — "the world feels small": plan a world expansion
+## 2026-07-17 — "the path to the star tools is too difficult": stretch the tool ladder
+
+**Owner (near-verbatim):**
+
+> the path to the star tools is too difficult, there should be 1-2 tiers more before that. fill
+> in the mining ores a bit and move star ores and tools higher to match their requirements.
+> kinda unreasonable to need silverwood for the upgrade right after gold tools. it's too much of
+> a difficult jump
+
+**Interpretation.** A progression-pacing call about the top of the tool ladder. Today the ladder
+is base → Copper (L10) → Iron (L20) → Gold (L30) → Star Metal (L40), and the Star tier demands
+endgame materials (silverwood beams, star metal — an ore that itself needs deep floors) one step
+after Gold. Three asks in one: (1) **insert 1–2 tool tiers** between Gold and Star so the climb
+is stairs, not a cliff; (2) **fill in the ore ladder** to feed those tiers (Cobalt already exists
+at L40 as a sink-only ore — the natural first rung); (3) **move the Star tier up** so its level
+requirement matches the depth/cost of its own materials (star metal is an L50 ore feeding an L40
+tool — backwards).
+
+**Constraint:** cozy contract — anyone who already forged Star tools keeps them (tier indices
+shift, so migrateSave must remap old tool indices to the new ladder, never downgrade).
+
+**Produced:** v3.37.0 (the stretched ladder), logged in CHANGELOG.md.
 
 **Owner (near-verbatim):**
 

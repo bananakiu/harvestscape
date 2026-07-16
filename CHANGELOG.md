@@ -22,6 +22,56 @@
 
 ---
 
+## v3.37.0 — "The Long Ladder" · 2026-07-17 · tag `v3.37.0`
+
+Owner balance call (DEVLOG 2026-07-17): *"the path to the star tools is too difficult, there
+should be 1-2 tiers more before that… kinda unreasonable to need silverwood for the upgrade
+right after gold tools."*
+
+**The diagnosis.** The ladder was base → Copper (10) → Iron (20) → Gold (30) → Star Metal (40),
+and the Star rung demanded the whole endgame at once — silverwood beams, heartwood, a Starstone,
+and star metal itself, *an L50 ore feeding an L40 tool* (backwards). One step after Gold's
+5,000g + maple, the price of everything.
+
+**The fix — two rungs and a re-seat, on the existing symmetry.** The ore ladder's own rule
+("a new ore every 10 levels") extends cleanly:
+- **Cobalt tools at L40** — the ore existed since v3.17 as a sink-only material; now it forges.
+  7,500g + Cobalt Ore 6 + **Willow Wood 60** (mid woods — the exact fix for the owner's
+  silverwood complaint).
+- **Deepsilver at L50** — a NEW ore (veins from floor 35, L50 to mine, XP 1050 / sell 370, both
+  interpolated on the v3.19 curve between Cobalt and the shard). Tools: 10,000g + Deepsilver
+  Ore 6 + Elder Wood 50.
+- **Star Metal moves to L60**, its ore to L60 and floors 45+ — the crown's cost is UNCHANGED;
+  what changed is that it now sits at the top of stairs instead of across a chasm. Each tier's
+  signature ore is minable exactly at that tier's own level, the whole way up.
+- `TIER_POWER` extends [.., 7, 9, 11]: old Star owners land on 11 — a small buff, never a nerf.
+
+**The migration that matters.** Tier indices shifted, so a pre-v3.37 save's `tools[t] === 4`
+means *Star Metal*, which is now index 6 — unremapped, every veteran's star tools would silently
+read as Cobalt (a downgrade; the cozy contract forbids it). `migrateSave` remaps 4→6 once,
+guarded by `flags.ladder6`; `startNewGame` stamps the flag so a post-v3.37 save's legitimate
+Cobalt tools are never touched. Verified: remap, guard, and idempotency.
+
+Everything else was already generic: `canTiles` uses `tier >= 3`, vein/item sprites build from
+`ORES`, the shop iterates the arrays. The two non-generic spots — the shop's `HOE_PERK`/
+`CAN_PERK` arrays (would have printed "undefined" for the new rungs) — were extended.
+
+**Review findings (3, all fixed pre-ship):** the Collection's "Materials" hand-list omitted the
+one collectible this release adds (Deepsilver Ore invisible in the museum AND mis-bucketed in
+the bag) — the ore sublist is now **derived from `ORES`** so the next ore can't be forgotten;
+the atlas generator's heading said "Tools — four tiers each" over a seven-row table — now
+derived from `TOOL_TIERS.length`; and the Starstone drop-rate comment still cited the old
+"(Mining 50, floor 35+)" gate — updated, with a note that the 0.30 per-vein roll keeps the
+shard:Starstone *ratio* (the number that actually tunes the Star tier) invariant under the
+deeper band.
+
+Verified in-browser (muted): the full climb Gold→Cobalt→Deepsilver→Star with exact mats/gold
+per rung, skill gates, the remap in all three cases, depth bands at 38/48/60 (no star metal
+above floor 45), shop rendering all seven rungs, deepsilver sprites, the derived museum list
+(in ladder order, no duplicates), "Tools — 7 tiers each" in the regenerated atlas, clean console.
+
+---
+
 ## v3.36.0 — "The Coast Road" · 2026-07-16 · tag `v3.36.0`
 
 **The world grows** — `WORLD_EXPANSION.md` area 1, the first new map since the Grove Depths

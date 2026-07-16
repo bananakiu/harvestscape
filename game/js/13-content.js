@@ -142,13 +142,16 @@ function genMine(m){
   // v3.19 — the ore table is VALUABLE veins only now; plain stone is the separate filler (below).
   // Same depth spacing: iron first at floor 5, gold 15, cobalt 25, star metal 35 — you see the next
   // metal a few floors before your Mining catches up to it.
+  // v3.37: the bands stretch with the ladder — Deepsilver takes the 45-55 floors and Star Metal
+  // moves deeper (45+ instead of 35+), so the deepest ore lives where its L60 tier says it should.
   const oreTable = depth<5  ? ["copper"]
                  : depth<10 ? ["copper","copper","iron"]
                  : depth<15 ? ["copper","iron","iron"]
                  : depth<25 ? ["iron","gold","gold"]
                  : depth<35 ? ["gold","gold","cobalt"]
-                 : depth<45 ? ["gold","cobalt","cobalt","starmetal"]
-                 :            ["cobalt","cobalt","starmetal","starmetal"];
+                 : depth<45 ? ["gold","cobalt","cobalt","deepsilver"]
+                 : depth<55 ? ["cobalt","deepsilver","deepsilver","starmetal"]
+                 :            ["deepsilver","deepsilver","starmetal","starmetal"];
   // The weather above reaches down here. A storm drives the veins, and fog is when the seams
   // "read" — the old miners' word for it. Both make the stone generous, for one day only.
   const oreBoost = isStorm() ? 1.5 : 1;

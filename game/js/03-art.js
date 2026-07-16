@@ -615,7 +615,7 @@ function buildItems(){
   mkSpr("item_Quartz Cluster", 16, 16, g => { px(g,6,3,2,10,"#dff2ff"); px(g,4,6,2,7,"#c8e6fb"); px(g,9,5,2,8,"#eef8ff"); px(g,7,8,2,5,"#d0eafd"); px(g,4,12,8,1,"#a9c4da"); });
   mkSpr("item_Geode Heart", 16, 16, g => { px(g,3,4,10,9,"#8a8a8a"); px(g,3,4,10,1,"#a2a2a2"); px(g,3,12,10,1,"#6a6a6a");   // stone shell
     px(g,5,6,6,5,"#3a2f52"); px(g,6,6,4,1,"#c8b8ff"); px(g,6,7,1,3,"#a877e0"); px(g,9,7,1,3,"#a877e0"); px(g,7,8,2,2,"#e6d8ff"); });   // crystal-lined hollow
-  const oreCols = { "Copper Ore":"#c77b3f", "Iron Ore":"#bfa8a0", "Gold Ore":"#ffd75a", "Cobalt Ore":"#5a7ad0", "Star Metal Shard":"#c8ecff" };
+  const oreCols = { "Copper Ore":"#c77b3f", "Iron Ore":"#bfa8a0", "Gold Ore":"#ffd75a", "Cobalt Ore":"#5a7ad0", "Deepsilver Ore":"#9ab0c8", "Star Metal Shard":"#c8ecff" };   // v3.37: + deepsilver
   for(const o in oreCols){ mkSpr("item_"+o, 16, 16, g => {
     px(g,4,6,8,7,"#7d7d7d"); px(g,3,8,10,4,"#6e6e6e"); px(g,5,5,5,3,"#8a8a8a");
     px(g,6,8,2,2,oreCols[o]); px(g,9,9,2,2,oreCols[o]); px(g,7,10,1,1,shade(oreCols[o],1.3)); }); }

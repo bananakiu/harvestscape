@@ -475,7 +475,7 @@ const MUSEUM = [
   { name:"The Shore",     items:()=>[...Object.keys(SHORE), ...Object.keys(ROADSIDE)] },   // + the coast road's forage (v3.36)
   { name:"Farm & Forage", items:()=>["Field Salad","Frostberry","Berry Bun","Honey","Egg","Large Egg","Milk","Large Milk","Cheese","Fine Cheese","Wool","Prize Fleece"] },   // Wool since v3.8; Cheese/Fine Cheese v3.33 (the press)
   { name:"The Kitchen",   items:()=>RECIPES.map(r=>r.name) },
-  { name:"Materials",     items:()=>["Wood","Pine Wood","Maple Wood","Willow Wood","Elder Wood","Heartwood","Silverwood",...Object.values(WOOD_TO_LUMBER),"Stone","Copper Ore","Iron Ore","Gold Ore","Cobalt Ore","Star Metal Shard"] },   // + milled lumber (v3.21)
+  { name:"Materials",     items:()=>["Wood","Pine Wood","Maple Wood","Willow Wood","Elder Wood","Heartwood","Silverwood",...Object.values(WOOD_TO_LUMBER),...Object.values(ORES).map(o=>o.drop)] },   // + milled lumber (v3.21); ores DERIVED from ORES (v3.37 review fix — a hand-list forgot Deepsilver the day it shipped; now the next ore can't be missed)
   { name:"The Deep",      items:()=>[...GEODE_CURIOS, "Geode Heart"] },   // v3.28: geode curios from the deep mine
   { name:"The Canopy",    items:()=>Object.keys(CHARMS) },
 ];
@@ -841,8 +841,8 @@ function renderShop(){
       const c = toolCost(tool, cur+1);
       const need = TIER_LEVEL[cur+1], sk = TOOL_SKILL[tool], haveLvl = skillLvl(sk) >= need;
       const can = haveLvl && state.gold>=c.g && Object.keys(c.mats).every(it => (state.inv[it]||0) >= c.mats[it]);
-      const CAN_PERK = ["", "waters a 3-tile row", "waters a 5-tile row", "waters 3×3", "waters 3×3, next to no energy"];
-      const HOE_PERK = ["", "tills a 3-tile row", "tills a 5-tile row", "tills 3×3", "tills 3×3, next to no energy"];
+      const CAN_PERK = ["", "waters a 3-tile row", "waters a 5-tile row", "waters 3×3", "waters 3×3, next to no energy", "waters 3×3, harder steel", "waters 3×3, the star's own temper"];   // v3.37: +2 rungs
+      const HOE_PERK = ["", "tills a 3-tile row", "tills a 5-tile row", "tills 3×3", "tills 3×3, next to no energy", "tills 3×3, harder steel", "tills 3×3, the star's own temper"];
       const perk = tool==="Can" ? CAN_PERK[cur+1] : tool==="Hoe" ? HOE_PERK[cur+1]
                  : tool==="Rod" ? "faster bites, steadier reel" : "stronger, less energy";
       const matStr = Object.keys(c.mats).map(it => { const have=state.inv[it]||0, need2=c.mats[it];

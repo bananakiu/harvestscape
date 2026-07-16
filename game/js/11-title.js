@@ -137,6 +137,7 @@ function startNewGame(){
   state.farm = newMap("farm");
   state.flags.npxGame = true;   // this save gets the new-player experience (prologue, hints, tips)
   state.flags.bornUnbuilt = true;   // v3.21: born in the construction era — the farm starts WITHOUT coop/barn; you raise them
+  state.flags.ladder6 = true;       // v3.37: born on the 7-rung tool ladder — the star-tier index remap must never touch this save
   try { localStorage.setItem("hs_seen_version", VERSION.code); } catch(e){}  // new players start current
   startPrologue();
 }
@@ -229,6 +230,14 @@ function migrateSave(s){
     s.flags.firstLargeProduce = true;
   for(const k in f.stats){ if(s.stats[k] === undefined) s.stats[k] = 0; }
   for(const t of TOOLS){ if(s.tools[t] === undefined) s.tools[t] = 0; }
+  // v3.37 "The Long Ladder": two tiers (Cobalt, Deepsilver) were INSERTED between Gold and Star
+  // Metal, so tier indices shifted — a pre-v3.37 save's tools[t]===4 meant STAR METAL, which is
+  // now index 6. Remap once (flag-guarded), or every veteran's star tools would silently read as
+  // Cobalt — a downgrade, and the cozy contract forbids taking anything. Indices 0-3 are unchanged.
+  if(!s.flags.ladder6){
+    if(s.tools) for(const t of TOOLS) if(s.tools[t] === 4) s.tools[t] = 6;
+    s.flags.ladder6 = true;
+  }
   if(s.skills) for(const sk in f.skills){ if(s.skills[sk] === undefined) s.skills[sk] = 0; }
   if(!s.rel) s.rel = {};
   if(!s.animals) s.animals = { chickens:[], cows:[], sheep:[] };

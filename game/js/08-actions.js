@@ -523,7 +523,9 @@ function useTool(){
       const n = 1 + (hasMastery("Mining",50) && chance(0.15) ? 1 : 0);  // ★ Rich Seam
       give(o.drop, n); addXP("Mining", o.xp); bump("mined");
       // v3.18 — the star gem comes only off a Star Metal vein: same celestial deposit as the metal.
-      // Rare because the vein itself is (Mining 50, floor 35+), and it's what the ultimate tools want.
+      // Rare because the vein itself is gated (Mining 60, floor 45+ since v3.37 — was 50/35+), and
+      // it's what the ultimate tools want. The 0.30 roll is per-vein, so the shard:Starstone RATIO
+      // (the number that actually tunes the Star tier) is unchanged by the deeper band.
       if(o === ORES.starmetal && chance(0.30)){ give("Starstone", 1);
         pSparkle(tx*TILE+8, ty*TILE+8, GEMS.Starstone, 16); floatText(state.px, state.py-30, "✦ a Starstone!", "#c8b8ff"); }
       if(wasStairs){   // v3.19 — this plain rock hid the way down; break it and the shaft opens

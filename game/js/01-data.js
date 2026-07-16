@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.36.0", code: 73, codename: "The Coast Road", date: "2026-07-16" };
+const VERSION = { name: "3.37.0", code: 74, codename: "The Long Ladder", date: "2026-07-17" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.37.0", code:74, date:"2026-07-17", name:"The Long Ladder", notes:[
+    { t:"balance", s:"The climb to the star tools is stairs now, not a cliff. Two new tool tiers sit between Gold and Star Metal — Cobalt at level 40, forged from cobalt and willow, and Deepsilver at 50, from a new pale ore in the deep floors and the grove's dark elder boards. Star Metal moves to level 60, where its own ore now lives — the silverwood and the Starstone come at the top of a long ladder, not one step after gold." },
+    { t:"new", s:"A new ore: Deepsilver, in veins from floor 35 down — it holds the lamplight a moment longer than it should. Star metal now runs deeper (floor 45 and below), and every ore still arrives one rung per ten levels." },
+    { t:"balance", s:"If you'd already forged Star Metal tools, they're still Star Metal — nothing is ever taken. They even swing a little harder now, sitting at the top of the taller ladder." },
+  ]},
   { v:"3.36.0", code:73, date:"2026-07-16", name:"The Coast Road", notes:[
     { t:"new", s:"The world grows. East along the shore past Bram's coast, a new road follows the headland: the Coast Road. The Gullwater river comes down to meet the sea there — the first river in the valley — with an old plank ford, a roadside shrine, and at the road's end, a weathered ferry landing and a milestone that reads MARROW POINT — 39. The road runs on north past the landing. You can't. That's rather the point." },
     { t:"new", s:"River fishing. The Gullwater holds its own catch — the cheerful Chub, the Grayling (the lady of the stream), and the Trout, finally home in moving water. Where the river meets the sea, the estuary mixes river fish with the salmon run. And when a storm is on the sea, something rare runs upriver — Bram always said the rain brings things with it." },
@@ -377,7 +382,13 @@ const ORES = {
   // so shallow floors read exactly as tuned; a low miner facing one gets the "come back stronger"
   // gate, same as Gold today. Rock + cracked sprites auto-generate from `gem`; the drop is a sink.
   cobalt:    { name:"Cobalt Vein",     lvl:40, hp:16, xp:720,  drop:"Cobalt Ore",       gem:"#6a8ad8", col:"#4a6ac8" },
-  starmetal: { name:"Star Metal Vein", lvl:50, hp:22, xp:1560, drop:"Star Metal Shard", gem:"#c8ecff", col:"#a8c8e8" },
+  // v3.37 (owner call: "the path to the star tools is too difficult… fill in the mining ores a
+  // bit and move star ores and tools higher"): Deepsilver slots in at 50 and Star Metal moves to
+  // 60 — the ore ladder stays "a new ore every 10 levels", and each tool tier's signature ore is
+  // now minable exactly at that tier's own level (star metal fed an L40 tool from an L50 ore —
+  // backwards; no longer).
+  deepsilver:{ name:"Deepsilver Vein", lvl:50, hp:19, xp:1050, drop:"Deepsilver Ore",   gem:"#c8d8e8", col:"#9ab0c8" },
+  starmetal: { name:"Star Metal Vein", lvl:60, hp:22, xp:1560, drop:"Star Metal Shard", gem:"#c8ecff", col:"#a8c8e8" },
 };
 
 // ---- FISH ----
@@ -583,7 +594,7 @@ const LEGEND_BY_ID = {}; LEGENDS.forEach(l => LEGEND_BY_ID[l.id] = l);
 
 // ---- SELL VALUES ----
 const ITEM_SELL = { "Wood":4, "Pine Wood":9, "Maple Wood":17, "Willow Wood":11, "Elder Wood":32, "Heartwood":70, "Silverwood":113,   // v3.20: wood sells for ~1/3 — the renewable grove made chop-and-sell too easy a purse; wood is a construction material now, not a money crop
-  "Stone":3, "Copper Ore":30, "Iron Ore":68, "Gold Ore":165, "Cobalt Ore":300, "Star Metal Shard":450 };   // shard seats under Diamond (520) — an ore must never out-value a common gem (the Starstone is a class apart)
+  "Stone":3, "Copper Ore":30, "Iron Ore":68, "Gold Ore":165, "Cobalt Ore":300, "Deepsilver Ore":370, "Star Metal Shard":450 };   // shard seats under Diamond (520) — an ore must never out-value a common gem (the Starstone is a class apart); Deepsilver (v3.37) sits between Cobalt and the shard, on-curve
 FISH.forEach(f => { ITEM_SELL[f.name] = f.sell; ITEM_SELL["Cooked "+f.name] = Math.floor(f.sell*1.75); });
 LEGENDS.forEach(l => { ITEM_SELL[l.name] = l.sell; });   // trophies. You don't cook a Stormrider.
 for(const k in CROPS) ITEM_SELL[CROPS[k].name] = CROPS[k].sell;
@@ -876,14 +887,21 @@ const TOOL_ICON = { Hoe:"hoe", Can:"can", Axe:"axe", Pick:"pick", Rod:"rod" };
 // four, so the deepest veins and the rarest timber finally forge something. It's a transformative
 // unlock (§4.2), not another same-verb bump: a jump in power that only a master miner + woodcutter
 // can even gather the materials for.
-const TOOL_TIERS = ["Basic", "Copper", "Iron", "Gold", "Star Metal"];
-const TIER_POWER = [1, 2, 3, 5, 7];
-const MAX_TIER = TOOL_TIERS.length - 1;   // = 4; used everywhere instead of a hardcoded 3
+// v3.37 (owner call): the ladder gains two rungs between Gold and Star Metal — Cobalt at 40 and
+// Deepsilver at 50 — and Star Metal moves to 60. The old jump was a cliff: silverwood beams and a
+// Starstone one step after Gold ("kinda unreasonable to need silverwood for the upgrade right
+// after gold tools"). Now the climb is stairs, each rung fed by the ore that unlocks at its own
+// level, with the wood ladder rising alongside (Wood → Pine → Maple → Willow → Elder → the
+// silverwood/heartwood crown). Existing Star tools are remapped, never downgraded (migrateSave).
+const TOOL_TIERS = ["Basic", "Copper", "Iron", "Gold", "Cobalt", "Deepsilver", "Star Metal"];
+const TIER_POWER = [1, 2, 3, 5, 7, 9, 11];   // old Star owners land on 11 — a small buff; cozy contract says never a nerf
+const MAX_TIER = TOOL_TIERS.length - 1;   // = 6; used everywhere instead of a hardcoded number
 // v3.17 — a tool upgrade now needs SKILL, not just materials + coin. Gathering a pile of ore never
 // makes sense as the sole gate for an OP tool; you must have earned the level in that tool's own
-// craft. Clean & memorable, matching the ore ladder: Copper at 10, Iron 20, Gold 30, Star Metal 40.
+// craft. Clean & memorable, matching the ore ladder: Copper 10, Iron 20, Gold 30, Cobalt 40,
+// Deepsilver 50, Star Metal 60.
 const TOOL_SKILL = { Hoe:"Farming", Can:"Farming", Axe:"Woodcutting", Pick:"Mining", Rod:"Fishing" };
-const TIER_LEVEL = [1, 10, 20, 30, 40];   // skill level required to reach each tier (index = tier)
+const TIER_LEVEL = [1, 10, 20, 30, 40, 50, 60];   // skill level required to reach each tier (index = tier)
 // Tool tiers cost wood + ore + gold — and the top tiers a signature gem / the deep materials — so
 // every upgrade needs Mining AND Woodcutting progress (and the Rod's Pearl, the beach). A gold tool
 // is an achievement across skills, not a purchase. (Owner playtest 2026-07-12: "right now it's
@@ -892,7 +910,9 @@ const TIER_COST  = [null,
   { g:300,   mats:{ "Copper Ore":5, "Wood":50 } },        // v3.20: wood reqs ×5 (wood is a construction material now, not a rounding error)
   { g:1200,  mats:{ "Iron Ore":5,  "Pine Wood":50 } },
   { g:5000,  mats:{ "Gold Ore":5,  "Maple Wood":50 } },
-  { g:12000, mats:{ "Star Metal Shard":4, "Cobalt Ore":8, "Silverwood":40, "Heartwood":20, "Starstone":1 } }];   // v3.18: the star gem crowns the ultimate tool; v3.20: premium wood ×5 (note: paid per-tool, so a full 5-tool set is a real endgame timber grind)
+  { g:7500,  mats:{ "Cobalt Ore":6, "Willow Wood":60 } },                 // v3.37: the first new rung — mid woods, no premium timber yet
+  { g:10000, mats:{ "Deepsilver Ore":6, "Elder Wood":50 } },              // v3.37: the deep grove's dark boards carry the second rung
+  { g:12000, mats:{ "Star Metal Shard":4, "Cobalt Ore":8, "Silverwood":40, "Heartwood":20, "Starstone":1 } }];   // v3.18: the star gem crowns the ultimate tool; unchanged in v3.37 — at L60 with two rungs before it, its cost finally matches its place
 const TIER3_GEM  = { Hoe:"Opal", Can:"Topaz", Axe:"Emerald", Pick:"Ruby", Rod:"Pearl" };   // Hoe was Amethyst (now Gary-only)
 function toolCost(tool, tier){
   const base = TIER_COST[tier]; if(!base) return null;
@@ -900,7 +920,7 @@ function toolCost(tool, tier){
   if(tier === 3 && TIER3_GEM[tool]) mats[TIER3_GEM[tool]] = 1;   // the keepsake set into the handle
   return { g: base.g, mats };
 }
-const TIER_COL   = ["#b7a48c", "#c77b3f", "#d8c4bc", "#ffd75a", "#bfe4ff"];
+const TIER_COL   = ["#b7a48c", "#c77b3f", "#d8c4bc", "#ffd75a", "#5a7ad0", "#9ab0c8", "#bfe4ff"];   // v3.37: + cobalt, deepsilver
 
 // ---- THE OLD LIFT ----
 // A rusted lift shaft stands by the entry ladder of every mine floor. Riding UP is always free —
@@ -1254,6 +1274,7 @@ const EXAMINE = {
   "Coelacanth": "A living fossil. It was old when the valley was young.",
   "Frostfin": "It only rises when the water skins over with ice — blue as the cold morning it's caught in.",
   "Glassperch": "So clear you can see the winter light straight through it. Comes up once a year, and only to the patient.",
+  "Deepsilver Ore": "Pale metal from the deep floors — it holds the lamplight a moment longer than it should.",
   "Minnow": "Barely a mouthful, endlessly pleased with itself. Every river starts somewhere.",
   "Chub": "A cheerful, blunt-headed river fish. Takes anything, regrets nothing.",
   "Grayling": "The lady of the stream — a sail of a fin, violet in the right light. The Gullwater's pride.",

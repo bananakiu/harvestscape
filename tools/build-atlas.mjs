@@ -337,7 +337,7 @@ ${ladder("⛏ Mining", D.MASTERY_NPC?.Mining, mineRows, D.MASTERY?.Mining)}
 ${ladder("🎣 Fishing", D.MASTERY_NPC?.Fishing, fishRows, D.MASTERY?.Fishing)}
 ${ladder("🍳 Cooking", D.MASTERY_NPC?.Cooking, cookRows, D.MASTERY?.Cooking)}
 
-<h3>Tools — four tiers each</h3>
+<h3>Tools — ${(D.TOOL_TIERS || []).length || "seven"} tiers each</h3>
 <p class="prose">Five tools (${D.TOOLS.join(", ")}), upgraded at Tom's forge. Power multiplies the work per swing.</p>
 ${table(["Tier", "Power", "Cost"],
   D.TOOL_TIERS.map((t, i) => [`<b>${esc(t)}</b>`, `×${D.TIER_POWER[i]}`,
