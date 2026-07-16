@@ -22,6 +22,38 @@
 
 ---
 
+## v3.39.0 — "The Counterweight" · 2026-07-17 · tag `v3.39.0`
+
+Owner balance call (DEVLOG): *"The costs of saving the minecart elevators are crazy… too
+expensive, coins-wise especially. It just doesn't make it worth it."*
+
+**The diagnosis.** The Old Lift's stop costs past floor 20 doubled every 5 floors —
+`6000 × 2^((n-20)/5)`: floor 50 = **384,000g**, floor 65 = **3,072,000g** — a prestige tail
+written (v3.15/v3.20 era) when nothing below floor 45 mattered. v3.38 moved deepsilver to floor
+50+ and star metal below 65, turning the exponential into a wall across the game's main road.
+The owner's "coins-wise especially" points at the gold term, and the code agrees: past floor 20
+the *materials* plateaued while the *gold* exploded.
+
+**The fix.**
+- Floors 5–20 unchanged (500/1,500/3,000/6,000g — never the complaint).
+- Past 20 the gold climbs **linearly**: +3,000g per stop — 9k at 25 … 24k at 50 … 33k at 65.
+  Each stop is a few good late-game days; the whole shaft 5→65 sums to ~189k, roughly HALF of
+  one old floor-50 stop. A long-arc project, not a fantasy.
+- The deepest stops (45+) sink the deep tier's own neighbours — **Heartwood 25 + Cobalt Ore 10**
+  — instead of a fourth identical helping of elder + gold ore. Still exactly one Diamond (gems
+  keep their life beyond Tom's counter).
+- **The settlement fix:** `contributePledge` now checks funded-ness FIRST. The old order tried
+  to take a deposit before checking, so a pledge left over-funded by this very price cut would
+  toast "nothing on you that it still needs" forever and never complete. Now an over-funded
+  ledger settles the moment you visit the stop, no deposit needed. (Deposits already made above
+  the new price aren't refunded — nothing is taken, and the ledger completes in your favor.)
+
+Verified in-browser (muted): the full cost table floors 5→65 (24,000g at 50; 33,000g at 65;
+heartwood/cobalt shift exactly at 45), the over-funded-pledge settlement with empty pockets,
+and the normal deposit path regression. Clean console.
+
+---
+
 ## v3.38.0 — "One Ladder" · 2026-07-17 · tag `v3.38.0`
 
 Owner balance call (DEVLOG, same day as v3.37): *"match the tiers of the rocks with the tiers

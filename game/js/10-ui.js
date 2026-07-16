@@ -969,6 +969,10 @@ function pledgeRowHtml(id){
 }
 function contributePledge(id){
   if(pledgeDone(id)) return;
+  // v3.39: complete-first — if a past cost REDUCTION (the lift rebalance) left this pledge already
+  // over-funded, land it now; the old order demanded one more deposit the ledger didn't need, and
+  // a player with empty pockets got "nothing it still needs" forever instead of their stop.
+  if(pledgeFunded(id)){ completePledge(id); return; }
   const rem = pledgeRemaining(id);
   if(!state.pledges) state.pledges = {};
   const p = state.pledges[id] || (state.pledges[id] = { gPaid:0, mats:{} });

@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.38.0", code: 75, codename: "One Ladder", date: "2026-07-17" };
+const VERSION = { name: "3.39.0", code: 76, codename: "The Counterweight", date: "2026-07-17" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.39.0", code:76, date:"2026-07-17", name:"The Counterweight", notes:[
+    { t:"balance", s:"Restoring the deep lift stops is a project now, not a fantasy. Past floor 20 the cost used to double every five floors — by the deep floors it wanted more coin than a farm sees in seasons. It climbs gently now: a few thousand more per stop, all the way down. The deepest stops (45 and below) ask for heartwood and cobalt instead of yet more elder and gold ore — the deep shaft wants the deep materials — and still exactly one diamond." },
+    { t:"fix", s:"If you'd already pledged more toward a stop than its new price, the ledger settles up: the stop completes the next time you visit it, no further deposit needed." },
+  ]},
   { v:"3.38.0", code:75, date:"2026-07-17", name:"One Ladder", notes:[
     { t:"balance", s:"The rocks and the trees climb the same ladder now. Mining and Woodcutting share one set of rungs — 1, 10, 20, 30, 45, 70, 85 — pairing each ore with its timber: copper with pine, iron with maple, gold with willow, cobalt with elderwood, deepsilver with heartwood, and star metal with silverwood at the very top. Where the two ladders disagreed, the higher rung won: pine and maple ask a little more; cobalt, deepsilver and star metal ask what their timber always did." },
     { t:"balance", s:"Tool tiers sit on the same rungs — so no tool anywhere asks for an ore or a wood above its own level, in either skill. (The star axe used to want silverwood forty-odd levels before you could chop it. No longer.) Anything already forged is untouched, as always." },
@@ -947,8 +951,17 @@ function liftStopCost(n){
   // the deep stops want the deep grove's timber — Elderwood replacing a second helping of maple
   // (Grove Depths Phase 2: the two deep venues feed each other)
   if(n === 20) return { g:6000, mats:{ "Elder Wood":60, "Gold Ore":10, "Diamond":1 } };
-  // past 20 the shaft is old beyond reckoning — each deeper stop doubles the 20-cost in gold
-  return { g: 6000 * Math.pow(2, (n-20)/5), mats:{ "Elder Wood":60, "Gold Ore":10, "Diamond":1 } };
+  // v3.39 (owner call: "the restorations get so insane… too expensive, coins-wise especially"):
+  // past 20 the gold used to DOUBLE every 5 floors — 384,000g at floor 50, 3M at 65 — a prestige
+  // tail written before the deep floors mattered. v3.38 made floors 50-65 the core destination
+  // (deepsilver, star metal), so the exponential had become a wall across the main road. Now the
+  // gold climbs LINEARLY (+3,000 per stop: 9k at 25 … 33k at 65 — each a few good days, the whole
+  // shaft a long-arc project), and the deepest stops (45+) sink the deep tier's own neighbours
+  // (heartwood + cobalt) instead of a fourth helping of elder and gold ore. Still one Diamond —
+  // gems keep their life beyond Tom's counter.
+  const g = 6000 + ((n - 20) / 5) * 3000;
+  if(n >= 45) return { g, mats:{ "Heartwood":25, "Cobalt Ore":10, "Diamond":1 } };
+  return { g, mats:{ "Elder Wood":60, "Gold Ore":10, "Diamond":1 } };
 }
 
 // ---- GROVE DEPTHS ----

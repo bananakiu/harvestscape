@@ -14,7 +14,27 @@
 
 ---
 
-## 2026-07-17 — "match the tiers of the rocks with the tiers of the trees": one ladder
+## 2026-07-17 — "the costs of saving the minecart elevators are crazy": fix the lift curve
+
+**Owner (near-verbatim):**
+
+> The costs of saving the minecart elevators are crazy. The restorations get so insane. I think
+> it's something we have to fix. It's just too expensive, coins-wise especially. It just doesn't
+> make it worth it. We just have to rethink that and balance it out a little more.
+
+**Interpretation.** "Minecart elevators" = the Old Lift stops. The complaint is precisely
+located in the code: floors 5–20 cost 500/1,500/3,000/6,000g (fine), but past 20 the gold
+**doubles every 5 floors** — floor 50 = 384,000g, floor 65 = 3,072,000g. That curve predates the
+deep floors mattering; after v3.38 moved deepsilver to floor 50+ and star metal below 65, the
+exponential turned from "prestige tail" into a wall across the core progression path. The owner's
+emphasis — "coins-wise especially" — points at the gold term, not the materials.
+
+**Direction taken:** keep 5–20 unchanged; past 20 the gold goes **linear** (+3,000g per stop);
+materials stay the multi-skill sink but the deepest stops (45+) shift from elder/gold-ore to
+heartwood/cobalt so the deep infrastructure sinks the deep tier's neighbours. Total for every
+stop 5→65: ~a fifth of one old floor-50 stop.
+
+**Produced:** v3.39.0, logged in CHANGELOG.md.
 
 **Owner (near-verbatim):**
 
