@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.40.0", code: 77, codename: "The Quartermaster", date: "2026-07-17" };
+const VERSION = { name: "3.41.0", code: 78, codename: "Provisions", date: "2026-07-17" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.41.0", code:78, date:"2026-07-17", name:"Provisions", notes:[
+    { t:"new", s:"Buying works like selling now. Seeds, food, and saplings all take a quantity — the same ± arrows and number box — so stocking a season's planting is one click, not twenty. Ask for more than your purse covers and Tom sells you what it does, plainly." },
+    { t:"new", s:"Every buy row shows what you already hold (×N), same as the sell page — seeds in the bag, buns in the pack, hives and machines waiting to be placed — so you never buy blind." },
+  ]},
   { v:"3.40.0", code:77, date:"2026-07-17", name:"The Quartermaster", notes:[
     { t:"new", s:"You decide how much, everywhere. Selling at Tom's now has a number box with ± arrows beside every item — sell exactly as many as you like, or the whole stack with one click — and how many you're holding stays visible even when the demand note appears (it used to hide your count at the worst moment)." },
     { t:"new", s:"The cellar asks before it takes. When a sawmill, keg, jar, or press could take more than one thing from your bag, a picker opens — choose the wood, the crop, or the pail yourself. If you're only carrying one thing it wants, it loads instantly, same as ever." },

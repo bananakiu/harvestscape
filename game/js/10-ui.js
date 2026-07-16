@@ -781,16 +781,29 @@ function renderShop(){
         `<button onclick="sellItem('${jsq(i)}',${state.inv[i]})" title="${allTotal}g for all ${state.inv[i]}">all · ${allTotal}g</button></span></div>`;
     });
   } else if(shopTab === "buy"){
+    // v3.41 (owner, extending the sweep): buy rows show WHAT YOU ALREADY HOLD (×N, same badge as
+    // selling) and take a quantity — steppers on everything bought in multiples (seeds, food,
+    // saplings); one-of-a-kind rows (hive, machines, bouquet) keep single buy but gain the badge.
+    let bidx = 0;
     for(const id in CROPS){ const c = CROPS[id]; const ok = skillLvl("Farming") >= c.lvl;
       const inSeason = c.seasons.includes(curSeason());
+      const owned = state.inv[c.name+" Seeds"]||0;
       const sub = ok ? `${c.seasons.join("/")} · ${c.days}d · ${c.sell}g${inSeason?"":" · <span style='color:#c98a6a'>off-season</span>"}` : `🔒 Farming ${c.lvl}`;
+      const qid = "bq_" + (bidx++);
       html += `<div class="row ${ok?"":"locked"}"><span class="lead" data-icon="item_${c.name} Seeds"><canvas></canvas>` +
-        `<span>${c.name} Seeds <span class="sub">${sub}</span></span></span>` +
-        `<span><span class="price">${c.seed}g</span> <button class="buy" ${ok&&state.gold>=c.seed?"":"disabled"} onclick="buySeed('${id}')">buy</button></span></div>`;
+        `<span>${c.name} Seeds <span class="sub">×${owned}</span> <span class="sub">${sub}</span></span></span>` +
+        `<span><span class="price">${c.seed}g</span> ${ok ? qtyCtl(qid, Math.floor(state.gold/c.seed)) : ""} ` +
+        `<button class="buy" ${ok&&state.gold>=c.seed?"":"disabled"} onclick="buySeed('${id}',qv('${qid}'))">buy</button></span></div>`;
     }
-    html += `<div class="row"><span class="lead" data-icon="item_Berry Bun"><canvas></canvas><span>Berry Bun <span class="sub">+34 energy</span></span></span><span><span class="price">30g</span> <button class="buy" ${state.gold>=30?"":"disabled"} onclick="buyFood('Berry Bun',30)">buy</button></span></div>`;
-    html += `<div class="row"><span class="lead" data-icon="item_Field Salad"><canvas></canvas><span>Field Salad <span class="sub">+26 energy</span></span></span><span><span class="price">24g</span> <button class="buy" ${state.gold>=24?"":"disabled"} onclick="buyFood('Field Salad',24)">buy</button></span></div>`;
-    html += `<div class="row"><span class="lead" data-icon="item_Milk"><canvas></canvas><span>Milk <span class="sub">fresh from the coast dairy · for cooking</span></span></span><span><span class="price">160g</span> <button class="buy" ${state.gold>=160?"":"disabled"} onclick="buyFood('Milk',160)">buy</button></span></div>`;
+    const foodRow = (item, cost, sub) => {
+      const qid = "bq_" + (bidx++);
+      return `<div class="row"><span class="lead" data-icon="item_${item}"><canvas></canvas><span>${item} <span class="sub">×${state.inv[item]||0}</span> <span class="sub">${sub}</span></span></span>` +
+        `<span><span class="price">${cost}g</span> ${qtyCtl(qid, Math.floor(state.gold/cost))} ` +
+        `<button class="buy" ${state.gold>=cost?"":"disabled"} onclick="buyFood('${jsq(item)}',${cost},qv('${qid}'))">buy</button></span></div>`;
+    };
+    html += foodRow("Berry Bun", 30, "+34 energy");
+    html += foodRow("Field Salad", 24, "+26 energy");
+    html += foodRow("Milk", 160, "fresh from the coast dairy · for cooking");
     if(anyConfided() && !state.flags.married){
       const hasBq = (state.inv["Bouquet"]||0)>0;
       html += `<h2 style="font-size:1em;color:var(--rose);margin:.4em 0 .2em;">COURTSHIP</h2>`;
@@ -798,11 +811,13 @@ function renderShop(){
     }
     html += `<h2 style="font-size:1em;color:var(--gold-hi);margin:.4em 0 .2em;">ORCHARD &amp; APIARY</h2>`;
     for(const k in FRUIT_TREES){ const t = FRUIT_TREES[k];
-      html += `<div class="row"><span class="lead" data-icon="item_${t.fruit}"><canvas></canvas><span>${t.name} ` +
+      const qid = "bq_" + (bidx++);
+      html += `<div class="row"><span class="lead" data-icon="item_${t.fruit}"><canvas></canvas><span>${t.name} <span class="sub">×${state.inv[t.name]||0}</span> ` +
         `<span class="sub">${t.blurb} · ${t.sell}g a fruit</span></span></span>` +
-        `<span><span class="price">${t.cost}g</span> <button class="buy" ${state.gold>=t.cost?"":"disabled"} onclick="buySapling('${k}')">buy</button></span></div>`;
+        `<span><span class="price">${t.cost}g</span> ${qtyCtl(qid, Math.floor(state.gold/t.cost))} ` +
+        `<button class="buy" ${state.gold>=t.cost?"":"disabled"} onclick="buySapling('${jsq(k)}',qv('${qid}'))">buy</button></span></div>`;
     }
-    html += `<div class="row"><span class="lead" data-icon="item_Honey"><canvas></canvas><span>Beehive ` +
+    html += `<div class="row"><span class="lead" data-icon="item_Honey"><canvas></canvas><span>Beehive <span class="sub">×${state.inv["Beehive"]||0}</span> ` +
       `<span class="sub">honey every morning · more where more is in bloom</span></span></span>` +
       `<span><span class="price">${HIVE_COST}g</span> <button class="buy" ${state.gold>=HIVE_COST?"":"disabled"} onclick="buyHive()">buy</button></span></div>`;
     // the Cellar: machines that give a crop a second life (wood + ore + coin, like every good tool)
@@ -814,7 +829,7 @@ function renderShop(){
       const matStr = Object.keys(M.cost.mats).map(it => { const have=state.inv[it]||0, need=M.cost.mats[it];
         return `${need} ${it} <span style="color:${have>=need?'#8fd06a':'#c98a6a'}">(${have})</span>`; }).join(" + ");
       const can = state.gold >= M.cost.g && Object.keys(M.cost.mats).every(it => (state.inv[it]||0) >= M.cost.mats[it]);
-      html += `<div class="row"><span class="lead" data-icon="item_${M.name}"><canvas></canvas><span>${M.name} ` +
+      html += `<div class="row"><span class="lead" data-icon="item_${M.name}"><canvas></canvas><span>${M.name} <span class="sub">×${state.inv[M.name]||0}</span> ` +
         `<span class="sub">${M.blurb}<br>${M.cost.g}g + ${matStr}</span></span></span>` +
         `<span><button class="buy" ${can?"":"disabled"} onclick="buyMachine('${mk}')">buy</button></span></div>`;
     }
@@ -881,6 +896,14 @@ function sellQty(item, qid){
   const el = $(qid);
   const n = Math.max(1, Math.min((state.inv[item]||0), parseInt(el && el.value, 10) || 1));
   sellItem(item, n);
+}
+// v3.41: read a quantity box for the BUY side (the purchase fns clamp to the purse themselves)
+function qv(qid){ const el = $(qid); return Math.max(1, parseInt(el && el.value, 10) || 1); }
+// one stepper cluster, shared by every buy row that sells in multiples
+function qtyCtl(qid, max){
+  return `<button onclick="stepQty('${qid}',-1)">−</button>` +
+    `<input type="number" class="qty" id="${qid}" value="1" min="1" max="${Math.max(1,max)}" onclick="this.select()">` +
+    `<button onclick="stepQty('${qid}',1)">+</button>`;
 }
 // The machine chooser — the gift panel's pattern for the cellar. interact() opens it whenever a
 // machine is empty and you carry MORE than one thing it accepts; one acceptable thing still loads

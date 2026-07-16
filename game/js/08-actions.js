@@ -1456,14 +1456,20 @@ const TOM_GLUT = [
   "Tom: “I'll take it, but the price is the price. Nobody in this valley wants more {item} today.”",
   "Tom: “You know what sells? Variety. Ask anyone. Ask me. I just said it.”",
 ];
-function buySeed(id){
+// v3.41 (owner, extending the v3.40 sweep to buying): both take an optional count, clamped to
+// what the purse can cover — ask for 20 with coin for 12 and you get 12, said plainly, one toast.
+function buySeed(id, n){
   const c = CROPS[id]; if(state.gold < c.seed) return;
-  state.gold -= c.seed; give(c.name+" Seeds",1,true); toast("Bought "+c.name+" Seeds", "#8fd06a");
+  n = Math.max(1, Math.min(n||1, Math.floor(state.gold / c.seed)));
+  state.gold -= c.seed * n; give(c.name+" Seeds", n, true);
+  toast("Bought " + (n>1 ? n+"× " : "") + c.name+" Seeds", "#8fd06a");
   playSfx("coin"); refreshHUD(); renderShop(); refreshHotbar();
 }
-function buyFood(item, cost){
+function buyFood(item, cost, n){
   if(state.gold < cost) return;
-  state.gold -= cost; give(item,1,true); toast("Bought "+item, "#8fd06a"); playSfx("coin"); refreshHUD(); renderShop();
+  n = Math.max(1, Math.min(n||1, Math.floor(state.gold / cost)));
+  state.gold -= cost * n; give(item, n, true);
+  toast("Bought " + (n>1 ? n+"× " : "") + item, "#8fd06a"); playSfx("coin"); refreshHUD(); renderShop();
 }
 function buyTool(tool){
   const cur = state.tools[tool]; if(cur>=MAX_TIER) return;

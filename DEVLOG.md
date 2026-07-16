@@ -41,6 +41,15 @@ reflex became "no control" everywhere quantities matter.
 
 **Produced:** v3.40.0 (the sweep), logged in CHANGELOG.md.
 
+**Follow-up (same thread):**
+
+> should apply the same ui for buying stuff too (to make it easy to buy multiple things. also,
+> should display how many you have of each item (similar ui to selling) even when buying
+
+Buy-side extension: steppers + buy-N on the rows where multiples make sense (seeds, food,
+saplings), an owned-count badge on every buy row (seeds/food/saplings/hive/machines — décor
+already had one), quantities clamped to what you can afford. Produced: v3.41.0.
+
 **Owner (near-verbatim):**
 
 > The costs of saving the minecart elevators are crazy. The restorations get so insane. I think

@@ -1066,11 +1066,12 @@ function buyShears(){
   toast("A fine pair of shears. Now the wool is yours for the gathering.", "#8fd06a");
   playSfx("coin"); refreshHUD(); renderShop();
 }
-function buySapling(k){
+function buySapling(k, n){
   const t = FRUIT_TREES[k]; if(!t) return;
   if(state.gold < t.cost){ toast(`Not enough coin (${t.cost}g).`); playSfx("error"); return; }
-  state.gold -= t.cost; give(t.name, 1, true);
-  toast(`A ${t.name}. Press R to select it, then plant it on open grass.`, "#8fd06a");
+  n = Math.max(1, Math.min(n||1, Math.floor(state.gold / t.cost)));   // v3.41: buy several, clamped to the purse
+  state.gold -= t.cost * n; give(t.name, n, true);
+  toast(`${n>1 ? n+"× " : "A "}${t.name}${n>1?"s":""}. Press R to select it, then plant it on open grass.`, "#8fd06a");
   playSfx("coin"); refreshHUD(); refreshHotbar(); renderShop();
 }
 function buyHive(){

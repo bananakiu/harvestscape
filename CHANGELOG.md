@@ -22,6 +22,32 @@
 
 ---
 
+## v3.41.0 — "Provisions" · 2026-07-17 · tag `v3.41.0`
+
+Owner follow-up to the v3.40 sweep: *"should apply the same ui for buying stuff too… also,
+should display how many you have of each item (similar ui to selling) even when buying."*
+
+**Steppers on the buy side.** Seeds, food, and saplings — everything bought in multiples —
+gain the same `[−] [box] [+] [buy]` cluster (one shared `qtyCtl()` helper renders it). The
+purchase functions (`buySeed`/`buyFood`/`buySapling`) take an optional count and **clamp to
+the purse**: ask for 20 with coin for 12 and you get 12, one toast, said plainly. Call-site
+audit: the three new onclicks are the only callers, so the widened arities break nothing.
+One-of-a-kind rows (hive, machines, bouquet) deliberately keep single buy — a stepper on a
+capped or gift-gated item would be a lie.
+
+**Owned badges everywhere.** Every buy row now shows `×N` held — seeds in the bag, buns in
+the pack, hives and machines waiting to be placed (the décor tab already had "×N in bag") —
+so you never buy blind. Locked seed rows show the badge too, but no stepper.
+
+Verified in-browser (muted): the ×7 badge, buying 10 seeds exact, the clamp edge (999
+requested with 95g → exactly 3 bought, 5g change), hive/machine badges, a 3-sapling
+purchase, screenshot of the tab (owned + locked rows), clean console. Review scope:
+this is a pattern-extension of the just-reviewed v3.40 widgets (same input guard, same
+stepper, same escaping); the fresh surface — the three clamps and call-site arity — was
+verified behaviorally and by grep above.
+
+---
+
 ## v3.40.0 — "The Quartermaster" · 2026-07-17 · tag `v3.40.0`
 
 Owner UX call (DEVLOG): a **quantity-controls sweep** — "give the option to modify the
