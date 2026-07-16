@@ -742,3 +742,11 @@ body{
   #belowbar{ display:none; }
   #stage{ max-height:96dvh; }
 }
+
+/* v3.40 — quantity boxes (the owner's sell/pledge steppers). Sized for three digits, themed to the panel. */
+input.qty{
+  width:3.2em; text-align:center; background:#241a10; color:#e9dcc0;
+  border:1px solid #5e4a30; border-radius:4px; font:inherit; padding:.1em .15em; margin:0 .15em;
+}
+input.qty::-webkit-outer-spin-button, input.qty::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+input.qty{ -moz-appearance:textfield; appearance:textfield; }

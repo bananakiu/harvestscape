@@ -22,6 +22,51 @@
 
 ---
 
+## v3.40.0 — "The Quartermaster" · 2026-07-17 · tag `v3.40.0`
+
+Owner UX call (DEVLOG): a **quantity-controls sweep** — "give the option to modify the
+quantity… this goes for a lot of the interfaces so do a sweep."
+
+**The diagnosis.** The game's "one button, no menus" cozy reflex had quietly become "no
+control" at every surface where quantities matter: pledges drained everything on hand in one
+click; machines auto-picked their input with "no selector icon or UI anywhere"; the sell tab
+hid the owned count exactly when the demand note appeared, and sold one-or-all only.
+
+**1 — Selling (the owner's explicit design).** Every sell row now carries
+`[−] [number box] [+] [sell] [all · total]` — clickable arrows around a real `<input>`, sell
+exactly N, or the lot. The owned `×N` is ALWAYS visible; the demand note *appends* instead of
+replacing it (it used to hide "how much do I have left" mid-selloff, the worst moment). One
+supporting fix with teeth: **the global keydown handler now ignores events targeting
+INPUT/TEXTAREA** — typing "3" in a quantity box must never select hotbar slot 3.
+
+**2 — The machine chooser.** A new `machPanel` (the gift panel's pattern): when a sawmill,
+keg, jar, or press is empty and you carry **more than one** thing it accepts, a picker opens —
+icon, count, and what each input becomes (`Pine Wood ×12 → 10 Pine Lumber`). With exactly one
+valid input it loads instantly — the old one-button reflex kept where a menu is pure friction.
+Both paths land in one shared `loadMachineWith()` that **re-validates** (machine still there,
+still empty, item still held/valid) because the world can change while a panel is open.
+`MACHINES.sawmill` gains the `accepts` field the v3.33 refactor gave everyone else — the
+chooser asks every machine the same question.
+
+**3 — Pledge portions.** `contributePledge(id, frac)`: **[a little]** (10% of the *total* cost
+per resource, min 1), **[half]**, **[all]** (the old behaviour, and the default for every old
+call site). Chunks are portions of the total, not the remainder, so "a little" stays a
+consistent step however far along the pledge is. Applies to every ledger — lift stops and
+waystones alike.
+
+**Review findings (3, fixed pre-ship):** the input keydown guard swallowed **Escape** while a
+quantity box had focus, leaving the primary close key silently dead (Escape now *blurs* the box;
+the next Escape closes the panel as ever); the chooser priced products as `input × mult`, showing
+Fine Cheese at 248g when it sells for 250 (it now shows the product's real `ITEM_SELL` price);
+and the atlas step hadn't yet run at review time.
+
+Verified in-browser (muted): stepper math, sell-N and the ×25-with-demand-35% display
+(screenshotted), the two-woods chooser → pine picked → 10 milled, the single-option instant
+load, "Fine Cheese (250g)" exact, Escape-blur behavior, pledge chunks to the gold piece
+(900g/6 elder/1 ore/1 diamond on a 10% click), 'all' completing, clean console.
+
+---
+
 ## v3.39.0 — "The Counterweight" · 2026-07-17 · tag `v3.39.0`
 
 Owner balance call (DEVLOG): *"The costs of saving the minecart elevators are crazy… too

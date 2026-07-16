@@ -756,20 +756,28 @@ function renderShop(){
   if(shopTab === "sell"){
     const sellables = Object.keys(state.inv).filter(i => ITEM_SELL[i]);
     if(!sellables.length) html += `<div class="locked">Nothing to sell yet — go harvest, chop, mine or fish!</div>`;
-    sellables.forEach(i => {
-      // Tom's demand: show what the NEXT one fetches, and say so plainly when it has slipped
+    sellables.forEach((i, idx) => {
+      // Tom's demand: show what the NEXT one fetches, and say so plainly when it has slipped.
+      // v3.40 (owner sweep): the owned count is ALWAYS visible — the demand note used to REPLACE
+      // it, hiding "how much do I have left" at the exact moment (mid-selloff) it matters most.
       const now = nextUnitPrice(i), base = Math.round(baseUnitPrice(i)), lvl = demandLevel(i);
       const dipped = now < base;
-      const note = dipped
-        ? `<span class="sub" style="color:#c98a6a">demand ${Math.round(lvl*100)}% · ${soldToday(i)} sold today</span>`
-        : `<span class="sub">×${state.inv[i]}</span>`;
+      const note = `<span class="sub">×${state.inv[i]}</span>` + (dipped
+        ? ` <span class="sub" style="color:#c98a6a">demand ${Math.round(lvl*100)}% · ${soldToday(i)} sold today</span>` : "");
       const priceHtml = dipped
         ? `<span class="price" style="color:#c98a6a">${now}g</span> <span class="sub" style="text-decoration:line-through;opacity:.55">${base}g</span>`
         : `<span class="price">${now}g</span>`;
       // "all" shows the blended total it will actually fetch, not just the next unit's price
       const allTotal = bundlePrice(i, state.inv[i]);
+      // v3.40: the owner's quantity controls — clickable ± arrows around a real number box,
+      // "sell" for that many, "all" for the lot. The box id is index-based (names carry spaces).
+      const qid = "sq_" + idx;
       html += `<div class="row"><span class="lead" data-icon="item_${i}"><canvas></canvas><span>${i} ${note}</span></span>` +
-        `<span>${priceHtml} <button onclick="sellItem('${jsq(i)}',1)">1</button> ` +
+        `<span>${priceHtml} ` +
+        `<button onclick="stepQty('${qid}',-1)">−</button>` +
+        `<input type="number" class="qty" id="${qid}" value="1" min="1" max="${state.inv[i]}" onclick="this.select()">` +
+        `<button onclick="stepQty('${qid}',1)">+</button> ` +
+        `<button onclick="sellQty('${jsq(i)}','${qid}')">sell</button> ` +
         `<button onclick="sellItem('${jsq(i)}',${state.inv[i]})" title="${allTotal}g for all ${state.inv[i]}">all · ${allTotal}g</button></span></div>`;
     });
   } else if(shopTab === "buy"){
@@ -863,6 +871,46 @@ function openGiftPicker(id, items){
   $("giftHead").textContent = "GIVE " + NPCDEF[id].name.toUpperCase();
   openPanel("giftPanel", () => renderGift(id, items));
 }
+// ---- v3.40 quantity controls (owner sweep: "give the option to modify the quantity") ----
+function stepQty(qid, d){
+  const el = $(qid); if(!el) return;
+  const max = parseInt(el.max, 10) || 1;
+  el.value = Math.max(1, Math.min(max, (parseInt(el.value, 10) || 1) + d));
+}
+function sellQty(item, qid){
+  const el = $(qid);
+  const n = Math.max(1, Math.min((state.inv[item]||0), parseInt(el && el.value, 10) || 1));
+  sellItem(item, n);
+}
+// The machine chooser — the gift panel's pattern for the cellar. interact() opens it whenever a
+// machine is empty and you carry MORE than one thing it accepts; one acceptable thing still loads
+// instantly (the old one-button reflex kept where a menu would be pure friction).
+function openMachineChooser(kind, tx, ty){
+  const M = MACHINES[kind];
+  $("machHead").textContent = "LOAD THE " + M.name.toUpperCase();
+  openPanel("machPanel", () => renderMachineChooser(kind, tx, ty));
+}
+function renderMachineChooser(kind, tx, ty){
+  const M = MACHINES[kind], b = $("machPanel").querySelector(".body");
+  const items = Object.keys(state.inv).filter(it => (state.inv[it]||0) > 0 && M.accepts(it));
+  let html = `<div style="color:var(--ink-soft);margin-bottom:6px;">Pick what goes in.` +
+    (kind === "sawmill" ? ` The mill takes up to ${M.batch} of one species.` : ` One at a time; ${M.days} ${M.days===1?"night":"nights"} each.`) + `</div>`;
+  items.forEach(it => {
+    const prod = M.product(it);
+    const sub = kind === "sawmill"
+      ? `×${state.inv[it]} → ${Math.min(state.inv[it], M.batch)} ${prod}`
+      : `×${state.inv[it]} → ${prod} (${ITEM_SELL[prod]||0}g)`;   // the PRODUCT's real price (review fix: mult-math showed Fine Cheese at 248g; it sells for 250)
+    html += `<div class="row"><span class="lead" data-icon="item_${it}"><canvas></canvas><span>${it} <span class="sub">${sub}</span></span></span>` +
+      `<button onclick="machChoose('${jsq(kind)}',${tx},${ty},'${jsq(it)}')">load</button></div>`;
+  });
+  if(!items.length) html += `<div class="locked">Nothing in your bag that it takes.</div>`;
+  b.innerHTML = html; hydrateIcons(b);
+}
+function machChoose(kind, tx, ty, item){
+  closePanel("machPanel");
+  loadMachineWith(kind, tx, ty, item);   // 08-actions.js — the one loader both paths share
+}
+
 function renderGift(id, items){
   const def = NPCDEF[id], b = $("giftPanel").querySelector(".body");
   let html = `<div style="color:var(--ink-soft);margin-bottom:6px;">Pick something from your bag. One gift per day.</div>`;
@@ -964,23 +1012,34 @@ function pledgeRowHtml(id){
   for(const it in rem.mats){ const have = state.inv[it]||0;
     bits.push(`${rem.mats[it]}× ${it} <span style="color:${have>=rem.mats[it]?'#8fd06a':'#c98a6a'}">(${have})</span>`); }
   const canAny = (rem.g > 0 && state.gold > 0) || Object.keys(rem.mats).some(it => (state.inv[it]||0) > 0);
+  // v3.40 (owner sweep): portions, not a drain — "when you click pledge it automatically just
+  // drains your cash… and all the resources". A little = 10% of the total cost per resource,
+  // half = 50%, all = the old behaviour, each still capped by what's owed and what you hold.
   return `<div class="row"><span class="lead"><span>${cap(pledgeName(id))} <span class="sub">owed: ${bits.join(", ")}</span></span></span>` +
-    `<button class="buy" ${canAny?"":"disabled"} onclick="contributePledge('${id}')">contribute</button></div>`;
+    `<span><button ${canAny?"":"disabled"} onclick="contributePledge('${id}',0.1)">a little</button> ` +
+    `<button ${canAny?"":"disabled"} onclick="contributePledge('${id}',0.5)">half</button> ` +
+    `<button class="buy" ${canAny?"":"disabled"} onclick="contributePledge('${id}',1)">all</button></span></div>`;
 }
-function contributePledge(id){
+function contributePledge(id, frac){
   if(pledgeDone(id)) return;
   // v3.39: complete-first — if a past cost REDUCTION (the lift rebalance) left this pledge already
   // over-funded, land it now; the old order demanded one more deposit the ledger didn't need, and
   // a player with empty pockets got "nothing it still needs" forever instead of their stop.
   if(pledgeFunded(id)){ completePledge(id); return; }
+  // v3.40: frac portions the deposit — each resource gives at most ceil(frac × its TOTAL cost)
+  // this click (a consistent chunk however far along the pledge is), still capped by what's owed
+  // and held. frac 1 (or omitted — every old call site) is the original everything-you-have.
+  frac = frac || 1;
+  const total = pledgeCost(id) || { g:0, mats:{} };
+  const chunk = v => frac >= 1 ? Infinity : Math.max(1, Math.ceil(v * frac));
   const rem = pledgeRemaining(id);
   if(!state.pledges) state.pledges = {};
   const p = state.pledges[id] || (state.pledges[id] = { gPaid:0, mats:{} });
   const gave = [];
-  const dg = Math.min(state.gold, rem.g);
+  const dg = Math.min(state.gold, rem.g, chunk(total.g));
   if(dg > 0){ state.gold -= dg; p.gPaid = (p.gPaid||0) + dg; gave.push(dg + "g"); }
   for(const it in rem.mats){
-    const d = Math.min(state.inv[it]||0, rem.mats[it]);
+    const d = Math.min(state.inv[it]||0, rem.mats[it], chunk(total.mats[it]||rem.mats[it]));
     if(d > 0 && take(it, d)){ if(!p.mats) p.mats = {}; p.mats[it] = (p.mats[it]||0) + d; gave.push(d + "× " + it); }
   }
   if(!gave.length){ toast("Nothing on you that it still needs.", "#c98a6a"); playSfx("error"); return; }
@@ -1220,6 +1279,13 @@ function setControlsHint(){
 // ---- INPUT ----
 function firstGesture(){ audioResume(); }
 document.addEventListener("keydown", e => {
+  // v3.40: typing in a quantity box must never drive the game (hotbar digits, tool keys, WASD) —
+  // but Escape BLURS the box (review fix: swallowing it left the primary close key silently dead
+  // while a box had focus; blur first, and the next Escape closes the panel as ever).
+  if(e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")){
+    if(e.key === "Escape") e.target.blur();
+    return;
+  }
   const k = e.key.toLowerCase();
   firstGesture();
   if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(k)) e.preventDefault();

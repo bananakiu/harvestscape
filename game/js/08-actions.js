@@ -660,17 +660,13 @@ function interact(){
           toast(`The ${obj.item.toLowerCase()} needs ${M.days - obj.days} more ${M.days-obj.days===1?"night":"nights"}.`, "#cbb98f");
           return;
         }
-        // empty: load the best thing this machine will take — one button, no menus (cozy contract).
-        // v3.33: what it takes is the MACHINE's business (M.accepts) — the press wants milk, not crops.
-        let best = null;
-        for(const it in state.inv){
-          if(state.inv[it] > 0 && M.accepts(it) && (!best || (ITEM_SELL[it]||0) > (ITEM_SELL[best]||0))) best = it;
-        }
-        if(!best){ toast("It wants " + M.wants + "."); playSfx("error"); return; }
-        take(best);
-        obj.item = best; obj.days = 0; obj.ready = false;
-        toast(`The ${M.name.toLowerCase()} takes your ${best.toLowerCase()}. ${M.days} ${M.days===1?"night":"nights"}.`, "#cbb98f");
-        playSfx("plant"); pPuff(tx*TILE+8, ty*TILE+4, "#cbb98f", 5);
+        // empty (v3.40 owner sweep): ONE acceptable thing in the bag still loads instantly — the
+        // old one-button reflex where a menu is pure friction — but with a choice to make, the
+        // chooser opens ("I can't pick the wood I want… there's no selector anywhere").
+        const cands = Object.keys(state.inv).filter(it => (state.inv[it]||0) > 0 && M.accepts(it));
+        if(!cands.length){ toast("It wants " + M.wants + "."); playSfx("error"); return; }
+        if(cands.length === 1){ loadMachineWith(obj.kind, tx, ty, cands[0]); return; }
+        openMachineChooser(obj.kind, tx, ty);
         return;
       }
       case "sawmill": {
@@ -690,17 +686,12 @@ function interact(){
           toast(`Milling ${obj.qty} ${obj.item.toLowerCase()} — ${left} more ${left===1?"night":"nights"}.`, "#cbb98f");
           return;
         }
-        // empty: mill the species you carry the MOST of, up to a batch — one button, no menus (cozy)
-        let best = null, bestN = 0;
-        for(const it in state.inv){
-          if(state.inv[it] > 0 && WOOD_NAMES.has(it) && state.inv[it] > bestN){ best = it; bestN = state.inv[it]; }
-        }
-        if(!best){ toast("It wants raw logs — chop a tree and bring the wood."); playSfx("error"); return; }
-        const n = Math.min(bestN, M.batch);
-        take(best, n);
-        obj.item = best; obj.qty = n; obj.days = 0; obj.ready = false;
-        toast(`The sawmill takes ${n} ${best.toLowerCase()} — ${WOOD_TO_LUMBER[best].toLowerCase()} by morning.`, "#cbb98f");
-        playSfx("plant"); pPuff(tx*TILE+8, ty*TILE+4, "#cbb98f", 5);
+        // empty (v3.40 owner sweep): one species in the bag mills instantly; more than one opens
+        // the chooser — the owner's sawmill complaint verbatim ("I can't pick the wood I want").
+        const woods = Object.keys(state.inv).filter(it => (state.inv[it]||0) > 0 && WOOD_NAMES.has(it));
+        if(!woods.length){ toast("It wants raw logs — chop a tree and bring the wood."); playSfx("error"); return; }
+        if(woods.length === 1){ loadMachineWith("sawmill", tx, ty, woods[0]); return; }
+        openMachineChooser("sawmill", tx, ty);
         return;
       }
       case "wrack": {                                  // what the storm took, the sea returns
@@ -774,6 +765,25 @@ function forageNode(x, y, obj, item, skill, xp){
 // A rare deep-floor nodule that cracks into a curio for the shelf (mostly), a gem grown in the dark
 // (sometimes), a rare Geode Heart, or — one in twenty-five — a Starstone. Collection first, coin a
 // distant second, so the deep pays in wonder without becoming a gold faucet.
+// v3.40: the one loader every path shares — the instant single-option load AND the chooser's
+// pick both land here. Re-validates the machine (the world can change while a panel is open).
+function loadMachineWith(kind, tx, ty, item){
+  const obj = objAt(tx, ty), M = MACHINES[kind];
+  if(!obj || obj.kind !== kind || obj.item || !M) return;                    // moved, loaded, or gone
+  if((state.inv[item]||0) <= 0 || !M.accepts(item)) return;                  // spent or never valid
+  if(kind === "sawmill"){
+    const n = Math.min(state.inv[item], M.batch);
+    take(item, n);
+    obj.item = item; obj.qty = n; obj.days = 0; obj.ready = false;
+    toast(`The sawmill takes ${n} ${item.toLowerCase()} — ${WOOD_TO_LUMBER[item].toLowerCase()} by morning.`, "#cbb98f");
+  } else {
+    take(item);
+    obj.item = item; obj.days = 0; obj.ready = false;
+    toast(`The ${M.name.toLowerCase()} takes your ${item.toLowerCase()}. ${M.days} ${M.days===1?"night":"nights"}.`, "#cbb98f");
+  }
+  playSfx("plant"); pPuff(tx*TILE+8, ty*TILE+4, "#cbb98f", 5);
+}
+
 function crackGeode(tx, ty){
   state.flags.crackedGeode = true;   // v3.34: Pip has OPINIONS about treasure inside rocks (NPC_RECOG)
   playSfx("get"); pSparkle(tx*TILE+8, ty*TILE+8, "#c8b8ff", 16); pChips(tx*TILE+8, ty*TILE+8, "#8a8278", 6);

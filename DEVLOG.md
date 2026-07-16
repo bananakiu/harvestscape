@@ -14,7 +14,32 @@
 
 ---
 
-## 2026-07-17 — "the costs of saving the minecart elevators are crazy": fix the lift curve
+## 2026-07-17 — "give the option to modify the quantity": the quantity-controls sweep
+
+**Owner (near-verbatim):**
+
+> For pledging you should give the option to modify the quantity because right now when you click
+> pledge it automatically just drains your cash of what you have and all the resources and this
+> goes for a lot of the interfaces so do a sweep because for example when I'm in the sawmill and
+> I want to make some lumber I can't pick the wood I want to deposit to create lumber there's no
+> selector there's no selector icon or UI anywhere … and that applies for preserving and all
+> those other sort of like processing sort of items and when I'm selling items I can't see the
+> quantity that I have especially after the demand sort of situation shows up when demand is
+> less than 100% that blocks the quantity so I can't see how much I have left and there has to be
+> an easy way to sell multiple things maybe there's like a selector to toggle maybe like arrow
+> keys plus clickable arrow keys plus like a text box for number of items to sell per item so you
+> could just sell all in a massive quantity at once should be available
+
+**Interpretation.** One systemic gap, three surfaces: the game's "one button, no menus" cozy
+reflex became "no control" everywhere quantities matter.
+1. **Pledges** auto-drain everything on hand (gold especially) — needs portioning.
+2. **Machines** (sawmill/keg/jar/press) auto-pick their input — needs a picker when more than
+   one valid input is carried ("no selector icon or UI anywhere").
+3. **Selling**: the owned quantity is hidden exactly when the demand note appears, and selling
+   is one-at-a-time — needs an always-visible count, clickable +/− steppers with a number box
+   (owner's explicit design), and sell-all.
+
+**Produced:** v3.40.0 (the sweep), logged in CHANGELOG.md.
 
 **Owner (near-verbatim):**
 
