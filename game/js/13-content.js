@@ -16,6 +16,7 @@ const MAPS = {
   mine:      { w:24, h:16, name:"The Old Mine",          subtitle:"",                 music:"mine", bg:"#050406", gen:genMine },   // v3.16: ~half the old 34×22 — smaller floors lean on descending + the checkpoints
   beach:     { w:46, h:24, outdoor:true, name:"Willowbrook Coast", subtitle:"salt on the breeze", music:"beach", bg:"#2f4a63", gen:genBeach },
   coastroad: { w:46, h:26, outdoor:true, name:"The Coast Road", subtitle:"north, by the sea", music:"beach", bg:"#2f4a63", gen:genCoastRoad },   // v3.36 — WORLD_EXPANSION.md area 1
+  ridge:     { w:46, h:30, outdoor:true, name:"Starfall Ridge", subtitle:"where the sky came down", music:"auto", bg:"#141824", gen:genRidge },   // v3.43 — WORLD_EXPANSION.md area 2
   grove:     { w:44, h:30, outdoor:true, name:"The Deep Grove", subtitle:"the forest gives, and grows back", music:"auto", bg:"#0d150c", gen:genGrove },
   village:   { w:40, h:28, outdoor:true, name:"Willowbrook Village", subtitle:"the valley's beating heart", music:"auto", bg:"#101408", gen:genVillage },
 };
@@ -233,6 +234,65 @@ function genMine(m){
   m.subtitle = "Floor " + depth + "  ·  the way down is here somewhere";
   m.meta.up = {x:ux,y:uy};   // entry (diagnostic only; nothing reads meta). No fixed down-portal now — the way down hides under the stairs rock.
 }
+// ---- Starfall Ridge (v3.43) — WORLD_EXPANSION.md area 2 ----
+// The mountain above the mine, finally above ground: switchbacks from the tree line through the
+// scree to a snow-pale summit — the crater dell where the Guild's founding star fell, a wind-worn
+// bench at the cliff edge, and a cairn that opens the panorama (the game showing its own
+// geography from the one spot the fiction promised). By day: alpine forage. On CLEAR nights the
+// summit gleams with Starlight Shards — the first activity gated by clock and sky, not tool tier.
+// Layout on a fixed seed (landmarks never move); forage and starlight reshuffle with the day.
+function genRidge(m){
+  const layout = makeRng(999);                    // fixed: trail, crater, cairn, bench never move
+  const rng = makeRng(111 + state.day*7);         // daily: forage + shard scatter
+  const t = m.tiles;
+  // three bands rising north: tree-line grass → scree → the pale summit
+  for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++){
+    if(y >= 20)      t[y*W+x] = layout()<0.10 ? T.FLOWERGRASS : T.GRASS;   // the tree line
+    else if(y >= 9)  t[y*W+x] = T.DIRT;                                    // the scree
+    else             t[y*W+x] = T.SAND;                                    // the summit, snow-pale
+  }
+  // borders — walled all around except the south trailhead band back to the village
+  for(let x=0;x<m.w;x++){ t[0*W+x]=T.IWALL; t[(m.h-1)*W+x]=T.IWALL; }
+  for(let y=0;y<m.h;y++){ t[y*W+0]=T.IWALL; t[y*W+m.w-1]=T.IWALL; }
+  // the switchbacks: one honest zigzag from the trailhead to the crater's lip
+  const leg = (x0,x1,y) => { for(let x=Math.min(x0,x1);x<=Math.max(x0,x1);x++) t[y*W+x]=T.PATH; };
+  const rise = (x,y0,y1) => { for(let y=Math.min(y0,y1);y<=Math.max(y0,y1);y++) t[y*W+x]=T.PATH; };
+  rise(37,25,29); leg(10,37,25); rise(10,20,25); leg(10,36,20); rise(36,14,20); leg(12,36,14); rise(12,8,14); leg(12,22,8);
+  for(const wy of [28,29]){ for(const wx of [36,37,38]){ t[wy*W+wx]=T.PATH; if(wy===29) m.warps[key(wx,29)] = { to:"village", sx:37*TILE, sy:2*TILE, face:"down", auto:true }; } }
+  put(m, 34, 27, "sign", {text:"↓ Willowbrook Village"});
+  put(m, 34, 24, "sign", {text:"⛰ The switchbacks — mind your footing (gently; nothing here bites)"});
+  // the crater dell: a ring of scree on the summit, the star's old bed at its heart
+  for(let y=3;y<=7;y++) for(let x=24;x<=32;x++){ if(Math.hypot(x-28,y-5)<=2.6) t[y*W+x]=T.DIRT; }
+  put(m, 28, 5, "crater");
+  // the cairn at the cliff edge — the panorama — and the wind-worn bench beside it
+  put(m, 8, 4, "cairn"); put(m, 5, 4, "bench");
+  put(m, 10, 6, "sign", {text:"The valley, from above — the cairn marks the view"});
+  // the tree line: pines below, a few hardy ones straggling up the scree
+  for(let i=0;i<14;i++){ const x=randiR(layout,2,43), y=randiR(layout,21,27);
+    if(t[y*W+x]===T.GRASS && !m.objects[key(x,y)]) put(m, x, y, "pine"); }
+  for(let i=0;i<4;i++){ const x=randiR(layout,2,43), y=randiR(layout,15,19);
+    if(t[y*W+x]===T.DIRT && !m.objects[key(x,y)]) put(m, x, y, "pine"); }
+  // scree stone — the mountain gives what mountains give (minable, the farm-ridge rule)
+  for(let i=0;i<8;i++){ const x=randiR(layout,2,43), y=randiR(layout,10,19);
+    if(t[y*W+x]===T.DIRT && !m.objects[key(x,y)]) m.objects[key(x,y)] = { kind:"stone", hp:ORES.stone.hp }; }
+  // daily forage: thyme on the scree, snowdrops on the summit's edge. Nothing may land within a
+  // tile of the cairn (review fix: two nodes plus the cairn could wall off one summit tile for a
+  // day — cosmetic, but a sealed tile is a sealed tile).
+  const nearCairn = (x,y) => Math.abs(x-8) <= 2 && Math.abs(y-4) <= 2;
+  for(let i=0;i<5;i++){ const x=randiR(rng,2,43), y=randiR(rng,10,19);
+    if(t[y*W+x]===T.DIRT && !m.objects[key(x,y)]) put(m, x, y, "thymenode"); }
+  for(let i=0;i<4;i++){ const x=randiR(rng,2,43), y=randiR(rng,3,8);
+    if(t[y*W+x]===T.SAND && !m.objects[key(x,y)] && !nearCairn(x,y)) put(m, x, y, "snowdropnode"); }
+  // CLEAR days only: starlight falls on the summit overnight — gleanable after dusk (see interact)
+  if(state.weather === "clear"){
+    for(let i=0;i<10;i++){ const x=randiR(rng,2,43), y=randiR(rng,2,8);
+      if(t[y*W+x]===T.SAND && !m.objects[key(x,y)] && !nearCairn(x,y)) put(m, x, y, "shardnode"); }
+  }
+  // keep the trail itself clear — a switchback you can't walk is a wall
+  for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++)
+    if(t[y*W+x]===T.PATH && m.objects[key(x,y)] && !["sign"].includes(m.objects[key(x,y)].kind)) delete m.objects[key(x,y)];
+}
+
 // ---- The Coast Road (v3.36) — WORLD_EXPANSION.md area 1 ----
 // The shoreline continuing east of the beach: the road along the headland, the Gullwater river
 // cutting down to its estuary, the old plank ford, and the ferry landing where the road to
@@ -365,6 +425,11 @@ function genVillage(m){
   m.objects[key(33,3)] = { kind:"mineentrance" };
   m.warps[key(33,4)] = { to:"mine", sx:0, sy:0, face:"down", auto:false, mine:true };
   m.objects[key(31,4)] = { kind:"sign", text:"⛏ The Old Mine" };
+  // v3.43: the ridge trail climbs on past the mine mouth — the north edge opens at x36-38
+  // (clear of the entrance at 33,3 and the festival-window story triggers that crowd it)
+  for(const wx of [36,37,38]){ set2(wx,0,T.PATH); set2(wx,1,T.PATH); set2(wx,2,T.PATH); set2(wx,3,T.PATH);
+    m.warps[key(wx,0)] = { to:"ridge", sx:37*TILE, sy:27*TILE, face:"up", auto:true }; }
+  m.objects[key(35,2)] = { kind:"sign", text:"⛰ Starfall Ridge — the switchbacks" };
   // south: the coast. A 3×2 warp pad — walking along the very bottom of the map counts too.
   for(const x of [19,20,21]) for(const y of [26,27])
     m.warps[key(x,y)] = { to:"beach", sx:30*TILE+8, sy:3*TILE, face:"down", auto:true };

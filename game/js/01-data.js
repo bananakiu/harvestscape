@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.42.0", code: 79, codename: "Starlight", date: "2026-07-17" };
+const VERSION = { name: "3.43.0", code: 80, codename: "Starfall Ridge", date: "2026-07-17" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.43.0", code:80, date:"2026-07-17", name:"Starfall Ridge", notes:[
+    { t:"new", s:"The world grows upward. Past the mine mouth, switchbacks climb Starfall Ridge — through the tree line, up the scree, to a snow-pale summit where the Guild's founding star came down. The crater is still there, fused smooth. So is a wind-worn bench at the cliff edge, and a cairn stacked by every hand that ever made the climb." },
+    { t:"new", s:"Star-gleaning. On clear nights the summit catches Starlight Shards — splinters of the old light, gleanable after dusk for Mining practice and honest coin. Once in a while, one turns out to be true star metal. By day the ridge offers humbler things: mountain thyme and snowdrops on the scree, and stone for whoever swings at it." },
+    { t:"new", s:"The cairn opens the panorama: the whole valley from above, painted by the hour — the grove, your farm and its chimney smoke, the village, the umbrellas on the sand, the Gullwater running to the sea, and far up the coast, if you watch a moment, a light blinking at Marrow Point." },
+  ]},
   { v:"3.42.0", code:79, date:"2026-07-17", name:"Starlight", notes:[
     { t:"polish", s:"Star metal looks like what it is now. The veins run violet — the Starstone's own colour, off the same fallen star — with white-hot flecks, and each one casts a soft breathing glow in the dark of the deep floors. No more squinting to tell it from deepsilver; the star shard and the Star Metal tools wear the same violet." },
   ]},
@@ -662,6 +667,16 @@ EDIBLE["Clam"] = 20;
 const ROADSIDE = { Samphire:55, "Sea Holly":40 };
 for(const s in ROADSIDE) ITEM_SELL[s] = ROADSIDE[s];
 EDIBLE["Samphire"] = 14;   // crisp, salty — the coast's pocket snack
+// v3.43 Starfall Ridge: alpine forage by day, starlight by night. The Starlight Shard is a
+// gleanable CURIO (sellable per the owner's call) — deliberately its own item, never the mine's
+// Star Metal Shard, so the summit is a treat and not a surface faucet for the L85 material
+// (though a glean has a small chance of turning up the real thing — a trickle, bounded).
+// (Review rebalance, same release: the shard launched at 120g × ~8.5 nodes + a 6% star-metal
+// roll ≈ 1.4k/night, UNGATED — a bigger printer than the one v2.0 nerfed, live from day 2. It
+// now sits at the top of the forage band like everything else pickable by hand: ~350g/night,
+// the beach's own ungated envelope, with the star-metal trickle at 3% as the real prize.)
+const ALPINE = { "Mountain Thyme":45, "Snowdrop":38, "Starlight Shard":42 };
+for(const s in ALPINE) ITEM_SELL[s] = ALPINE[s];
 // v3.28 "Geodes": the mine's canopy-nest — a rare deep geode cracks into a curio for the shelf. These
 // are Collection pieces first, coin a distant second (they never out-earn the field), so the deep pays
 // in wonder, not gold. GEODE_CURIOS are the common set; a Geode Heart is the rare prize.
@@ -1322,6 +1337,9 @@ const EXAMINE = {
   "Rainrunner": "It runs up the river only when the storm is on the sea. Bram always said the rain brings something with it.",
   "Samphire": "Crisp green spears from the tideline, salty as the wind that grew them.",
   "Sea Holly": "A steel-blue bloom that thrives on salt and neglect. Maya would paint it; Bram would call it a weed.",
+  "Mountain Thyme": "Tough little leaves from the high scree — half the flavour of the valley in a pinch.",
+  "Snowdrop": "It blooms where the snow never quite leaves. Proof that stubbornness can be delicate.",
+  "Starlight Shard": "A splinter of last night's sky, still faintly warm. It hums if you hold it to your ear. Probably.",
   "Cooked Sardine": "Fried whole, and crunched from head to tail.",
   "Cooked Bass": "Firm white flakes, honestly earned.",
   "Cooked Trout": "Pan-browned and river-sweet.",
@@ -1497,6 +1515,12 @@ const EXAMINE_TILE = {
   EXAMINE_OBJ["mooring"] = "Nothing has tied up here in years. Somebody keeps the boards good anyway.";
   EXAMINE_OBJ["samphirenode"] = "Salty green spears, growing where only the tide waters them.";
   EXAMINE_OBJ["hollynode"] = "Steel-blue and stubborn — the headland's one flower.";
+  // v3.43 Starfall Ridge
+  EXAMINE_OBJ["cairn"] = "Stacked by every hand that ever made the climb. The view is the payment.";
+  EXAMINE_OBJ["crater"] = "The star's old bed. The stone is fused smooth, like the mountain flinched once and never again.";
+  EXAMINE_OBJ["shardnode"] = "A splinter of last night's sky, caught in the scree. It waits for the dark to let go.";
+  EXAMINE_OBJ["thymenode"] = "Tough little leaves that out-stubborn the wind.";
+  EXAMINE_OBJ["snowdropnode"] = "White bells at the snow line, nodding at nothing.";
   EXAMINE_OBJ["bench"] = "Worn smooth by years of sitting. Still room for one more.";
   EXAMINE_OBJ["plantpot"] = "Someone tends these — the blooms are always fresh.";
   // décor (v3.13): the placed pieces read back their catalogue blurb (OBJ_TITLE set in 08-actions.js,

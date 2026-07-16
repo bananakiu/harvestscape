@@ -496,9 +496,9 @@ body{
   display:grid; gap:.4em; margin:.1em 0 .5em;
   grid-template-columns:repeat(4,1fr);
   grid-template-areas:
-    ".     .     guild   mine     "
+    ".     .     guild   ridge    "
     "grove farm  village mine     "
-    "grove farm  village .        "
+    "grove farm  village mine     "
     ".     .     coast   coastroad";
 }
 .wmNode{

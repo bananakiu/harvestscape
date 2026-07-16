@@ -10,7 +10,7 @@ const IS_TOUCH = matchMedia("(pointer:coarse)").matches || "ontouchstart" in win
 // ---- open-panel tracking ----
 const openPanels = new Set();
 function anyPanelOpen(){ return openPanels.size > 0; }
-function uiBlocking(){ return dlg.open || anyPanelOpen(); }
+function uiBlocking(){ return dlg.open || anyPanelOpen() || !!_panoClose; }   // v3.43: the panorama blocks like a panel (story triggers must not fire beneath it)
 
 // ---- toasts / banner ----
 function toast(msg, col){
@@ -473,10 +473,10 @@ const MUSEUM = [
   { name:"The Legends",   items:()=>LEGENDS.map(l=>l.name) },
   { name:"Gems",          items:()=>Object.keys(GEM_SELL) },
   { name:"The Shore",     items:()=>[...Object.keys(SHORE), ...Object.keys(ROADSIDE)] },   // + the coast road's forage (v3.36)
-  { name:"Farm & Forage", items:()=>["Field Salad","Frostberry","Berry Bun","Honey","Egg","Large Egg","Milk","Large Milk","Cheese","Fine Cheese","Wool","Prize Fleece"] },   // Wool since v3.8; Cheese/Fine Cheese v3.33 (the press)
+  { name:"Farm & Forage", items:()=>["Field Salad","Frostberry","Berry Bun","Honey","Egg","Large Egg","Milk","Large Milk","Cheese","Fine Cheese","Wool","Prize Fleece","Mountain Thyme","Snowdrop"] },   // Wool since v3.8; Cheese v3.33; the ridge's forage v3.43
   { name:"The Kitchen",   items:()=>RECIPES.map(r=>r.name) },
   { name:"Materials",     items:()=>["Wood","Pine Wood","Maple Wood","Willow Wood","Elder Wood","Heartwood","Silverwood",...Object.values(WOOD_TO_LUMBER),...Object.values(ORES).map(o=>o.drop)] },   // + milled lumber (v3.21); ores DERIVED from ORES (v3.37 review fix — a hand-list forgot Deepsilver the day it shipped; now the next ore can't be missed)
-  { name:"The Deep",      items:()=>[...GEODE_CURIOS, "Geode Heart"] },   // v3.28: geode curios from the deep mine
+  { name:"The Deep",      items:()=>[...GEODE_CURIOS, "Geode Heart", "Starlight Shard"] },   // v3.28: geode curios; v3.43: the summit's splinter joins the celestial family
   { name:"The Canopy",    items:()=>Object.keys(CHARMS) },
 ];
 // (The Collection tile grid now lives in renderCollectionHtml, the Journal's Collection tab.)
@@ -577,11 +577,12 @@ const WORLD_MAP = [
   { id:"mine",    area:"mine",    label:"The Old Mine",       sub:"ore & gems" },
   { id:"coast",   area:"coast",   label:"Willowbrook Coast",  sub:"fishing & festivals" },
   { id:"coastroad", area:"coastroad", label:"The Coast Road", sub:"the Gullwater · the landing" },   // v3.36
+  { id:"ridge",     area:"ridge",     label:"Starfall Ridge",  sub:"the summit · the view" },         // v3.43
 ];
-// every live map id folds onto one of the seven board regions
+// every live map id folds onto one of the eight board regions
 const MAP_REGION = { farm:"farm", cottage:"farm", coop:"farm", barn:"farm",
   village:"village", store:"village", mayahouse:"village", guild:"guild",
-  mine:"mine", beach:"coast", grove:"grove", coastroad:"coastroad" };
+  mine:"mine", beach:"coast", grove:"grove", coastroad:"coastroad", ridge:"ridge" };
 // Where each neighbour is right now — inferred read-only from the spawn schedule (spawnMapNpcs,
 // 13-content.js). Live NPC entities only exist on the loaded map, so the map reconstructs their
 // whereabouts from the same clock rules rather than reading entities off other maps.
@@ -886,6 +887,89 @@ function openGiftPicker(id, items){
   $("giftHead").textContent = "GIVE " + NPCDEF[id].name.toUpperCase();
   openPanel("giftPanel", () => renderGift(id, items));
 }
+// ---- v3.43: the cairn panorama — the game's own geography, painted from the one spot the
+// fiction promised. A single static scene keyed to hour + weather (never a live second camera),
+// drawn at the game's native 320×208 and upscaled pixelated like everything else. ----
+let _panoClose = null;   // live close handle — uiBlocking() and doSleep() check/clear it (review fixes)
+function openPanorama(){
+  if(_panoClose){ _panoClose(); return; }   // second press on the cairn climbs down
+  const wrap = document.createElement("div");
+  wrap.id = "panorama";
+  Object.assign(wrap.style, { position:"absolute", inset:"0", zIndex:"60", background:"#000", cursor:"pointer" });
+  const cv = document.createElement("canvas"); cv.width = 320; cv.height = 208;
+  Object.assign(cv.style, { width:"100%", height:"100%", imageRendering:"pixelated" });
+  wrap.appendChild(cv);
+  $("stage") ? $("stage").appendChild(wrap) : document.body.appendChild(wrap);
+  const g = cv.getContext("2d");
+  paintPanorama(g);
+  // the Marrow Point light really blinks (review fix: one paint froze the animT sample) —
+  // a slow repaint while open, cleared on EVERY close path below
+  const tick = setInterval(() => paintPanorama(g), 600);
+  const onKey = e => { e.stopPropagation(); e.preventDefault(); close(); };
+  const close = () => { clearInterval(tick); document.removeEventListener("keydown", onKey, true); wrap.remove(); _panoClose = null; };
+  _panoClose = close;
+  wrap.onclick = close;
+  // one keypress also climbs down — captured ahead of the game's own handler, and properly
+  // REMOVED on click-close too (review fix: the once-listener used to dangle and silently
+  // swallow one future keypress at some random later moment)
+  document.addEventListener("keydown", onKey, { capture:true });
+  playSfx("menu");
+}
+function paintPanorama(g){
+  const h = state.time/60, night = (h >= 20 || h < 5.5), dusk = (h >= 17.5 && h < 20), dawn = (h >= 5.5 && h < 8);
+  g.imageSmoothingEnabled = false;
+  // the sky — the hour picks the palette
+  const sky = g.createLinearGradient(0,0,0,120);
+  if(night){ sky.addColorStop(0,"#0a0c1e"); sky.addColorStop(1,"#1c2340"); }
+  else if(dusk){ sky.addColorStop(0,"#3a3560"); sky.addColorStop(1,"#d8784a"); }
+  else if(dawn){ sky.addColorStop(0,"#4a5a8a"); sky.addColorStop(1,"#e8a86a"); }
+  else { sky.addColorStop(0,"#6aa0d8"); sky.addColorStop(1,"#b8d8ee"); }
+  g.fillStyle = sky; g.fillRect(0,0,320,120);
+  // stars / sun / moon
+  if(night){ g.fillStyle="#e8ecff"; for(let i=0;i<70;i++){ const x=(i*47)%320, y=(i*31)%95; g.fillRect(x,y,1,1); }
+    g.fillStyle="#f4f0e0"; g.beginPath(); g.arc(258,30,9,0,7); g.fill(); g.fillStyle= "#1c2340"; g.beginPath(); g.arc(262,27,8,0,7); g.fill(); }
+  else { g.fillStyle = dusk||dawn ? "#ffd88a" : "#fff2c0"; g.beginPath(); g.arc(dusk?60:250, dusk?95:35, 11, 0, 7); g.fill(); }
+  // far hills, two silhouettes deep
+  g.fillStyle = night ? "#131a2e" : dusk ? "#4a3a55" : "#5a7a9a";
+  g.beginPath(); g.moveTo(0,105); for(let x=0;x<=320;x+=16) g.lineTo(x, 95 + Math.sin(x*0.05)*7); g.lineTo(320,120); g.lineTo(0,120); g.fill();
+  g.fillStyle = night ? "#0e1424" : dusk ? "#3a2e46" : "#46617e";
+  g.beginPath(); g.moveTo(0,115); for(let x=0;x<=320;x+=16) g.lineTo(x, 108 + Math.cos(x*0.04)*6); g.lineTo(320,125); g.lineTo(0,125); g.fill();
+  // the valley floor
+  g.fillStyle = night ? "#16241a" : "#4a7a3e"; g.fillRect(0,118,320,90);
+  // the sea, along the south — a band across the bottom
+  g.fillStyle = night ? "#101c30" : "#2f5a7e"; g.fillRect(0,178,320,30);
+  g.fillStyle = night ? "#1a2a44" : "#4a7aa0"; for(let x=0;x<320;x+=22) g.fillRect(x+((state.day*3)%11),182+((x/22)%3),9,1);
+  // the grove, a dark mass to the west (left)
+  g.fillStyle = night ? "#0c1810" : "#2c4a28"; g.fillRect(0,120,66,52);
+  for(let i=0;i<26;i++){ const x=(i*13)%62, y=124+(i*17)%42; g.fillStyle = night ? "#122414" : "#39602f"; g.fillRect(x,y,5,4); }
+  // the farm — fields, the cottage, a thread of chimney smoke
+  g.fillStyle = night ? "#233020" : "#7aa04e"; g.fillRect(84,132,42,26);
+  g.fillStyle = night ? "#1c281a" : "#68904a"; for(let i=0;i<5;i++) g.fillRect(84,134+i*5,42,2);
+  g.fillStyle="#5a3f28"; g.fillRect(96,124,12,8); g.fillStyle="#7a5636"; g.fillRect(94,122,16,3);
+  g.fillStyle = night ? "#ffd88a" : "#3a2c1c"; g.fillRect(99,127,2,2);   // one lit window after dark
+  g.fillStyle="rgba(220,220,220,0.5)"; for(let i=0;i<4;i++) g.fillRect(106, 116-i*4, 2, 2);
+  // the village + the guild on its rise
+  for(let i=0;i<6;i++){ const x=150+i*11, y=140+(i%2)*6; g.fillStyle="#5a3f28"; g.fillRect(x,y,9,7); g.fillStyle="#7a5636"; g.fillRect(x-1,y-2,11,3);
+    if(night){ g.fillStyle="#ffd88a"; g.fillRect(x+3,y+3,2,2); } }
+  g.fillStyle="#6a4e32"; g.fillRect(176,126,16,10); g.fillStyle="#8a6647"; g.fillRect(174,123,20,4);   // the guild
+  // the coast: umbrellas on the sand
+  for(let i=0;i<5;i++){ g.fillStyle=["#c94f4f","#4f7ac9","#c9a44a","#4fa06a","#b06ac9"][i]; g.fillRect(140+i*14,172,6,2); g.fillStyle="#e8dcc0"; g.fillRect(142+i*14,174,2,2); }
+  // the Gullwater, down from the hills to the sea — and the coast road running north (right)
+  g.fillStyle = night ? "#1a2a44" : "#4a7aa0"; for(let y=120;y<178;y+=2) g.fillRect(236 + Math.round(Math.sin(y*0.12)*4), y, 3, 2);
+  g.fillStyle = night ? "#3a3226" : "#b8a06a"; for(let y=126;y<176;y+=2) g.fillRect(262 + Math.round((176-y)*0.4), y, 3, 2);
+  // Marrow Point's light, far up the coast — a blink you can just make out
+  if(Math.floor(animT*1.2)%2===0){ g.fillStyle="#ffe6a0"; g.fillRect(312,121,2,2); g.fillStyle="rgba(255,230,160,0.35)"; g.fillRect(310,119,6,6); }
+  // weather over everything
+  if(isRain() || isStorm()){ g.fillStyle="rgba(140,170,210,0.25)"; for(let i=0;i<90;i++){ const x=(i*37)%320, y=(i*53)%200; g.fillRect(x,y,1,4); } }
+  if(isFog()){ g.fillStyle="rgba(200,205,215,0.35)"; g.fillRect(0,100,320,108); }
+  if(isSnow()){ g.fillStyle="rgba(240,244,250,0.8)"; for(let i=0;i<60;i++){ const x=(i*41)%320, y=(i*61)%200; g.fillRect(x,y,1,1); } }
+  // the caption, on the pixel canvas like a postcard
+  g.fillStyle="rgba(0,0,0,0.55)"; g.fillRect(0,196,320,12);
+  g.fillStyle="#e9dcc0"; g.font="8px monospace"; g.textAlign="center";
+  g.fillText("The valley, from Starfall Ridge. (click to climb down)", 160, 204);
+  g.textAlign="left";
+}
+
 // ---- v3.40 quantity controls (owner sweep: "give the option to modify the quantity") ----
 function stepQty(qid, d){
   const el = $(qid); if(!el) return;

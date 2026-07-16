@@ -22,6 +22,61 @@
 
 ---
 
+## v3.43.0 — "Starfall Ridge" · 2026-07-17 · tag `v3.43.0`
+
+**The world grows upward** — `WORLD_EXPANSION.md` area 2, and the sequel v3.42's violet
+starlight set up: now there's a place it falls.
+
+**The map.** `ridge`, 46×30 outdoor, up the switchbacks past the mine mouth (the village's
+north edge opens at x36–38, clear of the entrance and its story triggers): tree-line pines,
+the dirt scree, and a snow-pale summit holding the **crater dell** where the Guild's founding
+star came down (fused smooth, a last violet gleam at the bottom), a **wind-worn bench** at the
+cliff edge, and the **cairn**. Fixed layout seed — landmarks never move; forage reshuffles daily.
+
+**Star-gleaning — the first activity gated by clock and sky, not tool tier.** On CLEAR days
+(only) the summit spawns ~10 Starlight Shard nodes; they refuse daylight with a warm line and
+glean after dusk for Mining 90 XP and a 120g curio — with a **6% chance of true Star Metal**
+per fresh node, deliberately behind the same per-day dedupe as the shard itself (caught in
+dev: rolling the bonus before the dedupe would have let repeat-pressing farm the 6% all
+night — verified closed with a 50-press hammer test). By day: mountain thyme and snowdrops
+(Farming forage), and honest scree stone.
+
+**The panorama.** The cairn opens a full-screen procedural painting of the whole valley at the
+game's native 320×208 — sky by the hour (dawn/day/dusk/night, sun or moon and stars), the
+grove's dark mass, the farm with its chimney smoke and one lit window after dark, the village
+and the Guild, the umbrellas on the sand, the Gullwater winding to the sea, the coast road
+running north — and, blinking at the far edge, **Marrow Point's light**. Weather paints over
+everything (rain streaks, fog haze, snow). One static scene, never a live second camera; click
+or any key climbs down.
+
+**Balance — rewritten by its own review.** The glean launched at 120g + Mining 90 XP per node,
+ungated: two verifiers independently proved that made the summit a **~1.4k-gold, 900-XP nightly
+printer available from day 2** — bigger than the v2.0 starfruit printer the balance playbook
+records nerfing, and a Mining 1→9-in-one-night leveling bypass. Both re-simulated the shipped
+generator byte-for-byte (real RNG, 1000 days) to size it: mean 8.55 nodes/clear night, not the
+nominal 10. Shipped numbers: **Starlight Shard 42g** (top of the ungated-forage band — the
+beach's own ~350g/day envelope is the precedent), **Mining 14 XP** (forage-class), star-metal
+trickle at **3%**. Time-averaged across weather, the summit now adds ~250g/day of dead-hours
+income plus the trickle — a treat with a real prize inside, not a second economy.
+
+**The rest of the review (7 findings, all fixed pre-ship):** the panorama's one-shot key
+listener dangled after click-close and would silently swallow one future keypress (proper
+removeEventListener on every close path); the panorama was invisible to `uiBlocking()` so the
+26:00 forced sleep could play out *underneath* the opaque overlay (it now blocks like a panel
+AND `doSleep` force-closes it); the Marrow Point light never actually blinked (painted once —
+now a slow repaint interval, cleared on close); a ~0.2%-of-days RNG alignment could wall off
+one summit tile beside the cairn (nodes now keep their distance); and a self-caught exploit
+from dev: the star-metal roll originally sat before the per-day dedupe, so repeat-pressing a
+picked node could farm it (verified closed with a 50-press hammer test).
+
+Verified in-browser (muted): trailhead both directions with the mine intact, full geometry,
+node counts, rain-day = no shards, the day-refusal line, fresh gleans at the new numbers
+(42g/14 XP), the cairn-box clear across 125 day-seeds, panorama open/close lifecycle (blocks
+while open, no swallowed keys after, sleep closes it), the dusk panorama + night summit
+screenshots, atlas (13 maps), clean console.
+
+---
+
 ## v3.42.0 — "Starlight" · 2026-07-17 · tag `v3.42.0`
 
 Owner art call (DEVLOG): deepsilver and star metal "look too alike… make the star one better —

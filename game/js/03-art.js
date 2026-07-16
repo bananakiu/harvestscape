@@ -1141,6 +1141,34 @@ function buildBeachArt(){
   mkSpr("item_Sea Holly", 16, 16, g => {
     px(g,6,3,4,3,"#7a9ac8"); px(g,7,2,2,1,"#a8c0e0"); px(g,5,4,1,1,"#7a9ac8"); px(g,10,4,1,1,"#7a9ac8"); px(g,7,4,2,1,"#dce8f8");
     px(g,7,6,2,7,"#5a7a4a"); px(g,5,8,2,1,"#5a7a4a"); px(g,9,9,2,1,"#5a7a4a"); });
+  // v3.43 STARFALL RIDGE — the summit's furniture and forage
+  mkSpr("cairn", 16, 18, g => {                                                       // stacked by every hand that made the climb
+    px(g,4,13,8,3,"#8a8478"); px(g,4,13,8,1,"#a8a296");                               // base stones
+    px(g,5,10,6,3,"#9a948a"); px(g,5,10,6,1,"#b8b2a6");
+    px(g,6,7,4,3,"#8a8478"); px(g,6,7,4,1,"#a8a296");
+    px(g,7,4,2,3,"#9a948a"); px(g,7,4,2,1,"#c8c2b6"); px(g,7,3,1,1,"#d8d2c6"); });    // the topstone, catching light
+  mkSpr("crater", 16, 16, g => {                                                      // the star's old bed, fused smooth
+    px(g,3,6,10,7,"#6a655c"); px(g,4,5,8,1,"#7a746a"); px(g,5,7,6,4,"#4a463e");       // the bowl
+    px(g,6,8,4,2,"#3a362e"); px(g,7,9,2,1,"#b088e8"); px(g,8,8,1,1,"#d8b0ff"); });    // a last violet gleam at the bottom
+  mkSpr("shardnode", 16, 16, g => {                                                   // starlight, caught in the scree
+    px(g,6,9,4,4,"#8a8478");                                                          // the scree it landed in
+    px(g,7,5,2,5,"#d8b0ff"); px(g,7,5,1,5,"#eedcff"); px(g,6,7,1,1,"#b088e8");        // the splinter
+    px(g,10,8,1,1,"#b088e8"); px(g,7,4,1,1,"#ffffff"); px(g,9,6,1,1,"#ffffff"); });   // white-hot glints
+  mkSpr("thymenode", 16, 16, g => {
+    px(g,5,9,6,4,"#5a7a4a"); px(g,5,9,6,1,"#6f9a58"); px(g,4,11,2,2,"#4a6a3e");       // the tough little bush
+    px(g,6,8,1,1,"#c9a0c8"); px(g,9,9,1,1,"#c9a0c8"); px(g,7,10,1,1,"#d8b0d8"); });   // tiny thyme flowers
+  mkSpr("snowdropnode", 16, 16, g => {
+    px(g,6,8,1,5,"#5a7a4a"); px(g,9,9,1,4,"#5a7a4a");                                 // stems
+    px(g,5,6,3,2,"#f4f4fa"); px(g,6,5,1,1,"#ffffff"); px(g,8,7,3,2,"#eaeaf4"); px(g,9,6,1,1,"#ffffff"); });   // the nodding bells
+  mkSpr("item_Mountain Thyme", 16, 16, g => {
+    px(g,7,4,2,9,"#5a7a4a"); px(g,5,6,2,1,"#6f9a58"); px(g,9,7,2,1,"#6f9a58");
+    px(g,4,8,2,1,"#6f9a58"); px(g,10,9,2,1,"#6f9a58"); px(g,6,4,1,1,"#c9a0c8"); px(g,9,5,1,1,"#c9a0c8"); });
+  mkSpr("item_Snowdrop", 16, 16, g => {
+    px(g,7,6,1,7,"#5a7a4a"); px(g,8,7,2,1,"#5a7a4a");
+    px(g,6,3,3,3,"#f4f4fa"); px(g,7,2,1,1,"#ffffff"); px(g,6,6,1,1,"#eaeaf4"); px(g,8,6,1,1,"#eaeaf4"); });
+  mkSpr("item_Starlight Shard", 16, 16, g => {
+    px(g,7,3,2,9,"#d8b0ff"); px(g,7,3,1,9,"#eedcff"); px(g,6,6,1,2,"#b088e8"); px(g,9,7,1,2,"#b088e8");
+    px(g,7,2,1,1,"#ffffff"); px(g,9,5,1,1,"#ffffff"); px(g,6,11,1,1,"#ffffff"); });
   mkSpr("coralnode", 16, 16, g => { px(g,6,8,2,6,"#ff7d9c"); px(g,4,9,2,5,"#ff9ab0"); px(g,9,7,2,7,"#ff5a7a"); px(g,7,6,2,3,"#ffbecb"); px(g,5,13,7,2,"#c9b06a"); });
   mkSpr("seaweednode", 16, 16, g => { for(let i=0;i<4;i++){ const x=4+i*2; px(g,x,7,1,7,"#3f8a5a"); px(g,x,7,1,3,"#57ad74"); } px(g,4,13,8,1,"#c9b06a"); });
   mkSpr("stage", 16, 16, g => { px(g,0,4,16,10,"#8a5f38"); px(g,0,4,16,2,"#a5763f"); px(g,0,12,16,2,"#5e4426"); for(let x=2;x<16;x+=4) px(g,x,6,1,6,"#6e4a2a"); });
