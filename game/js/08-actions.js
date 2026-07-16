@@ -292,6 +292,47 @@ function horseLook(tx, ty){
   ];
   return { title: nm, text: lines[Math.abs(Math.floor(animT/2)) % lines.length] };
 }
+// v3.35: the flock, examined — the horseLook treatment for every named animal. Radius test
+// against the facing tile's centre (animals wander in pixels, so tile-equality would be flaky).
+// Lines rise with the bond: a stranger, a friend, family (the 180 Large-produce tier).
+function animalLook(tx, ty){
+  if(!curMap || !curMap.animals || !curMap.animals.length) return null;
+  // tile-equality, not a radius (review fix): a radius wider than a half-tile let a hen on the
+  // NEIGHBOURING tile hijack the examine of the object the player was actually facing.
+  let best = null;
+  for(const a of curMap.animals){ if(Math.floor(a.x/TILE) === tx && Math.floor(a.y/TILE) === ty){ best = a; break; } }
+  if(!best) return null;
+  const c = best.ref, nm = c.name || "the " + (best.species === "chicken" ? "hen" : best.species);
+  const tier = (c.friend||0) >= 180 ? 2 : (c.friend||0) >= 80 ? 1 : 0;
+  const L = {
+    chicken: [
+      [nm + " regards you sideways, the way hens do. You are, at best, tolerated.",
+       nm + " is deeply absorbed in a patch of ground that contains nothing."],
+      [nm + " trots a few steps your way before remembering to play it cool.",
+       nm + " has opinions about the weather and delivers them all at once."],
+      [nm + " settles down next to your boot like it's the best seat in the valley.",
+       "Wherever you stand, " + nm + " ends up underfoot. This is love, hen-shaped."],
+    ],
+    cow: [
+      [nm + " chews, and considers you the way she considers most things: slowly.",
+       nm + " is exactly where she was an hour ago, and content about it."],
+      [nm + " swings her big head toward you when you speak. She's listening. Probably.",
+       nm + " leans a little your way, like a ship coming gently about."],
+      [nm + " rests her chin on the rail and waits for you, every morning, at the same spot.",
+       "The best pail in the valley, and " + nm + " gives it like it's nothing. It isn't nothing."],
+    ],
+    sheep: [
+      [nm + " blinks at you from somewhere deep inside her wool.",
+       nm + " is mostly coat at this point. Somewhere in there, a sheep."],
+      [nm + " follows you along the fence line, pretending it's a coincidence.",
+       nm + " has learned the sound of your boots and looks up before you're even close."],
+      [nm + " leans her whole warm weight against your leg and stays there.",
+       "Prize wool grows on a happy sheep, and " + nm + " may be the happiest in the valley."],
+    ],
+  };
+  const lines = L[best.species][tier];
+  return { title: nm + "  " + flockHearts(c), text: lines[Math.abs(Math.floor(animT/2)) % lines.length] };
+}
 function examineFacing(){
   if(!curMap) return null;
   const [tx,ty] = facingTile(); const k = key(tx,ty), tt = tileAt(tx,ty), obj = objAt(tx,ty);
@@ -300,6 +341,8 @@ function examineFacing(){
     return { title:c.name, text: ripe ? (EXAMINE[c.name]||"Ripe and ready.") : `A ${c.name.toLowerCase()} coming along — day ${crop.days} of ${c.days}.` }; }
   const npc = npcAtTile(tx,ty);
   if(npc){ return { title:(NPCDEF[npc.id]&&NPCDEF[npc.id].name)||npc.id, text: EXAMINE_NPC[npc.id]||"One of the valley's own." }; }
+  const an = animalLook(tx, ty);   // v3.35: the flock speaks before the furniture does
+  if(an) return an;
   if(obj){ const o = objLook(obj); if(o) return o; }
   const h = horseLook(tx, ty);   // v3.26: the horse (stall or saddle) before falling through to the bare tile
   if(h) return h;

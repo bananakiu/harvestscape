@@ -787,6 +787,22 @@ function nearestNpc(range){
 }
 
 // ---- animals (chickens) ----
+// v3.35 "The Flock": every animal has a NAME (assigned at purchase; backfilled for old saves in
+// migrateSave). The very first hen a farm ever gets is Sir Cluckington — paying off Pip's coop
+// line, two releases of foreshadowing finally cashed. Names live on the persistent record.
+const ANIMAL_NAMES = ["Clementine","Butterscotch","Petal","Waddles","Dot","Mabel","Hazel","Poppy",
+  "Tansy","Bluebell","Nutmeg","Ginger","Olive","Primrose","Bess","Daisy","Snowdrop","Bramble",
+  "Fern","Pippa","Thistle","Marigold","Cocoa","Puddle"];   // (no overlap with HORSE_NAMES)
+function nameAnimal(){
+  const all = [...state.animals.chickens, ...(state.animals.cows||[]), ...(state.animals.sheep||[])];
+  const used = new Set(all.map(a => a.name).filter(Boolean));
+  const start = (state.day*3 + used.size*7) % ANIMAL_NAMES.length;   // deterministic, no reroll savescumming
+  for(let i=0; i<ANIMAL_NAMES.length; i++){ const n = ANIMAL_NAMES[(start+i)%ANIMAL_NAMES.length]; if(!used.has(n)) return n; }
+  return "Little One";
+}
+// The bond, visible: 5 hearts at 50 friend apiece (cap 250) — the Large-produce threshold (180)
+// sits at ~3½ hearts, so the hearts a player watches grow ARE the road to the good pail.
+function flockHearts(c){ const h = Math.min(5, Math.floor((c.friend||0)/50)); let s = ""; for(let i=0;i<5;i++) s += i<h ? "♥" : "♡"; return s; }
 function spawnAnimals(m){
   m.animals = [];
   if(m.id === "coop"){
@@ -805,6 +821,33 @@ function spawnAnimals(m){
       m.animals.push({ ref:c, species:"sheep", speed:9, x:(6 + (i%2)*4)*TILE+8, y:(4 + Math.floor(i/2)*3)*TILE+8,
         dir:{x:0,y:0}, timer:0, walk:0, moving:false, face: i%2?"left":"right" });
     });
+  } else if(m.id === "farm" && state.weather === "clear" && curSeason() !== "Winter"){
+    // v3.35: the fair-weather yard. On clear (non-winter) days the flock takes the grass strip in
+    // front of its buildings — the SAME wrappers as indoors, so petting and the day's egg/milk/wool
+    // work in the open air (a chore made a stroll). A home+leash on each wrapper (see updateAnimals)
+    // keeps the wander near the buildings; nothing is saved beyond what already persists — this
+    // whole cast list is rebuilt on every map entry, exactly like the coop's.
+    // Every stamp goes through freeSpot (review fix): the preferred tile can be OCCUPIED — the
+    // minecart line's railcart sits at (14,7), the first hen's slot, and any of these grass tiles
+    // can hold a player's keg or décor. An animal spawned at a blocked tile's centre can never
+    // step out (the move check tests the destination tile, and every sub-pixel step from a centre
+    // lands on the same tile) — so probe neighbours, and if nothing near is free, stay in today.
+    const freeSpot = (tx,ty) => {
+      for(const [dx,dy] of [[0,0],[1,0],[-1,0],[0,1],[1,1],[-1,1],[2,0],[-2,0],[0,-1]]){
+        const x = tx+dx, y = ty+dy, o = m.objects[key(x,y)];
+        if(!SOLID.has(m.tiles[y*W+x]) && !objBlocks(o)) return { x:x*TILE+8, y:y*TILE+8 };
+      }
+      return null;
+    };
+    const yard = [];
+    const stamp = (c, species, speed, tx, ty) => { const p = freeSpot(tx,ty); if(p) yard.push({ ref:c, species, speed, x:p.x, y:p.y }); };
+    if(state.flags.proj_coop) state.animals.chickens.forEach((c,i) => stamp(c, "chicken", 15, 14 + (i%4), 7 + Math.floor(i/4)));
+    if(state.flags.proj_barn){
+      (state.animals.cows||[]).forEach((c,i) => stamp(c, "cow", 7, 20 + (i%2)*3, 7 + Math.floor(i/2)));
+      (state.animals.sheep||[]).forEach((c,i) => stamp(c, "sheep", 9, 24 + (i%2)*2, 7 + Math.floor(i/2)));
+    }
+    yard.forEach((a,i) => m.animals.push(Object.assign(a, { dir:{x:0,y:0}, timer:0, walk:0, moving:false,
+      face: i%2?"left":"right", home:{ x:a.x, y:a.y, r:40 } })));
   }
 }
 function updateAnimals(dt){
@@ -812,6 +855,20 @@ function updateAnimals(dt){
   for(const a of curMap.animals){
     a.timer -= dt;
     if(a.timer <= 0){ a.timer = rand(0.8,2.4); a.dir = chance(0.5)?{x:0,y:0}:{x:[-1,0,1][randi(0,2)],y:[-1,0,1][randi(0,2)]}; }
+    // v3.35: yard animals carry a home+leash — past the radius, the next step is homeward.
+    // Interiors have walls; the open farm needs this so a hen never ends up in the crop rows.
+    // The homeward step probes half a tile ahead and falls back diagonal → x-only → y-only;
+    // if all three are blocked (a wall pocket), the wander's own reroll stands for this cycle —
+    // overriding it every frame made the blocked-step recovery dead code and pinned animals
+    // marching in place against the coop wall (review fix).
+    if(a.home && Math.hypot(a.x-a.home.x, a.y-a.home.y) > (a.home.r||40)){
+      const hx = Math.sign(a.home.x-a.x), hy = Math.sign(a.home.y-a.y);
+      for(const d of [{x:hx,y:hy},{x:hx,y:0},{x:0,y:hy}]){
+        if(!d.x && !d.y) continue;
+        const px2 = Math.floor((a.x+d.x*8)/TILE), py2 = Math.floor((a.y+d.y*8)/TILE);
+        if(!isSolidTile(px2,py2) && !objBlocks(objAt(px2,py2))){ a.dir = d; break; }
+      }
+    }
     a.moving = (a.dir.x||a.dir.y)!==0;
     if(a.moving){
       const sp=(a.speed||15)*dt, nx=a.x+a.dir.x*sp, ny=a.y+a.dir.y*sp, bx=Math.floor(nx/TILE), by=Math.floor(ny/TILE);
@@ -827,43 +884,59 @@ function nearestAnimal(range){
   return best;
 }
 function petChicken(a){
-  const c = a.ref;
+  const c = a.ref, nm = c.name || "the hen";
   if(c.eggDay !== state.day){ c.eggDay = state.day; const large = c.friend>=180 && chance(0.5);
     give(large?"Large Egg":"Egg", 1); c.friend = Math.min(250, c.friend+8);
-    playSfx("get"); pSparkle(a.x, a.y-8, "#fff6d0", 6); floatText(a.x, a.y-14, "+egg", "#ffe08a"); }
+    playSfx("get"); pSparkle(a.x, a.y-8, "#fff6d0", 6); floatText(a.x, a.y-14, "+egg", "#ffe08a");
+    maybeFirstLarge(large); }
   else if(c.petDay !== state.day){ c.petDay = state.day; c.friend = Math.min(250, c.friend+3);
-    toast("You pet the hen. ♥", "#ff7d9c"); playSfx("heart"); pSparkle(a.x, a.y-8, "#ff9ab0", 4); }
-  else toast("This hen has had enough fuss for today.");
+    toast(`You pet ${nm}. ${flockHearts(c)}`, "#ff7d9c"); playSfx("heart"); pSparkle(a.x, a.y-8, "#ff9ab0", 4); }
+  else toast(`${nm} has had enough fuss for today.`);
+}
+// v3.35: the friend>=180 threshold used to be entirely invisible — the first time an animal gives
+// its best, the moment gets a beat that names the mechanic (the firstTimber pattern).
+function maybeFirstLarge(large){
+  if(!large || state.flags.firstLargeProduce) return;
+  state.flags.firstLargeProduce = true;
+  showDialog("The Best She Has",
+    "A larger, richer gift than any morning before — and she watches you take it, easy and unbothered. Somewhere in all those mornings you stopped being the farmer and started being family.\n\n(A well-loved animal — hearts most of the way full — gives its best about half the time.)", null);
 }
 function buyChicken(){
   if(!state.flags.proj_coop){ toast("You'll want a coop first — raise one from the Ledger (Rowan can help)."); playSfx("error"); return; }
   if(state.animals.chickens.length >= 6){ toast("Your coop is full (6 hens)."); return; }
   if(state.gold < 300){ toast("Not enough coin (300g)."); playSfx("error"); return; }
-  state.gold -= 300; state.animals.chickens.push({ friend:0, eggDay:0, petDay:0 });
-  toast("A new hen joins the coop! 🐔", "#8fd06a"); playSfx("coin"); refreshHUD(); renderShop();
+  state.gold -= 300;
+  // the first hen a farm EVER gets is Sir Cluckington — Pip called it at the coop-raise (NPC_RECOG)
+  const nm = state.animals.chickens.length === 0 ? "Sir Cluckington" : nameAnimal();
+  state.animals.chickens.push({ friend:0, eggDay:0, petDay:0, name:nm });
+  toast(nm === "Sir Cluckington" ? "Sir Cluckington joins the coop! 🐔 Pip will be beside himself." : `${nm} joins the coop! 🐔`, "#8fd06a");
+  playSfx("coin"); refreshHUD(); renderShop();
 }
 
 // ---- cows ----
 function petCow(a){
-  const c = a.ref;
+  const c = a.ref, nm = c.name || "the cow";
   if(c.milkDay !== state.day){
     c.milkDay = state.day;
     const large = c.friend >= 180 && chance(0.5);
     give(large ? "Large Milk" : "Milk", 1);
     c.friend = Math.min(250, c.friend + 8);
     playSfx("get"); pSparkle(a.x, a.y-10, "#eaf4fb", 7); floatText(a.x, a.y-16, large?"+big milk":"+milk", "#dfeaf2");
+    maybeFirstLarge(large);
   } else if(c.petDay !== state.day){
     c.petDay = state.day; c.friend = Math.min(250, c.friend + 3);
-    toast("She leans into your hand. ♥", "#ff7d9c"); playSfx("heart"); pSparkle(a.x, a.y-10, "#ff9ab0", 4);
-  } else toast("She's been milked and fussed over already today.");
+    toast(`${nm} leans into your hand. ${flockHearts(c)}`, "#ff7d9c"); playSfx("heart"); pSparkle(a.x, a.y-10, "#ff9ab0", 4);
+  } else toast(`${nm} has been milked and fussed over already today.`);
 }
 function buyCow(){
   if(!state.flags.proj_barn){ toast("You'll need a barn first — raise one from the Ledger."); playSfx("error"); return; }
   if(!state.animals.cows) state.animals.cows = [];
   if(state.animals.cows.length >= 4){ toast("Your barn is full (4 cows)."); return; }
   if(state.gold < 600){ toast("Not enough coin (600g)."); playSfx("error"); return; }
-  state.gold -= 600; state.animals.cows.push({ friend:0, milkDay:0, petDay:0 });
-  toast("A cow ambles into the barn. 🐄", "#8fd06a"); playSfx("coin"); refreshHUD(); renderShop();
+  state.gold -= 600;
+  const nm = nameAnimal();
+  state.animals.cows.push({ friend:0, milkDay:0, petDay:0, name:nm });
+  toast(`${nm} ambles into the barn. 🐄`, "#8fd06a"); playSfx("coin"); refreshHUD(); renderShop();
 }
 
 // ---- sheep ----
@@ -875,6 +948,7 @@ function shearSheep(a){
   const c = a.ref;
   // A full coat + shears is the payoff; a truly cherished sheep (friend>=180) grows a Prize Fleece,
   // mirroring the Large Milk/Egg tier so a sheep's friendship is never dead state.
+  const nm = c.name || "the sheep";
   if(woolReady(c) && state.flags.hasShears){
     c.woolDay = state.day;
     const prize = c.friend >= 180 && chance(0.5);
@@ -882,6 +956,7 @@ function shearSheep(a){
     c.friend = Math.min(250, c.friend + 8);
     playSfx("get"); pSparkle(a.x, a.y-10, "#f6f6fa", prize?10:7);
     floatText(a.x, a.y-16, prize?"+prize fleece":"+wool", prize?"#ffe6a0":"#e8e8ee");
+    maybeFirstLarge(prize);
     return;
   }
   // Anything else falls through to a friendly pet — a full-coated sheep is never un-pettable, and
@@ -889,10 +964,10 @@ function shearSheep(a){
   if(c.petDay !== state.day){
     c.petDay = state.day; c.friend = Math.min(250, c.friend + 3);
     const nudge = woolReady(c) && !state.flags.hasShears
-      ? "Her coat's full — shears from Tom's would gather it. She leans into your hand anyway. ♥"
-      : "The sheep leans into your hand. ♥";
+      ? `${nm}'s coat is full — shears from Tom's would gather it. She leans into your hand anyway. ${flockHearts(c)}`
+      : `${nm} leans into your hand. ${flockHearts(c)}`;
     toast(nudge, "#ff7d9c"); playSfx("heart"); pSparkle(a.x, a.y-10, "#ff9ab0", 4);
-  } else toast("This one's had plenty of fuss today.");
+  } else toast(`${nm} has had plenty of fuss today.`);
 }
 function buySheep(){
   if(!state.flags.proj_barn){ toast("You'll need a barn first — raise one from the Ledger."); playSfx("error"); return; }
@@ -901,8 +976,9 @@ function buySheep(){
   if(state.gold < SHEEP_COST){ toast(`Not enough coin (${SHEEP_COST}g).`); playSfx("error"); return; }
   state.gold -= SHEEP_COST;
   // stamp woolDay=today so the first coat grows over WOOL_REGROW days, the same as every coat after
-  state.animals.sheep.push({ friend:0, woolDay:state.day, petDay:0 });
-  toast("A sheep trots into the barn. 🐑  Its coat will want a few days to grow.", "#8fd06a");
+  const nm = nameAnimal();
+  state.animals.sheep.push({ friend:0, woolDay:state.day, petDay:0, name:nm });
+  toast(`${nm} trots into the barn. 🐑  Her coat will want a few days to grow.`, "#8fd06a");
   playSfx("coin"); refreshHUD(); renderShop();
 }
 function buyShears(){

@@ -22,6 +22,62 @@
 
 ---
 
+## v3.35.0 — "The Flock" · 2026-07-16 · tag `v3.35.0`
+
+The v3.32 re-audit's **#2 priority** — "the most-touched living things are the least written."
+The barn animals the player pets every morning had no names, no voice, no visible friendship.
+
+**Names.** `ANIMAL_NAMES` pool (24, no overlap with `HORSE_NAMES`); `nameAnimal()` assigns at
+purchase, deterministically (day + flock size — no reroll save-scumming). The first hen a farm
+*ever* gets is **Sir Cluckington** — Pip's coop-raise line ("I'm gonna name one Sir Cluckington")
+was two releases of foreshadowing, now paid off at the shop counter. `migrateSave` names every
+existing animal (hen #1 becomes Sir Cluckington retroactively — he was Sir Cluckington all along).
+
+**The bond, visible.** `flockHearts(c)` renders 5 hearts at 50 friend apiece — chosen so the
+invisible `friend >= 180` Large-produce threshold sits at ~3½ hearts: the hearts a player watches
+grow ARE the road to the good pail. Pet toasts now carry name + hearts; examining an animal (Q)
+gets the horseLook treatment — 3 species × 3 friendship tiers of lines (stranger → friend →
+family). And the first time an animal gives its best (Large Egg / Large Milk / Prize Fleece), a
+one-time firstTimber-style beat names the mechanic — backfilled off `discovered[]` so veterans
+don't get it on their four-hundredth egg.
+
+**The fair-weather yard.** On clear, non-winter days `spawnAnimals` gains a farm branch: the
+flock spawns in the grass strip in front of its buildings as the *same wrappers* as indoors — so
+petting, the day's egg/pail/coat, the E-prompt, and the draw loop all work in the open air with
+zero new code (they were already generic over `curMap.animals`). The one real addition is a
+`home` + leash on each yard wrapper (`updateAnimals` steers homeward past 40px) — interiors have
+walls; the open farm needed a reason a hen never ends up in the crop rows. Rain, storms, fog,
+snow, and the whole of winter keep everyone in. `migrateSave` clears any yard wrappers that got
+serialized into `state.farm` (they're rebuilt on every map entry — nothing may pet a detached
+copy).
+
+**Adversarial review found 5 issues; all fixed pre-ship.** The one for the ages: **Sir
+Cluckington would have spawned entombed in the minecart** — chicken #0's preferred yard tile
+(14,7) is exactly `CART_A`, the railcart's tile on any save with the minecart line funded, and an
+animal spawned at a blocked tile's centre can never step out (the move check tests the destination
+tile; every sub-pixel step from a centre lands on the same tile). The update's marquee animal,
+frozen walk-animating inside a minecart you could ride *through* him. Fixes:
+- **`freeSpot` probe at spawn** — every yard stamp scans neighbours if its preferred tile is
+  occupied (railcart, player kegs/décor — 11 of the 14 tiles were plantable) and stays in for the
+  day if nothing nearby is free.
+- **Leash pocket fix** — the homeward override ran every frame, making the blocked-step reroll
+  dead code; a verifier *simulated it* and froze the hen against the coop wall in 166/200 trials.
+  The homeward step now probes ahead (diagonal → x-only → y-only) and yields to the wander's
+  reroll when all three are blocked.
+- **Examine is tile-precise** — the radius-14 test let a hen on a *neighbouring* tile hijack the
+  shipping bin's Q-examine; now the animal must occupy the faced tile.
+- **Prompt honesty** — facing an unripe crop, the E-prompt could point at a passing hen while E
+  answered the crop; the prompt now respects interact()'s crop-first order.
+
+Verified in-browser (muted): naming (first-hen guarantee, distinct pool picks), yard spawn +
+rain/winter gating, leashed wander + pocket recovery, the railcart/keg dodge (hen → (15,7), cow →
+(21,7), both mobile), pet toasts with hearts, all three examine tiers + tile-equality both ways,
+first-Large firing once, backfill (names + firstLargeProduce + stale-wrapper clear), and a
+screenshot of the yard alive — hens scratching by the coop (egg-ready glow), cow and sheep by the
+barn.
+
+---
+
 ## v3.34.0 — "Small Talk" · 2026-07-16 · tag `v3.34.0`
 
 The v3.32 re-audit's **#3 priority** — the "shipped ≠ integrated" defect class. Ice fishing,

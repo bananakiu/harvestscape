@@ -205,6 +205,28 @@ function migrateSave(s){
     }
     if(s.farm && s.farm.objects) for(const k in s.farm.objects){ const o = s.farm.objects[k]; if(o && DECOR[o.kind]) s.flags["placed_"+o.kind] = true; }
   }
+  // v3.35: the fair-weather yard means state.farm.animals can hold serialized wrapper entities
+  // (with stale ref copies) from the moment of saving. spawnAnimals rebuilds the cast on every
+  // map entry, so clear the stale ones at load — nothing may ever pet a detached copy.
+  if(s.farm) s.farm.animals = [];
+  // v3.35 "The Flock" backfill: every existing animal gets a name (the first hen a save ever had
+  // becomes Sir Cluckington — Pip called it), and a save that has already held Large produce
+  // skips the first-Large dialog (it would misread as news on their four-hundredth egg).
+  if(s.animals){
+    const all = [...(s.animals.chickens||[]), ...(s.animals.cows||[]), ...(s.animals.sheep||[])];
+    const used = new Set(all.map(a => a.name).filter(Boolean));
+    if(s.animals.chickens && s.animals.chickens[0] && !s.animals.chickens[0].name && !used.has("Sir Cluckington")){
+      s.animals.chickens[0].name = "Sir Cluckington"; used.add("Sir Cluckington");
+    }
+    let ni = ((s.day||1)*3) % ANIMAL_NAMES.length;
+    for(const a of all){ if(!a.name){
+      let guard = 0; while(used.has(ANIMAL_NAMES[ni % ANIMAL_NAMES.length]) && guard++ < ANIMAL_NAMES.length) ni++;
+      a.name = used.has(ANIMAL_NAMES[ni % ANIMAL_NAMES.length]) ? "Little One" : ANIMAL_NAMES[ni % ANIMAL_NAMES.length];
+      used.add(a.name); ni++;
+    } }
+  }
+  if(s.flags && s.discovered && (s.discovered["Large Egg"] || s.discovered["Large Milk"] || s.discovered["Prize Fleece"]))
+    s.flags.firstLargeProduce = true;
   for(const k in f.stats){ if(s.stats[k] === undefined) s.stats[k] = 0; }
   for(const t of TOOLS){ if(s.tools[t] === undefined) s.tools[t] = 0; }
   if(s.skills) for(const sk in f.skills){ if(s.skills[sk] === undefined) s.skills[sk] = 0; }

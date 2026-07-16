@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.34.0", code: 71, codename: "Small Talk", date: "2026-07-16" };
+const VERSION = { name: "3.35.0", code: 72, codename: "The Flock", date: "2026-07-16" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.35.0", code:72, date:"2026-07-16", name:"The Flock", notes:[
+    { t:"new", s:"Every animal has a name now. New arrivals are named at the counter; the animals you already keep found their names too — and your very first hen turns out to have been Sir Cluckington all along, exactly as Pip promised. Pet toasts show each animal's hearts, examining one (Q) tells you how the friendship is going in its own words, and the first time a well-loved animal gives its best — a large egg, a brimming pail, a prize fleece — the moment gets its due." },
+    { t:"new", s:"On clear days the flock goes out. Hens scratch in front of the coop, cows and sheep take the grass by the barn — and the morning egg, pail, and coat can all be gathered right there in the yard. They keep close to home, and head in when the weather turns (and through the winter)." },
+  ]},
   { v:"3.34.0", code:71, date:"2026-07-16", name:"Small Talk", notes:[
     { t:"new", s:"The valley notices more. Bram has a word for whoever keeps casting after the water goes hard — and words he's been saving for the first Frostfin and the first Glassperch anyone's landed since his day. Pip has urgent questions about treasure inside rocks (and one worry about Gary). And the star monuments no longer stand in silence: Pip begs a turn at the telescope, Rowan has a long look at the obelisk, and Maya has seen the spire glowing from the meadow." },
     { t:"polish", s:"If you'd already caught the winter fish, cracked a geode, or raised a monument before this update — everyone still remembers. The lines wait for your next visit." },

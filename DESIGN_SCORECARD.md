@@ -64,7 +64,9 @@ last nine releases built.
    hearts in the pet toast, a recognition moment at the first Large Egg/Milk/Fleece — plus the
    fair-weather yard: flock rendered outdoors on clear days (render-side, stall-horse pattern, no
    new save state). → `13-content.js` (pet/buy fns, spawnAnimals), `08-actions.js` (animalLook),
-   `01-data.js`, `07-entities.js`.
+   `01-data.js`, `07-entities.js`. ✅ **Shipped v3.35.0** — names (Sir Cluckington guaranteed first,
+   backfilled for old saves), hearts in every pet toast, 3-tier examines, the first-Large beat, and
+   the fair-weather yard (real entities rather than render-only, leashed, chores work outdoors).
 3. **[S] Give the voiceless systems their voice.** *(Story)* Bram tips and reacts to the winter fish;
    Pip reacts to the first geode curio ("Gary gets a friend"); NPC_RECOG entries per star monument
    (Pip begging to use the Great Telescope). Pure text on delivery channels that already exist — the

@@ -257,7 +257,9 @@ function renderWorld(){
     ctx.strokeStyle = toolActValid(fx,fy) ? "rgba(150,255,150,0.7)" : "rgba(255,255,255,0.28)";
     ctx.lineWidth = 1; ctx.strokeRect(fx*TILE+0.5, fy*TILE+0.5, TILE-1, TILE-1);
     if(facingInteractable(fx,fy)) drawPrompt(fx*TILE+8, fy*TILE-6);
-    else { const n = nearestNpc(24); if(n) drawPrompt(n.x, n.y-28);
+    // v3.35: interact() answers ANY crop on the facing tile (unripe → status toast) before it ever
+    // reaches an animal — so while facing a growing crop, never point the prompt at a passing hen.
+    else if(!curMap.crops[key(fx,fy)]){ const n = nearestNpc(24); if(n) drawPrompt(n.x, n.y-28);
       else { const a = nearestAnimal(20); if(a) drawPrompt(a.x, a.y-18); } }
   }
 
