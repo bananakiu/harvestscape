@@ -69,7 +69,8 @@ last nine releases built.
    Pip reacts to the first geode curio ("Gary gets a friend"); NPC_RECOG entries per star monument
    (Pip begging to use the Great Telescope). Pure text on delivery channels that already exist — the
    cheapest §7/§4.6 yield on the board. → `13-content.js`, `08-actions.js` (first-catch/first-place
-   flags, firstTimber pattern).
+   flags, firstTimber pattern). ✅ **Shipped v3.34.0** — seven recognition beats + when()-gated
+   entries + full migrateSave backfill so old saves earn the lines retroactively.
 4. **[M] The deep veins — Mining L70 + L90 ores, with sinks in the same release.** *(Progression)*
    Two veins on floors 45+/55+ extending the oreTable bands, XP on the v3.19 ×3 scale, prices
    monotonic under gem-class neighbours, folded into new star-tier/estate recipes from day one so

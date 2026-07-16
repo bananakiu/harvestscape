@@ -679,6 +679,28 @@ const NPC_RECOG = [
   { npc:"tom",   flag:"proj_barn",   ack:"ack_tom_press",    give:"Cheese Press",
     when: () => (state.inv["Cheese Press"]||0) === 0 && !(state.farm && Object.values(state.farm.objects).some(o => o.kind === "press")),   // never force a surplus press
     line:"That milk trade I mentioned? My wife sent one of her old presses up from the dairy — says any farm that supplies her milk ought to be making its own cheese. It's yours. Set it down like a hive." },
+  // ---- v3.34 "Small Talk": the voiceless systems get a voice ----
+  // The v3.32 audit's new defect class — "shipped ≠ integrated": ice fishing, geodes, and the
+  // star monuments all worked, and no NPC ever said a word about any of them. These entries ride
+  // the channels that already exist. Flags: first_<fish> set in landFish, crackedGeode in
+  // crackGeode, placed_<decor> at décor placement — all backfilled for old saves in migrateSave.
+  { npc:"bram",  ack:"ack_bram_icetip",                       // no flag — fires the first winter talk once the rod arm is real
+    // …and stands down forever once the player has already found the ice fish themselves (either
+    // one) — a discovery tip delivered after the congratulations would read as Bram forgetting.
+    when: () => curSeason() === "Winter" && skillLvl("Fishing") >= 10 && !state.flags.first_Frostfin && !state.flags.first_Glassperch,
+    line:"Water's gone hard. Good. Most folk put the rod away come the freeze — but there's fish that only rise through ice. Frostfin, off the pond and the coast. And out past the breakers… something clearer than the ice itself. Dress warm." },
+  { npc:"bram",  flag:"first_Frostfin",   ack:"ack_bram_frostfin",
+    line:"A Frostfin, was it. Most quit casting when the water hardens. The fish notice who stays. …So do I." },
+  { npc:"bram",  flag:"first_Glassperch", ack:"ack_bram_glassperch",
+    line:"…That's a Glassperch you landed. Eleven winters I fished this coast before my first. Don't you dare tell me how long it took you — let an old man keep one thing." },
+  { npc:"pip",   flag:"crackedGeode",     ack:"ack_pip_geode",
+    line:"You cracked open a ROCK and there was TREASURE inside?! …Wait. Do you think Gary has treasure inside him? …No. NO. Some rocks are friends, not presents. But can I see yours again??" },
+  { npc:"pip",   flag:"placed_observatory", ack:"ack_pip_scope",
+    line:"You have a TELESCOPE! A real actually-REAL one! Rowan said the Guild had one and I thought it was a made-up story! Can I look through it?? I want to find the hole where your star fell out!" },
+  { npc:"rowan", flag:"placed_starobelisk", ack:"ack_rowan_obelisk",
+    line:"Star metal, raised in a farmer's yard where anyone may walk up and lay a hand on it. The founders locked theirs in a vault. Yours catches the sunrise. …I think you have the right of it." },
+  { npc:"maya",  flag:"placed_crystalspire", ack:"ack_maya_spire",
+    line:"I could see it from the meadow last night — your spire, glowing like the mine came up for air. I sat in the grass and watched it a long while. I hope that's alright. ♥" },
   { npc:"rowan", flag:"proj_stable", ack:"ack_rowan_stable", line:"You framed a stable with your own milled beams, stone footing and all. The old carpentry lives in your hands, it seems. That was the tenth craft, though the Guild never counted it. Ride well." },
   { npc:"maya",  flag:"proj_stable", ack:"ack_maya_stable",  line:"I saw you ride past this morning — you looked so free, mane and all. The valley feels bigger and smaller at once now. Take me along the coast road someday? ♥" },
 ];
@@ -688,7 +710,7 @@ const NPC_RECOG = [
 // plaza-Tom/Rowan/Maya would otherwise get their story-filler line first). Story turn-ins and heart
 // events already return earlier in talkNpc, so this can't preempt anything quest-critical.
 function pendingRecog(id){
-  for(const r of NPC_RECOG){ if(r.npc===id && state.flags[r.flag] && !state.flags[r.ack]){
+  for(const r of NPC_RECOG){ if(r.npc===id && (!r.flag || state.flags[r.flag]) && !state.flags[r.ack]){   // v3.34: flag optional — a `when`-only entry (Bram's ice tip) gates itself
     if(r.when && !r.when()) continue;                       // v3.33: an entry can wait for its moment (or never come — the press gift skips owners)
     state.flags[r.ack] = true;
     if(r.give){ give(r.give, 1, true); playSfx("gift"); pSparkle(state.px, state.py-14, "#ffe6a0", 12); }   // v3.33: a recognition can carry a parcel

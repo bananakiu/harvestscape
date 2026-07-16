@@ -723,6 +723,7 @@ function forageNode(x, y, obj, item, skill, xp){
 // (sometimes), a rare Geode Heart, or — one in twenty-five — a Starstone. Collection first, coin a
 // distant second, so the deep pays in wonder without becoming a gold faucet.
 function crackGeode(tx, ty){
+  state.flags.crackedGeode = true;   // v3.34: Pip has OPINIONS about treasure inside rocks (NPC_RECOG)
   playSfx("get"); pSparkle(tx*TILE+8, ty*TILE+8, "#c8b8ff", 16); pChips(tx*TILE+8, ty*TILE+8, "#8a8278", 6);
   const r = Math.random();
   if(r < 0.56){ const s = pick(GEODE_CURIOS); give(s, 1);
@@ -1033,6 +1034,7 @@ function landFish(){
   }
 
   give(f.name, 1); bump("fished");
+  if(f.season) state.flags["first_"+f.name] = true;   // v3.34: the season-gated catches get remembered — Bram has words for each (NPC_RECOG)
   addXP("Fishing", f.xp + (perfect ? Math.round(f.xp*0.5) : 0));
   if(perfect){ give(f.name, 1); floatText(state.px, state.py-30, "PERFECT!", "#ffd75a"); }
   if(curMap.id === "beach" && chance(0.15)) give(pick(["Shell","Coral","Seaweed"]), 1);
@@ -1190,6 +1192,7 @@ function plantPermanent(tx, ty){
     if(!spendEnergy(2)) return;
     take(D.name);
     curMap.objects[key(tx,ty)] = { kind:dec };   // kind is the DECOR key; spr[kind] draws it
+    state.flags["placed_"+dec] = true;   // v3.34: the neighbours notice what you raise (NPC_RECOG keys off these; backfilled in migrateSave)
     setTile(tx,ty, T.GRASS);
     toast(`The ${D.name.toLowerCase()} looks right at home.`, "#cbb98f"); playSfx("plant");
     pSparkle(tx*TILE+8, ty*TILE+8, "#ffe6a0", 8);

@@ -194,6 +194,17 @@ function migrateSave(s){
     const st = PROJECT_BY_ID.stable.site;
     for(let y=st[1]; y<=st[3]; y++) for(let x=st[0]; x<=st[2]; x++){ const k = x+","+y; const o = s.farm.objects[k]; if(o && ORES[o.kind]) delete s.farm.objects[k]; }
   }
+  // v3.34 "Small Talk" backfill: the recognition lines key off first_<fish> / crackedGeode /
+  // placed_<decor> flags that only started being written in v3.34 — so a save that already
+  // caught the winter fish, cracked a geode, or raised a monument earns its lines retroactively.
+  // discovered[] records every item ever held; the farm's objects record what stands.
+  if(s.flags){
+    if(s.discovered){
+      for(const fname of ["Frostfin","Glassperch"]) if(s.discovered[fname]) s.flags["first_"+fname] = true;
+      if(GEODE_CURIOS.some(c => s.discovered[c]) || s.discovered["Geode Heart"]) s.flags.crackedGeode = true;
+    }
+    if(s.farm && s.farm.objects) for(const k in s.farm.objects){ const o = s.farm.objects[k]; if(o && DECOR[o.kind]) s.flags["placed_"+o.kind] = true; }
+  }
   for(const k in f.stats){ if(s.stats[k] === undefined) s.stats[k] = 0; }
   for(const t of TOOLS){ if(s.tools[t] === undefined) s.tools[t] = 0; }
   if(s.skills) for(const sk in f.skills){ if(s.skills[sk] === undefined) s.skills[sk] = 0; }

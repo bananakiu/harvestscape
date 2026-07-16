@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.33.0", code: 70, codename: "The Dairy", date: "2026-07-16" };
+const VERSION = { name: "3.34.0", code: 71, codename: "Small Talk", date: "2026-07-16" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.34.0", code:71, date:"2026-07-16", name:"Small Talk", notes:[
+    { t:"new", s:"The valley notices more. Bram has a word for whoever keeps casting after the water goes hard — and words he's been saving for the first Frostfin and the first Glassperch anyone's landed since his day. Pip has urgent questions about treasure inside rocks (and one worry about Gary). And the star monuments no longer stand in silence: Pip begs a turn at the telescope, Rowan has a long look at the obelisk, and Maya has seen the spire glowing from the meadow." },
+    { t:"polish", s:"If you'd already caught the winter fish, cracked a geode, or raised a monument before this update — everyone still remembers. The lines wait for your next visit." },
+  ]},
   { v:"3.33.0", code:70, date:"2026-07-16", name:"The Dairy", notes:[
     { t:"new", s:"The barn's milk finally has somewhere to go. A new Cheese Press sets a pail into a wheel of cheese overnight — plain milk into Cheese, a well-loved cow's brimming pail into Fine Cheese. Load it like a keg; both wheels keep, eat well, and sell honestly." },
     { t:"new", s:"Your first press is a gift. Once the barn is up, talk to Tom — his wife runs the dairy down the coast, and she's sent something up for the farm that supplies her milk. More presses are on his shelf after that, built from oak lumber and iron." },

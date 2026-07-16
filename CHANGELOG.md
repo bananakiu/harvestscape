@@ -22,6 +22,44 @@
 
 ---
 
+## v3.34.0 — "Small Talk" · 2026-07-16 · tag `v3.34.0`
+
+The v3.32 re-audit's **#3 priority** — the "shipped ≠ integrated" defect class. Ice fishing,
+geodes, and the star monuments all *worked* and no NPC ever said a word about any of them. This
+is the pure-text fix: seven recognition beats on channels that already exist.
+
+**The lines.** Bram gets three: a winter-fishing *tip* (the first winter talk once Fishing ≥ 10 —
+pointing at the Frostfin and "something clearer than the ice itself"), and reactions to the first
+Frostfin and first Glassperch landed. Pip gets two: urgent questions about treasure inside rocks
+(and one worry about Gary), and begging a turn at the Great Telescope. Rowan reads the star
+obelisk against the founders' vault; Maya has watched the crystal spire glow from the meadow.
+
+**The plumbing (small, deliberate):**
+- `pendingRecog` entries may now omit `flag` and gate purely on `when()` — the ice tip is
+  condition-shaped (a season + a skill), not event-shaped, and inventing a fake flag for it
+  would've been worse. Existing entries unchanged (`!r.flag || state.flags[r.flag]`).
+- Three flag setters: `landFish` stamps `first_<name>` for season-gated fish (the legend branch
+  returns before it, so Frostjaw-the-legend correctly doesn't collide), `crackGeode` stamps
+  `crackedGeode`, décor placement stamps `placed_<kind>` generically (future décor recognitions
+  are one data entry away).
+- **`migrateSave` backfills all of it** — `discovered[]` already remembers every item ever held,
+  and the farm's objects record what stands, so a save that caught the fish or raised the
+  monuments *before* v3.34 earns its lines on the next visit. Integration debts should be paid
+  retroactively, not only forward.
+
+**Review finding (fixed pre-ship):** the ice tip's `when()` gated only on season+skill, so a
+player who'd already caught the winter fish (any pre-v3.34 save, or anyone whose first Bram talk
+after a catch landed off-season) would get the *discovery* tip **after** the congratulations —
+Bram introducing fish he'd already toasted. The tip now also stands down once either
+`first_<fish>` flag is set: a discovery beat delivered late reads as the character forgetting.
+
+Verified in-browser (muted): all seven lines fire once on their flags/when and never repeat, the
+tip's season+skill gate **and** its stand-down after a catch, backfill precision
+(Glassperch-discovered sets its flag, Frostfin absent stays absent, a curio sets crackedGeode),
+clean console.
+
+---
+
 ## v3.33.0 — "The Dairy" · 2026-07-16 · tag `v3.33.0`
 
 The v3.32 re-audit's **#1 priority**: the Cheese Press, closing the barn's dead-end produce
