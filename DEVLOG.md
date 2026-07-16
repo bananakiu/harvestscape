@@ -14,7 +14,23 @@
 
 ---
 
-## 2026-07-17 — "give the option to modify the quantity": the quantity-controls sweep
+## 2026-07-17 — "deepsilver and star ore look too alike": give star metal its own light
+
+**Owner (near-verbatim):**
+
+> Deep silver ore and the star sort of ore look too alike. We have to change it. Make the star
+> one better. Maybe it glows more; perhaps there's a little bit of purple or something in it.
+> Make it different from the deep silver or red.
+
+**Interpretation.** Fair cop: deepsilver (`#9ab0c8`/`#c8d8e8`) and star metal (`#a8c8e8`/
+`#c8ecff`) are both pale silver-blue — at 16px in a dark mine they read identical. Direction
+taken (the owner's own suggestion): **violet** — which the fiction already supports, since the
+Starstone (violet, `#c8b8ff` sparkles) comes off the same celestial deposit. Star metal veins
+go violet with white-hot fleck cores, the vein casts a small violet light pool in the mine
+("glows more", literally), the shard item and the Star tool-tier color follow, and deepsilver
+stays exactly where it was — the gap comes from moving the star, not both.
+
+**Produced:** v3.42.0, logged in CHANGELOG.md.
 
 **Owner (near-verbatim):**
 

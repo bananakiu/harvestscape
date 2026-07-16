@@ -38,6 +38,7 @@ function collectLights(){
       case "lamp":      L.push({x:cx,y:cy-6,r:44,c:"255,225,150",i:0.95}); break;
       case "crystal":   L.push({x:cx,y:cy,r:36,c:"140,210,255",i:0.7+0.15*Math.sin(animT*4)}); break;
       case "gemrock":   L.push({x:cx,y:cy,r:20,c:"200,150,240",i:0.5}); break;
+      case "starmetal": L.push({x:cx,y:cy,r:22,c:"200,160,255",i:0.55+0.12*Math.sin(animT*3)}); break;   // v3.42: the star's own light, breathing softly in the deep
       case "sealeddoor":L.push({x:cx,y:cy-4,r:40,c:"170,220,255",i:0.8}); break;
       case "wing":      if(wingLit(o.wing)) L.push({x:cx,y:cy-2,r:26,c:"255,170,80",i:flick*0.9}); break;
       case "lantern":   L.push({x:cx,y:cy-2,r:30,c:"255,200,110",i:0.85+0.12*Math.sin(animT*3+x)}); break;

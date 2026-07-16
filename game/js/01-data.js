@@ -8,13 +8,16 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.41.0", code: 78, codename: "Provisions", date: "2026-07-17" };
+const VERSION = { name: "3.42.0", code: 79, codename: "Starlight", date: "2026-07-17" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.42.0", code:79, date:"2026-07-17", name:"Starlight", notes:[
+    { t:"polish", s:"Star metal looks like what it is now. The veins run violet — the Starstone's own colour, off the same fallen star — with white-hot flecks, and each one casts a soft breathing glow in the dark of the deep floors. No more squinting to tell it from deepsilver; the star shard and the Star Metal tools wear the same violet." },
+  ]},
   { v:"3.41.0", code:78, date:"2026-07-17", name:"Provisions", notes:[
     { t:"new", s:"Buying works like selling now. Seeds, food, and saplings all take a quantity — the same ± arrows and number box — so stocking a season's planting is one click, not twenty. Ask for more than your purse covers and Tom sells you what it does, plainly." },
     { t:"new", s:"Every buy row shows what you already hold (×N), same as the sell page — seeds in the bag, buns in the pack, hives and machines waiting to be placed — so you never buy blind." },
@@ -410,7 +413,11 @@ const ORES = {
   // (silverwood's). One ladder, two skills, and no tier anywhere feeds a tool it out-levels.
   cobalt:    { name:"Cobalt Vein",     lvl:45, hp:16, xp:720,  drop:"Cobalt Ore",       gem:"#6a8ad8", col:"#4a6ac8" },
   deepsilver:{ name:"Deepsilver Vein", lvl:70, hp:19, xp:1050, drop:"Deepsilver Ore",   gem:"#c8d8e8", col:"#9ab0c8" },
-  starmetal: { name:"Star Metal Vein", lvl:85, hp:22, xp:1560, drop:"Star Metal Shard", gem:"#c8ecff", col:"#a8c8e8" },
+  // v3.42 (owner: "they look too alike… a little bit of purple, glows more"): star metal goes
+  // VIOLET — the Starstone's own family, off the same celestial deposit — with white-hot fleck
+  // cores and a light pool in the mine (collectLights). Deepsilver stays put; the gap comes from
+  // moving the star, not both.
+  starmetal: { name:"Star Metal Vein", lvl:85, hp:22, xp:1560, drop:"Star Metal Shard", gem:"#d8b0ff", col:"#b088e8" },
 };
 
 // ---- FISH ----
@@ -945,7 +952,7 @@ function toolCost(tool, tier){
   if(tier === 3 && TIER3_GEM[tool]) mats[TIER3_GEM[tool]] = 1;   // the keepsake set into the handle
   return { g: base.g, mats };
 }
-const TIER_COL   = ["#b7a48c", "#c77b3f", "#d8c4bc", "#ffd75a", "#5a7ad0", "#9ab0c8", "#bfe4ff"];   // v3.37: + cobalt, deepsilver
+const TIER_COL   = ["#b7a48c", "#c77b3f", "#d8c4bc", "#ffd75a", "#5a7ad0", "#9ab0c8", "#c8a8ff"];   // v3.37: + cobalt, deepsilver; v3.42: star follows its ore to violet (ice-blue sat one hue off deepsilver)
 
 // ---- THE OLD LIFT ----
 // A rusted lift shaft stands by the entry ladder of every mine floor. Riding UP is always free —

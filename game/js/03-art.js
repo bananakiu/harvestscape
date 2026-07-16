@@ -267,6 +267,12 @@ function buildRocks(){
       px(g,3,13,11,2,"#5f5f5f"); px(g,4,4,3,2,"#b4b4b4");
       if(o.gem){ px(g,5,8,2,2,o.gem); px(g,9,10,2,2,o.gem); px(g,10,6,1,1,shade(o.gem,1.3));
         px(g,6,11,1,1,o.gem); px(g,5,8,1,1,shade(o.gem,1.4)); }
+      // v3.42: the star vein GLOWS — white-hot cores in every fleck, and two more flecks than any
+      // ordinary ore, so it never again reads as deepsilver's twin in a dark corridor
+      if(id === "starmetal"){
+        px(g,5,8,1,1,"#ffffff"); px(g,9,10,1,1,"#ffffff"); px(g,10,6,1,1,"#f0e6ff");
+        px(g,7,5,1,1,o.gem); px(g,12,9,1,1,o.gem); px(g,7,12,1,1,shade(o.gem,1.2));
+      }
     });
     mkSpr(id+"_cracked", 16, 16, g => { g.drawImage(spr[id],0,0);
       px(g,7,5,1,6,"#4a4a4a"); px(g,6,7,3,1,"#4a4a4a"); px(g,9,8,2,1,"#4a4a4a"); });
@@ -615,7 +621,7 @@ function buildItems(){
   mkSpr("item_Quartz Cluster", 16, 16, g => { px(g,6,3,2,10,"#dff2ff"); px(g,4,6,2,7,"#c8e6fb"); px(g,9,5,2,8,"#eef8ff"); px(g,7,8,2,5,"#d0eafd"); px(g,4,12,8,1,"#a9c4da"); });
   mkSpr("item_Geode Heart", 16, 16, g => { px(g,3,4,10,9,"#8a8a8a"); px(g,3,4,10,1,"#a2a2a2"); px(g,3,12,10,1,"#6a6a6a");   // stone shell
     px(g,5,6,6,5,"#3a2f52"); px(g,6,6,4,1,"#c8b8ff"); px(g,6,7,1,3,"#a877e0"); px(g,9,7,1,3,"#a877e0"); px(g,7,8,2,2,"#e6d8ff"); });   // crystal-lined hollow
-  const oreCols = { "Copper Ore":"#c77b3f", "Iron Ore":"#bfa8a0", "Gold Ore":"#ffd75a", "Cobalt Ore":"#5a7ad0", "Deepsilver Ore":"#9ab0c8", "Star Metal Shard":"#c8ecff" };   // v3.37: + deepsilver
+  const oreCols = { "Copper Ore":"#c77b3f", "Iron Ore":"#bfa8a0", "Gold Ore":"#ffd75a", "Cobalt Ore":"#5a7ad0", "Deepsilver Ore":"#9ab0c8", "Star Metal Shard":"#c8a0ff" };   // v3.37: + deepsilver; v3.42: the shard goes violet with its vein
   for(const o in oreCols){ mkSpr("item_"+o, 16, 16, g => {
     px(g,4,6,8,7,"#7d7d7d"); px(g,3,8,10,4,"#6e6e6e"); px(g,5,5,5,3,"#8a8a8a");
     px(g,6,8,2,2,oreCols[o]); px(g,9,9,2,2,oreCols[o]); px(g,7,10,1,1,shade(oreCols[o],1.3)); }); }

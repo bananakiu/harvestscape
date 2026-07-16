@@ -22,6 +22,28 @@
 
 ---
 
+## v3.42.0 — "Starlight" · 2026-07-17 · tag `v3.42.0`
+
+Owner art call (DEVLOG): deepsilver and star metal "look too alike… make the star one better —
+maybe it glows more; perhaps a little bit of purple."
+
+**The problem.** Both ores wore pale silver-blue (`#9ab0c8` vs `#a8c8e8`) — at 16px in a dark
+corridor, twins. **The fix moves only the star** (the gap should come from one side): star metal
+goes **violet** (`gem #d8b0ff / col #b088e8`) — the Starstone's own family, which the fiction
+already claims ("the star gem comes off the same celestial deposit") — with three changes that
+compound:
+- The vein sprite gains **white-hot cores** in every fleck plus two extra flecks (a special case
+  in the otherwise-generic `buildRocks`).
+- The vein **casts a light**: a `starmetal` case in `collectLights` — r22, violet, breathing on a
+  slow sine — so the deep floors literally glow where the star fell. ("Glows more", made literal.)
+- The shard item (`oreCols`) and the Star tool-tier colour (`TIER_COL[6]`) follow the vein to
+  violet — the old ice-blue tier colour sat one hue off deepsilver's, the same near-collision.
+
+Verified in-browser (muted): side-by-side vein + item sprites screenshotted (clearly distinct),
+`collectLights` emits the violet pool for a placed vein, clean console.
+
+---
+
 ## v3.41.0 — "Provisions" · 2026-07-17 · tag `v3.41.0`
 
 Owner follow-up to the v3.40 sweep: *"should apply the same ui for buying stuff too… also,
