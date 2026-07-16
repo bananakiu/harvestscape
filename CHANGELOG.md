@@ -22,6 +22,40 @@
 
 ---
 
+## Planning — `WORLD_EXPANSION.md`, the world-expansion plan · 2026-07-16
+
+Docs-only; no game change, no version bump, no atlas regen. Adds `WORLD_EXPANSION.md` and links
+it from `README.md`/`AGENTS.md`; the owner's feedback is recorded in `DEVLOG.md`.
+
+**Why.** Owner direction call: *"the world feels small too, maybe we should start planning to
+build out more areas in the game."* The diagnosis (from a code-grounded scout of the map graph +
+every place the fiction references): ~18 releases of content have deepened the same 11 maps while
+the dialogue kept referencing places that don't exist — Act II's coast road north and Elias's
+"forty miles", Tom's wife's dairy "down the coast" (five invocations), the river the Trout
+examine claims, the mountain above the mine. The world feels small because the fiction is bigger
+than the map.
+
+**The plan.** Four independent area designs (north/south/river/mountain angles), judged and
+merged into three, sequenced by fiction-cheque size × build cost, each one-release-scoped with a
+file-level build sketch against the engine's real cost model (MAPS entry, gen fn, warp bands, the
+per-map-id switches, atlas registration):
+1. **The Coast Road** — the Gullwater river (fishing's new `river`/`estuary` contexts), the ford,
+   and the ferry landing with its MARROW POINT — 39 milestone. Marrow Point itself stays off-map
+   forever — walkable would deflate "forty miles".
+2. **Starfall Ridge** — the mountain above the mine; star-gleaning on clear nights (the first
+   clock-and-sky-gated activity), alpine forage, and the panorama the story keeps narrating.
+3. **Butterbrook** — the coast dairy and its keeper (the game's first new NPC since launch),
+   the milk round closing the v3.33 dairy chain. Deliberately last: inhabitants are now the bar.
+
+Key synthesis rule: **the river exists once** — three candidates independently claimed river
+fishing; a river drawn on three maps is three ponds, drawn once with a mouth on the sea it's
+geography. The fourth candidate (Millbrook/Upriver) was cut for exactly that duplication.
+
+Open questions for the owner are listed per area in the plan (ferry cadence, the dairy keeper's
+name, panorama budget, hearts-at-v1).
+
+---
+
 ## v3.35.0 — "The Flock" · 2026-07-16 · tag `v3.35.0`
 
 The v3.32 re-audit's **#2 priority** — "the most-touched living things are the least written."

@@ -108,6 +108,10 @@ Treat the changelog as non-optional deliverable output, the same as the code its
 - `GROVE_DEPTHS.md` — the Grove Depths plan (depth rings, waystones on a pledge ledger, tree
   rarity, canopy treasure, + the mine lift's ledger retrofit). **Shipped in v3.3.0** — kept as
   the design record behind that release.
+- `WORLD_EXPANSION.md` — the world-expansion plan (owner call 2026-07-16: "the world feels
+  small"): three new areas sequenced by fiction-cheque size — the Coast Road (river + ferry
+  landing), Starfall Ridge (star-gleaning + the panorama), Butterbrook (the coast dairy).
+  **PLANNED, not yet built** — read it before adding any new map.
 - `NEW_PLAYER_EXPERIENCE.md` — the onboarding beta plan (shipped in v2.2.0; polish tier still
   on the roadmap).
 - `GAME_DESIGN_PRINCIPLES.md` — the design bible; the yardstick audits grade against.

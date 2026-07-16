@@ -14,7 +14,28 @@
 
 ---
 
-## 2026-07-14 — "wood is too easy to maintain": nerf it, then build construction on top
+## 2026-07-16 — "the world feels small": plan a world expansion
+
+**Owner (near-verbatim):**
+
+> continue. the world feels small too, maybe we should start planning to build out more areas in
+> the game
+
+**Interpretation.** A direction call, given mid-stream while the audit roadmap was being worked:
+the *content* of the valley has been deepening for ~18 releases (construction, animals, quest
+points, dairy, voice passes), but its *geography* hasn't grown since the Grove Depths (v3.3) —
+the map graph is still farm ↔ village ↔ coast, farm ↔ grove, plus the mine. Everything new has
+been packed into the same handful of screens, so the valley reads dense but small. The owner
+asked for **planning first** ("start planning to build out more areas"), not an immediate build —
+so the deliverable is an expansion plan on the GROVE_DEPTHS.md model: concrete area designs that
+existing fiction already points at, staged into buildable releases.
+
+Notable: the game's own dialogue has been writing cheques the map can't cash — Elias the ferryman
+and the coast road north (Act II's whole arc), Tom's wife's dairy down the coast (referenced in
+v3.24 and v3.33), the river the trout supposedly come from. The plan should draw the new areas
+from those existing hooks rather than invent unmoored ones.
+
+**Produced:** `WORLD_EXPANSION.md` (the plan), linked back here once the first area ships.
 
 **Owner (near-verbatim):**
 
