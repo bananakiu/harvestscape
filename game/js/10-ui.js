@@ -807,6 +807,13 @@ function renderShop(){
         `<button onclick="sellItem('${jsq(i)}',${state.inv[i]})" title="${allTotal}g for all ${state.inv[i]}">all · ${allTotal}g</button></span></div>`;
     });
   } else if(shopTab === "buy"){
+    // v4.0: Tom's daily "warden's salvage" — the non-combat trickle for warding materials (V4_PLAN §2),
+    // an EXPLICIT buy row (own button), never an auto-drain. Only once the tenth door is open.
+    { const o = (typeof todaysSalvage === "function") ? todaysSalvage() : null;
+      if(o){ const bought = state.flags.salvageDone === state.day, owned = state.inv[o.item]||0;
+        html += `<div class="row"><span class="lead" data-icon="item_${o.item}"><canvas></canvas><span style="color:var(--gold-hi)">✦ Warden's Salvage — ${o.qty}× ${o.item}${owned?` <span class="sub">×${owned}</span>`:''} <span class="sub">${o.want}</span></span></span>` +
+          `<span><span class="price">${o.price}g</span> <button class="buy" ${(!bought && state.gold>=o.price)?"":"disabled"} onclick="buySalvage()">${bought?"gone today":"buy"}</button></span></div>`;
+      } }
     // v3.41 (owner, extending the sweep): buy rows show WHAT YOU ALREADY HOLD (×N, same badge as
     // selling) and take a quantity — steppers on everything bought in multiples (seeds, food,
     // saplings); one-of-a-kind rows (hive, machines, bouquet) keep single buy but gain the badge.
@@ -1190,11 +1197,17 @@ function contributePledge(id, frac){
 // A filled pledge wakes INSTANTLY — "come back tomorrow" would be the trip-wasting frustration
 // this system exists to kill, in a smaller size.
 function completePledge(id){
-  if(state.pledges) delete state.pledges[id];   // done-ness lives in waystones/liftStops
+  if(state.pledges) delete state.pledges[id];   // done-ness lives in waystones/liftStops/wardBells
   if(id.startsWith("way")){
     if(!state.waystones) state.waystones = [];
     if(!state.waystones.includes(id)) state.waystones.push(id);
     banner("❖ Waystone awakened", cap(pledgeName(id)) + " hums with green light. Step between the stones — free, forever.");
+  } else if(id.startsWith("bell")){   // v4.0 Warden's Bell
+    const n = parseInt(id.slice(4), 10);
+    if(!state.wardBells) state.wardBells = [];
+    if(!state.wardBells.includes(n)) state.wardBells.push(n);
+    banner("❖ Warden's Bell rung", "Floor " + n + " answers now — ring back down to it any time, for good.");
+    playSfx("bellRing"); pSparkle(state.px, state.py-12, "#bfe4ff", 18); saveGame(); return;
   } else {
     const n = parseInt(id.slice(4), 10);
     if(!state.liftStops.includes(n)) state.liftStops.push(n);

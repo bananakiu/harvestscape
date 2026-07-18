@@ -207,3 +207,129 @@ function wardKnockout(){
     { type:"run", fn:()=>{ _wardKOing = false; state.resolve = resolveMax(); saveGame(); } },
   ]);
 }
+
+// ---------------- The Warden's Bell panel (checkpoints + the charm workbench) ----------------
+// Cloned from the Old Lift panel (renderLift): ring UP free, ring back down to any funded bell, and
+// pledge the current floor's bell on the Pledge Ledger. The bell doubles as the Warden's workbench —
+// where settling drops become the two crafted charms (worn one at a time, extending the v3.3 system).
+const WARD_RECIPES = [
+  { out:"Warded Charm",     mats:{ "Gloam Thread":6, "Wool":1, "Opal":1 }, blurb:"+5 maximum Resolve" },
+  { out:"Emberlight Charm", mats:{ "Ember Grit":4 },                       blurb:"your lantern reaches much farther" },
+];
+function openBells(){ openPanel("bellPanel", renderBells); }
+function renderBells(){
+  const b = $("bellPanel").querySelector(".body");
+  const depth = state.wardDepth||1, bells = (state.wardBells||[]).slice().sort((a,b)=>a-b);
+  let html = `<div class="desc" style="margin-bottom:.5em;color:var(--ink-soft);">` +
+    `The Warden's bells called the lantern-bearers. Ringing UP is always free; fund a bell and it's a checkpoint forever — ring back down to it any time.</div>`;
+  html += `<div class="row"><span class="lead"><span>☀ Up to the Guild</span></span><button class="buy" onclick="rideBell(0)">ring up</button></div>`;
+  for(const s of bells){
+    html += `<div class="row"><span class="lead"><span>Floor ${s} <span class="sub">funded bell</span></span></span>` +
+      (s===depth ? `<span class="sub">you are here</span>` : `<button class="buy" onclick="rideBell(${s})">ring down</button>`) + `</div>`;
+  }
+  if(depth % 5 === 0 && !bells.includes(depth)){
+    html += pledgeRowHtml("bell"+depth);
+    html += `<div class="desc" style="margin-top:.4em;color:var(--ink-soft);">Pledge what you carry — here, or from the Journal (J), anywhere. The ledger keeps the tally.</div>`;
+  } else if(depth % 5 !== 0){
+    const next = Math.min(15, Math.ceil(depth/5)*5);
+    if(next > depth) html += `<div class="desc" style="margin-top:.4em;color:var(--ink-soft);">The next Warden's Bell is on floor ${next}.</div>`;
+  }
+  // the workbench
+  html += `<div class="desc" style="margin:.7em 0 .3em;border-top:1px solid rgba(0,0,0,.18);padding-top:.55em;">` +
+    `<b style="color:var(--gold-hi)">✦ The Warden's workbench.</b> <span style="color:var(--ink-soft)">Bind what you've settled into a charm — worn one at a time, like the grove's.</span></div>`;
+  for(const r of WARD_RECIPES){
+    const have = (state.inv[r.out]||0);
+    const matStr = Object.keys(r.mats).map(it => { const h=state.inv[it]||0, n=r.mats[it];
+      return `${n} ${it} <span style="color:${h>=n?'#8fd06a':'#c98a6a'}">(${h})</span>`; }).join(" + ");
+    const can = Object.keys(r.mats).every(it => (state.inv[it]||0) >= r.mats[it]);
+    html += `<div class="row"><span class="lead" data-icon="item_${r.out}"><canvas></canvas><span>${r.out}${have?` <span class="sub" style="color:var(--gold-hi)">×${have}</span>`:''} ` +
+      `<span class="sub">${r.blurb}<br>${matStr}</span></span></span>` +
+      `<button class="buy" ${can?"":"disabled"} onclick="craftWardCharm('${r.out}')">bind</button></div>`;
+  }
+  b.innerHTML = html;
+  if(typeof hydrateIcons === "function") hydrateIcons(b);
+}
+function craftWardCharm(out){
+  const r = WARD_RECIPES.find(x => x.out === out); if(!r) return;
+  for(const it in r.mats) if((state.inv[it]||0) < r.mats[it]){ toast("Not enough " + it + ".", "#ff8a7a"); playSfx("error"); return; }
+  for(const it in r.mats) take(it, r.mats[it]);
+  give(out, 1); addXP("Warding", 20);
+  playSfx("upgrade"); pSparkle(state.px, state.py-12, "#bfe0ff", 16);
+  toast("You bind a " + out + ". (Wear it from your Backpack.)", "#8fe8c8");
+  refreshHUD(); renderBells();
+}
+function rideBell(target){
+  closeAllPanels(); playSfx("bellRing");
+  if(target === 0){ exitUndercroft(); toast("The bell rings, and the way up opens into the Guild.", "#bfe4ff"); return; }
+  state.wardDepth = target;
+  travelTo("undercroft", 2*TILE+8, 3*TILE, "down");
+  toast("The bell rings you down to floor " + target + ".", "#bfe4ff");
+}
+
+// ---------------- Tom's "warden's salvage" — the non-combat loot trickle (V4_PLAN §2) ----------------
+// So a combat-averse save can still finish the story (slower): Tom offers ONE warding material a day
+// to BUY, cloned from Nell's daily order but REVERSED (Tom sells to you). Modest quantities at a fair
+// markup — never a faucet that undercuts settling, just a trickle for the charm/bell sinks.
+const SALVAGE_OFFERS = [
+  { item:"Gloam Thread", qty:3, price:90,  want:"A trapper up the coast brought in a hank of that queer silver thread. Odd stuff. Three lengths?", line:"There you are. Whatever you're winding it into, mind your fingers." },
+  { item:"Knotwood",     qty:2, price:70,  want:"Somebody left a couple of those grief-dark knots on my step. Bad luck to burn 'em, they say. Two?", line:"Off my step and onto yours. Fair trade, that." },
+  { item:"Ember Grit",   qty:2, price:80,  want:"Got a pinch of that warm grit that ticks like a stove. Won't sit near the matches. Two measures?", line:"Careful — it likes to be near things. Mind what you keep it by." },
+];
+function todaysSalvage(){
+  if(state.flags.salvageDay === state.day) return state.flags.salvageIdx >= 0 ? SALVAGE_OFFERS[state.flags.salvageIdx] : null;
+  const rng = makeRng(5150 + state.day*31);
+  state.flags.salvageDay = state.day;
+  state.flags.salvageIdx = state.flags.tenthDoorOpen ? Math.floor(rng() * SALVAGE_OFFERS.length) : -1;   // only once the door's open
+  return state.flags.salvageIdx >= 0 ? SALVAGE_OFFERS[state.flags.salvageIdx] : null;
+}
+// An EXPLICIT buy (a row in Tom's shop with its own button) — never an auto-drain on talk, per the
+// owner's standing UI feedback that interfaces must not silently spend everything you carry.
+function buySalvage(){
+  const o = todaysSalvage(); if(!o) return;
+  if(state.flags.salvageDone === state.day){ toast("Tom's already parted with today's salvage.", "#cbb98f"); return; }
+  if(state.gold < o.price){ toast("Not enough coin for that.", "#ff8a7a"); playSfx("error"); return; }
+  state.gold -= o.price; give(o.item, o.qty); state.flags.salvageDone = state.day;
+  playSfx("coin"); pSparkle(state.px, state.py-12, "#ffce5a", 10);
+  toast("Bought " + o.qty + "× " + o.item + " — " + o.price + "g.", "#ffce5a");
+  refreshHUD(); if(typeof renderShop === "function") renderShop();
+}
+
+// ---------------- Act III opener: "The Tenth Door" turn-in scene (Elias takes the boards down) --------
+// Attached here (not in 01-data) because it needs QUESTS + NPCDEF + mkNpc, all defined by the time this
+// file loads. Matches the "One Last Letter" / Homecoming temperature: quiet, earned, restrained. Rowan
+// owns the sealing guilt; Elias — the last Warden — takes his own boards down and hands over the Basic
+// Stave, reframing combat as tending ("you settle it — there's a difference, and it matters"). Sets
+// state.flags.tenthDoorOpen, which turns the planked door into the Undercroft mouth (olddoor interact).
+(function attachTenthDoor(){
+  const q = QUESTS.find(x => x.id === "tenth-door");
+  if(!q) return;
+  const ensure = (id, x, y, face) => { let n = curMap.npcs.find(v => v.id === id);
+    if(!n){ n = mkNpc(id, x*TILE, y*TILE, {face}); curMap.npcs.push(n); } return n; };
+  q.turnIn = { cutscene: [
+    { type:"run", fn:()=>{ ensure("rowan", 8, 4, "up"); ensure("elias", 9, 7, "up"); } },
+    { type:"wait", t:0.4 },
+    { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"You've the run of the whole valley now, and there's one door in it I've never let you near. It's past time I told you why." },
+    { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"There were ten wings, not nine. The tenth was the Warden's — the craft of tending what grows where nobody's looking. When the Guild went dark, I nailed that one shut with my own hands. I called it grief. Some of it was grief." },
+    { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"The rest was that I couldn't bear to keep it, and couldn't bear to lose it. So I hid it. Eleven years." },
+    { type:"move", actor:"elias", x:13, y:4, face:"up", sp:30 },
+    { type:"wait", t:0.5 },
+    { type:"say", who:"Elias", portrait:"port_elias", text:"You never lost it, Rowan. You left it for the one person stubborn enough to come and fetch all of us home. …It was my workroom, you know. The last Warden's." },
+    { type:"say", who:"Elias", portrait:"port_elias", text:"I told you once the boards could come down any day they chose. Turns out the day chose you." },
+    { type:"run", fn:()=>{ pSparkle(15*TILE+8, 1*TILE+8, "#bfe4ff", 22); playSfx("door"); if(typeof cam!=="undefined") cam.shake = 2; } },
+    { type:"wait", t:0.7 },
+    { type:"say", who:"Elias", portrait:"port_elias", text:"There. Feel that cold coming up? That's the Undercroft breathing. Eleven years untended — and things have knotted themselves out of everything nobody minded. Wisps. Shamblers. Little grieving knots of the dark." },
+    { type:"say", who:"You", portrait:"port_player", text:"…Do I fight them?" },
+    { type:"say", who:"Elias", portrait:"port_elias", text:"No. You settle them. There's a difference, and it's the whole of the craft. You don't raise a hand against the dark down there — you tend it back into what it was, and it comes apart almost grateful. Here. This was mine." },
+    { type:"run", fn:()=>{ give("Stave", 1, true); state.tools.Stave = 0; state.flags.staveEarned = true;
+        if(typeof ensureStaveSlot === "function") ensureStaveSlot();
+        playSfx("gift"); pSparkle(state.px, state.py-14, "#bfe4ff", 16); if(typeof refreshHotbar==="function") refreshHotbar(); } },
+    { type:"say", who:"Elias", portrait:"port_elias", text:"A warden's Stave. Basic and worn — Tom can forge you a truer one when your hands have learned it. And there are bells down there. Ring one and the lantern-bearers will always find you. Nothing in that dark is worth losing yourself over. Nothing ever will be." },
+    { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"Ten wings, then. …We'll light the last one properly one day, when it's earned. Go gently, child. And come back up for supper — both of you." },
+    { type:"run", fn:()=>{ state.flags.tenthDoorOpen = true; ensureRel("elias").points = Math.max(ensureRel("elias").points||0, 120); saveGame(); } },
+    { type:"banner", big:"❖ The Tenth Door", small:"The Warden's wing is open. Step through it in the Guild.", t:3.4 },
+  ] };
+  // A quiet recognition once the door's open — Elias, warden to warden, if you meet him topside.
+  if(typeof NPC_RECOG !== "undefined") NPC_RECOG.push({
+    npc:"elias", flag:"tenthDoorOpen", ack:"ack_elias_warden",
+    line:"Still going down there, are you? Good. It's less lonely, the tending, when somebody minds it. …Mind the bells. That's all I ask." });
+})();

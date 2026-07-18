@@ -87,6 +87,30 @@ replaces any XP-penalty/daily-cap idea, which would break the contract.
   is the wasted run-depth, softened by the bells. ★ Lanternheart (99) floors Resolve at 10, so a
   master is effectively un-knock-out-able. This is the amended contract made literal.
 
+### Added — the loot economy: bells, charms, salvage
+
+- **Warden's Bells** on floors 5/10/15 are checkpoints on the same Pledge Ledger as the Old Lift and
+  the waystones — funded in cross-skill deposits (gold + settle drops + timber/ore, so warding never
+  self-funds its own checkpoints), then ringable-down-to forever. The bell panel clones the lift's,
+  and doubles as the **Warden's workbench** where settling drops become the two crafted charms
+  (**Warded Charm** — Gloam Thread×6 + Wool + Opal → +5 max Resolve; **Emberlight Charm** — Ember
+  Grit×4 → a much wider lantern), extending the v3.3 one-charm-worn system rather than adding armour.
+- **Tom's warden's salvage** — the non-combat trickle (V4_PLAN §2): one warding material a day offered
+  to buy in Tom's shop, an **explicit buy row with its own button** (never an auto-drain on talk —
+  honouring the owner's standing UI feedback), so a combat-averse save can still finish the story,
+  slower. Only appears once the tenth door is open.
+
+### Added — Act III opener: "The Tenth Door"
+
+- The quest (giver Elder Rowan; gated on Act II done + total level 100) appends to the linear chain as
+  the first **Act III — The Untended** beat (the Journal grows a third act header). Its turn-in is a
+  restrained cutscene in the "One Last Letter"/Homecoming register: Rowan finally owns nailing the
+  tenth wing shut, Elias — revealed as the last Warden, welded to the shipped "Elias's old workroom"
+  canon — takes his own boards down and gives the Basic Stave, reframing combat as *tending* ("you
+  settle them; there's a difference, and it's the whole of the craft"). Sets `tenthDoorOpen`, and the
+  door's examine + interact become the Undercroft mouth. A quiet Elias recognition line follows once
+  the door's open.
+
 ### Design notes / conservative calls (logged per §8)
 
 - **Creature & drop balance are the build plan's starting bids, passed through GBP and kept.**
