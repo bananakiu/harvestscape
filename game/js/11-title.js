@@ -117,7 +117,7 @@ function initTitle(){
   if(ver){ ver.textContent = "v" + VERSION.name;
     ver.onclick = (e) => { e.stopPropagation(); firstGesture(); openPanel("newsPanel", renderNews); }; }
   updateMuteBtn();
-  $("btnMute").onclick = () => { firstGesture(); setMusicEnabled(!SND.enabled); updateMuteBtn(); };
+  $("btnMute").onclick = () => { firstGesture(); setMusicOn(!SND.musicOn); updateMuteBtn(); };
   setMusicMode("title");
 
   const stage = $("stage");
@@ -129,7 +129,7 @@ function initTitle(){
   // any click on the title starts audio
   $("title").addEventListener("pointerdown", firstGesture, { once:false });
 }
-function updateMuteBtn(){ $("btnMute").textContent = "♪ Music: " + (SND.enabled ? "On" : "Off"); }
+function updateMuteBtn(){ $("btnMute").textContent = "♪ Music: " + (SND.musicOn ? "On" : "Off"); }
 
 // ---- flow ----
 function startNewGame(){

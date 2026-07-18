@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.44.0", code: 81, codename: "Butterbrook", date: "2026-07-17" };
+const VERSION = { name: "3.45.0", code: 82, codename: "Quietude", date: "2026-07-18" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.45.0", code:82, date:"2026-07-18", name:"Quietude", notes:[
+    { t:"fix", s:"Turn the music off and it's off now. A faint reverb tail used to keep whispering under everything after the music stopped — that leak is gone, so off is truly silent." },
+    { t:"new", s:"Music and Sound Effects have their own On/Off switches in Settings now, each beside its own volume slider. Hush the soundtrack but keep the birds, rain and chimes — or the other way round. Rain and birdsong follow the Sound Effects switch." },
+  ]},
   { v:"3.44.0", code:81, date:"2026-07-17", name:"Butterbrook", notes:[
     { t:"new", s:"The dairy down the coast is real now. West off the beach, the shore opens south to Butterbrook — meadows, a brook running to the sea under a plank bridge, and the creamery alone at the far end. It's the longest walk in the valley, and worth it: at the end of it is Nell." },
     { t:"new", s:"Nell — Tom's wife, the coast dairy keeper the barn's been shipping milk to for twenty years, and the valley's first new face in a long while. She keeps a standing order: bring her the day's ask — milk, cheese, wool, the good big eggs — and she pays a premium over Tom's counter, with Farming practice and her thanks besides. Talk to her to hear what she needs." },

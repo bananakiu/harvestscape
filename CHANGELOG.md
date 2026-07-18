@@ -22,7 +22,12 @@
 
 ---
 
-## [Unreleased] — Audio: real mute + split Music / Sound FX
+## v3.45.0 — "Quietude" · 2026-07-18 · tag `v3.45.0`
+
+Audio: real mute + split Music / Sound FX. (Note: the `10-ui.js` settings-panel half of this
+change was swept into the v3.44.0 commit `0d5b257` by a concurrent session before this was cut,
+which left that commit briefly referencing `setMusicOn` before `02-audio.js` defined it; this
+release lands the rest and makes the tip consistent again.)
 
 Owner report: *"when the music is turned off, there's still light background music in the
 background — I want music fully off when it's off"*, plus a request for **separate toggles for
@@ -59,6 +64,18 @@ master switch. Split into `SND.musicOn` and `SND.sfxOn`, each with its own on/of
 - **Environmental audio** (rain, birdsong, crickets) is categorized as Sound FX, so it follows the
   SFX toggle; rain's level is remembered (`SND.rainLevel`) so toggling SFX back on restores the
   current weather immediately. Music ducking under storms still keys off `musicOn`.
+
+**Weather-duck follow-up (adversarial review).** Making Sound FX independent exposed two duck
+interactions, both fixed via a single `currentDuck()` helper that is now the sole source of truth
+for the storm duck: (1) with **SFX off**, rain is silent, so the music no longer ducks for weather
+you can't hear — previously it stayed ducked ~42–58% for the whole storm; (2) the volume slider and
+the music toggle now *honour* the active duck instead of writing the raw `musicVol` — previously,
+dragging the slider or toggling music **while the world clock was paused** (a panel/dialogue open,
+so `updateWeather` isn't re-ducking each frame) snapped the music back to full over the storm until
+you unpaused. Also hardened `burst()` to route its reverb send by `dest` like `note()` does, so a
+future music-dest burst can't re-introduce the wet-bypass class this change removed. Verified with a
+master-bus analyser: storm+SFX-on settles music to 0.324 (≈0.58×), storm+SFX-off to 0.545 (full),
+slider/toggle-while-paused hold the duck, and music-off is still true silence.
 
 **Save compatibility.** Prefs (`hs_audio`) now persist `{music, sfx}` booleans; a legacy single
 `{on}` flag is migrated to both (verified: old `{on:false}` → both toggles off, volumes carried).

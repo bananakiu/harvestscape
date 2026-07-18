@@ -5,20 +5,25 @@
    ============================================================ */
 
 const SND = {
-  ctx:null, master:null, musicGain:null, sfxGain:null, rev:null, delay:null,
-  musicVol:0.55, sfxVol:0.8, enabled:true,
+  ctx:null, master:null, musicGain:null, sfxGain:null,
+  musicRev:null, musicDelay:null, sfxRev:null, sfxDelay:null,
+  musicVol:0.55, sfxVol:0.8, musicOn:true, sfxOn:true,
   mode:"title", started:false, sched:null,
-  step:0, nextTime:0, bar:0, lastLead:69, rain:null, rainGain:null,
+  step:0, nextTime:0, bar:0, lastLead:69, rain:null, rainGain:null, rainLevel:0,
 };
 
 (function loadAudioPrefs(){
   try{ const p = JSON.parse(localStorage.getItem("hs_audio")); if(p){
     if(typeof p.m==="number") SND.musicVol=p.m;
     if(typeof p.s==="number") SND.sfxVol=p.s;
-    if(typeof p.on==="boolean") SND.enabled=p.on;
+    // Audio split into independent Music + Sound FX toggles. Older saves stored a single
+    // {on} master flag — seed both from it, then let the newer keys override if present.
+    if(typeof p.on==="boolean"){ SND.musicOn=p.on; SND.sfxOn=p.on; }
+    if(typeof p.music==="boolean") SND.musicOn=p.music;
+    if(typeof p.sfx==="boolean") SND.sfxOn=p.sfx;
   }}catch(e){}
 })();
-function saveAudioPrefs(){ try{ localStorage.setItem("hs_audio", JSON.stringify({m:SND.musicVol,s:SND.sfxVol,on:SND.enabled})); }catch(e){} }
+function saveAudioPrefs(){ try{ localStorage.setItem("hs_audio", JSON.stringify({m:SND.musicVol,s:SND.sfxVol,music:SND.musicOn,sfx:SND.sfxOn,on:SND.musicOn||SND.sfxOn})); }catch(e){} }
 
 const midi = n => 440 * Math.pow(2, (n - 69) / 12);
 
@@ -30,20 +35,30 @@ function audioEnsure(){
 
   SND.master = ctx.createGain(); SND.master.gain.value = 0.9; SND.master.connect(ctx.destination);
 
-  // reverb (generated impulse) + a light feedback delay for space
-  const rev = ctx.createConvolver(); rev.buffer = makeImpulse(2.1, 2.6);
-  const revGain = ctx.createGain(); revGain.gain.value = 0.28;
-  rev.connect(revGain); revGain.connect(SND.master); SND.rev = rev;
-
-  const delay = ctx.createDelay(); delay.delayTime.value = 0.34;
-  const fb = ctx.createGain(); fb.gain.value = 0.28;
-  const dWet = ctx.createGain(); dWet.gain.value = 0.18;
-  delay.connect(fb); fb.connect(delay); delay.connect(dWet); dWet.connect(SND.master); SND.delay = delay;
-
-  SND.musicGain = ctx.createGain(); SND.musicGain.gain.value = SND.enabled ? SND.musicVol : 0;
+  SND.musicGain = ctx.createGain(); SND.musicGain.gain.value = SND.musicOn ? SND.musicVol : 0;
   SND.musicGain.connect(SND.master);
-  SND.sfxGain = ctx.createGain(); SND.sfxGain.gain.value = SND.enabled ? SND.sfxVol : 0;
+  SND.sfxGain = ctx.createGain(); SND.sfxGain.gain.value = SND.sfxOn ? SND.sfxVol : 0;
   SND.sfxGain.connect(SND.master);
+
+  // Per-category reverb + feedback-delay sends. CRITICAL: each bus's wet return feeds its own
+  // category gain (music → musicGain, sfx → sfxGain), NOT the master. The old build shared one
+  // reverb + one delay wired straight to master, so the wet tails of the generative pads & leads
+  // bypassed musicGain entirely — that reverberant wash kept playing even with music "off" (the
+  // "faint background music when muted" bug). Routing the returns through the category gains means
+  // muting a category silences its tail too. One convolver per bus (buffers are shared).
+  const revBuf = makeImpulse(2.1, 2.6);
+  function makeFxBus(destGain){
+    const rev = ctx.createConvolver(); rev.buffer = revBuf;
+    const revGain = ctx.createGain(); revGain.gain.value = 0.28;
+    rev.connect(revGain); revGain.connect(destGain);
+    const delay = ctx.createDelay(); delay.delayTime.value = 0.34;
+    const fb = ctx.createGain(); fb.gain.value = 0.28;
+    const dWet = ctx.createGain(); dWet.gain.value = 0.18;
+    delay.connect(fb); fb.connect(delay); delay.connect(dWet); dWet.connect(destGain);
+    return { rev, delay };
+  }
+  const mBus = makeFxBus(SND.musicGain); SND.musicRev = mBus.rev; SND.musicDelay = mBus.delay;
+  const sBus = makeFxBus(SND.sfxGain);   SND.sfxRev  = sBus.rev;  SND.sfxDelay  = sBus.delay;
 
   // rain noise (silent until weather turns it up)
   const rain = ctx.createBufferSource(); rain.buffer = makeNoise(2.5); rain.loop = true;
@@ -89,8 +104,10 @@ function note(freq, t, dur, opt={}){
   node.connect(g);
   const dest = opt.dest || SND.musicGain;
   g.connect(dest);
-  if(opt.rev) g.connect(SND.rev);
-  if(opt.delay) g.connect(SND.delay);
+  // send the wet signal to the SAME category's bus as the dry, so a muted gain kills the tail too
+  const toSfx = dest === SND.sfxGain;
+  if(opt.rev) g.connect(toSfx ? SND.sfxRev : SND.musicRev);
+  if(opt.delay) g.connect(toSfx ? SND.sfxDelay : SND.musicDelay);
   o.start(t); o.stop(t + dur + 0.05);
 }
 
@@ -174,22 +191,39 @@ function setMusicMode(m){
   if(SND.mode === m) return;
   SND.mode = m;
 }
+// How much to duck the music for *audible* weather (1 = no duck). Rain rides the Sound FX bus,
+// so with SFX off the weather is silent and there's nothing to make room for — don't duck. This
+// is the single source of truth for the duck, so the slider/toggle setters honour it too (they
+// used to write the raw musicVol, which un-ducked the music whenever the world clock was paused).
+function currentDuck(){
+  const v = SND.rainLevel;
+  if(!SND.sfxOn || v <= 0) return 1;
+  return v >= 1.3 ? 0.58 : 0.76;   // a storm ducks more than a drizzle
+}
 function setRainLevel(v){ // 0 = dry, 1 = rain, ~1.6 = storm
-  if(SND.rainGain) SND.rainGain.gain.setTargetAtTime(Math.min(v,1.8) * 0.075 * (SND.enabled?1:0), SND.ctx.currentTime, 0.8);
-  // duck the music so the weather has room to breathe — a storm ducks more than a drizzle
-  if(SND.musicGain && SND.enabled){
-    const duck = v <= 0 ? 1 : v >= 1.3 ? 0.58 : 0.76;
-    SND.musicGain.gain.setTargetAtTime(SND.musicVol * duck, SND.ctx.currentTime, 0.9);
-  }
+  SND.rainLevel = v;   // remembered so toggling Sound FX back on can restore the current weather
+  // rain is an environmental sound effect — it rides the Sound FX toggle, not Music
+  if(SND.rainGain) SND.rainGain.gain.setTargetAtTime(Math.min(v,1.8) * 0.075 * (SND.sfxOn?1:0), SND.ctx.currentTime, 0.8);
+  // duck the music so audible weather has room to breathe
+  if(SND.musicGain && SND.musicOn) SND.musicGain.gain.setTargetAtTime(SND.musicVol * currentDuck(), SND.ctx.currentTime, 0.9);
 }
-function setMusicEnabled(on){
-  SND.enabled = on; saveAudioPrefs();
+function setMusicOn(on){
+  SND.musicOn = on; saveAudioPrefs();
   if(!SND.ctx) return;
-  SND.musicGain.gain.setTargetAtTime(on?SND.musicVol:0, SND.ctx.currentTime, 0.2);
-  SND.sfxGain.gain.setTargetAtTime(on?SND.sfxVol:0, SND.ctx.currentTime, 0.2);
+  SND.musicGain.gain.setTargetAtTime(on ? SND.musicVol * currentDuck() : 0, SND.ctx.currentTime, 0.2);
 }
-function setMusicVol(v){ SND.musicVol=v; saveAudioPrefs(); if(SND.ctx&&SND.enabled) SND.musicGain.gain.setTargetAtTime(v, SND.ctx.currentTime, 0.1); }
-function setSfxVol(v){ SND.sfxVol=v; saveAudioPrefs(); if(SND.ctx&&SND.enabled) SND.sfxGain.gain.setTargetAtTime(v, SND.ctx.currentTime, 0.1); }
+function setSfxOn(on){
+  SND.sfxOn = on; saveAudioPrefs();
+  if(!SND.ctx) return;
+  // quicker ramp up (0.03s) so the "select" confirmation blip lands at full level, not mid-fade
+  SND.sfxGain.gain.setTargetAtTime(on?SND.sfxVol:0, SND.ctx.currentTime, on ? 0.03 : 0.2);
+  // rain rides the SFX bus (via master), so restore/kill it to match the current weather at once
+  if(SND.rainGain) SND.rainGain.gain.setTargetAtTime(Math.min(SND.rainLevel,1.8) * 0.075 * (on?1:0), SND.ctx.currentTime, 0.3);
+  // toggling SFX changes whether the weather ducks music — re-apply the duck now
+  if(SND.musicGain && SND.musicOn) SND.musicGain.gain.setTargetAtTime(SND.musicVol * currentDuck(), SND.ctx.currentTime, 0.3);
+}
+function setMusicVol(v){ SND.musicVol=v; saveAudioPrefs(); if(SND.ctx&&SND.musicOn) SND.musicGain.gain.setTargetAtTime(v * currentDuck(), SND.ctx.currentTime, 0.1); }
+function setSfxVol(v){ SND.sfxVol=v; saveAudioPrefs(); if(SND.ctx&&SND.sfxOn) SND.sfxGain.gain.setTargetAtTime(v, SND.ctx.currentTime, 0.1); }
 
 // ---------------------------------------------------------------
 //  SOUND EFFECTS
@@ -205,7 +239,9 @@ function burst(t, dur, opt={}){ // filtered noise burst
   g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(opt.gain??0.3, t+ (opt.atk??0.005));
   g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
   src.connect(f); f.connect(g); g.connect(opt.dest||SND.sfxGain);
-  if(opt.rev) g.connect(SND.rev);
+  // route the wet send to match the dry dest (all callers are SFX today; mirrors note() so a
+  // future music-dest burst can't re-introduce the wet-bypass class this change fixed)
+  if(opt.rev) g.connect((opt.dest||SND.sfxGain) === SND.sfxGain ? SND.sfxRev : SND.musicRev);
   src.start(t); src.stop(t+dur+0.05);
 }
 function blip(freq, t, dur, type, gain, opt={}){
@@ -256,10 +292,10 @@ const SFX = {
     [48,55].forEach(m=>note(midi(m),t,1.1,{type:"sine",gain:0.09,atk:0.02,rel:0.9,dest:SND.sfxGain,rev:true})); },
 };
 function T0(){ return SND.ctx ? SND.ctx.currentTime + 0.001 : 0; }
-function playSfx(name){ if(SND.enabled && SND.ctx && SFX[name]) SFX[name](); }
+function playSfx(name){ if(SND.sfxOn && SND.ctx && SFX[name]) SFX[name](); }
 
-// ambient nature layer (called sparsely from the weather system)
-function ambBird(){ if(!SND.enabled || !SND.ctx) return; const t=T0(); const base=1500+Math.random()*700;
+// ambient nature layer (called sparsely from the weather system) — birdsong/crickets are SFX
+function ambBird(){ if(!SND.sfxOn || !SND.ctx) return; const t=T0(); const base=1500+Math.random()*700;
   for(let i=0;i<3;i++) blip(base + i*160*(Math.random()<.5?1:-1), t+i*0.06, 0.05, "sine", 0.028, {rev:true}); }
-function ambCricket(){ if(!SND.enabled || !SND.ctx) return; const t=T0();
+function ambCricket(){ if(!SND.sfxOn || !SND.ctx) return; const t=T0();
   for(let i=0;i<3;i++) blip(4400, t+i*0.035, 0.02, "square", 0.012, {}); }
