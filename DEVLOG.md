@@ -14,6 +14,56 @@
 
 ---
 
+## 2026-07-18 — Version 4 direction: combat is in, the story must carry the game
+
+**Owner (near-verbatim):**
+
+> Time for the next major version of this game. Map out what this game is right now and how it
+> could look, especially if we add combat.
+>
+> It's a little messy right now. The main storyline is quite thin, and honestly, it incentivizes
+> players to focus on the progression of skills too much. Something like Stardew Valley has a
+> longer-running quest, or Harvest Moon has a longer-running quest line of sorts that takes
+> longer. While you're building towards that, you happen to build your skills along the way.
+>
+> If you're ADHD enough to enjoy it, you could go and rabbit hole into certain skills. However,
+> there should be ways to block that out to encourage exploration of other parts of the game,
+> which players already do through the upgrades that require several resources.
+>
+> In general, I think we don't need to include the "no combat" aspect as a cozy contract because
+> combat is fun. Stardew Valley has it, while Harvest Moon doesn't. Honestly, combat would unlock
+> so much in the game; it could include a new skill as well.
+>
+> While that jazz could be good, it's just not an expansive game right now, and it's something we
+> could improve on. So, focus on writing the roadmap and changes in the game. Assess the whole
+> game as it is first and save that. Then, create your version 4, which will be a sort of gigantic
+> game update. For the build-out, let's focus more on the planning. Then, write up some
+> instructions on what the game will look like. We'll see from there what direction to go before
+> we build it out.
+
+**Interpretation — three direction calls, one of them historic:**
+
+1. **The "no combat" clause of the cozy contract is rescinded.** Combat is now wanted — Stardew's
+   model (combat exists, the game stays cozy) over Harvest Moon's (none). It should be a new
+   skill in the 1–99 ladder and a content unlock engine, not a bolt-on. What the owner did *not*
+   rescind: nothing else in the contract — "nothing is ever taken from the player" needs a
+   combat-specific answer (Stardew-style soft knockout, no item loss) rather than deletion.
+2. **The story must become the spine.** The current main quest is too thin and finishes while
+   the skill grind is barely warm — so the grind *is* the game, which inverts the Stardew/HM
+   model the owner wants: a long-running storyline you build toward, with skills leveling as a
+   byproduct along the way. This deepens the 2026-07-13 "story falls flat" thread from a
+   surfacing problem into a length/structure problem.
+3. **Anti-rabbit-hole pacing.** Deep single-skill grinding should be gently blocked/redirected —
+   the owner explicitly endorses the existing multi-resource upgrade gates as the model. So:
+   more cross-skill gates and breadth incentives, not punishments (no XP penalties — that would
+   violate the remaining contract).
+
+**Process call:** plan, don't build. Assess the game as-is and save it; write the v4 plan and a
+"what the game will look like" brief; owner reviews before any build-out. Token-conscious.
+
+**Produced:** [V4_STATE_OF_THE_GAME.md](V4_STATE_OF_THE_GAME.md) (the as-is assessment),
+[V4_PLAN.md](V4_PLAN.md) (the roadmap), and the cozy-contract amendment in `AGENTS.md`.
+
 ## 2026-07-17 — "deepsilver and star ore look too alike": give star metal its own light
 
 **Owner (near-verbatim):**

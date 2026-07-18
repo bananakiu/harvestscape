@@ -87,10 +87,17 @@ Treat the changelog as non-optional deliverable output, the same as the code its
 
 ## Design identity — do not break without explicit reason
 
-- **No combat, ever. Nothing is ever taken from the player.** The mine, storms, and low
-  energy are all deliberately non-hazardous. This is the cozy contract; protect it.
+- **Nothing is ever taken from the player.** No permanent loss — no item loss, no gold loss,
+  no level loss, no destroyed property, ever. This is the surviving core of the cozy contract.
+- **Combat exists (v4 direction, owner call 2026-07-18) but is Stardew-cozy, not punishing.**
+  The original "no combat, ever" clause was rescinded by the owner for Version 4 — combat is a
+  new 1–99 skill and a content unlock engine (see `V4_PLAN.md`). Defeat is a soft knockout
+  (wake up safe, nothing lost), never death; the farm, village, and all v1–v3 spaces stay
+  hazard-free — combat lives only in spaces the player deliberately enters.
 - **Stardew base × RuneScape skill grind (1–99).** The recurring design tension (tracked in
   the audits) is keeping the RuneScape progression layer as rich as the cozy farming base.
+- **The story is the spine (v4 direction).** The long main quest should be what the player
+  builds toward; skills level as a byproduct along the way — not the other way around.
 
 ## Reference docs
 
@@ -111,7 +118,15 @@ Treat the changelog as non-optional deliverable output, the same as the code its
 - `WORLD_EXPANSION.md` — the world-expansion plan (owner call 2026-07-16: "the world feels
   small"): three new areas sequenced by fiction-cheque size — the Coast Road (river + ferry
   landing), Starfall Ridge (star-gleaning + the panorama), Butterbrook (the coast dairy).
-  **PLANNED, not yet built** — read it before adding any new map.
+  **All three SHIPPED** (v3.36 / v3.43 / v3.44); the per-area later layers remain roadmap.
+- `V4_STATE_OF_THE_GAME.md` — the v3.45.0 baseline assessment: full systems inventory
+  (verified against live code) + the three-problem diagnosis (thin story, rabbit-holing,
+  no-combat content ceiling) that motivates Version 4.
+- `V4_PLAN.md` — **the Version 4 roadmap ("The Warden's Valley"), PLANNED not built:**
+  Warding (combat) as the sixth 1–99 skill per the bible's §6 expedition spec, the
+  year-long chaptered Act III driven by the Warden's Ledger, mastery trials + variety
+  spark for breadth pacing, and the v4.0–v4.4 release train. Read it (and the owner
+  decision points in its §6) before building anything combat- or Act-III-shaped.
 - `NEW_PLAYER_EXPERIENCE.md` — the onboarding beta plan (shipped in v2.2.0; polish tier still
   on the roadmap).
 - `GAME_DESIGN_PRINCIPLES.md` — the design bible; the yardstick audits grade against.

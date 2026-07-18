@@ -22,6 +22,42 @@
 
 ---
 
+## 2026-07-18 — Version 4 planning (docs only, no game code)
+
+### Design — Version 4 planned: combat green-lit, the story becomes the spine
+
+The owner's 2026-07-18 direction call (recorded near-verbatim in `DEVLOG.md`) sets the next
+major version: the main storyline is too thin and over too early, single-skill rabbit-holing
+is under-checked, and — the historic part — **the "no combat, ever" clause of the cozy
+contract is rescinded**. Combat is wanted Stardew-style: present, fun, a new skill, a content
+unlock engine — while "nothing is ever taken from the player" survives untouched.
+
+Why this shape and not others:
+
+- **`V4_STATE_OF_THE_GAME.md` (new)** — the assessment the owner asked to "save first."
+  Key quantification driving everything else: the Act I finale gates on total level 60 of a
+  possible 495, so the narrative resolves with ~88% of the progression system still ahead
+  and no story pull on any of it. Also names the assets v4 inherits (the bible's §6 cozy-
+  combat spec, the pledge/bundle machinery, the 9-wings-vs-5-skills fiction gap, unspent
+  story hooks) so the plan builds instead of rebuilding.
+- **`V4_PLAN.md` (new)** — "The Warden's Valley": (1) **Warding**, the sixth 1–99 skill —
+  settle restless Gloam-things in opt-in spaces (the Undercroft beneath the Guild's planked
+  door), Resolve bar + zero-cost knockout, gear forged on the existing 7-tier ore+wood
+  ladder, loot as material fuel never a faucet; (2) **Act III "The Untended"** — 8 chapters
+  across a full year on Community-Center-style bundles via the pledge machinery, total-level
+  gates ramping ~100→380 so the story now outlasts the mid-game; (3) **breadth engine** —
+  cross-skill mastery trials at 50/75 (banked levels, never lost XP) + a daily variety
+  spark, extending the owner-endorsed multi-resource-gate pattern instead of inventing
+  penalties. Release train v4.0–v4.4, six owner decision points, constraints per build.
+- **`AGENTS.md` design identity amended** — "No combat, ever" replaced by the surviving
+  core ("nothing is ever taken") + the Stardew-cozy combat terms + story-as-spine; the
+  reference-docs list gains both v4 docs and marks `WORLD_EXPANSION.md` shipped (it still
+  said "PLANNED" — README had the same staleness, also fixed).
+- **`DEVLOG.md`** — the direction call recorded with interpretation, per convention.
+
+Deliberately *not* done: any game code, version bump, or atlas regen — this is a planning
+change set; the owner reviews `V4_PLAN.md` (esp. its §6 decision points) before build-out.
+
 ## v3.45.0 — "Quietude" · 2026-07-18 · tag `v3.45.0`
 
 Audio: real mute + split Music / Sound FX. (Note: the `10-ui.js` settings-panel half of this
