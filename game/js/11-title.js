@@ -239,6 +239,8 @@ function migrateSave(s){
     s.flags.ladder6 = true;
   }
   if(s.skills) for(const sk in f.skills){ if(s.skills[sk] === undefined) s.skills[sk] = 0; }
+  if(s.skills && s.skills.Warding === undefined) s.skills.Warding = 0;   // v4.0 belt-and-suspenders: the sixth skill on any pre-v4 save
+  s.resolve = 100;                                                       // v4.0: always wake with full Resolve (it's never a persisted worry; loads land on the farm anyway)
   if(!s.rel) s.rel = {};
   if(!s.animals) s.animals = { chickens:[], cows:[], sheep:[] };
   if(!s.animals.chickens) s.animals.chickens = [];
@@ -340,6 +342,7 @@ function beginPlay(){
   $("hud").classList.remove("hidden"); $("hotbar").classList.remove("hidden");
   if(IS_TOUCH) $("touchUI").classList.remove("hidden");
   setMap("farm", 8*TILE+8, 12*TILE, "down");   // always wake on the farm
+  ensureStaveSlot();   // v4.0: restore the Stave hotbar slot for a save that already earned it
   refreshHUD(); refreshHotbar(); refreshQuestTracker(); setControlsHint(); clearPickups();
   // recover a stranded finale: reloaded during the handoff, OR the finale's objectives are
   // already met but the festival never fired.

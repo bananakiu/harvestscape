@@ -307,7 +307,7 @@ const CHANGELOG = [
 // The 1–99 grind used to pass its milestones in silence. Now, when you cross a mastery tier
 // (25/50/75/99) in a skill, the neighbour who cares most about that craft says a warm word — in
 // their own voice. One line per skill per tier; fires once, naturally, as you cross it.
-const MASTERY_NPC = { Farming:"maya", Woodcutting:"tom", Mining:"rowan", Fishing:"bram", Cooking:"pip" };
+const MASTERY_NPC = { Farming:"maya", Woodcutting:"tom", Mining:"rowan", Fishing:"bram", Cooking:"pip", Warding:"elias" };   // v4.0: Elias, the last Warden, is the one who cares about the tenth craft
 const MASTERY_PRAISE = {
   Farming: { 25:"Your rows are getting straighter than mine. I'm a little jealous.",
              50:"The whole valley's greener since you came — I paint it that way now.",
@@ -329,6 +329,37 @@ const MASTERY_PRAISE = {
              50:"You cook better than the festival stalls! I'm telling everyone.",
              75:"When I grow up I'm gonna cook just like you. Save me a plate?",
              99:"You're the best cook in the whole valley. That's a FACT, not an opinion." },
+  // v4.0 — Elias, quiet and self-aware, an old maker watching someone tend what he couldn't.
+  Warding: { 25:"You've the hands for it. My father used to say warding was only tending, with the lights turned low.",
+             50:"The old wing feels less heavy since you started going down. I notice. So does the valley.",
+             75:"I sealed that door because I couldn't face what wanted tending. You faced it. …Thank you for that.",
+             99:"There hasn't been a Warden like you in living memory. Go gently down there — the dark is only lonely." },
+};
+
+// ---- THE VARIETY SPARK (v4.0, V4_PLAN §4) ----
+// Anti-rabbit-hole, reward-shaped and never punitive (GBP §5.3 stands — no XP tax, no daily cap).
+// The first few actions in each skill each DAY glow with bonus XP, so rotating between crafts is
+// visibly optimal while single-skill focus is still allowed and never taxed. Ships in v4.0 (small,
+// sets the tone early). Tracked in state.dailyXpActs (reset each dawn); hooked in addXP.
+const SPARK_MULT = 1.5;   // +50% XP on a sparked grant
+const SPARK_CAP = 10;     // the first N grants per skill per day spark
+
+// ---- RESTLESS THINGS (v4.0 Warding — the creatures of the Undercroft) ----
+// Not animals, never people (V4_BUILD_PLAN §1): melancholy nature-spirits knotted out of the
+// materials warding lapsed on. You don't kill them, you SETTLE them — a Stave swing bursts them
+// back into what they're knotted from. Creature tiers ride the unified 1/10/20 ladder so zone
+// depth reads like ore depth. XP sits UNDER the ore curve for the band (copper L10=78, iron L20=186)
+// on purpose: settling is a frequent action (several per floor, low hp), so per-settle XP is modest
+// — it must not out-pace mining an ore vein per unit time (GBP §3.4). Drops are FUEL, priced below
+// same-band gather income (ITEM_SELL below) — settling never out-earns the money crop (GBP §2.4).
+// Every attack is TELEGRAPHED (a shimmer/creak ≥0.5s before it lands) — the bible's cozy-combat rule.
+const CREATURES = {
+  wisp:      { name:"Gloam Wisp",     lvl:1,  hp:3, dmg:10, xp:14, drop:"Gloam Thread", n:1,
+               tele:0.6, speed:26, col:"#9fd0ff", col2:"#5f7fbf" },   // drifts, shies from light, lunges after a shimmer
+  shambler:  { name:"Knot-Shambler",  lvl:10, hp:8, dmg:15, xp:30, drop:"Knotwood",     n:1, drop2:"Gloam Thread", n2:1,
+               tele:0.7, speed:16, col:"#7a6a52", col2:"#4a3c2c" },   // slow, then a straight root-creak charge
+  embermite: { name:"Ember Mite",     lvl:20, hp:6, dmg:15, xp:46, drop:"Ember Grit",   n:1,
+               tele:0.5, speed:40, col:"#ffab5a", col2:"#c05a24" },   // skitters, quick, leaves a warm patch behind
 };
 
 const SEASONS = ["Spring", "Summer", "Fall", "Winter"];
@@ -638,7 +669,12 @@ const LEGEND_BY_ID = {}; LEGENDS.forEach(l => LEGEND_BY_ID[l.id] = l);
 
 // ---- SELL VALUES ----
 const ITEM_SELL = { "Wood":4, "Pine Wood":9, "Maple Wood":17, "Willow Wood":11, "Elder Wood":32, "Heartwood":70, "Silverwood":113,   // v3.20: wood sells for ~1/3 — the renewable grove made chop-and-sell too easy a purse; wood is a construction material now, not a money crop
-  "Stone":3, "Copper Ore":30, "Iron Ore":68, "Gold Ore":165, "Cobalt Ore":300, "Deepsilver Ore":370, "Star Metal Shard":450 };   // shard seats under Diamond (520) — an ore must never out-value a common gem (the Starstone is a class apart); Deepsilver (v3.37) sits between Cobalt and the shard, on-curve
+  "Stone":3, "Copper Ore":30, "Iron Ore":68, "Gold Ore":165, "Cobalt Ore":300, "Deepsilver Ore":370, "Star Metal Shard":450,   // shard seats under Diamond (520) — an ore must never out-value a common gem (the Starstone is a class apart); Deepsilver (v3.37) sits between Cobalt and the shard, on-curve
+  // v4.0 warding drops — FUEL, not a faucet (GBP §2.4). Priced deliberately LOW: the Undercroft is
+  // gated behind Act II + total-100, so a settler always has iron/gold to mine (68/165g) — these sit
+  // well under that, and under the wood ladder they resemble (Maple 17 · Elder 32). Their real value
+  // is as materials (charms, bell pledges, machine feed), so resale is a floor, never the point.
+  "Gloam Thread":18, "Knotwood":24, "Ember Grit":30 };
 FISH.forEach(f => { ITEM_SELL[f.name] = f.sell; ITEM_SELL["Cooked "+f.name] = Math.floor(f.sell*1.75); });
 LEGENDS.forEach(l => { ITEM_SELL[l.name] = l.sell; });   // trophies. You don't cook a Stormrider.
 for(const k in CROPS) ITEM_SELL[CROPS[k].name] = CROPS[k].sell;
@@ -903,6 +939,14 @@ const MASTERY = {
     75: "Comfort Food — a cooked dish is beloved by anyone who likes cooking",
     99: "Renowned — your cooking fetches a premium",
   },
+  // v4.0 Warding — cozy, never punishing: the capstone makes you effectively un-knock-out-able
+  // (Resolve floored at 10), the earlier tiers ease the grind and soften the dark's touch.
+  Warding: {
+    25: "Steady Ward — some settling swings cost no energy",
+    50: "Gloamwise — restless things sometimes give an extra material",
+    75: "Unshaken — the dark's touch costs you less Resolve",
+    99: "Lanternheart — your Resolve never falls below 10",
+  },
 };
 
 // ---- THE VILLAGE NOTICEBOARD ----
@@ -933,8 +977,14 @@ const REQUESTS = [
 ];
 
 // ---- TOOLS ----
-const TOOLS = ["Hoe", "Can", "Axe", "Pick", "Rod"];
-const TOOL_ICON = { Hoe:"hoe", Can:"can", Axe:"axe", Pick:"pick", Rod:"rod" };
+// v4.0 "The Tenth Door": the Stave joins as the sixth tool — the Warden's tool, the weapon of the
+// new Warding skill. It rides the SAME 7-tier ore+wood ladder as every other tool (V4_PLAN §2:
+// "Warding gear = the sixth line on the tool wall"), so all the tier-indexed tables below cover it
+// unchanged; only TOOL_SKILL and a tier-3 gem are Stave-specific. Unlike the five starting tools it
+// is not granted at freshState — Elias gives the Basic Stave in the door scene (state.flags.staveEarned),
+// and only then does it show in the bag and Tom's upgrade wall.
+const TOOLS = ["Hoe", "Can", "Axe", "Pick", "Rod", "Stave"];
+const TOOL_ICON = { Hoe:"hoe", Can:"can", Axe:"axe", Pick:"pick", Rod:"rod", Stave:"stave" };
 // The Star Metal tier (v3.12) is the 4th and final rung. It exists to close the reward-is-an-input
 // rule (§3.5): before it, everything The Long Climb (v3.10) added below the surface — Cobalt Ore,
 // Star Metal Shard, Silverwood, Heartwood — was sell-only, a pure faucet. This tier CONSUMES all
@@ -956,7 +1006,7 @@ const MAX_TIER = TOOL_TIERS.length - 1;   // = 6; used everywhere instead of a h
 // makes sense as the sole gate for an OP tool; you must have earned the level in that tool's own
 // craft. Clean & memorable, matching the unified gathering ladder: Copper 10, Iron 20, Gold 30,
 // Cobalt 45, Deepsilver 70, Star Metal 85 (v3.38).
-const TOOL_SKILL = { Hoe:"Farming", Can:"Farming", Axe:"Woodcutting", Pick:"Mining", Rod:"Fishing" };
+const TOOL_SKILL = { Hoe:"Farming", Can:"Farming", Axe:"Woodcutting", Pick:"Mining", Rod:"Fishing", Stave:"Warding" };
 const TIER_LEVEL = [1, 10, 20, 30, 45, 70, 85];   // v3.38: the unified ladder — each tier's level IS its ore's and its wood's level, in every skill
 // Tool tiers cost wood + ore + gold — and the top tiers a signature gem / the deep materials — so
 // every upgrade needs Mining AND Woodcutting progress (and the Rod's Pearl, the beach). A gold tool
@@ -969,7 +1019,7 @@ const TIER_COST  = [null,
   { g:7500,  mats:{ "Cobalt Ore":6, "Willow Wood":60 } },                 // v3.37: the first new rung — mid woods, no premium timber yet
   { g:10000, mats:{ "Deepsilver Ore":6, "Elder Wood":50 } },              // v3.37: the deep grove's dark boards carry the second rung
   { g:12000, mats:{ "Star Metal Shard":4, "Cobalt Ore":8, "Silverwood":40, "Heartwood":20, "Starstone":1 } }];   // v3.18: the star gem crowns the ultimate tool; unchanged in v3.37 — at L60 with two rungs before it, its cost finally matches its place
-const TIER3_GEM  = { Hoe:"Opal", Can:"Topaz", Axe:"Emerald", Pick:"Ruby", Rod:"Pearl" };   // Hoe was Amethyst (now Gary-only)
+const TIER3_GEM  = { Hoe:"Opal", Can:"Topaz", Axe:"Emerald", Pick:"Ruby", Rod:"Pearl", Stave:"Sapphire" };   // Hoe was Amethyst (now Gary-only); the Stave takes a Sapphire — cool ward-light set into the head (v4.0)
 function toolCost(tool, tier){
   const base = TIER_COST[tier]; if(!base) return null;
   const mats = Object.assign({}, base.mats);
@@ -1055,6 +1105,18 @@ function waystoneCost(id){
   return null;   // way1 is already awake
 }
 
+// ---- WARDEN'S BELLS (v4.0) — the Undercroft's checkpoints, on the same Pledge Ledger ----
+// Every 5th floor holds a silent Warden's Bell; funding it is a permanent checkpoint you can ring
+// back down to (renderBells clones renderLift). Like the lift/waystones, the sink is CROSS-skill —
+// gold + the settle drops (Knotwood/thread/grit) + timber/ore — so warding never self-funds its own
+// checkpoints (GBP §2.2/§2.4). Scaled to the lift's 500/1500/3000 so the two deep venues rhyme.
+function bellCost(n){
+  if(n === 5)  return { g:600,  mats:{ "Knotwood":10, "Wood":40 } };
+  if(n === 10) return { g:1500, mats:{ "Knotwood":20, "Gloam Thread":15, "Pine Wood":40 } };
+  if(n === 15) return { g:3000, mats:{ "Knotwood":30, "Ember Grit":10, "Iron Ore":8 } };
+  return null;
+}
+
 // ---- THE PLEDGE LEDGER ----
 // The owner's no-wasted-trips rule (DEVLOG 2026-07-13): reaching a restorable thing banks its
 // DISCOVERY permanently and for free; the cost is a PLEDGE you fill later, from anywhere, in
@@ -1066,6 +1128,7 @@ function waystoneCost(id){
 function pledgeCost(id){
   if(id.startsWith("way"))  return waystoneCost(id);
   if(id.startsWith("lift")) return liftStopCost(parseInt(id.slice(4), 10));
+  if(id.startsWith("bell")) return bellCost(parseInt(id.slice(4), 10));   // v4.0 Warden's Bells
   return null;
 }
 function pledgeName(id){
@@ -1073,6 +1136,7 @@ function pledgeName(id){
   if(id === "way6") return "the Sixth-Ring Waystone";
   if(id === "way9") return "the Heart Waystone";
   if(id.startsWith("lift")) return "the floor-" + id.slice(4) + " lift stop";
+  if(id.startsWith("bell")) return "the floor-" + id.slice(4) + " Warden's Bell";   // v4.0
   return id;
 }
 function pledgePaid(id){ return (state.pledges && state.pledges[id]) || { gPaid:0, mats:{} }; }
@@ -1087,12 +1151,14 @@ function pledgeFunded(id){ const r = pledgeRemaining(id); return r.g <= 0 && !Ob
 function pledgeDone(id){
   if(id.startsWith("way"))  return id === "way1" || (state.waystones||[]).includes(id);
   if(id.startsWith("lift")) return (state.liftStops||[]).includes(parseInt(id.slice(4), 10));
+  if(id.startsWith("bell")) return (state.wardBells||[]).includes(parseInt(id.slice(4), 10));   // v4.0
   return false;
 }
 function pledgeDiscovered(id){
   if(pledgeDone(id)) return true;
   if(id.startsWith("way"))  return !!(state.pledges && state.pledges[id]);   // touched the stone once
   if(id.startsWith("lift")) return (state.mineBest||0) >= parseInt(id.slice(4), 10);  // reached the floor once
+  if(id.startsWith("bell")) return (state.wardBest||0) >= parseInt(id.slice(4), 10);  // reached the Undercroft floor once
   return false;
 }
 // Everything the Journal's Restorations section should list, in display order.
@@ -1103,6 +1169,7 @@ function ledgerPledges(){
   const out = [];
   for(const id of ["way3","way6","way9"]) if(pledgeDiscovered(id)) out.push(id);
   for(let n = 5; n <= (state.mineBest||0); n += 5) out.push("lift"+n);
+  for(let n = 5; n <= Math.min(15, state.wardBest||0); n += 5) out.push("bell"+n);   // v4.0 Warden's Bells (floors 1–15 in v4.0)
   return out;
 }
 
@@ -1120,6 +1187,11 @@ const CHARMS = {
   "Lantern Charm":       { sell:100, effect:"your light reaches a little farther" },
   "The Forester's Band": { sell:0,   effect:"+8% Woodcutting XP and an extra log, now and then" },  // once per valley
   "Grandpa's Pocketwatch": { sell:0, effect:"+5% Farming XP while worn" },   // dug up where his last letter said (v3.32) — once per valley, never in a nest
+  // v4.0 — the first CRAFTED charms (forged at a Warden's Bell from settling drops, not nest-found).
+  // They extend the v3.3 one-charm system rather than adding armour: Warded lifts your Resolve cap,
+  // Emberlight widens your lantern for the dark. Modest sells; the point is wearing them.
+  "Warded Charm":     { sell:150, effect:"+5 maximum Resolve while worn" },
+  "Emberlight Charm": { sell:150, effect:"your lantern reaches much farther" },
 };
 for(const c in CHARMS) ITEM_SELL[c] = CHARMS[c].sell;
 function charmActive(name){ return state.charm === name && (state.inv[name]||0) > 0; }
@@ -1255,8 +1327,22 @@ const QUESTS = [
     obj:[ {text:"Follow Grandpa's last riddle", flag:"keepsakeFound"} ],
     reward:{ msg:"The last envelope goes back in the drawer, lighter now." },
     act2:true },
+
+  // ---- Act III opener (v4.0 "The Tenth Door") ----
+  // Appended last, per the questIdx-is-a-raw-index rule (see the epilogue note above). Its objectives
+  // are act2Done (guaranteed true by the time the chain reaches here — it reads as "the valley is
+  // whole") + total level 100 (the real gate: you've grown deep enough to be trusted with the tenth
+  // craft). Turn-in is a cutscene at the Guild where Elias takes the boards down and hands over the
+  // Basic Stave; it sets state.flags.tenthDoorOpen, which turns the planked door into the Undercroft
+  // mouth. The turnIn.cutscene is attached in 15-warding.js (after this array + NPCDEF exist).
+  { id:"tenth-door", qp:3, title:"The Tenth Door", giver:"Elder Rowan", act3:true,
+    desc:"The valley is whole again — and Rowan has stopped pretending the planked door in the Guild isn't there. “Nine wings we lit. There was always a tenth. Come see me when you've grown into it — there's a thing I should have told you eleven years ago, and a thing that wants doing.”",
+    obj:[ {text:"See the valley made whole (Act II)", flag:"act2Done"},
+          {text:"Reach total level 100", totalLevel:100} ],
+    reward:{ msg:"The boards come down. Cold air rises from the dark below the Guild." } },
 ];
 const FINALE_IDX = QUESTS.findIndex(q => q.finale);
+const ACT3_IDX = QUESTS.findIndex(q => q.act3);   // v4.0 — first Act III quest (The Tenth Door)
 
 // ---- HOW TO PLAY ----
 // One source of truth for the reference text, shown on the title screen (showHowto) AND inside
@@ -1429,6 +1515,13 @@ const EXAMINE = {
   "Wool": "Soft, warm, and freshly off the sheep.",
   "Prize Fleece": "The finest coat in the valley — only a truly cherished sheep grows one.",
   "Shears": "Well-oiled, sharp, and shepherd-approved. A sheep never minds.",
+  // v4.0 Warding
+  "Stave": "A warden's tool. Not for striking — for settling. It hums, very faintly, the way a held breath does.",
+  "Gloam Thread": "Cool, silver-blue, and impossibly fine. It was a wisp a moment ago; now it's just thread.",
+  "Knotwood": "A knot of grief-dark wood, smooth as a worry stone. Warding lapsed, and the wood remembered.",
+  "Ember Grit": "Warm grit that ticks like a cooling stove. It doesn't burn — it only wants to be near something.",
+  "Warded Charm": "Thread wound tight around a chip of sapphire. Wearing it, the dark feels a little less like it wants you.",
+  "Emberlight Charm": "A pinch of ember grit in a glass bead. It throws your lantern-light farther than any lantern should.",
   "Star Metal": "Star-fallen metal that slept in the vault; the Guild's forge wakes with it.",
   "Guild Seal": "Proof a craft was mastered, not merely attempted.",
   "Bouquet": "A Willowbrook bouquet, carried straight to one particular door.",
@@ -1475,6 +1568,11 @@ const EXAMINE_OBJ = {
   "ladder": "Down into the dark, one rung at a time.",
   "lift": "The Guild's old lift. The counterweight still works; the stops are what rusted.",
   "olddoor": "Nailed shut. The dust is old; the nails aren't.",
+  // v4.0 The Undercroft
+  "knot": "A knot of the dark, wound tight around the stair. Settle it and the way down opens.",
+  "wardbell": "A Warden's bell, green with age and silent. Fund it and it rings you home — or back down here.",
+  "wardup": "Worn stone steps, climbing back toward the Guild and the light.",
+  "wardladderdown": "The stair drops away into a deeper, quieter dark.",
 };
 const EXAMINE_NPC = {
   "maya": "Always paints the valley greener than it is; lately it obliges.",

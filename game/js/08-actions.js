@@ -7,6 +7,15 @@
 const HOTBAR = [ { tool:"Hoe" }, { tool:"Can" }, { tool:"Axe" }, { tool:"Pick" }, { tool:"Rod" }, { tool:"Seeds" } ];
 let slotSel = 0;
 function selectSlot(i){ if(i<0||i>=HOTBAR.length) return; slotSel = i; playSfx("select"); refreshHotbar(); }
+// v4.0: the Stave is the first tool ever granted mid-game (all others ship at freshState). It rides
+// its own hotbar slot APPENDED after Seeds — so Seeds keeps index 5 (the hard-coded slotSel=5) and
+// nothing reindexes. Re-append on every boot when earned, and at Elias's grant. Key 7 selects it.
+function ensureStaveSlot(){
+  const earned = state && state.flags && state.flags.staveEarned;
+  const has = HOTBAR.some(s => s.tool === "Stave");
+  if(earned && !has) HOTBAR.push({ tool:"Stave" });
+  else if(!earned && has){ const i = HOTBAR.findIndex(s => s.tool === "Stave"); if(i >= 0){ HOTBAR.splice(i,1); if(slotSel >= HOTBAR.length) slotSel = 0; } }
+}
 
 // ---- v3.22: the horse ----
 // Press H outdoors to mount (once the Stable is built); H again — or stepping into any building —
@@ -172,6 +181,17 @@ function addXP(skill, amt){
   }
   if(skill === "Mining" && charmActive("Amber Beetle")) amt = Math.round(amt * 1.05);
   if(skill === "Farming" && charmActive("Grandpa's Pocketwatch")) amt = Math.round(amt * 1.05);   // his time, well spent (v3.32)
+  // v4.0 variety spark (V4_PLAN §4) — the first SPARK_CAP grants in a skill each day earn +50% XP.
+  // Reward-shaped and never a tax: rotating skills is visibly optimal; single-skill focus is still free.
+  // addXP is the single choke point for ALL skill XP (Farming through Warding), so this covers combat too.
+  if(!state.dailyXpActs) state.dailyXpActs = {};
+  if((state.dailyXpActs[skill] || 0) < SPARK_CAP){
+    const firstToday = !state.dailyXpActs[skill];
+    state.dailyXpActs[skill] = (state.dailyXpActs[skill] || 0) + 1;
+    amt = Math.round(amt * SPARK_MULT);
+    pSparkle(state.px + rand(-3,3), state.py - 16, "#9fe0ff", 6);   // a distinct cold-blue spark on a boosted grant
+    if(firstToday) toast("✦ Variety spark — " + skill + " earns bonus XP for a while today.", "#9fe0ff");
+  }
   const before = levelFor(state.skills[skill]);
   state.skills[skill] += amt;
   floatText(state.px + rand(-4,4), state.py - 22, "+"+amt+" "+skill.slice(0,4).toLowerCase(), "#9fd8ff");
@@ -1176,6 +1196,8 @@ function newDay(){
   clearMapCache();                  // beach/mine refresh once per day
   const oldSeason = SEASONS[Math.floor((state.day-1)/SEASON_DAYS)%4];
   state.day++; state.time = 6*60; state.energy = 100;
+  state.dailyXpActs = {};              // v4.0: a new day re-lights every skill's variety spark
+  state.resolve = resolveMax();        // v4.0: Resolve is whole again each morning (it's never a persisted worry)
   // Tom's shelves half-empty overnight — the glut recovers, but not all at once, so you can't
   // sell out a hoard by dumping and then fully reset with a night's sleep.
   for(const it in state.market){

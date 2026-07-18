@@ -17,19 +17,23 @@ function freshState(){
     gold:500, energy:100, day:1, time:6*60,
     inv:{ "Turnip Seeds":6, "Berry Bun":2 },
     market:{},                            // how much of each item Tom has taken today; cleared at dawn
+    dailyXpActs:{},                        // v4.0 variety spark: {skill: sparked-grants-today}; reset each dawn
     seedSel:"turnip",
-    skills:{ Farming:0, Woodcutting:0, Mining:0, Fishing:0, Cooking:0 },
-    tools:{ Hoe:0, Can:0, Axe:0, Pick:0, Rod:0 },
+    skills:{ Farming:0, Woodcutting:0, Mining:0, Fishing:0, Cooking:0, Warding:0 },   // v4.0: Warding, the sixth skill
+    tools:{ Hoe:0, Can:0, Axe:0, Pick:0, Rod:0, Stave:0 },   // Stave is owned only once Elias grants it (state.flags.staveEarned) — 0 here just seeds the tier
     rel:{},                               // per-NPC relationship { points, talkedDay, giftedDay }
     animals:{ chickens:[], cows:[], sheep:[] },   // each: { friend, eggDay|milkDay|woolDay, petDay }
     mounted:false,                        // v3.22: are you riding the horse right now (transient; reset on load)
     mineDepth:0, mineBest:0,
     groveRing:0, groveBest:0,              // the Deep Grove's rings — mirrors mineDepth/mineBest
+    wardDepth:0, wardBest:0,               // v4.0 the Undercroft's floors — mirrors mineDepth/mineBest
+    resolve:100,                           // v4.0 the combat-only bar; full outside the Undercroft, drains only from contact there
+    wardBells:[],                          // v4.0 funded Warden's Bells (floor numbers 5/10/15) — permanent, like liftStops
     pledges:{},                            // the Pledge Ledger: id → { gPaid, mats:{item:n} } (see 01-data.js)
     waystones:[],                          // awakened waystone ids ("way3"…) — permanent, like liftStops
     charm:null,                            // the one canopy charm worn (its item must also be in inv)
     stats:{ legends:0, tilled:0, planted:0, watered:0, harvested:0, chopped:0, mined:0, fished:0, cooked:0, earned:0, toolUpgrades:0, sold:0, gems:0, forage:0,
-            bestCropSold:0, festivals:0, requests:0 },   // bestCropSold resets each season; the Harvest Fair judges it
+            bestCropSold:0, festivals:0, requests:0, warded:0, knockouts:0 },   // bestCropSold resets each season; warded/knockouts are v4.0
     questIdx:0, questDone:[], questReady:false,
     weather:"clear", forecast:null,        // forecast is rolled on the first newDay
     discovered:{ "Turnip Seeds":true, "Berry Bun":true },   // everything you've ever held — the Collection remembers
@@ -73,6 +77,7 @@ let mapCache = {};
 function getMap(id){
   if(id === "farm"){ if(!state.farm) state.farm = newMap("farm"); return state.farm; }
   const ck = id === "mine"  ? "mine:"  + (state.mineDepth||1)
+           : id === "undercroft" ? "undercroft:" + (state.wardDepth||1)   // v4.0 per-floor cache, like the mine
            : id === "grove" ? "grove:" + (state.groveRing||1) : id;
   if(mapCache[ck]) return mapCache[ck];
   return (mapCache[ck] = newMap(id));

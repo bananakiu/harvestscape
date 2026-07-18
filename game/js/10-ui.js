@@ -139,6 +139,21 @@ function refreshHUD(){
   bar.style.background = e>50 ? "linear-gradient(#b6f27a,#5aa733)"
                        : e>22 ? "linear-gradient(var(--gold-hi),var(--gold))"
                        :        "linear-gradient(var(--gold),var(--gold-d))";
+  // v4.0: the Resolve bar shows only inside a combat map (the Undercroft); elsewhere it's hidden
+  // and irrelevant. inCombatMap()/resolveMax() live in 15-warding.js.
+  const rw = $("resolveWrap");
+  if(rw){
+    const combat = typeof inCombatMap === "function" && inCombatMap();
+    rw.classList.toggle("hidden", !combat);
+    if(combat){
+      const rmax = resolveMax(), rp = Math.max(0, Math.min(rmax, state.resolve || 0));
+      const rbar = $("resolveBar"); rbar.style.width = Math.round(rp/rmax*100) + "%";
+      const frac = rp/rmax;
+      rbar.style.background = frac>0.5 ? "linear-gradient(#bfe4ff,#5a9ad8)"
+                           : frac>0.25 ? "linear-gradient(#cfe0ff,#6a86d0)"
+                           :             "linear-gradient(#dcd6ff,#8a7ad0)";   // deepens toward violet, never a red alarm
+    }
+  }
   refreshEventPill();
   drawClockDial();
 }
@@ -369,7 +384,7 @@ function panelTabs(panelId, stripId, tabs, render){
 // there (principle 4.3) without burying the levels. Icons reuse the mkIcon/hydrateIcons sprite
 // pipeline; every colour role is the pre-blessed one (level --gold, bar --blue, unlock --blue,
 // mastery --gold-hi, next-mastery --ink-soft) — no new hex, no new frame.
-const SKILL_ICON = { Farming:"item_Turnip", Woodcutting:"item_Wood", Mining:"item_Stone", Fishing:"item_Sardine", Cooking:"item_Berry Bun" };
+const SKILL_ICON = { Farming:"item_Turnip", Woodcutting:"item_Wood", Mining:"item_Stone", Fishing:"item_Sardine", Cooking:"item_Berry Bun", Warding:"item_Stave" };   // v4.0
 let skillSel = null;   // which skill's detail is expanded (null = grid only)
 function selectSkill(s){ skillSel = (skillSel === s) ? null : s; playSfx("select"); renderSkills(); }
 function skillDetailHtml(s){
@@ -392,20 +407,26 @@ function skillDetailHtml(s){
 function renderSkills(){
   const b = $("skillsPanel").querySelector(".body");
   let total = 0; for(const s in state.skills) total += levelFor(state.skills[s]);
-  let html = `<div class="skillTotal">Total Level <b>${total}</b> / ${99*5}</div><div class="skillGrid">`;
+  // v4.0: the cap is derived from the live skill count (594 with Warding), so it never drifts again.
+  let html = `<div class="skillTotal">Total Level <b>${total}</b> / ${99*Object.keys(state.skills).length}</div>`;
+  // v4.0 variety spark — a quiet nudge to rotate: the first few actions in each skill each day earn +50% XP.
+  html += `<div class="sparkNote">✦ <b>Variety spark</b> — the first ${SPARK_CAP} actions in each skill each day earn +50% XP. Rotate to make the most of it.</div>`;
+  html += `<div class="skillGrid">`;
   for(const s in state.skills){
     const xp = state.skills[s], lvl = levelFor(xp);
     const cur = XP_TABLE[lvl], next = lvl>=99?cur:XP_TABLE[lvl+1];
     const pct = lvl>=99 ? 100 : Math.floor(inv(xp,cur,next)*100);
     const un = nextUnlock(s), nx = nextMastery(s);
+    const spk = SPARK_CAP - ((state.dailyXpActs && state.dailyXpActs[s]) || 0);   // sparks left today
     const goal = un ? `<span class="sgoal unlock">▸ ${un.label} · ${un.at}</span>`
                : nx ? `<span class="sgoal mast">☆ Lv ${nx.at}: ${MASTERY[s][nx.at].split(" — ")[0]}</span>`
                :      `<span class="sgoal done">★ mastered</span>`;
+    const sparkBadge = spk > 0 ? `<span class="sgoal spark">✦ ${spk} spark${spk>1?"s":""} left today</span>` : "";
     html += `<div class="skillCell${s===skillSel?" sel":""}" onclick="selectSkill('${s}')">` +
       `<span class="sIcon" data-icon="${SKILL_ICON[s]}"><canvas></canvas><span class="sLvl">${lvl}</span></span>` +
       `<span class="sBody"><span class="sName">${s}</span>` +
       `<span class="xpbarWrap"><span class="xpbar" style="width:${pct}%"></span></span>` +
-      goal + `</span></div>`;
+      goal + sparkBadge + `</span></div>`;
   }
   html += `</div><div id="skillDetail">${skillDetailHtml(skillSel)}</div>`;
   html += `<details class="skillHelp"><summary>About the XP curve</summary>` +
@@ -517,7 +538,7 @@ function journalQuestsHtml(){
             : `Every task in the valley's book weighs a point or more. Fill the book, and Tom will have something for the teller.`) +
           `</div></div>`;
   html += `<div class="actHead">${ACT_TITLES[1]}</div>`;
-  let act2Open = false;
+  let act2Open = false, act3Open = false;
   QUESTS.forEach((q, idx) => {
     const done = idx < state.questIdx;
     const active = idx === state.questIdx;
@@ -528,7 +549,8 @@ function journalQuestsHtml(){
       }
       return; // other future quests stay hidden
     }
-    if(idx > FINALE_IDX && !act2Open){ html += `<div class="actHead">${ACT_TITLES[2]}</div>`; act2Open = true; }
+    if(idx > FINALE_IDX && idx < ACT3_IDX && !act2Open){ html += `<div class="actHead">${ACT_TITLES[2]}</div>`; act2Open = true; }
+    if(idx >= ACT3_IDX && !act3Open){ html += `<div class="actHead">${ACT_TITLES[3]}</div>`; act3Open = true; }   // v4.0
     html += `<div class="jq"><h3 class="${done?"done":""}">${done?"✔ ":active?"✒ ":""}${q.title} <span style="color:var(--ink-soft);font-size:.8em;">— ${q.giver}</span></h3>`;
     html += `<div class="desc">“${q.desc}”</div>`;
     q.obj.forEach(o => { const [c,m] = objProgress(o); const d = c>=m;
@@ -863,6 +885,7 @@ function renderShop(){
     }
   } else {
     for(const tool of TOOLS){
+      if(tool === "Stave" && !state.flags.staveEarned) continue;   // v4.0: the Stave only appears on the wall once Elias has given it
       const cur = state.tools[tool];
       if(cur >= MAX_TIER){ html += `<div class="row"><span class="lead" data-icon="tool_${TOOL_ICON[tool]}"><canvas></canvas><span style="color:${TIER_COL[cur]}">${TOOL_TIERS[cur]} ${tool} ★ <span class="sub">maxed</span></span></span></div>`; continue; }
       const c = toolCost(tool, cur+1);
@@ -1455,7 +1478,7 @@ document.addEventListener("keydown", e => {
   else if(k === "q" || k === "x"){ examine(); }   // Q is the WASD-native primary; X kept as a legacy alias
   else if(k === "m"){ setMusicOn(!SND.musicOn); toast("Music "+(SND.musicOn?"on":"off")); }
   else if(k === "escape"){ if(dlg.open) closeDialog(); else closeAllPanels(); }
-  else if("123456".includes(k)) selectSlot(+k-1);
+  else if("1234567".includes(k)) selectSlot(+k-1);   // v4.0: 7th slot is the Stave (only present once earned)
 });
 document.addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
 window.addEventListener("blur", () => { for(const kk in keys) keys[kk] = false; fishHold = false; });

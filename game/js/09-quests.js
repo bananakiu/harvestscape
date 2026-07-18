@@ -17,9 +17,9 @@ function questPointsTotal(){ return QUESTS.reduce((t,q)=>t+(q.qp||1),0); }
 
 // Which act the player is in — used to frame the tracker, journal, and Continue recap so the
 // two-act structure is visible in casual play. Act I runs through the finale ("Wake the Valley").
-const ACT_TITLES = { 1:"Act I — The Quiet Valley", 2:"Act II — The Empty Chair" };
+const ACT_TITLES = { 1:"Act I — The Quiet Valley", 2:"Act II — The Empty Chair", 3:"Act III — The Untended" };
 function actInfo(){
-  const n = (state && state.questIdx > FINALE_IDX) ? 2 : 1;
+  const n = !state ? 1 : (state.questIdx >= ACT3_IDX ? 3 : state.questIdx > FINALE_IDX ? 2 : 1);   // v4.0: Act III opens at The Tenth Door
   return { n, title: ACT_TITLES[n] };
 }
 

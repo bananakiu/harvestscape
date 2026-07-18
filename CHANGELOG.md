@@ -22,6 +22,58 @@
 
 ---
 
+## [Unreleased] — v4.0.0 "The Tenth Door" (Version 4 begins)
+
+The first release of Version 4, built to `V4_BUILD_PLAN.md` §3. Combat enters the game — but
+as a **cozy, opt-in sixth craft**, not a punishment layer. The amended contract holds absolutely:
+**nothing is ever taken from the player** (knockout costs zero), creatures live **only** in the
+new Undercroft, and every pre-v4 space stays exactly as hazard-free as it was. Scope is v4.0 only
+(the Ledger, chapters, and mastery trials are v4.1+); the variety spark is the one v4.1-adjacent
+thing that ships here on purpose, to set the tone early.
+
+### Added — Warding, the sixth 1–99 skill (foundation)
+
+- **Warding** joins Farming/Woodcutting/Mining/Fishing/Cooking as a full skill on the shared XP
+  curve. Total-level cap rises 495 → **594**; the skills panel now derives its denominator from the
+  live skill count (`99 × Object.keys(state.skills).length`) so it can never drift again — the one
+  place a `*5` was hard-coded.
+- **The Stave** — the Warden's tool — is the sixth tool on the wall. It rides the *same* 7-tier
+  ore+wood ladder as every other tool (V4_PLAN §2: "Warding gear = the sixth line on the tool
+  wall"), so all the tier-indexed cost/power/colour tables cover it unchanged; only `TOOL_SKILL`
+  (→Warding) and a tier-3 gem (Sapphire, mirroring the Rod's Pearl) are Stave-specific. Unlike the
+  five starting tools it is **not** granted at freshState — Elias gives the Basic Stave in the door
+  scene (`state.flags.staveEarned`), and only then does it appear in the bag, on the hotbar (a 7th
+  slot appended after Seeds so nothing reindexes — key 7), and on Tom's upgrade wall.
+- **Mastery** (25/50/75/99) in Elias's quiet, self-aware voice — capstone **Lanternheart** floors
+  Resolve at 10 so a master is effectively un-knock-out-able. `MASTERY_NPC.Warding = "elias"` (the
+  last Warden is the one who cares about the tenth craft).
+- Save migration: `state.skills.Warding`, `state.tools.Stave`, and the new combat fields
+  (`resolve`, `wardDepth`/`wardBest`, `wardBells`, `dailyXpActs`, `stats.warded`/`knockouts`) all
+  backfill onto pre-v4 saves through the existing generic + per-collection loops in `migrateSave`;
+  an explicit belt-and-suspenders line seats Warding, and Resolve always loads full.
+
+### Added — the variety spark (the anti-rabbit-hole nudge, V4_PLAN §4)
+
+The first **10 actions in each skill each day** earn **+50% XP** with a distinct cold-blue sparkle
+and a one-time toast per skill per day; the skills panel shows how many sparks each skill has left.
+Hooked at `addXP`, the single choke point for *all* skill XP (so it covers Warding automatically),
+and reset each dawn in `newDay`. **Reward-shaped, never punitive** (GBP §5.3): rotating between
+crafts is now visibly optimal, but single-skill focus is still allowed and never taxed — this
+replaces any XP-penalty/daily-cap idea, which would break the contract.
+
+### Design notes / conservative calls (logged per §8)
+
+- **Creature & drop balance are the build plan's starting bids, passed through GBP and kept.**
+  Settle XP (wisp 14 @L1 · shambler 30 @L10 · embermite 46 @L20) sits *under* the ore-XP curve for
+  the band (copper L10=78, iron L20=186) on purpose: settling is a frequent, low-hp action, so
+  per-settle XP must stay under mining a vein per unit time (GBP §3.4). Drop sells (Gloam Thread 18 ·
+  Knotwood 24 · Ember Grit 30) are priced *low* — the Undercroft is gated behind Act II + total-100,
+  so a settler always has iron/gold (68/165g) to out-earn these many times over; their real value is
+  as crafting materials (charms, bell pledges), so resale is a floor, never the point (GBP §2.4).
+- **Charm recipe uses `Wool`, not `Fleece`.** V4_BUILD_PLAN §3.5 names "Fleece" for the Warded
+  Charm, but no item by that name exists — the sheep good is `Wool` (Prize Fleece is the rare
+  variant / a loved gift). Used `Wool` as the obtainable, on-theme ingredient.
+
 ## 2026-07-18 (later) — V4 build plan: implementation work orders for any coding agent
 
 ### Design — `V4_BUILD_PLAN.md` (new): the plan becomes executable
