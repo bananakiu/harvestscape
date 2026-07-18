@@ -14,6 +14,32 @@
 
 ---
 
+## 2026-07-18 — v4.0.0 "The Tenth Door" SHIPPED — open questions for owner playtest
+
+**Built** the entire v4.0 slice per `V4_BUILD_PLAN.md` §3 (Warding skill, the Undercroft floors
+1–15, the three creature families, the Stave, Resolve + the zero-cost knockout, Warden's Bells +
+crafted charms + Tom's salvage trickle, the "The Tenth Door" opening quest + Elias's door scene,
+and the variety spark). The knockout **contract test passed** (inventory + gold + XP byte-for-byte
+unchanged), the cozy-contract review lens found **zero** violations, and an adversarial review
+caught + fixed a critical bug (uninitialized `state.iFrame` had silently disabled all combat damage
+in fresh saves — `undefined <= 0` is false). Full playtest loop verified in-browser.
+
+**Questions for the owner to settle in playtest (none blocking — conservative calls made + logged
+in `CHANGELOG.md`):**
+
+1. **Balance bids kept as-is.** The build plan's numbers were passed through `GAME_BALANCE_PRINCIPLES`
+   and landed unchanged: settle XP (wisp 14 / shambler 30 / embermite 46) sits under the ore curve;
+   drop sells (Gloam Thread 18 / Knotwood 24 / Ember Grit 30) sit under same-band gather. **Do these
+   feel right in a real descent, or is settling too slow/too generous?**
+2. **`Wool` substituted for `Fleece`.** The Warded Charm recipe named "Fleece" (no such item exists);
+   used `Wool`. **OK, or should it want Prize Fleece / something rarer?**
+3. **Floor 15 is a hard dead-end** (v4.0 scope; v4.1 deepens). **Does the wing feel like it "ends"
+   too abruptly, or is the "the wing ends here — for now" note enough of a promise?**
+4. **The variety spark is +50% XP on the first 10 actions/skill/day.** **Too swingy, too subtle, or
+   right?** (It's reward-only — never a penalty — per the contract.)
+
+Linked: `CHANGELOG.md` (2026-07-18, v4.0.0) for the full implementation reasoning.
+
 ## 2026-07-18 — Version 4 direction: combat is in, the story must carry the game
 
 **Owner (near-verbatim):**

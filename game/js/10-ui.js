@@ -604,7 +604,7 @@ const WORLD_MAP = [
 ];
 // every live map id folds onto one of the nine board regions
 const MAP_REGION = { farm:"farm", cottage:"farm", coop:"farm", barn:"farm",
-  village:"village", store:"village", mayahouse:"village", guild:"guild",
+  village:"village", store:"village", mayahouse:"village", guild:"guild", undercroft:"guild",   // v4.0: the tenth door is inside the Guild
   mine:"mine", beach:"coast", grove:"grove", coastroad:"coastroad", ridge:"ridge",
   butterbrook:"butterbrook", dairy:"butterbrook" };
 // Where each neighbour is right now — inferred read-only from the spawn schedule (spawnMapNpcs,

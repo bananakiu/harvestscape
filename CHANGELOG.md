@@ -22,7 +22,7 @@
 
 ---
 
-## [Unreleased] — v4.0.0 "The Tenth Door" (Version 4 begins)
+## 2026-07-18 — v4.0.0 "The Tenth Door" (code 83, tag `v4.0.0`) — Version 4 begins
 
 The first release of Version 4, built to `V4_BUILD_PLAN.md` §3. Combat enters the game — but
 as a **cozy, opt-in sixth craft**, not a punishment layer. The amended contract holds absolutely:

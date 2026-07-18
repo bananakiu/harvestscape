@@ -94,7 +94,7 @@ function updateCreatures(dt){
       const sp = d.speed * 2.3 * dt;
       moveCreature(cr, cr.lvx*sp, cr.lvy*sp); cr.moving = true;
       if(cr.kind === "embermite") cr.warm = 1;   // leaves a fading warm patch
-      if(dist < 11 && state.iFrame <= 0) drainResolve(d.dmg, cr.x, cr.y);
+      if(dist < 11 && !(state.iFrame > 0)) drainResolve(d.dmg, cr.x, cr.y);   // !(x>0) is undefined-safe (undefined<=0 is false, which would disable all damage)
       if(cr.stateT <= 0){ cr.state = "cooldown"; cr.stateT = 1.1; }
       continue;
     }

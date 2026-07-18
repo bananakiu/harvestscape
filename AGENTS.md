@@ -71,11 +71,14 @@ Treat the changelog as non-optional deliverable output, the same as the code its
 
 ## Architecture (the parts that constrain every change)
 
-- **15 plain `<script>` files, one shared global scope.** No modules/bundler/libraries.
+- **16 plain `<script>` files, one shared global scope.** No modules/bundler/libraries.
   Load order is load-bearing: `00-core` → `01-data` → `02-audio` → `03-art` → `04-world`
   → `05-particles` → `06-weather` → `07-entities` → `08-actions` → `09-quests` →
-  `13-content` → `10-ui` → `11-title` → `14-story` → `12-game`. Function declarations hoist,
-  so cross-file calls resolve at runtime — but data/const initialization order still matters.
+  `13-content` → `15-warding` → `10-ui` → `11-title` → `14-story` → `12-game`. Function
+  declarations hoist, so cross-file calls resolve at runtime — but data/const initialization
+  order still matters. (`15-warding.js` is the v4.0 combat layer; it loads right after
+  `13-content` so its load-time IIFEs can see `QUESTS`/`NPCDEF`/`NPC_RECOG`, while
+  `genUndercroft` + the map-nav twins live in `13-content` because `MAPS` references them.)
 - **Rendering:** internal 320×208 canvas, `imageSmoothingEnabled=false`, CSS-upscaled ~4×
   (`image-rendering:pixelated`). High-fidelity text draws to a separate device-resolution
   `#gtext` overlay (`05-particles.js`), *not* the pixel canvas — keep game text crisp there.
@@ -122,16 +125,18 @@ Treat the changelog as non-optional deliverable output, the same as the code its
 - `V4_STATE_OF_THE_GAME.md` — the v3.45.0 baseline assessment: full systems inventory
   (verified against live code) + the three-problem diagnosis (thin story, rabbit-holing,
   no-combat content ceiling) that motivates Version 4.
-- `V4_PLAN.md` — **the Version 4 roadmap ("The Warden's Valley"), PLANNED not built:**
-  Warding (combat) as the sixth 1–99 skill per the bible's §6 expedition spec, the
-  year-long chaptered Act III driven by the Warden's Ledger, mastery trials + variety
-  spark for breadth pacing, and the v4.0–v4.4 release train. Read it (and the owner
-  decision points in its §6) before building anything combat- or Act-III-shaped.
+- `V4_PLAN.md` — **the Version 4 roadmap ("The Warden's Valley"):** Warding (combat) as the
+  sixth 1–99 skill per the bible's §6 expedition spec, the year-long chaptered Act III driven
+  by the Warden's Ledger, mastery trials + variety spark for breadth pacing, and the v4.0–v4.4
+  release train. **v4.0 "The Tenth Door" SHIPPED** (Warding + the Undercroft floors 1–15 + the
+  three creature families + Resolve/knockout + the Stave + bells/charms + the door-opening quest
+  + the variety spark); v4.1–v4.4 (the Ledger, chapters, mastery trials, deeper venues) remain.
+  Read it (and the owner decision points in its §6) before building anything Act-III-shaped.
 - `V4_BUILD_PLAN.md` — **the implementation work orders for v4**, written to be executed
   cold by any coding agent: locked decisions, verified engine anchors (symbol names, data
   shapes, integration points), and per-release specs with schemas, starting balance
-  numbers, and definition-of-done. **This is the entry point for actually building v4** —
-  one release per session, strictly in order.
+  numbers, and definition-of-done. **This is the entry point for building each v4 release** —
+  one release per session, strictly in order (v4.0 done; start the next unbuilt release's §).
 - `NEW_PLAYER_EXPERIENCE.md` — the onboarding beta plan (shipped in v2.2.0; polish tier still
   on the roadmap).
 - `GAME_DESIGN_PRINCIPLES.md` — the design bible; the yardstick audits grade against.

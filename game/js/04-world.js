@@ -28,6 +28,7 @@ function freshState(){
     groveRing:0, groveBest:0,              // the Deep Grove's rings — mirrors mineDepth/mineBest
     wardDepth:0, wardBest:0,               // v4.0 the Undercroft's floors — mirrors mineDepth/mineBest
     resolve:100,                           // v4.0 the combat-only bar; full outside the Undercroft, drains only from contact there
+    iFrame:0,                              // v4.0 post-hit invulnerability timer — MUST be a number before combat (undefined<=0 is false, which would silently disable all damage)
     wardBells:[],                          // v4.0 funded Warden's Bells (floor numbers 5/10/15) — permanent, like liftStops
     pledges:{},                            // the Pledge Ledger: id → { gPaid, mats:{item:n} } (see 01-data.js)
     waystones:[],                          // awakened waystone ids ("way3"…) — permanent, like liftStops

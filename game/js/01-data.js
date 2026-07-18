@@ -8,13 +8,20 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.45.0", code: 82, codename: "Quietude", date: "2026-07-18" };
+const VERSION = { name: "4.0.0", code: 83, codename: "The Tenth Door", date: "2026-07-18" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.0.0", code:83, date:"2026-07-18", name:"The Tenth Door", notes:[
+    { t:"new", s:"Version 4 begins. Behind the planked door in the Guild — the one Rowan would never talk about — a stair now goes down into the Undercroft: the tenth wing, the Warden's wing, sealed the night the Guild went dark. Finish Elias's story and grow into the valley (total level 100), and Rowan will finally take you to it." },
+    { t:"new", s:"Warding — a new craft, trained 1 to 99, the sixth skill on the wall. Below the valley the dark has knotted itself into restless things — gloam wisps, knot-shamblers, ember mites — where warding lapsed for eleven years. You don't fight them. You settle them: a swing of a forged Warden's Stave, and they come apart into the materials they were knotted from. It is cozy, and it is opt-in, and it lives only down there." },
+    { t:"new", s:"Nothing is ever taken from you — not even here. If your Resolve runs out, the lantern-bearers carry you back to the door with every last coin and thread still yours. A knockout costs a run, never a thing. The farm, the village, every place you already know stays exactly as safe as it always was; the dark is only ever a place you choose to walk into." },
+    { t:"new", s:"The Stave rides the same seven-tier ladder as your other tools — Elias gives you a basic one, and Tom forges it up from there. Warden's Bells on the 5th, 10th and 15th floors are checkpoints you fund and ring back down to; settling drops become charms at the bell's workbench (a wider lantern, a deeper Resolve). Combat-shy? Tom keeps a bit of warden's salvage on his shelf each day, so the story finishes either way." },
+    { t:"new", s:"The variety spark: the first few actions in each skill each day now glow with bonus experience. Rotate your crafts and the valley quietly pays you for it — never a penalty for focusing, just a small, warm nudge to try a bit of everything." },
+  ]},
   { v:"3.45.0", code:82, date:"2026-07-18", name:"Quietude", notes:[
     { t:"fix", s:"Turn the music off and it's off now. A faint reverb tail used to keep whispering under everything after the music stopped — that leak is gone, so off is truly silent." },
     { t:"new", s:"Music and Sound Effects have their own On/Off switches in Settings now, each beside its own volume slider. Hush the soundtrack but keep the birds, rain and chimes — or the other way round. Rain and birdsong follow the Sound Effects switch." },

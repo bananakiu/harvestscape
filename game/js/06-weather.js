@@ -63,8 +63,7 @@ function collectLights(){
   // v4.0: the restless things carry their own cold light (creatures live in curMap.creatures, so the
   // object switch above never reaches them — scan them here, like the windows).
   if(curMap.creatures) for(const cr of curMap.creatures){ if(!cr.alive) continue;
-    const d = CREATURES[cr.kind];
-    L.push({ x:cr.x, y:cr.y-4, r:20, c: d && d.kind==="embermite" ? "255,170,90" : "150,215,255",
+    L.push({ x:cr.x, y:cr.y-4, r:20, c: cr.kind==="embermite" ? "255,170,90" : "150,215,255",   // the instance carries .kind (CREATURES entries don't)
              i: 0.4 + 0.2*Math.sin(animT*5 + cr.x) });
     if(cr.warm > 0) L.push({ x:cr.x, y:cr.y+2, r:16, c:"255,150,80", i:0.3*cr.warm });   // an ember mite's fading warm patch
   }

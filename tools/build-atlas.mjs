@@ -75,7 +75,7 @@ const PLAIN_KEYS = ["SEASONS", "SEASON_DAYS", "FESTIVALS", "BIRTHDAYS",
   "HIVE_COST", "HIVE_RADIUS", "HIVE_CAP", "HIVE_MAX",
   "WATER", "LEGENDS", "ITEM_SELL", "GEM_SELL", "SHORE",
   "RECIPES", "PROJECTS", "WEATHERS", "WEATHER_ODDS",
-  "MASTERY", "MASTERY_NPC", "REQUESTS", "TOOLS", "TOOL_TIERS", "TIER_POWER", "TIER_COST",
+  "MASTERY", "MASTERY_NPC", "REQUESTS", "TOOLS", "TOOL_TIERS", "TIER_POWER", "TIER_COST", "CREATURES",
   "QUESTS", "FINALE_IDX", "XP_TABLE", "NPCDEF", "NPC_LINES",
   "HEART_EVENTS", "MARRIAGE_SCENES", "FESTIVAL_SCENES", "JOURNAL_PAGES"];
 const src = GAME_FILES.map(f => fs.readFileSync(f, "utf8")).join("\n;\n") + `
@@ -195,7 +195,7 @@ const STATS = [
   [(D.FISH || []).length + (D.LEGENDS || []).length, "fish (5 of them legendary)"],
   [(D.RECIPES || []).length, "recipes"],
   [(D.FESTIVALS || []).length + 1, "festivals a year (one earned)"],
-  [masteryCount, "mastery perks across 5 skills"],
+  [masteryCount, `mastery perks across ${Object.keys(D.MASTERY || {}).length || 6} skills`],
 ].filter(([n]) => n > 0);
 
 /* ---------------- sections ---------------- */
@@ -325,14 +325,19 @@ function skillsSection(){
   const fishRows = D.FISH.map(f => [f.lvl, `${dots(f.pal)} <b>${esc(f.name)}</b> — ${f.sell}g · lives in ${["pond", "coast"].filter(w => D.WATER[w].includes(f.name)).join(" & ") || "both waters"}`])
     .concat(D.LEGENDS.map(l => [l.lvl, `${dots(l.pal)} <b class="gold">★ ${esc(l.name)}</b> — legendary, ${l.sell}g (see The Hunt)`]));
   const cookRows = D.RECIPES.map(r => [r.lvl, `<b>${esc(r.name)}</b> — ${Object.entries(r.ing).map(([i, n]) => `${n}× ${esc(i)}`).join(" + ")} · ${r.energy} energy · ${r.sell}g`]);
+  // v4.0 Warding — the "content" at each level is a creature family to settle (not a slay).
+  const wardRows = Object.values(D.CREATURES || {}).map(c => [c.lvl, `<b>${esc(c.name)}</b> — settle it (never kill) for ${c.xp} Warding XP · drops ${esc(c.drop)} (${D.ITEM_SELL[c.drop]}g)`]);
+  const skillCount = Object.keys(D.MASTERY || {}).length || 6;
 
   return `
 <section id="skills"><h2>Skills & Unlocks</h2>
-<p class="prose">Five skills, each 1–99 on the game's own curve (v2.8 “Earned”): the first levels
+<p class="prose">${skillCount} skills, each 1–99 on the game's own curve (v2.8 “Earned”): the first levels
 are earned, the middle is a long steady climb, and only 95–99 steepen into the completionist
 crown. Every skill keeps paying past its last content unlock — <b>mastery perks land at
 25 / 50 / 75 / 99</b>, each announced by the villager who cares most. Carrying
-<b>Grandpa's Guild Pin</b> (from the chest letter) grants +10% XP to everything.</p>
+<b>Grandpa's Guild Pin</b> (from the chest letter) grants +10% XP to everything. <b>Warding</b>
+(v4.0) is the sixth: cozy, opt-in combat you train by <i>settling</i> the Undercroft's restless
+things — nothing is ever taken, a knockout costs zero.</p>
 ${curve}
 <p class="prose small">Reaching 99 in one skill ≈ ${(xp[99] / 1000).toFixed(0)}k XP. For scale: a turnip harvest is ${D.CROPS.turnip.xp} XP, a starfruit ${D.CROPS.starfruit.xp}, a Golden Koi ${D.FISH.find(f => f.name === "Golden Koi").xp}.</p>
 ${ladder("🌱 Farming", D.MASTERY_NPC?.Farming, farmRows, D.MASTERY?.Farming)}
@@ -340,9 +345,10 @@ ${ladder("🪓 Woodcutting", D.MASTERY_NPC?.Woodcutting, woodRows, D.MASTERY?.Wo
 ${ladder("⛏ Mining", D.MASTERY_NPC?.Mining, mineRows, D.MASTERY?.Mining)}
 ${ladder("🎣 Fishing", D.MASTERY_NPC?.Fishing, fishRows, D.MASTERY?.Fishing)}
 ${ladder("🍳 Cooking", D.MASTERY_NPC?.Cooking, cookRows, D.MASTERY?.Cooking)}
+${ladder("🔔 Warding", D.MASTERY_NPC?.Warding, wardRows, D.MASTERY?.Warding)}
 
 <h3>Tools — ${(D.TOOL_TIERS || []).length || "seven"} tiers each</h3>
-<p class="prose">Five tools (${D.TOOLS.join(", ")}), upgraded at Tom's forge. Power multiplies the work per swing.</p>
+<p class="prose">${D.TOOLS.length} tools (${D.TOOLS.join(", ")}), upgraded at Tom's forge (the Stave is the Warden's, v4.0). Power multiplies the work per swing.</p>
 ${table(["Tier", "Power", "Cost"],
   D.TOOL_TIERS.map((t, i) => [`<b>${esc(t)}</b>`, `×${D.TIER_POWER[i]}`,
     D.TIER_COST[i] ? `${D.TIER_COST[i].g.toLocaleString("en-US")}g + ${Object.entries(D.TIER_COST[i].mats).map(([m, n]) => `${n}× ${esc(m)}`).join(" + ")}` : "— (starting kit)"]))}
@@ -350,7 +356,10 @@ ${table(["Tier", "Power", "Cost"],
 }
 
 function worldSection(){
-  const order = ["farm", "cottage", "coop", "barn", "store", "mayahouse", "guild", "mine", "beach"];
+  // v4.0: render EVERY map (the explicit order first, then any not listed — so new areas like the
+  // Undercroft, and the v3.x expansion maps, always appear instead of being silently dropped).
+  const explicitOrder = ["farm", "cottage", "coop", "barn", "store", "mayahouse", "guild", "undercroft", "mine", "beach", "coastroad", "ridge", "butterbrook", "dairy", "grove", "village"];
+  const order = explicitOrder.filter(id => D.MAPS[id]).concat(Object.keys(D.MAPS).filter(id => !explicitOrder.includes(id)));
   return `
 <section id="world"><h2>The World</h2>
 <p class="prose">One valley, ${Object.keys(D.MAPS).length} places. Only the farm persists between
@@ -486,7 +495,7 @@ function completionSection(){
     `Light all <b>9 Guild wings</b>`,
     `Find all <b>${D.JOURNAL_PAGES.length} almanac pages</b> (the last one only comes after the memorial)`,
     `Catch all <b>${D.LEGENDS.length} legendary fish</b> → Bram's Oilskin`,
-    `Reach <b>level 99</b> in all 5 skills — ${masteryCount} mastery perks along the way`,
+    `Reach <b>level 99</b> in all ${Object.keys(D.MASTERY || {}).length || 6} skills — ${masteryCount} mastery perks along the way`,
     `<b>6 hearts</b> with all ${npcIds.length} villagers; see every heart scene (${heartSceneCount})`,
     `Marry <b>Maya or Bram</b>`,
     `Fund all <b>${D.PROJECTS.length} restoration projects</b> (~16,000g)`,

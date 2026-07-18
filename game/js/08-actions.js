@@ -268,7 +268,8 @@ const OBJ_TITLE  = { geode:"Geode", bed:"Bed", campfire:"Campfire", stove:"Stove
   cairn:"The Cairn", crater:"The Crater Dell", shardnode:"Starlight", thymenode:"Mountain Thyme", snowdropnode:"Snowdrops",
   churn:"The Butter Churn",
   deadfall:"Deadfall", westtrail:"The Trail West", easttrail:"The Trail Back", waystone:"Waystone", hearttree:"The Heart of the Forest",
-  ancient:"Ancient Tree" };
+  ancient:"Ancient Tree",
+  knot:"The Stair-Knot", wardbell:"The Warden's Bell", wardup:"Worn Steps", wardladderdown:"The Deeper Stair" };   // v4.0 Undercroft
 for(const k in DECOR) OBJ_TITLE[k] = DECOR[k].name;   // décor pieces (v3.13) examine under their proper name
 function npcAtTile(tx,ty){ if(!curMap||!curMap.npcs) return null;
   for(const n of curMap.npcs){ if(Math.floor(n.x/TILE)===tx && Math.floor(n.y/TILE)===ty) return n; } return null; }
