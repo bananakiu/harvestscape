@@ -14,6 +14,7 @@ const MAPS = {
   mayahouse: { w:12, h:9,  name:"The Alderman House",    subtitle:"",                 music:"cozy", bg:"#171009", gen:genMayaHouse },
   guild:     { w:17, h:11, name:"Guild of Nine Crafts",  subtitle:"once, the heart of the valley", music:"cozy", bg:"#12100b", gen:genGuild },
   mine:      { w:24, h:16, name:"The Old Mine",          subtitle:"",                 music:"mine", bg:"#050406", gen:genMine },   // v3.16: ~half the old 34×22 — smaller floors lean on descending + the checkpoints
+  undercroft:{ w:24, h:16, name:"The Undercroft",        subtitle:"the tenth wing",   music:"under", bg:"#0b0a12", gen:genUndercroft },   // v4.0 — sealed under the Guild; the mine's cozy-dark cousin, but knotted with restless things
   beach:     { w:46, h:24, outdoor:true, name:"Willowbrook Coast", subtitle:"salt on the breeze", music:"beach", bg:"#2f4a63", gen:genBeach },
   coastroad: { w:46, h:26, outdoor:true, name:"The Coast Road", subtitle:"north, by the sea", music:"beach", bg:"#2f4a63", gen:genCoastRoad },   // v3.36 — WORLD_EXPANSION.md area 1
   ridge:     { w:46, h:30, outdoor:true, name:"Starfall Ridge", subtitle:"where the sky came down", music:"auto", bg:"#141824", gen:genRidge },   // v3.43 — WORLD_EXPANSION.md area 2
@@ -235,6 +236,137 @@ function genMine(m){
   }
   m.subtitle = "Floor " + depth + "  ·  the way down is here somewhere";
   m.meta.up = {x:ux,y:uy};   // entry (diagnostic only; nothing reads meta). No fixed down-portal now — the way down hides under the stairs rock.
+}
+
+// ---------------- The Undercroft (v4.0 "The Tenth Door") — the tenth wing, procedural floors --------
+// The mine's cozy-dark COUSIN: it reuses the carve/BFS skeleton, but this is a COMBAT venue, not a
+// mining one. No ore veins — instead the dark is knotted with restless things (CREATURES, settled with
+// the Stave), and the way down hides under a KNOT you settle (not a rock you pick). A silent Warden's
+// Bell stands on every floor (the checkpoint, funded on the Pledge Ledger). Floors 1–15 in v4.0; floor
+// 15 is a dead-end for now (v4.1 "The Warden's Ledger" deepens it). This lives in 13-content.js — not
+// 15-warding.js — because the MAPS literal above references genUndercroft at load time (strict mode
+// would throw on a forward-ref to a not-yet-parsed script). mkCreature/updateCreatures live in 15.
+const WARD_FLOOR_MAX = 15;   // v4.0 bottom of the wing
+function genUndercroft(m){
+  const depth = state.wardDepth || 1;
+  const rng = makeRng(4200 + depth*137 + state.day*7);   // distinct seed base (the mine uses 9001)
+  m.tiles.fill(T.MWALL);
+  const floor = (x,y) => { if(x>0&&y>0&&x<m.w-1&&y<m.h-1) m.tiles[y*W+x]=T.MFLOOR; };
+  let cx = m.w>>1, cy = m.h>>1;
+  for(let i=0;i<m.w*m.h*0.62;i++){
+    floor(cx,cy); floor(cx+1,cy); floor(cx,cy+1);
+    cx = clamp(cx + randiR(rng,-1,1), 1, m.w-2);
+    cy = clamp(cy + randiR(rng,-1,1), 1, m.h-2);
+  }
+  const ux=2, uy=2, dx=m.w-3, dy=m.h-3;
+  const carve = (x0,y0,x1,y1) => { let x=x0,y=y0; let guard=0;
+    while((x!==x1||y!==y1) && guard++<400){ floor(x,y); floor(x,y+1); floor(x+1,y);
+      if(x!==x1) x += Math.sign(x1-x); else if(y!==y1) y += Math.sign(y1-y); } floor(x1,y1); };
+  carve(ux,uy, m.w>>1, m.h>>1); carve(m.w>>1, m.h>>1, dx, dy);
+  floor(ux,uy); floor(ux,uy+1); floor(ux+1,uy); put(m,ux,uy,"wardup");            // the way back up toward the Guild
+  floor(dx,dy); floor(dx-1,dy); floor(dx,dy-1);
+  floor(ux+2,uy); floor(ux+2,uy+1); floor(ux+3,uy); put(m,ux+2,uy,"wardbell");    // the checkpoint bell — on every floor, like the lift
+
+  const floors = [];
+  for(let y=1;y<m.h-1;y++) for(let x=1;x<m.w-1;x++) if(m.tiles[y*W+x]===T.MFLOOR) floors.push([x,y]);
+
+  // sparse old-Guild wreckage for texture + the odd wall sconce for light (never over entry/bell)
+  for(const [x,y] of floors){
+    if((x===ux&&y===uy) || (x===ux+2&&y===uy)) continue;
+    if(m.objects[key(x,y)]) continue;
+    const r = rng();
+    if(r < 0.03) put(m,x,y, rng()<0.5?"rubble":"beam");
+    else if(r < 0.055){ const above=m.tiles[(y-1)*W+x]; if(above===T.MWALL) put(m,x,y,"torch"); }
+  }
+  const nbrs = (x,y) => [[x+1,y],[x-1,y],[x,y+1],[x,y-1]];
+  for(const [ax,ay] of [...nbrs(ux,uy), ...nbrs(ux+2,uy)]){
+    const o = m.objects[key(ax,ay)]; if(o && o.kind !== "wardbell" && o.kind !== "wardup") delete m.objects[key(ax,ay)];
+  }
+
+  // ---- hide the stairs down under a KNOT (a settle-target), with a guaranteed WALKABLE route to it ----
+  const walk = (x,y) => {
+    if(x<1||y<1||x>=m.w-1||y>=m.h-1) return false;
+    if(m.tiles[y*W+x] !== T.MFLOOR) return false;
+    const o = m.objects[key(x,y)];
+    return !o || WALKABLE_OBJ.has(o.kind);
+  };
+  const bfsTo = (tx2,ty2) => {
+    const prev = {}; prev[key(ux,uy+1)] = null; const q = [[ux,uy+1]];
+    for(let h=0; h<q.length; h++){ const [x,y] = q[h];
+      if(x===tx2 && y===ty2) return { prev, endK:key(x,y) };
+      for(const [nx,ny] of nbrs(x,y)){ const k2 = key(nx,ny);
+        if(k2 in prev || !walk(nx,ny)) continue; prev[k2] = key(x,y); q.push([nx,ny]); } }
+    return null;
+  };
+  let onPath = new Set();
+  if(depth < WARD_FLOOR_MAX){
+    const minDist = Math.max(6, Math.floor((m.w+m.h)/4));
+    let pool = floors.filter(([x,y]) => Math.abs(x-ux)+Math.abs(y-uy) >= minDist && !(x===ux+2&&y===uy));
+    if(!pool.length) pool = floors.filter(([x,y]) => !(x===ux&&y===uy) && !(x===ux&&y===uy+1) && !(x===ux+2&&y===uy));
+    const [sx,sy] = pool[randiR(rng, 0, pool.length-1)];
+    m.tiles[sy*W+sx] = T.MFLOOR; delete m.objects[key(sx,sy)];
+    let route = bfsTo(sx,sy);
+    if(!route){   // sealed pocket — carve a straight tunnel to it, clearing any prop in the way
+      let x=ux, y=uy+1, g=0;
+      while((x!==sx||y!==sy) && g++<300){ m.tiles[y*W+x]=T.MFLOOR;
+        const o=m.objects[key(x,y)]; if(o && !WALKABLE_OBJ.has(o.kind)) delete m.objects[key(x,y)];
+        if(x!==sx) x += Math.sign(sx-x); else if(y!==sy) y += Math.sign(sy-y); }
+      route = bfsTo(sx,sy);
+    }
+    if(route){ let k2 = route.endK; while(k2){ onPath.add(k2); k2 = route.prev[k2]; } }
+    put(m, sx, sy, "knot", { hp: 5 + Math.floor(depth/3), stairs:true, shakeT:0 });
+    m.meta.knot = {x:sx,y:sy};
+    m.subtitle = "Floor " + depth + "  ·  something down here wants tending";
+  } else {
+    m.subtitle = "Floor " + depth + "  ·  the wing ends here — for now";
+  }
+
+  // ---- the restless things — kind by depth band, kept OFF the stairs route and away from the entry ----
+  m.creatures = [];
+  const bag = depth < 5  ? ["wisp","wisp","wisp"]
+            : depth < 10 ? ["wisp","wisp","shambler"]
+            :              ["wisp","shambler","shambler","embermite"];
+  const count = 3 + Math.min(4, Math.floor(depth/3));   // 3 shallow → up to 7 deep
+  const spots = floors.filter(([x,y]) => !onPath.has(key(x,y)) && !m.objects[key(x,y)]
+    && Math.abs(x-ux)+Math.abs(y-uy) > 5);
+  for(let i=0; i<count && spots.length; i++){
+    const [x,y] = spots.splice(randiR(rng,0,spots.length-1),1)[0];
+    m.creatures.push(mkCreature(bag[randiR(rng,0,bag.length-1)], x, y, rng));
+  }
+  m.meta.up = {x:ux,y:uy};
+}
+
+// ---- Undercroft navigation (twins of enterMine / mineDown / mineUp) ----
+// Entered from the planked Guild door once state.flags.tenthDoorOpen (see the olddoor interact case).
+function enterUndercroft(){
+  state.wardDepth = 1; state.wardBest = Math.max(state.wardBest||0, 1);
+  state.resolve = resolveMax();               // walk in whole
+  travelTo("undercroft", 2*TILE+8, 3*TILE, "down");
+  if((state.wardBells||[]).length) setTimeout(() => toast("A funded Warden's Bell will ring you down from the surface — or back up here.", "#bfe4ff"), 900);
+}
+function wardDown(){
+  if((state.wardDepth||1) >= WARD_FLOOR_MAX) return;   // floor 15 is the v4.0 bottom
+  state.wardDepth = (state.wardDepth||1) + 1;
+  state.wardBest = Math.max(state.wardBest||0, state.wardDepth);
+  checkQuests(); travelTo("undercroft", 2*TILE+8, 3*TILE, "down");
+  let stop = "";
+  if(state.wardDepth % 5 === 0 && !(state.wardBells||[]).includes(state.wardDepth)){
+    const id = "bell"+state.wardDepth, rem = pledgeRemaining(id), owed = [];
+    if(state.pledges && state.pledges[id]){
+      if(rem.g > 0) owed.push(rem.g+"g");
+      for(const it in rem.mats) owed.push(rem.mats[it]+"× "+it);
+      stop = "  ·  the bell here is " + owed.join(", ") + " short";
+    } else stop = "  ·  a Warden's Bell waits here";
+  }
+  toast("You go down to floor " + state.wardDepth + "…" + stop, "#bfe4ff");
+}
+function exitUndercroft(){   // out the top, back into the Guild by the planked door — also the knockout landing
+  state.resolve = resolveMax();
+  travelTo("guild", 15*TILE+8, 2*TILE, "down");
+}
+function wardUp(){
+  if((state.wardDepth||1) > 1){ state.wardDepth--; travelTo("undercroft", 2*TILE+8, 3*TILE, "down"); }
+  else exitUndercroft();
 }
 // ---- Butterbrook (v3.44) — WORLD_EXPANSION.md area 3 ----
 // Off the beach's WEST end, the coast opens south: wide shore-meadows, the brook winding to the

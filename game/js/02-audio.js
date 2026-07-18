@@ -131,14 +131,15 @@ const PENT = [60,62,64,67,69,72,74,76];  // C major pentatonic-ish
 const PROG_COZY  = [ {pad:[57,60,64],bass:45}, {pad:[53,57,60],bass:41}, {pad:[55,59,62],bass:43}, {pad:[52,55,59],bass:40} ]; // Am F G Em
 const PROG_MINE  = [ {pad:[57,60,64],bass:45}, {pad:[50,53,57],bass:38}, {pad:[55,58,62],bass:43}, {pad:[57,60,64],bass:45} ]; // Am Dm G Am
 const PROG_BEACH = [ {pad:[60,64,67],bass:36}, {pad:[57,60,64],bass:45}, {pad:[53,57,60],bass:41}, {pad:[55,59,62],bass:43} ]; // C Am F G
-function progFor(){ switch(SND.mode){ case "night":return PROG_NIGHT; case "cozy":return PROG_COZY; case "mine":return PROG_MINE; case "beach":return PROG_BEACH; default:return PROG_DAY; } }
+const PROG_UNDER = [ {pad:[57,60,63],bass:45}, {pad:[56,59,62],bass:44}, {pad:[53,56,60],bass:41}, {pad:[57,60,63],bass:45} ]; // v4.0: Am Ab F Am — minor, close, uneasy but not frightening — the tenth wing
+function progFor(){ switch(SND.mode){ case "night":return PROG_NIGHT; case "cozy":return PROG_COZY; case "mine":return PROG_MINE; case "under":return PROG_UNDER; case "beach":return PROG_BEACH; default:return PROG_DAY; } }
 
 function startScheduler(){
   if(SND.sched) return;
   SND.step = 0; SND.bar = 0; SND.nextTime = SND.ctx.currentTime + 0.1;
   SND.sched = setInterval(scheduler, 25);
 }
-function tempo(){ return {night:66, title:80, cozy:74, mine:58, beach:92}[SND.mode] || 86; }
+function tempo(){ return {night:66, title:80, cozy:74, mine:58, under:52, beach:92}[SND.mode] || 86; }   // v4.0: the Undercroft is the slowest, most spacious theme
 
 function scheduler(){
   if(!SND.ctx) return;
@@ -154,7 +155,7 @@ function scheduler(){
 
 function playStep(step, t, stepDur){
   const mode = SND.mode;
-  const dark = (mode === "night" || mode === "mine");
+  const dark = (mode === "night" || mode === "mine" || mode === "under");   // v4.0: the Undercroft reads dark, like the mine
   const bright = (mode === "day" || mode === "title" || mode === "beach");
   const prog = progFor();
   const ch = prog[SND.bar];
@@ -290,6 +291,12 @@ const SFX = {
   legend(){ const t=T0();
     [60,64,67,72,76,79,84].forEach((m,i)=>blip(midi(m),t+i*0.085,0.5,"triangle",0.15,{rev:true,delay:true}));
     [48,55].forEach(m=>note(midi(m),t,1.1,{type:"sine",gain:0.09,atk:0.02,rel:0.9,dest:SND.sfxGain,rev:true})); },
+  // v4.0 Warding — a woody thunk with a faint tonal ring; a settle is a soft descending bell; a
+  // knockout is a gentle glide down (never a death sting); the bell is the tenth door's threshold.
+  staveHit(){ const t=T0(); burst(t,0.1,{freq:dj(320),sweep:100,ftype:"lowpass",q:2,gain:0.24}); blip(dj(180),t,0.12,"triangle",0.13,{glide:90,rev:true}); },
+  settle(){ const t=T0(); [67,64,60,57].forEach((m,i)=>blip(midi(m),t+i*0.07,0.24,"sine",0.11,{rev:true})); },
+  knockout(){ const t=T0(); note(midi(64),t,1.2,{type:"sine",gain:0.12,atk:0.03,rel:1.0,glide:midi(43),dest:SND.sfxGain,rev:true}); burst(t+0.1,0.5,{freq:180,sweep:60,ftype:"lowpass",q:0.6,gain:0.09}); },
+  bellRing(){ const t=T0(); [72,79,84].forEach((m,i)=>blip(midi(m),t+i*0.12,0.7,"sine",0.12,{rev:true,delay:true})); },
 };
 function T0(){ return SND.ctx ? SND.ctx.currentTime + 0.001 : 0; }
 function playSfx(name){ if(SND.sfxOn && SND.ctx && SFX[name]) SFX[name](); }

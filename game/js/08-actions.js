@@ -572,6 +572,17 @@ function useTool(){
     if(!spendEnergy(1)) return;
     startFishing(tx,ty);
   }
+  else if(tool === "Stave"){
+    // v4.0 Warding: the settling swing. Energy is the swing cost (2, like the Axe/Pick), the same as
+    // every other tool — Resolve is a SEPARATE resource, drained only by a restless thing's touch.
+    // ★ Steady Ward (25) gives some free swings. staveSwing (15-warding.js) settles a creature in reach
+    // or breaks the stair-knot; it no-ops harmlessly outside the Undercroft (nothing to hit up top).
+    if(!state.flags.staveEarned){ toast("You don't carry a warden's tool yet.", "#cbb98f"); return; }
+    const freeSwing = hasMastery("Warding",25) && chance(0.15);
+    if(!freeSwing && !spendEnergy(2)) return;
+    staveSwing(tx, ty, power);
+    refreshHUD(); return;
+  }
   refreshHUD();
 }
 
@@ -759,6 +770,10 @@ function interact(){
       case "lift": openLift(); return;
       case "ladderdown": mineDown(); return;
       case "mineentrance": enterMine(); return;
+      case "wardup": wardUp(); return;                 // v4.0 Undercroft — up a floor / out to the Guild
+      case "wardbell": openBells(); return;            // the Warden's Bell checkpoint panel
+      case "wardladderdown": wardDown(); return;       // the settled knot's stair
+      case "knot": toast("A knot of the dark, wound round the stair. Settle it with your Stave (Space).", "#bfe4ff"); return;
       case "westtrail": groveDeeper(); return;
       case "easttrail": groveBack(); return;
       case "deadfall": toast(`A great deadfall seals the trail west. (Axe — Woodcutting ${obj.lvl})`, "#cbb98f"); return;
@@ -769,6 +784,8 @@ function interact(){
       case "olddoor": {
         // The first planted question (STORY_OVERHAUL.md): a door someone nailed shut years ago.
         // Rowan deflects until Act II has told you why; afterwards it reads as quiet closure.
+        // v4.0: once Elias has taken the boards down (The Tenth Door), the door IS the Undercroft mouth.
+        if(state.flags.tenthDoorOpen){ enterUndercroft(); return; }
         if(state.flags.knowsElias)
           showDialog("A door, planked shut",
             "Elias's old workroom. Rowan never had the heart to open it, and now there's no need — the boards can come down any day they choose. There's no hurry left in it.",
@@ -1434,6 +1451,7 @@ function updateTime(dt){
   // EXCEPTION (v3.15): during an opt-in Deep Run, time flows — that's the whole expedition. The
   // day ending just sends you home with your haul (doSleep below), so it costs a run, never items.
   if(curMap && curMap.id === "mine" && !state.deepRun) return;
+  if(curMap && curMap.id === "undercroft") return;   // v4.0: the Undercroft is always timeless — a settling run is never raced by the sun (there's no Deep Run here in v4.0)
   state.time += dt * (60/16);
   if(curMap && curMap.music === "auto"){ const h = state.time/60; setMusicMode(nightFactor(h)>0.55 ? "night" : "day"); }
   if(state.time >= 26*60){ toast("You stayed up far too late…", "#ff8a7a"); doSleep(); }

@@ -40,6 +40,8 @@ function collectLights(){
       case "gemrock":   L.push({x:cx,y:cy,r:20,c:"200,150,240",i:0.5}); break;
       case "starmetal": L.push({x:cx,y:cy,r:22,c:"200,160,255",i:0.55+0.12*Math.sin(animT*3)}); break;   // v3.42: the star's own light, breathing softly in the deep
       case "sealeddoor":L.push({x:cx,y:cy-4,r:40,c:"170,220,255",i:0.8}); break;
+      case "knot":      L.push({x:cx,y:cy-2,r:26,c:"150,200,255",i:0.45+0.14*Math.sin(animT*2.4+x)}); break;   // v4.0: the stair-knot's cold pulse
+      case "wardbell":  L.push({x:cx,y:cy-4,r:32,c:"200,235,255",i:0.6+0.1*Math.sin(animT*2)}); break;         // v4.0: the bell's threshold glow
       case "wing":      if(wingLit(o.wing)) L.push({x:cx,y:cy-2,r:26,c:"255,170,80",i:flick*0.9}); break;
       case "lantern":   L.push({x:cx,y:cy-2,r:30,c:"255,200,110",i:0.85+0.12*Math.sin(animT*3+x)}); break;
       case "stall":     L.push({x:cx,y:cy-4,r:34,c:"255,200,120",i:0.9}); break;
@@ -58,9 +60,21 @@ function collectLights(){
     if(curMap.tiles[wy*W+wx] === T.WALL && isWindowTile(wx, wy))
       L.push({ x:wx*TILE+8, y:wy*TILE+11, r:28, c:"255,208,128", i:0.8 });
   }
-  const charmR = charmActive("Lantern Charm") ? 12 : 0;   // a firefly's worth farther
-  L.push({ x:state.px, y:state.py-6, r: (curMap.id==="mine"?98:42) + charmR,   // wide warm lantern underground; a soft warm aura up top
-           c: curMap.id==="mine"?"255,215,160":"255,226,178", i: curMap.id==="mine"?1:0.55 });
+  // v4.0: the restless things carry their own cold light (creatures live in curMap.creatures, so the
+  // object switch above never reaches them — scan them here, like the windows).
+  if(curMap.creatures) for(const cr of curMap.creatures){ if(!cr.alive) continue;
+    const d = CREATURES[cr.kind];
+    L.push({ x:cr.x, y:cr.y-4, r:20, c: d && d.kind==="embermite" ? "255,170,90" : "150,215,255",
+             i: 0.4 + 0.2*Math.sin(animT*5 + cr.x) });
+    if(cr.warm > 0) L.push({ x:cr.x, y:cr.y+2, r:16, c:"255,150,80", i:0.3*cr.warm });   // an ember mite's fading warm patch
+  }
+  // v4.0: the Emberlight Charm throws the lantern much farther; deep spaces (mine + undercroft) already
+  // run a wide warm pool, so add the charm on top of whichever base applies.
+  const charmR = (charmActive("Lantern Charm") ? 12 : 0) + (charmActive("Emberlight Charm") ? 8 : 0);
+  const deep = curMap.id==="mine" || curMap.id==="undercroft";
+  const lr = curMap.id==="undercroft" ? 90 : (curMap.id==="mine" ? 98 : 42);
+  L.push({ x:state.px, y:state.py-6, r: lr + charmR,   // wide warm lantern underground; a soft warm aura up top
+           c: deep?"255,215,160":"255,226,178", i: deep?1:0.55 });
   return L;
 }
 
@@ -82,6 +96,8 @@ function drawLighting(camX, camY){
     showLights = boost > 0.02;
   } else if(curMap.id === "mine"){
     amb = "#5b5568"; boost = 1; showLights = true;      // dim but readable — you can see ore to swing at
+  } else if(curMap.id === "undercroft"){
+    amb = "#4a4560"; boost = 1; showLights = true;      // v4.0: dimmer and bluer than the mine — the tenth door, lit only by your lantern and the wisps
   } else {
     amb = "#ccb89a"; boost = 0.7; showLights = true;      // cozy interior
   }
@@ -105,7 +121,7 @@ function drawLighting(camX, camY){
   }
 
   // a soft frame — eased off underground, where the dark already does the framing
-  const vigA = (curMap && curMap.id === "mine") ? 0.18 : 0.34;
+  const vigA = (curMap && (curMap.id === "mine" || curMap.id === "undercroft")) ? 0.18 : 0.34;
   const vg = ctx.createRadialGradient(VIEW_W/2,VIEW_H/2, VIEW_H*0.45, VIEW_W/2,VIEW_H/2, VIEW_H*0.95);
   vg.addColorStop(0,"rgba(0,0,0,0)"); vg.addColorStop(1,`rgba(0,0,0,${vigA})`);
   ctx.fillStyle = vg; ctx.fillRect(0,0,VIEW_W,VIEW_H);

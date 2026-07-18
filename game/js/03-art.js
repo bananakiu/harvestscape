@@ -37,7 +37,58 @@ function buildArt(){
   buildBeachArt();
   buildChars();
   buildItems();
+  buildWardingArt();   // v4.0 — the Stave, the warding drops/charms, the restless things
   buildPortraits();
+}
+
+// ---------------- v4.0 Warding art: the Stave, its drops & charms, and the restless things ----------
+// Kept together (not scattered into buildItems/buildChars) so the whole combat layer's art reads as one
+// unit. Creatures are baked as 2-frame sprites (like the animals in buildInteriors) and composited with
+// dynamic state tints in drawCreature (15-warding.js). Melancholy, not menacing: soft glows, downcast
+// shapes, cool blues — a garden gone untended, not a monster.
+function buildWardingArt(){
+  // The Stave — a pale worn shaft with a small blue ward-light bound into the head.
+  const stave = g => { px(g,7,4,2,10,"#b7a48c"); px(g,7,4,1,10,"#cdb99f");   // shaft
+    px(g,6,2,4,4,"#3a6ad0"); px(g,7,2,2,2,"#9fc4ff"); px(g,6,3,1,1,"#2a4a9a"); };   // sapphire head + glint
+  mkSpr("tool_stave", 16, 16, stave);
+  mkSpr("item_Stave", 16, 16, stave);
+  // The drops — fuel, drawn plain and quiet.
+  mkSpr("item_Gloam Thread", 16, 16, g => { for(let i=0;i<9;i++) px(g,4+i,10-Math.round(Math.sin(i*0.9)*2),1,1,"#bfe0ff");
+    for(let i=0;i<7;i++) px(g,5+i,7-Math.round(Math.sin(i*0.9+1)*2),1,1,"#8fb8e8"); px(g,4,10,1,1,"#e8f4ff"); });
+  mkSpr("item_Knotwood", 16, 16, g => { px(g,4,5,8,7,"#4a3c2c"); px(g,4,5,8,1,"#6a5540"); px(g,5,7,3,3,"#2c221a");
+    px(g,9,6,2,2,"#2c221a"); px(g,6,8,1,1,"#7a6a52"); });   // a grief-dark knot with a whorl
+  mkSpr("item_Ember Grit", 16, 16, g => { px(g,5,7,6,5,"#4a2a14"); px(g,6,8,4,3,"#c05a24"); px(g,7,9,2,1,"#ffab5a");
+    px(g,5,6,1,1,"#ff8a3a"); px(g,10,7,1,1,"#ff8a3a"); });
+  // The crafted charms — a chip of sapphire wound in thread; a bead of ember in glass.
+  mkSpr("item_Warded Charm", 16, 16, g => { px(g,6,5,4,4,"#3a6ad0"); px(g,7,5,2,2,"#9fc4ff");
+    for(let i=0;i<8;i++) px(g,4+i,11,1,1,"#bfe0ff"); px(g,7,9,2,2,"#8fb8e8"); });
+  mkSpr("item_Emberlight Charm", 16, 16, g => { px(g,5,5,6,6,"#2a2018"); px(g,6,6,4,4,"#c05a24"); px(g,7,7,2,2,"#ffce8a");
+    px(g,6,6,1,1,"#ffab5a"); });
+
+  // ---- the restless things (2-frame idle) ----
+  // Gloam Wisp — a small mournful orb with a trailing wisp; frames wobble the tail.
+  const wispBody = g => { px(g,4,4,4,4,"#bfe0ff"); px(g,3,5,6,2,"#9fd0ff"); px(g,5,5,2,2,"#eaf6ff"); };
+  mkSpr("wisp_0", 12, 12, g => { wispBody(g); px(g,5,8,2,2,"#7faee0"); px(g,5,10,1,1,"#5f8fc0"); });
+  mkSpr("wisp_1", 12, 12, g => { wispBody(g); px(g,4,8,2,2,"#7faee0"); px(g,3,10,1,1,"#5f8fc0"); });
+  // Knot-Shambler — a hunched knot of dark wood, dim eye-glints; frames shift the lean.
+  const shBody = g => { px(g,3,6,8,7,"#4a3c2c"); px(g,3,6,8,1,"#5f4c38"); px(g,2,9,10,4,"#3a2e22");
+    px(g,4,8,2,2,"#8fd0ff"); px(g,8,8,2,2,"#8fd0ff"); px(g,5,9,1,1,"#2a2018"); px(g,9,9,1,1,"#2a2018"); };
+  mkSpr("shambler_0", 14, 14, g => { shBody(g); px(g,3,13,2,1,"#2a2018"); px(g,9,13,2,1,"#2a2018"); });
+  mkSpr("shambler_1", 14, 14, g => { shBody(g); px(g,4,13,2,1,"#2a2018"); px(g,8,13,2,1,"#2a2018"); });
+  // Ember Mite — a small skittering shell with a warm core and many little legs.
+  const emBody = g => { px(g,3,4,6,4,"#4a2a18"); px(g,3,4,6,1,"#6a3a22"); px(g,4,5,4,2,"#c05a24"); px(g,5,5,2,1,"#ffab5a"); };
+  mkSpr("embermite_0", 12, 10, g => { emBody(g); px(g,2,8,1,1,"#3a2418"); px(g,4,8,1,1,"#3a2418"); px(g,7,8,1,1,"#3a2418"); px(g,9,8,1,1,"#3a2418"); });
+  mkSpr("embermite_1", 12, 10, g => { emBody(g); px(g,3,8,1,1,"#3a2418"); px(g,5,8,1,1,"#3a2418"); px(g,6,8,1,1,"#3a2418"); px(g,8,8,1,1,"#3a2418"); });
+
+  // ---- Undercroft fixtures (drawn by the generic drawObject fallback, so they shake on hit) ----
+  // The stair-knot — a dark gnarled coil hiding the way down; a settle-target for the Stave.
+  mkSpr("knot", 16, 16, g => { px(g,3,4,10,10,"#3a2e22"); px(g,3,4,10,1,"#5a4a38");
+    px(g,5,6,6,6,"#2a2018"); px(g,6,7,4,4,"#4a3c2c"); px(g,7,8,2,2,"#1a140e");
+    px(g,4,10,2,2,"#5a4a38"); px(g,10,6,2,2,"#5a4a38"); px(g,6,5,1,1,"#8fd0ff"); px(g,9,11,1,1,"#8fd0ff"); });
+  // The Warden's Bell — a green-aged bell hung on a small frame (a standing fixture; 22px tall → TALL).
+  mkSpr("wardbell", 16, 22, g => { px(g,2,2,12,2,"#5a4a38"); px(g,3,2,1,20,"#4a3c2c"); px(g,12,2,1,20,"#4a3c2c");   // frame
+    px(g,6,6,4,2,"#3a6a5a"); px(g,5,7,6,7,"#5a9a86"); px(g,4,13,8,3,"#4a8a76"); px(g,5,7,6,1,"#7ac0a8");            // bell body
+    px(g,7,16,2,3,"#3a6a5a"); px(g,7,10,2,3,"#2a4a3e"); });                                                          // clapper + shading
 }
 
 /* ---------------- terrain tiles ---------------- */

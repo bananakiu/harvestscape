@@ -61,6 +61,32 @@ and reset each dawn in `newDay`. **Reward-shaped, never punitive** (GBP §5.3): 
 crafts is now visibly optimal, but single-skill focus is still allowed and never taxed — this
 replaces any XP-penalty/daily-cap idea, which would break the contract.
 
+### Added — the Undercroft (the tenth wing) + the combat loop
+
+- **The Undercroft** — floors 1–15 of cozy-dark procedural cavern behind the planked Guild door,
+  cloned from the mine's carve/BFS skeleton but re-purposed: no ore, and the way down hides under a
+  **knot** you *settle* with the Stave (not a rock you pick). Its own bluer ambient (`#4a4560`),
+  dark bg, a wide lantern pool (r≈90), its own slow uneasy music mode (`PROG_UNDER`, ~52 bpm), and
+  vignette softened like the mine. **Time stands still** underground, like the mine. Floor 15 is a
+  dead-end for now (v4.1 deepens it). It is the *only* hazardous space in the valley — reached only
+  by deliberately walking through the tenth door.
+- **The restless things** — three creature families, melancholy not menacing, each with **one
+  telegraphed attack** (a shimmer/creak ≥0.5s before it lands — you always get to react): the
+  drifting **Gloam Wisp** (shies from your lantern, then lunges), the slow **Knot-Shambler** (roots,
+  then charges straight), and the quick **Ember Mite** (skitters, dashes, leaves a fading warm
+  patch). Baked as 2-frame sprites, composited with dynamic telegraph/hurt tints; they depth-sort
+  with everything else and carry their own cold light. AI is entity-on-the-tick-loop only — no
+  physics, no pathfinding beyond the wander/aggro/telegraph/lunge/cooldown states.
+- **The Stave's swing** settles a creature in a generous hitbox or breaks the stair-knot; damage is
+  the tool's tier power (the existing `TIER_POWER` model), the swing costs 2 energy like the Axe/Pick
+  (★ Steady Ward sometimes free), and a settle drops materials + Warding XP + a soft bell.
+- **Resolve + the zero-cost knockout** — a combat-only bar (HUD-shown *only* in the Undercroft),
+  full on every safe map and each dawn, drained only by a restless thing's touch (with ~0.85s
+  i-frames + knockback so a swarm can't chain-drain you). Empty → a soft knockout: fade, two lines
+  of story, and you wake at the Guild door with **every item, coin and XP intact** — the only cost
+  is the wasted run-depth, softened by the bells. ★ Lanternheart (99) floors Resolve at 10, so a
+  master is effectively un-knock-out-able. This is the amended contract made literal.
+
 ### Design notes / conservative calls (logged per §8)
 
 - **Creature & drop balance are the build plan's starting bids, passed through GBP and kept.**

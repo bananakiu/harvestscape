@@ -23,6 +23,7 @@ function loop(ts){
         updateTime(dt);
         updateNpcs(dt);
         updateAnimals(dt);
+        updateCreatures(dt);            // v4.0 — Undercroft AI; a no-op on every map without creatures
         updateFishing(dt);
         updateWeather(dt);
         maybeSeasonalFestival();        // a festival window can open while you stand on the sand

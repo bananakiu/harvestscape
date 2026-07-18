@@ -129,7 +129,8 @@ const INTERACT_KINDS = new Set(["campfire","stove","counter","stall","shipbin","
   "waystone","westtrail","easttrail","deadfall","hearttree","lift","olddoor","keg","jar","sawmill","press",
   "milestone","shrine","mooring","samphirenode","hollynode",     // v3.36: the Coast Road's landmarks + forage
   "cairn","crater","shardnode","thymenode","snowdropnode",       // v3.43: Starfall Ridge
-  "churn"]);                                                     // v3.44: Butterbrook
+  "churn",                                                       // v3.44: Butterbrook
+  "wardup","wardbell","wardladderdown","knot"]);                 // v4.0: the Undercroft
 function facingInteractable(fx, fy){
   const w = warpAt(fx,fy); if(w && !w.auto) return true;
   const crop = curMap.crops[key(fx,fy)];
@@ -252,6 +253,8 @@ function renderWorld(){
     }});
   }
   for(const a of curMap.animals) ents.push({ y: a.y, draw: () => a.species==="cow" ? drawCow(a) : a.species==="sheep" ? drawSheep(a) : drawChicken(a) });
+  // v4.0: the Undercroft's restless things depth-sort with everything else so they occlude correctly.
+  if(curMap.creatures) for(const cr of curMap.creatures) if(cr.alive) ents.push({ y: cr.y, draw: () => drawCreature(cr) });
   ents.sort((a,b) => a.y - b.y).forEach(e => e.draw());
 
   // facing cursor + prompts
@@ -457,7 +460,7 @@ function drawGroundTile(x, y, tt, nf){
   }
 }
 
-const TALL = new Set(["oak","pine","maple","bookshelf","lamp","fireplace","banner","sealeddoor","palm","mineentrance","lift","olddoor"]);
+const TALL = new Set(["oak","pine","maple","bookshelf","lamp","fireplace","banner","sealeddoor","palm","mineentrance","lift","olddoor","wardbell"]);   // v4.0: the bell stands 22px
 function drawObject(ox, oy, o, k){
   const bx = ox*TILE, by = oy*TILE;
   let sway = 0;
@@ -512,6 +515,11 @@ function drawObject(ox, oy, o, k){
   if(o.kind==="ladderup" || o.kind==="ladderdown"){
     ctx.drawImage(spr.ladder, bx, by);
     queueText(bx+8, by+9, o.kind==="ladderup"?"▲":"▼", { color:"#ffce5a", size:8 });
+    return;
+  }
+  if(o.kind==="wardup" || o.kind==="wardladderdown"){   // v4.0 Undercroft stairs — reuse the ladder art, cool marker
+    ctx.drawImage(spr.ladder, bx, by);
+    queueText(bx+8, by+9, o.kind==="wardup"?"▲":"▼", { color:"#bfe4ff", size:8 });
     return;
   }
   if(o.kind==="waystone"){
