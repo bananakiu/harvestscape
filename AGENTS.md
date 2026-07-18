@@ -127,6 +127,11 @@ Treat the changelog as non-optional deliverable output, the same as the code its
   year-long chaptered Act III driven by the Warden's Ledger, mastery trials + variety
   spark for breadth pacing, and the v4.0–v4.4 release train. Read it (and the owner
   decision points in its §6) before building anything combat- or Act-III-shaped.
+- `V4_BUILD_PLAN.md` — **the implementation work orders for v4**, written to be executed
+  cold by any coding agent: locked decisions, verified engine anchors (symbol names, data
+  shapes, integration points), and per-release specs with schemas, starting balance
+  numbers, and definition-of-done. **This is the entry point for actually building v4** —
+  one release per session, strictly in order.
 - `NEW_PLAYER_EXPERIENCE.md` — the onboarding beta plan (shipped in v2.2.0; polish tier still
   on the roadmap).
 - `GAME_DESIGN_PRINCIPLES.md` — the design bible; the yardstick audits grade against.

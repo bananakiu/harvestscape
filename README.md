@@ -68,6 +68,7 @@ Sell and upgrade at **Tom's stall**; **sleep at your cottage door** to pass the 
 - `WORLD_EXPANSION.md` — the world-expansion plan: three new areas (the Coast Road, Starfall Ridge, Butterbrook), sequenced and scoped to one release each. All three shipped (v3.36 / v3.43 / v3.44); later layers remain.
 - `V4_STATE_OF_THE_GAME.md` — the factual assessment of the game at v3.45.0: full systems inventory + the diagnosis behind Version 4.
 - `V4_PLAN.md` — the Version 4 roadmap ("The Warden's Valley"): combat as the sixth skill, the year-long Act III story spine, and the breadth-pacing engine. Planned, not yet built.
+- `V4_BUILD_PLAN.md` — the v4 implementation work orders: locked decisions, verified code anchors, and per-release specs (v4.0–v4.4) any coding agent can execute cold.
 - `GAME_DESIGN_PRINCIPLES.md` — the design bible; the yardstick the audits grade against.
 - `GAME_BALANCE_PRINCIPLES.md` — the balancing playbook: distilled rules for gold, XP, and progression, each anchored to a real rebalance in this game's history, with a checklist, failure-mode list, and a live reference-numbers appendix. Read it before touching any economy/XP/tier number.
 - `NEW_PLAYER_EXPERIENCE.md` — the onboarding beta plan (shipped in v2.2.0 "First Light"; its polish tier remains on the roadmap).

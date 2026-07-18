@@ -22,6 +22,42 @@
 
 ---
 
+## 2026-07-18 (later) — V4 build plan: implementation work orders for any coding agent
+
+### Design — `V4_BUILD_PLAN.md` (new): the plan becomes executable
+
+The owner approved `V4_PLAN.md` and asked for a build plan another AI coding agent (Codex,
+Opus, etc.) could implement cold. The new doc is written as self-contained work orders:
+
+- **Locked decisions (§1)** — the plan's §6 recommendations are now decisions (Warding /
+  settle verb / Stave weapon / zero-cost knockout / trials at 50+75 / gate ramp 100→380),
+  so an implementing agent never has to guess intent. Notably, **decision 5 resolved
+  itself**: a code read found the planked Guild door's shipped post-Act-II examine already
+  canonizes it as *Elias's old workroom* — so the lore locks as "Elias was the last
+  Warden," which welds Act II to Act III instead of fighting the shipped text. (The
+  door-opening scene is Elias taking his own boards down — the examine's "any day they
+  choose," kept literally.)
+- **Engine primer (§2)** — every integration anchor an implementer needs, verified by grep
+  against v3.45.0 *symbol names* (not line numbers, which drift): the skills engine has no
+  SKILLS constant (the set is `state.skills`' keys, so adding Warding is one `freshState`
+  line + one **explicit nested `migrateSave` backfill** — the generic backfill only covers
+  top-level fields, a trap called out in bold), `addXP`/`levelFor`/`TIER_POWER`, the
+  `genMine`/lift/pledge machinery the Undercroft clones, the full new-map registration
+  set, cutscene step types, dark-zone lighting branches, and the release plumbing.
+- **Per-release specs (§3–§7)** — v4.0 in file-level detail (creature table with starting
+  hp/XP/drops, Resolve semantics, knockout invariant with an explicit
+  diff-inventory-before/after test, the Stave as `TOOLS[5]`, Warden's Bell checkpoints on
+  the pledge pattern, variety spark in `addXP`); v4.1–v4.4 at task level with
+  definition-of-done gates. Design details deliberately NOT restated from `V4_PLAN.md` are
+  cross-referenced, not duplicated — one source of truth per fact.
+- **Standing constraints (§8)** — contract test per release (grep the diff for anything
+  that takes), hazard containment to the three combat maps, GBP pass on every number, and
+  a blocked/deviation protocol (conservative call + changelog reasoning + DEVLOG question,
+  never silently override a locked decision).
+
+Also: `V4_PLAN.md` §6.5 marked resolved; `AGENTS.md`/`README.md` doc lists gained the
+build plan (flagged as *the* entry point for building v4). Still docs-only — no game code.
+
 ## 2026-07-18 — Version 4 planning (docs only, no game code)
 
 ### Design — Version 4 planned: combat green-lit, the story becomes the spine

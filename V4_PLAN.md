@@ -172,8 +172,10 @@ Godot work (separate track), multiplayer-anything.
    is the alternative if runs feel consequence-free in playtest.
 4. **Mastery-trial gates: 50/75 (recommended) or 50 only** — 75-trials risk feeling like a
    second wall in the same climb; can be deferred to v4.3 data.
-5. **The planked door's shipped "closure" examine** — approve the recontextualization once
-   chapter 1 is drafted (needs a read of the live `14-story.js` text first).
+5. **The planked door's shipped "closure" examine** — RESOLVED 2026-07-18: the live text
+   canonizes the door as *Elias's old workroom* ("the boards can come down any day they
+   choose"), so Elias becomes the last Warden and Act III opens with him taking the boards
+   down. See `V4_BUILD_PLAN.md` §1 (locked decision 5).
 6. **Act III total-level gate curve** — the 100→380 ramp above is a starting bid; sign off
    after a GBP pass models real days-to-total at normal play.
 
