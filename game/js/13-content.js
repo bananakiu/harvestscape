@@ -17,6 +17,8 @@ const MAPS = {
   beach:     { w:46, h:24, outdoor:true, name:"Willowbrook Coast", subtitle:"salt on the breeze", music:"beach", bg:"#2f4a63", gen:genBeach },
   coastroad: { w:46, h:26, outdoor:true, name:"The Coast Road", subtitle:"north, by the sea", music:"beach", bg:"#2f4a63", gen:genCoastRoad },   // v3.36 — WORLD_EXPANSION.md area 1
   ridge:     { w:46, h:30, outdoor:true, name:"Starfall Ridge", subtitle:"where the sky came down", music:"auto", bg:"#141824", gen:genRidge },   // v3.43 — WORLD_EXPANSION.md area 2
+  butterbrook:{ w:46, h:34, outdoor:true, name:"Butterbrook", subtitle:"the coast dairy", music:"beach", bg:"#2f4a63", gen:genButterbrook },   // v3.44 — WORLD_EXPANSION.md area 3
+  dairy:     { w:13, h:9,  name:"The Coast Dairy", subtitle:"cool stone, cream, and patience", music:"cozy", bg:"#171009", gen:genDairy },
   grove:     { w:44, h:30, outdoor:true, name:"The Deep Grove", subtitle:"the forest gives, and grows back", music:"auto", bg:"#0d150c", gen:genGrove },
   village:   { w:40, h:28, outdoor:true, name:"Willowbrook Village", subtitle:"the valley's beating heart", music:"auto", bg:"#101408", gen:genVillage },
 };
@@ -234,6 +236,63 @@ function genMine(m){
   m.subtitle = "Floor " + depth + "  ·  the way down is here somewhere";
   m.meta.up = {x:ux,y:uy};   // entry (diagnostic only; nothing reads meta). No fixed down-portal now — the way down hides under the stairs rock.
 }
+// ---- Butterbrook (v3.44) — WORLD_EXPANSION.md area 3 ----
+// Off the beach's WEST end, the coast opens south: wide shore-meadows, the brook winding to the
+// sea under a plank footbridge, and the creamery alone at the far west — Tom's wife Nell, working
+// the milk the barn's been shipping down since v3.24. Generous with distance: entrance east, dairy
+// far west, the longest walk in the valley (the fiction implied "down the coast" — let it be felt).
+// Fixed layout seed; daily seed only reshuffles the shore forage.
+function genButterbrook(m){
+  const layout = makeRng(1212);
+  const rng = makeRng(1313 + state.day*7);
+  const t = m.tiles;
+  const fill = (x0,y0,x1,y1,tile) => { for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) t[y*W+x]=tile; };
+  // ground: meadow north, sand, then the sea along the south (the coast's own shoreline sine)
+  for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++){
+    const shore = m.h-6 - Math.round(Math.sin(x*0.4)*1.4);
+    if(y >= shore) t[y*W+x]=T.WATER;
+    else if(y >= m.h-9) t[y*W+x]=T.SAND;
+    else t[y*W+x] = layout()<0.12 ? T.FLOWERGRASS : T.GRASS;
+  }
+  // borders (top + both sides; the sea closes the south)
+  for(let x=0;x<m.w;x++) t[0*W+x]=T.IWALL;
+  for(let y=0;y<m.h;y++){ t[y*W+0]=T.IWALL; t[y*W+m.w-1]=T.IWALL; }
+  // the brook — down from the meadow to the sea, a plank footbridge where the path crosses
+  for(let y=1;y<m.h-9;y++){ const bx = 30 + Math.round(Math.sin(y*0.28)*3); t[y*W+bx]=T.WATER; t[y*W+bx+1]=T.WATER; }
+  // the coast path, east→west along row 8 — over the brook it becomes bridge
+  for(let x=1;x<=44;x++){ if(t[8*W+x]===T.WATER) t[8*W+x]=T.BRIDGE; else t[8*W+x]=T.PATH; }
+  // east warp band back to the beach
+  for(const wy of [7,8,9]){ t[wy*W+(m.w-1)]=T.PATH; m.warps[key(m.w-1,wy)] = { to:"beach", sx:2*TILE, sy:6*TILE, face:"right", auto:true }; }
+  put(m, m.w-3, 7, "sign", {text:"→ Willowbrook Coast"});
+  // the creamery at the far WEST — a red-roofed dairy; its door warps into the interior. The door
+  // sits in the BOTTOM wall row (5,6) so it's reachable from the walkable meadow below — review
+  // fix: it was in the top row (5,5) with a wall beneath, so the warp tile itself was solid and
+  // the interior exit landed the player embedded in the wall (unstick masked it).
+  fill(3,3,8,4, T.ROOF); fill(3,5,8,6, T.WALL); t[6*W+5]=T.DOOR;
+  m.warps[key(5,6)] = { to:"dairy", sx:6*TILE+8, sy:6*TILE, face:"up" };
+  put(m, 2, 6, "sign", {text:"Butterbrook Dairy — Nell, prop."});
+  put(m, 8, 6, "churn");
+  // keep the creamery's door approach clear, and the path itself
+  for(let y=6;y<=9;y++) delete m.objects[key(5,y)];
+  // meadow dressing — a few coastal trees + bushes, fixed so a landmark stays a landmark
+  for(let i=0;i<8;i++){ const x=randiR(layout,3,42), y=randiR(layout,10,22);
+    if(t[y*W+x]===T.GRASS && !m.objects[key(x,y)]) put(m, x, y, layout()<0.5?"pine":"bush"); }
+  // daily shore forage — samphire on the sand (reuses the Coast Road's node)
+  for(let i=0;i<6;i++){ const x=randiR(rng,3,43), y=m.h-9+randiR(rng,0,2);
+    if(t[y*W+x]===T.SAND && !m.objects[key(x,y)]) put(m, x, y, "samphirenode"); }
+  // the path may never be sealed
+  for(let x=0;x<=44;x++){ const o=m.objects[key(x,8)]; if(o && !["sign","churn"].includes(o.kind)) delete m.objects[key(x,8)]; }
+}
+function genDairy(m){
+  genRoom(m, T.PLANK, T.IWALL);
+  // the work of the place: presses, a churn, wheels ageing on the shelves
+  put(m,2,2,"barrel"); put(m,4,2,"crate"); put(m,10,2,"crate"); put(m,11,2,"barrel");
+  put(m,7,2,"churn");
+  put(m,2,5,"crate"); put(m,11,5,"crate");
+  put(m,9,6,"sign",{text:"“Clean milk, a cool room, and patience.” — Nell"});
+  exitAt(m, 6, "butterbrook", 5*TILE+8, 7*TILE+8);   // land at the CENTRE of (5,7) — walkable meadow below the door (the +8 is the genStore convention; the tile top alone let the collision box graze the wall row above)
+}
+
 // ---- Starfall Ridge (v3.43) — WORLD_EXPANSION.md area 2 ----
 // The mountain above the mine, finally above ground: switchbacks from the tree line through the
 // scree to a snow-pale summit — the crater dell where the Guild's founding star fell, a wind-worn
@@ -637,6 +696,9 @@ function genBeach(m){
   // the landmark can never be overwritten by a palm and flicker out for a day (review fix).
   for(const wy of [5,6,7]){ t[wy*W+(m.w-1)]=T.PATH; m.warps[key(m.w-1, wy)] = { to:"coastroad", sx:2*TILE, sy:8*TILE, face:"right", auto:true }; }
   put(m, m.w-3, 5, "sign", {text:"→ The Coast Road · Marrow Pt. 39 mi"});
+  // v3.44: the WEST edge opens south to Butterbrook, the coast dairy (WORLD_EXPANSION.md area 3)
+  for(const wy of [5,6,7]){ t[wy*W+0]=T.PATH; m.warps[key(0, wy)] = { to:"butterbrook", sx:43*TILE, sy:8*TILE, face:"left", auto:true }; }
+  put(m, 2, 5, "sign", {text:"← Butterbrook · the coast dairy"});
   // palms + driftwood
   for(let i=0;i<8;i++){ const x=randiR(rng,3,m.w-4), y=randiR(rng,3,m.h-12); if(t[y*W+x]===T.GRASS||t[y*W+x]===T.SAND) put(m,x,y,"palm"); }
   for(let y=1;y<=5;y++) delete m.objects[key(ex,y)];   // a palm must never seal the village door's approach
@@ -698,6 +760,8 @@ const NPCDEF = {
            loved:["Golden Koi","Pearl","Coelacanth"], liked:["Salmon","Coral","Cooked Salmon","Gulf Sturgeon"] },
   pip:   { name:"Pip",         portrait:"port_pip",   spr:"pip",
            loved:["Opal","Berry Bun"], liked:["Shell","Starfruit","Topaz","Wool","Melon"] },   // Opal for Gary's friend (Amethyst is Gary himself now)
+  nell:  { name:"Nell",        portrait:"port_nell",  spr:"nell",
+           loved:["Fine Cheese","Cheese","Prize Fleece"], liked:["Milk","Wool","Honey","Large Egg","Berry Bun"] },   // Tom's wife, the coast dairy (v3.44) — "Cheese" covers Fine Cheese; "Milk" covers Large Milk; "Egg" avoided (would eat plain Egg too — Large Egg is the treat)
   elias: { name:"Elias",       portrait:"port_elias", spr:"elias",
            loved:["Golden Koi","Pearl","Prize Fleece"], liked:["Trout","Salmon","Coral","Cooked","Wool"] },
 };
@@ -742,7 +806,51 @@ const NPC_LINES = {
     "I sit here most mornings now. My daughter brings me tea and pretends it's for the walk. Neither of us mentions the years. We will, one day.",
     "Eleven years is a long time to be forty miles away. …Thank you for coming and getting me. I'd have never come on my own.",
   ],
+  // v3.44 Nell — Tom's wife, the coast dairy the barn ships its milk to. Warm, dry, unhurried;
+  // Tom's humour with the volume turned down. These are her idle lines (heart-tiered); when she
+  // has a standing order open, npcLine speaks the order instead (see the nell branch below).
+  nell: [
+    "So you're the one Tom won't stop going on about. The farm that woke up. I run the dairy down here — half your milk ends up in my presses, you know. Pleased to finally put a face to the pails.",
+    "Tom sends the milk down, I send the cheese back up. Been that way twenty years. He tells folk it's romance. It's mostly logistics.",
+    "A good cheese only wants three things: clean milk, a cool room, and patience. Two of those I can supply. The patience is on you.",
+    "The meadow's kind in the evenings. I come out here when the presses are set and just… let the coast be the coast for a while.",
+    "You've been good to us — good milk, and better company. Tom picked well, staying in that valley. So did I, coming down to this one.",
+  ],
 };
+// ---- Nell's daily order (v3.44) — the buy-from-player that closes the barn → coast → cheese
+// loop the v3.24/v3.33 dairy chain opened. Modelled on the noticeboard (todaysRequest), her own
+// flag namespace, dairy goods only, paid at a premium + Farming XP + hearts. Rotates by the day. ----
+const NELL_ORDERS = [
+  { item:"Milk",        qty:5, want:"I'm short on plain milk for the morning rounds.",     line:"Five good pails — that'll see the village through breakfast. Bless you." },
+  { item:"Large Milk",  qty:3, want:"I need the rich stuff — a well-loved cow's milk.",     line:"Now THAT is milk. This becomes something worth the wait. Thank you." },
+  { item:"Cheese",      qty:3, want:"The shelf's bare — I could use some wheels to age.",   line:"Straight to the cool room with these. In a month they'll be somebody's Sunday." },
+  { item:"Fine Cheese", qty:2, want:"A buyer up the coast asked for my very best.",         line:"Fine cheese for fine folk. You've made me look good, and I don't forget it." },
+  { item:"Wool",        qty:4, want:"The dairy gets cold of an evening — I'm carding wool.", line:"Warm hands make good cheese. This'll keep the whole crew's fingers working." },
+  { item:"Large Egg",   qty:3, want:"I'm baking — the good big eggs, if you've any.",        line:"Custards tonight, then. Come by tomorrow and there might be a bowl spare." },
+];
+function todaysNellOrder(){
+  if(state.flags.nellDay === state.day) return state.flags.nellIdx >= 0 ? NELL_ORDERS[state.flags.nellIdx] : null;
+  const rng = makeRng(7373 + state.day*29);
+  const idx = Math.floor(rng() * NELL_ORDERS.length);
+  state.flags.nellDay = state.day; state.flags.nellIdx = idx;
+  return NELL_ORDERS[idx];
+}
+function nellOrderFilled(){ return state.flags.nellDone === state.day; }
+function tryNellOrder(){
+  if(nellOrderFilled()) return false;
+  const o = todaysNellOrder();
+  if(!o || (state.inv[o.item]||0) < o.qty) return false;
+  take(o.item, o.qty);
+  const pay = Math.max(90, Math.round((ITEM_SELL[o.item]||0) * o.qty * 1.6));   // a premium over Tom's counter — she pays for the trip
+  state.gold += pay; bump("earned", pay); bump("requests", 1);
+  addXP("Farming", 6 * o.qty);   // dairy goods feed Farming, the only skill the cheese chain pays (no Ranching skill exists)
+  ensureRel("nell").points += 25;
+  state.flags.nellDone = state.day;
+  playSfx("coin"); floatText(state.px, state.py-24, "+"+pay+"g", "#ffce5a"); pSparkle(state.px, state.py-14, "#ffce5a", 12); refreshHUD();
+  showDialog("Nell   " + heartStr(heartsOf("nell")), o.line + "\n\n(+" + pay + "g · +25 ♥)", NPCDEF.nell.portrait);
+  setTimeout(() => toast(`Dairy order filled — +${pay}g, +25 ♥`, "#ffce5a"), 300);
+  return true;
+}
 function npcStory(id){
   // festival-prep phase = the two quests before the finale. Anchored to FINALE_IDX, not QUESTS.length,
   // so appending Act Two (or anything else) can never shift this window out from under the writing.
@@ -855,6 +963,13 @@ function npcLine(id, h){
     "A boat could dock here tomorrow, you know. Wouldn't take much. A rope. A reason.",
     "Bram thinks I come up here to be sad. I come up here because the wind's honest. …And to be a little sad.",
   ]);
+  // v3.44: when Nell has a standing order you haven't filled, she names it (so the order is
+  // discoverable just by talking) — order beats heart-tier, like Elias's landing. Filled or
+  // empty-handed, she falls through to her warm idle lines below.
+  if(id === "nell" && !nellOrderFilled()){
+    const o = todaysNellOrder();
+    if(o) return `${o.want} Bring me ${o.qty} ${o.item} and there's good coin in it — more than Tom would give you, and my thanks besides.`;
+  }
   const arr = NPC_LINES[id] || ["…"];
   let idx = Math.min(arr.length-1, h);
   if(id === "rowan"){
@@ -882,6 +997,14 @@ function spawnMapNpcs(m){
     // a festival date (review fix: the beach cast includes him all day on those dates, and the
     // Star-Watch lands on a %4 day EVERY year; a festival always outranks the landing).
     if(state.flags.act2Done && h>=7 && h<19 && state.day % 4 === 0 && !beachEvent()) m.npcs.push(mkNpc("elias", 40*TILE, 16*TILE, {face:"down"}));
+  } else if(m.id==="butterbrook"){
+    // v3.44: of an evening (18:30–22:00) Nell walks the meadow; by day she's inside the creamery
+    // (below, Tom's shopkeeper model — never two places), and after 22:00 she's home abed like
+    // every other neighbour (review fix: the old `h<7` had her wandering the meadow at 1am, which
+    // both looked odd and disagreed with the world-map dot).
+    if(h>=18.5 && h<22) m.npcs.push(mkNpc("nell", 16*TILE, 14*TILE, {wander:{x0:12,y0:11,x1:24,y1:18}}));
+  } else if(m.id==="dairy"){
+    if(h>=7 && h<18.5) m.npcs.push(mkNpc("nell", 6*TILE+8, 3*TILE, {face:"down"}));
   } else if(m.id==="village"){
     if(h>=7 && h<18.5) m.npcs.push(mkNpc("maya", 24*TILE, 12*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));
     if(h>=8 && h<19)   m.npcs.push(mkNpc("pip",  17*TILE, 16*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));
@@ -1212,6 +1335,7 @@ function talkNpc(id){
       "port_pip");
     return;
   }
+  if(id === "nell" && tryNellOrder()) return;  // v3.44: her standing dairy order fills the moment you can meet it
   if(tryFulfillRequest(id)) return;           // scripted scenes always outrank the noticeboard
   const rec = pendingRecog(id);               // v3.24: "saw your new barn!" — a one-time nod, before the filler line
   if(rec){ showDialog(def.name + "   " + heartStr(heartsOf(id)), rec, def.portrait); return; }

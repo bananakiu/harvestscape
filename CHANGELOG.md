@@ -22,6 +22,102 @@
 
 ---
 
+## [Unreleased] — Audio: real mute + split Music / Sound FX
+
+Owner report: *"when the music is turned off, there's still light background music in the
+background — I want music fully off when it's off"*, plus a request for **separate toggles for
+background music and sound effects**.
+
+**Fixed — the "faint music when muted" leak (the real bug).** The generative music was never
+fully silenced by the mute. Cause was in the WebAudio routing (`02-audio.js`): there was a single
+shared reverb and a single feedback delay, and both were wired **straight to `master`**. Every music
+voice (`note()`) sent its *wet* signal directly into those busses, so the wet path **bypassed
+`musicGain` entirely**. Turning music "off" set `musicGain → 0`, which killed the *dry* pads/leads —
+but their reverb and delay tails kept ringing out through master. Because the music is continuous,
+that reverberant wash was constant: exactly the "light background music" that was still audible.
+The pluck/lead/pad/sparkle voices all use `rev`/`delay`, so the leak was always present.
+
+Fix: **per-category effect busses.** Music and SFX now each own a reverb + delay send whose wet
+return feeds *its own* category gain (`musicRev`/`musicDelay` → `musicGain`, `sfxRev`/`sfxDelay` →
+`sfxGain`) instead of master. `note()`/`burst()` route the wet send to the same bus as the dry
+signal. Now a muted category silences its tail too. Verified in-browser with an analyser on the
+master bus: with music off (SFX isolated off), output RMS falls to ~0.00002 (≈ −93 dBFS, i.e.
+true silence) after the tails decay — previously it stayed near the music's own level.
+
+*Why busses and not "just also zero the shared rev/delay on mute":* the rev/delay are shared by
+SFX too. Zeroing the shared bus on music-mute would wrongly kill SFX reverb (and vice-versa). Two
+independent busses is what makes the two toggles below actually independent. Minor bonus: SFX
+reverb now scales with the SFX volume slider (it used to bypass `sfxGain`), which is more correct.
+
+**Added — independent Music and Sound FX toggles.** The old model had a single `SND.enabled` flag
+gating everything — mislabeled "♪ Music" on the title and "Audio On/Off" in Settings, but really a
+master switch. Split into `SND.musicOn` and `SND.sfxOn`, each with its own on/off control:
+- **Settings panel:** the single "Audio" row is replaced by an On/Off toggle on *each* of the
+  existing Music and Sound FX rows (green when on, greyed when off), beside their volume sliders.
+- **Title screen** "♪ Music" button and the **`m`** hotkey now toggle **music only** (matching
+  their label), leaving SFX alone.
+- **Environmental audio** (rain, birdsong, crickets) is categorized as Sound FX, so it follows the
+  SFX toggle; rain's level is remembered (`SND.rainLevel`) so toggling SFX back on restores the
+  current weather immediately. Music ducking under storms still keys off `musicOn`.
+
+**Save compatibility.** Prefs (`hs_audio`) now persist `{music, sfx}` booleans; a legacy single
+`{on}` flag is migrated to both (verified: old `{on:false}` → both toggles off, volumes carried).
+An `on: music||sfx` key is still written for graceful downgrade to older builds.
+
+Touched: `game/js/02-audio.js` (routing + state + toggle API), `game/js/10-ui.js` (Settings UI +
+`m` hotkey), `game/js/11-title.js` (title mute button). No `VERSION` bump here — folds into the
+next cut. Syntax-checked; in-browser verified (mute silence, toggle independence, migration, clean
+console).
+
+---
+
+## v3.44.0 — "Butterbrook" · 2026-07-17 · tag `v3.44.0`
+
+`WORLD_EXPANSION.md` area 3, the last of the three — and the release the plan called the hardest,
+because it needed the valley's **first new NPC since launch**. That inhabitant is **Nell**.
+
+**The map.** West off the beach, the coast opens south to `butterbrook` (46×34): shore-meadows,
+the brook winding to the sea under a plank footbridge, and the creamery alone at the far western
+end — deliberately the longest walk in the valley, because the fiction always said the dairy was
+"down the coast". The beach grows a west warp band mirroring the v3.36 east one; the creamery
+door opens into a small `dairy` interior (13×9). Both regenerate daily via `mapCache`.
+
+**Nell** — Tom's wife, the coast dairy the barn's shipped its milk to for twenty years, invoked
+in five lines of dialogue since v3.24 and drawn *never* until now. Built to the bar v3.34/3.35
+set for inhabitants: a hand-drawn portrait and overworld sprite (a new `kerchief` portrait
+feature — sandy hair under a red headscarf, so she reads distinct from the whole cast at 16px),
+`CHAR_SPEC` colours, `EXAMINE_NPC`, and five heart-tiered idle lines with her own voice (Tom's
+dry humour, the volume turned down). Voice-first; heart events are a later layer.
+
+**The milk round — closing the dairy loop.** Nell keeps a **daily order** (the noticeboard's
+pattern, her own flag namespace, dairy goods only): she asks for the day's item — milk, cheese,
+wool, the good big eggs — and pays a **premium over Tom's counter** (1.6× vs the board's 1.4×),
+plus Farming practice and hearts, once a day. Talk to her and she tells you today's ask; bring it
+and it fills on the spot. Your barn makes the milk, your press makes the cheese (v3.33), and now
+there's someone down the coast glad of both — the loop the whole chain was reaching for.
+
+**Review found 3 issues, all fixed pre-ship** — all in Nell's schedule/geometry, none in the
+economy or the writing:
+- The creamery door was in the *top* wall row with a wall beneath it, so the interior exit warp
+  landed the player *inside* the wall — only `unstick()` saved it, popping them out one tile
+  askew. The door moved to the reachable bottom row and the exit lands at the centre of the
+  walkable meadow tile below it (verified: `collisionEmbedded: false`, steps clear in every
+  direction).
+- Nell wandered the meadow at 1am (the old `h < 7`); she now keeps proper hours — creamery
+  7:00–18:30, meadow 18:30–22:00, home abed after — and `npcRegionNow` matches exactly, so the
+  world-map dot never disagrees with where she's standing.
+- On festival days the blanket "everyone's at the coast" rule put a *false* Nell dot on the
+  beach (she's not in the festival cast); she's now excluded, keeping her true dairy location.
+
+Verified in-browser (muted): the map geometry (creamery/brook/bridge/path/sea/churn), the beach
+west band (east still → Coast Road), the door→dairy→back warp loop landing clean, Nell's fixed
+schedule + matching map dot + festival exclusion, the order transaction (Fine Cheese ×2 → 800g,
++12 Farming XP, +25 hearts, no double-dip, can't-fill-empty, idle-line-after-fill), the portrait
++ overworld sprite with the kerchief (screenshotted), the map in context, atlas (15 maps /
+7 NPCs), clean console.
+
+---
+
 ## v3.43.0 — "Starfall Ridge" · 2026-07-17 · tag `v3.43.0`
 
 **The world grows upward** — `WORLD_EXPANSION.md` area 2, and the sequel v3.42's violet

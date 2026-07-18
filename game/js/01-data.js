@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "3.43.0", code: 80, codename: "Starfall Ridge", date: "2026-07-17" };
+const VERSION = { name: "3.44.0", code: 81, codename: "Butterbrook", date: "2026-07-17" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"3.44.0", code:81, date:"2026-07-17", name:"Butterbrook", notes:[
+    { t:"new", s:"The dairy down the coast is real now. West off the beach, the shore opens south to Butterbrook — meadows, a brook running to the sea under a plank bridge, and the creamery alone at the far end. It's the longest walk in the valley, and worth it: at the end of it is Nell." },
+    { t:"new", s:"Nell — Tom's wife, the coast dairy keeper the barn's been shipping milk to for twenty years, and the valley's first new face in a long while. She keeps a standing order: bring her the day's ask — milk, cheese, wool, the good big eggs — and she pays a premium over Tom's counter, with Farming practice and her thanks besides. Talk to her to hear what she needs." },
+    { t:"new", s:"The dairy chain comes full circle: your barn makes the milk, your press makes the cheese, and now there's someone down the coast who's glad of both." },
+  ]},
   { v:"3.43.0", code:80, date:"2026-07-17", name:"Starfall Ridge", notes:[
     { t:"new", s:"The world grows upward. Past the mine mouth, switchbacks climb Starfall Ridge — through the tree line, up the scree, to a snow-pale summit where the Guild's founding star came down. The crater is still there, fused smooth. So is a wind-worn bench at the cliff edge, and a cairn stacked by every hand that ever made the climb." },
     { t:"new", s:"Star-gleaning. On clear nights the summit catches Starlight Shards — splinters of the old light, gleanable after dusk for Mining practice and honest coin. Once in a while, one turns out to be true star metal. By day the ridge offers humbler things: mountain thyme and snowdrops on the scree, and stone for whoever swings at it." },
@@ -1474,6 +1479,7 @@ const EXAMINE_NPC = {
   "bram": "An old fisher who believed the legends only once he'd hooked them.",
   "pip": "A valley kid, mostly powered by Berry Buns.",
   "elias": "A quiet man the valley kept a chair for, all those years.",
+  "nell": "Tom's better half and the better cook; the coast dairy runs on her patience.",
 };
 const EXAMINE_TILE = {
   "GRASS": "Ordinary green, and none the worse for it.",
@@ -1521,6 +1527,8 @@ const EXAMINE_TILE = {
   EXAMINE_OBJ["shardnode"] = "A splinter of last night's sky, caught in the scree. It waits for the dark to let go.";
   EXAMINE_OBJ["thymenode"] = "Tough little leaves that out-stubborn the wind.";
   EXAMINE_OBJ["snowdropnode"] = "White bells at the snow line, nodding at nothing.";
+  // v3.44 Butterbrook
+  EXAMINE_OBJ["churn"] = "An old butter churn, worn pale where a hundred mornings of hands have held it.";
   EXAMINE_OBJ["bench"] = "Worn smooth by years of sitting. Still room for one more.";
   EXAMINE_OBJ["plantpot"] = "Someone tends these — the blooms are always fresh.";
   // décor (v3.13): the placed pieces read back their catalogue blurb (OBJ_TITLE set in 08-actions.js,

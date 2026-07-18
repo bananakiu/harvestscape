@@ -5,10 +5,10 @@
 > renewable verb. Owner's call (DEVLOG, 2026-07-16): *"the world feels small — start planning
 > to build out more areas."*
 >
-> **Status.** Area 1 (The Coast Road) **SHIPPED in v3.36.0**; Area 2 (Starfall Ridge)
-> **SHIPPED in v3.43.0** (v1: star-gleaning, alpine forage, the crater, the panorama — the
-> lift summit stop, the Rowan quest, and the Elias bench scene remain later layers).
-> Area 3 (Butterbrook, with Nell) planned. Line references are against v3.35.0.
+> **Status.** All three areas SHIPPED: Area 1 (The Coast Road) **v3.36.0**, Area 2 (Starfall
+> Ridge) **v3.43.0**, Area 3 (Butterbrook + Nell) **v3.44.0**. The plan's core is complete;
+> later layers remain per-area (the Coast Road ferry, the ridge lift stop + Rowan quest + Elias
+> bench, Nell's heart events + the cheese cellar). Line references are against v3.35.0.
 
 ---
 

@@ -496,10 +496,10 @@ body{
   display:grid; gap:.4em; margin:.1em 0 .5em;
   grid-template-columns:repeat(4,1fr);
   grid-template-areas:
-    ".     .     guild   ridge    "
-    "grove farm  village mine     "
-    "grove farm  village mine     "
-    ".     .     coast   coastroad";
+    ".           .     guild   ridge    "
+    "grove       farm  village mine     "
+    "grove       farm  village mine     "
+    "butterbrook coast coast   coastroad";
 }
 .wmNode{
   position:relative; display:flex; flex-direction:column; gap:.12em;

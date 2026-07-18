@@ -246,6 +246,7 @@ const OBJ_TITLE  = { geode:"Geode", bed:"Bed", campfire:"Campfire", stove:"Stove
   crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift", olddoor:"A Planked Door", keg:"Keg", jar:"Preserves Jar", sawmill:"Sawmill", press:"Cheese Press", bench:"Bench", plantpot:"Flower Planter",
   milestone:"The Milestone", shrine:"Roadside Shrine", mooring:"The Ferry Landing", samphirenode:"Samphire", hollynode:"Sea Holly",
   cairn:"The Cairn", crater:"The Crater Dell", shardnode:"Starlight", thymenode:"Mountain Thyme", snowdropnode:"Snowdrops",
+  churn:"The Butter Churn",
   deadfall:"Deadfall", westtrail:"The Trail West", easttrail:"The Trail Back", waystone:"Waystone", hearttree:"The Heart of the Forest",
   ancient:"Ancient Tree" };
 for(const k in DECOR) OBJ_TITLE[k] = DECOR[k].name;   // décor pieces (v3.13) examine under their proper name
@@ -730,6 +731,7 @@ function interact(){
       }
       case "crater": showDialog("The Crater Dell", "A bowl of broken scree, older than the Guild, its rim softened by a hundred winters. This is where it came down — the star whose metal built nine crafts and one long story.\n\nThe stone underfoot is fused smooth. On clear nights, they say, the summit still catches splinters of the old light.", null); return;
       case "cairn": openPanorama(); return;
+      case "churn": showDialog("The Butter Churn", "You give the plunger a few turns out of habit. Somewhere under the cream, butter is deciding whether to happen. Nell says the trick is to stop asking it to.\n\n(The dairy's work is Nell's; you just like the sound it makes.)", null); return;
       case "milestone": showDialog("The Milestone", "A squat granite post, older than the Guild, its face worn soft by forty-odd years of salt wind. The carving is still plain enough:\n\nMARROW POINT — 39\n\nThe road runs on north past the landing, thin and patient, until the headland takes it out of sight. Thirty-nine miles. Elias walked it in eleven years; his father sailed it in a day.", null); return;
       case "shrine": showDialog("The Roadside Shrine", "A knee-high stone hollow with a shelf, kept by nobody and tended by everyone — travellers leave what they can spare and take what they need. Today there's a smooth pebble, a dried flower, and half a biscuit, hard as the milestone.\n\nYou tidy the shelf a little. The wind approves.", null); return;
       case "mooring": showDialog("The Ferry Landing", "Grey planks, salt-silvered, solid underfoot — somebody keeps the boards good even though nothing has tied up here in years. The mooring post still wears a loop of rope, spliced and re-spliced.\n\nThe water slaps the pilings, patient as a clock. A ferry could dock here tomorrow, if a ferry were ever minded to.", null); return;

@@ -128,7 +128,8 @@ const INTERACT_KINDS = new Set(["campfire","stove","counter","stall","shipbin","
   "bed","ladderup","ladderdown","mineentrance","shellnode","coralnode","seaweednode","sealeddoor","desk","memorial",
   "waystone","westtrail","easttrail","deadfall","hearttree","lift","olddoor","keg","jar","sawmill","press",
   "milestone","shrine","mooring","samphirenode","hollynode",     // v3.36: the Coast Road's landmarks + forage
-  "cairn","crater","shardnode","thymenode","snowdropnode"]);     // v3.43: Starfall Ridge
+  "cairn","crater","shardnode","thymenode","snowdropnode",       // v3.43: Starfall Ridge
+  "churn"]);                                                     // v3.44: Butterbrook
 function facingInteractable(fx, fy){
   const w = warpAt(fx,fy); if(w && !w.auto) return true;
   const crop = curMap.crops[key(fx,fy)];

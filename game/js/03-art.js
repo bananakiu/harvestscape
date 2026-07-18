@@ -446,6 +446,8 @@ const CHAR_SPEC = {
   pip:    { skin:"#eec39a", skinSh:"#d8a878", hair:"#c98a3a", hairSh:"#a06a28", shirt:"#c0503a", shirtSh:"#9a3a2a", pants:"#3a5a8a", pantsSh:"#2a466e", shoe:"#3a2a1a" },
   // Maya's father: her auburn, gone grey at the edges; a ferryman's weathered coat
   elias:  { skin:"#dcae82", skinSh:"#b98c62", hair:"#8a6250", hairSh:"#66473a", shirt:"#6a7a8a", shirtSh:"#4c5a68", pants:"#413a33", pantsSh:"#2e2924", shoe:"#2a2018" },
+  // v3.44 Nell, the coast dairy — Tom's wife: sandy hair under a red kerchief, a creamery apron
+  nell:   { skin:"#e6bd90", skinSh:"#c69868", hair:"#c9a45a", hairSh:"#a0803a", shirt:"#cdd6dc", shirtSh:"#9aa6ae", pants:"#7a5636", pantsSh:"#5e4228", shoe:"#4a3020", kerch:"#b0483a" },
 };
 function buildChars(){
   for(const name in CHAR_SPEC){
@@ -503,6 +505,7 @@ function drawChar(g, sp, face, pose){
   // tom: mustache + rounder; maya: braid + freckles
   if(sp === CHAR_SPEC.tom && face==="down"){ px(g,6,8,4,1,sp.hairSh); }
   if(sp === CHAR_SPEC.maya && face==="down"){ px(g,3,5,2,5,sp.hair); px(g,5,6,1,1,sp.skinSh); px(g,10,6,1,1,sp.skinSh); }
+  if(sp === CHAR_SPEC.nell){ px(g,4,2,8,3,sp.kerch); px(g,4,2,8,1,shade(sp.kerch,1.2)); }   // v3.44: the red kerchief reads from every facing
 }
 
 /* ---------------- item icons ---------------- */
@@ -703,6 +706,8 @@ function buildPortraits(){
     shirt:"#3f88a0", feature:"beanie", extra:"mustache" });
   portrait("port_pip", { skin:"#eec39a", skinSh:"#d8a878", hair:"#c98a3a", brow:"#a06a28",
     shirt:"#c0503a", feature:"hair", extra:"freckles" });
+  portrait("port_nell", { skin:"#e6bd90", skinSh:"#c69868", hair:"#c9a45a", brow:"#9a7838",
+    shirt:"#cdd6dc", feature:"kerchief", kerch:"#b0483a", extra:"freckles" });
   portrait("port_elias", { skin:"#dcae82", skinSh:"#b98c62", hair:"#8a6250", brow:"#66473a",
     shirt:"#6a7a8a", feature:"hair", extra:"beard" });
   portrait("port_valley", { skin:"#8fd06a", skinSh:"#5fa03e", hair:"#4f8a34", brow:"#3f7a2e",
@@ -747,6 +752,12 @@ function portrait(name, p){
       px(g,15,11,34,7,p.hair);
       px(g,11,3,42,10,"#3f6a5a"); px(g,11,3,42,2,"#5a8a76"); px(g,11,11,42,2,"#2f5044");
       px(g,9,10,46,3,"#37604f");
+    } else if(p.feature==="kerchief"){   // v3.44 Nell — a dairymaid's headscarf, hair tucked under
+      px(g,15,8,34,8,p.hair);                                                            // a little hair at the crown
+      const kc = p.kerch || "#c98a8a";
+      px(g,13,9,38,7,kc); px(g,13,9,38,2,shade(kc,1.2)); px(g,13,14,38,1,shade(kc,.82));  // the scarf band
+      px(g,13,15,4,6,kc); px(g,47,15,4,6,kc);                                             // sides tucked past the ears
+      px(g,47,11,5,5,kc); px(g,50,13,3,4,shade(kc,.88));                                  // the knotted tail
     } else if(p.feature==="none"){
       px(g,14,6,36,14,p.hair); px(g,14,6,36,2,shade(p.hair,1.2)); // valley = leafy
     } else { // hair
@@ -1169,6 +1180,12 @@ function buildBeachArt(){
   mkSpr("item_Starlight Shard", 16, 16, g => {
     px(g,7,3,2,9,"#d8b0ff"); px(g,7,3,1,9,"#eedcff"); px(g,6,6,1,2,"#b088e8"); px(g,9,7,1,2,"#b088e8");
     px(g,7,2,1,1,"#ffffff"); px(g,9,5,1,1,"#ffffff"); px(g,6,11,1,1,"#ffffff"); });
+  // v3.44 BUTTERBROOK — the dairy's butter churn (a flavor prop, examined + a warm line)
+  mkSpr("churn", 16, 18, g => {
+    px(g,5,6,6,10,"#c9a06a"); px(g,5,6,6,1,"#e0bc86"); px(g,5,15,6,1,"#9a7648");          // the wooden tub
+    px(g,4,9,8,1,"#8a6a42"); px(g,4,12,8,1,"#8a6a42");                                    // the iron bands
+    px(g,7,1,2,6,"#8a6a42"); px(g,6,0,4,2,"#a5824c");                                     // the plunger handle
+    px(g,5,5,6,1,"#e8dcc0"); });                                                          // a skim of cream at the rim
   mkSpr("coralnode", 16, 16, g => { px(g,6,8,2,6,"#ff7d9c"); px(g,4,9,2,5,"#ff9ab0"); px(g,9,7,2,7,"#ff5a7a"); px(g,7,6,2,3,"#ffbecb"); px(g,5,13,7,2,"#c9b06a"); });
   mkSpr("seaweednode", 16, 16, g => { for(let i=0;i<4;i++){ const x=4+i*2; px(g,x,7,1,7,"#3f8a5a"); px(g,x,7,1,3,"#57ad74"); } px(g,4,13,8,1,"#c9b06a"); });
   mkSpr("stage", 16, 16, g => { px(g,0,4,16,10,"#8a5f38"); px(g,0,4,16,2,"#a5763f"); px(g,0,12,16,2,"#5e4426"); for(let x=2;x<16;x+=4) px(g,x,6,1,6,"#6e4a2a"); });

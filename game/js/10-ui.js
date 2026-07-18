@@ -578,17 +578,19 @@ const WORLD_MAP = [
   { id:"coast",   area:"coast",   label:"Willowbrook Coast",  sub:"fishing & festivals" },
   { id:"coastroad", area:"coastroad", label:"The Coast Road", sub:"the Gullwater · the landing" },   // v3.36
   { id:"ridge",     area:"ridge",     label:"Starfall Ridge",  sub:"the summit · the view" },         // v3.43
+  { id:"butterbrook", area:"butterbrook", label:"Butterbrook", sub:"the coast dairy · Nell" },          // v3.44
 ];
-// every live map id folds onto one of the eight board regions
+// every live map id folds onto one of the nine board regions
 const MAP_REGION = { farm:"farm", cottage:"farm", coop:"farm", barn:"farm",
   village:"village", store:"village", mayahouse:"village", guild:"guild",
-  mine:"mine", beach:"coast", grove:"grove", coastroad:"coastroad", ridge:"ridge" };
+  mine:"mine", beach:"coast", grove:"grove", coastroad:"coastroad", ridge:"ridge",
+  butterbrook:"butterbrook", dairy:"butterbrook" };
 // Where each neighbour is right now — inferred read-only from the spawn schedule (spawnMapNpcs,
 // 13-content.js). Live NPC entities only exist on the loaded map, so the map reconstructs their
 // whereabouts from the same clock rules rather than reading entities off other maps.
 function npcRegionNow(id){
   const h = (typeof curHour === "function") ? curHour() : 12;
-  if(typeof beachEvent === "function" && beachEvent()) return "coast";   // a festival gathers everyone on the sand
+  if(typeof beachEvent === "function" && beachEvent() && id !== "nell") return "coast";   // a festival gathers everyone on the sand — except Nell, who keeps the dairy (review fix: she was never in the festival cast, so the blanket "coast" put a false dot on her)
   switch(id){
     case "tom":   return "village";
     case "rowan": return "guild";
@@ -597,6 +599,7 @@ function npcRegionNow(id){
     case "pip":   return "village";
     case "elias": return (state.flags && state.flags.act2Done && h >= 7 && h < 19)
       ? (state.day % 4 === 0 ? "coastroad" : "farm") : null;   // v3.36: fourth days he walks to the landing
+    case "nell":  return (h >= 7 && h < 22) ? "butterbrook" : null;   // v3.44: dairy 7–18:30, meadow 18:30–22, home after — matches spawnMapNpcs exactly (review fix)
   }
   return null;
 }
@@ -1274,9 +1277,14 @@ function hydrateIcons(root){
 function renderSettings(){
   const b = $("settingsPanel").querySelector(".body");
   b.innerHTML =
-    `<div class="setRow"><span>Music</span><input type="range" id="setMusic" min="0" max="100" value="${Math.round(SND.musicVol*100)}"><span class="val">${Math.round(SND.musicVol*100)}</span></div>` +
-    `<div class="setRow"><span>Sound FX</span><input type="range" id="setSfx" min="0" max="100" value="${Math.round(SND.sfxVol*100)}"><span class="val">${Math.round(SND.sfxVol*100)}</span></div>` +
-    `<div class="setRow"><span>Audio</span><button class="dangerBtn" id="setMute" style="background:#3d5a2e;border-color:#6a8f52;color:#eaffd8;">${SND.enabled?"On":"Off"}</button></div>` +
+    `<div class="setRow"><span>Music</span>` +
+      `<button class="dangerBtn" id="setMusicOn" style="min-width:3em;background:${SND.musicOn?"#3d5a2e":"#332e2b"};border-color:${SND.musicOn?"#6a8f52":"#544d48"};color:${SND.musicOn?"#eaffd8":"#a89f98"};">${SND.musicOn?"On":"Off"}</button>` +
+      `<input type="range" id="setMusic" min="0" max="100" value="${Math.round(SND.musicVol*100)}">` +
+      `<span class="val">${Math.round(SND.musicVol*100)}</span></div>` +
+    `<div class="setRow"><span>Sound FX</span>` +
+      `<button class="dangerBtn" id="setSfxOn" style="min-width:3em;background:${SND.sfxOn?"#3d5a2e":"#332e2b"};border-color:${SND.sfxOn?"#6a8f52":"#544d48"};color:${SND.sfxOn?"#eaffd8":"#a89f98"};">${SND.sfxOn?"On":"Off"}</button>` +
+      `<input type="range" id="setSfx" min="0" max="100" value="${Math.round(SND.sfxVol*100)}">` +
+      `<span class="val">${Math.round(SND.sfxVol*100)}</span></div>` +
     `<div class="setRow"><span>How to play</span><button class="dangerBtn" id="setHelp" style="background:#3a4a30;border-color:#6a8f52;color:#eaffd8;">Read the guide</button></div>` +
     `<div class="setRow"><span>Save</span><span style="color:var(--ink-soft);font-size:.85em;">auto-saves each night</span></div>` +
     `<div class="setRow"><span>Version</span><button class="dangerBtn" id="setNews" style="background:#3a3550;border-color:#6a648f;color:#e6e0ff;">v${VERSION.name} — What's New</button></div>` +
@@ -1286,7 +1294,8 @@ function renderSettings(){
   mus.oninput = () => { setMusicVol(mus.value/100); mus.nextElementSibling.textContent = mus.value; };
   sfx.oninput = () => { setSfxVol(sfx.value/100); sfx.nextElementSibling.textContent = sfx.value; };
   sfx.onchange = () => playSfx("select");
-  $("setMute").onclick = () => { setMusicEnabled(!SND.enabled); renderSettings(); };
+  $("setMusicOn").onclick = () => { setMusicOn(!SND.musicOn); renderSettings(); };
+  $("setSfxOn").onclick = () => { setSfxOn(!SND.sfxOn); if(SND.sfxOn) playSfx("select"); renderSettings(); };
   $("setHelp").onclick = () => { closeAllPanels(); openLetter("❔ How to Play", HOWTO_TEXT); };
   $("setNews").onclick = () => openPanel("newsPanel", renderNews);
   $("setWipe").onclick = () => { if(confirm("Delete your save and restart from the title?")){ wipeSave(); location.reload(); } };
@@ -1444,7 +1453,7 @@ document.addEventListener("keydown", e => {
   else if(k === "g"){ if(!uiBlocking()) giveGift(); }
   else if(k === "h"){ if(!uiBlocking()) rideToggle(); }   // v3.22: mount/dismount the horse
   else if(k === "q" || k === "x"){ examine(); }   // Q is the WASD-native primary; X kept as a legacy alias
-  else if(k === "m"){ setMusicEnabled(!SND.enabled); toast("Music "+(SND.enabled?"on":"off")); }
+  else if(k === "m"){ setMusicOn(!SND.musicOn); toast("Music "+(SND.musicOn?"on":"off")); }
   else if(k === "escape"){ if(dlg.open) closeDialog(); else closeAllPanels(); }
   else if("123456".includes(k)) selectSlot(+k-1);
 });
