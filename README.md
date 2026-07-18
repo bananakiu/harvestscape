@@ -6,12 +6,21 @@ You inherit your late grandfather's neglected farm on the edge of the fading val
 
 ## Play
 
+**▶ Play it live: [harvestscape.vercel.app](https://harvestscape.vercel.app)** — the current `master`,
+auto-deployed on every push (saves live in your browser's localStorage).
+
+Or run it locally:
+
 ```sh
 python3 -m http.server 8643 --directory game
 # → http://localhost:8643
 ```
 
 Or just open `game/index.html` in any modern browser.
+
+> **Hosting.** The game is a pure static site served from `game/` (config in `vercel.json`:
+> `outputDirectory: game`, no build). Importing the repo on Vercel with default settings deploys
+> it as-is; every push to `master` republishes to the live URL above.
 
 ## Features
 
