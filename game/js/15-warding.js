@@ -181,10 +181,14 @@ function drainResolve(amt, srcX, srcY){
   const fl = resolveFloor();
   state.resolve = Math.max(fl, (state.resolve||0) - amt);
   state.iFrame = 0.85;   // brief invulnerability so a swarm can't chain-drain you
-  const a = Math.atan2(state.py - srcY, state.px - srcX);   // knock the player clear
+  // knock the player clear — use blockedAt (the REAL player collision: the 4-point feet bbox), NOT the
+  // single-tile wardWalkable, or the knockback can land the feet clipping a wall and wedge you. Axis-
+  // separated like normal movement, then unstick() guarantees you're never left standing in a solid.
+  const a = Math.atan2(state.py - srcY, state.px - srcX);
   const kx = state.px + Math.cos(a)*12, ky = state.py + Math.sin(a)*12;
-  if(wardWalkable(kx, state.py)) state.px = kx;
-  if(wardWalkable(state.px, ky)) state.py = ky;
+  if(!blockedAt(kx, state.py)) state.px = kx;
+  if(!blockedAt(state.px, ky)) state.py = ky;
+  unstick();
   cam.shake = 3.2; hitstop = 0.04;
   pSparkle(state.px, state.py-8, "#dcd6ff", 8);
   floatText(state.px, state.py-24, "−" + amt + " resolve", "#cfc4ff");

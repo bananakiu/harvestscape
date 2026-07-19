@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.0.0", code: 83, codename: "The Tenth Door", date: "2026-07-18" };
+const VERSION = { name: "4.0.1", code: 84, codename: "Sure Footing", date: "2026-07-19" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.0.1", code:84, date:"2026-07-19", name:"Sure Footing", notes:[
+    { t:"fix", s:"No more getting wedged in a wall. When a restless thing knocks you back, you'll never be shoved so hard your feet end up inside the stone — you're always set down somewhere you can actually stand." },
+    { t:"fix", s:"Planting a tree or a hive right at the edge of a tile could leave you standing on top of the new solid thing, stuck. Now the moment you plant, you step clear of it automatically." },
+  ]},
   { v:"4.0.0", code:83, date:"2026-07-18", name:"The Tenth Door", notes:[
     { t:"new", s:"Version 4 begins. Behind the planked door in the Guild — the one Rowan would never talk about — a stair now goes down into the Undercroft: the tenth wing, the Warden's wing, sealed the night the Guild went dark. Finish Elias's story and grow into the valley (total level 100), and Rowan will finally take you to it." },
     { t:"new", s:"Warding — a new craft, trained 1 to 99, the sixth skill on the wall. Below the valley the dark has knotted itself into restless things — gloam wisps, knot-shamblers, ember mites — where warding lapsed for eleven years. You don't fight them. You settle them: a swing of a forged Warden's Stave, and they come apart into the materials they were knotted from. It is cozy, and it is opt-in, and it lives only down there." },

@@ -22,6 +22,35 @@
 
 ---
 
+## 2026-07-19 — v4.0.1 "Sure Footing" (code 84, tag `v4.0.1`) — collision fixes
+
+Two "stuck in a solid" bugs, both fixed at the root with the engine's own canonical collision
+test (`blockedAt`, the 4-point feet bbox) + the `unstick()` safety net, instead of ad-hoc
+single-tile checks.
+
+### Fixed
+
+- **Knockback could wedge the player in a wall (v4.0 regression, owner report).** `drainResolve`'s
+  knockback moved the player with `wardWalkable` — a *single* tile-center test — so a shove that
+  landed the player at a sub-tile offset near a wall corner passed the check while the feet bbox
+  actually clipped the wall, leaving them stuck. Now the knockback uses `blockedAt` (the same
+  4-point bbox the player's own movement uses), axis-separated like normal movement, then calls
+  `unstick()` as a guarantee. **Verified by an exhaustive in-browser sweep: 18,744 wall-adjacent
+  knockback cases (sub-tile offsets × 8 angles) — the old logic stranded the player 1,525 times
+  (~8%); the new logic, 0.**
+- **Planting a tree/hive/machine/décor at a tile edge could trap you on it (pre-v4, long-standing).**
+  Permanents are placed on the *faced* tile, but the player's feet bbox can already overlap that
+  adjacent tile when standing near its edge — so a just-planted solid could make the player
+  `blockedAt` and stuck. `plantPermanent`'s call site now calls `unstick()` afterward (a no-op when
+  the placement was refused or the player is already clear), nudging you off the newly-solid tile.
+
+### Why the earlier v4.0 knockback test missed this
+
+The v4.0 combat test knocked the player from exact tile *centers*, where a 12px shove overshoots
+straight into the wall tile — which both the old and new logic correctly refuse. The real fault
+only appears at sub-tile offsets (the player mid-stride when hit), which the release test didn't
+cover. The new sweep exercises the full offset×angle space.
+
 ## 2026-07-18 — v4.0.0 "The Tenth Door" (code 83, tag `v4.0.0`) — Version 4 begins
 
 The first release of Version 4, built to `V4_BUILD_PLAN.md` §3. Combat enters the game — but

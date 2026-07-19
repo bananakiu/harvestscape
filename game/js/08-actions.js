@@ -455,7 +455,10 @@ function useTool(){
   }
   else if(tool === "Seeds"){
     // a tree or a hive goes in open ground, not a furrow, and it stays there for good
-    if(isSapSel(state.seedSel) || isHiveSel(state.seedSel) || isMachSel(state.seedSel) || isDecorSel(state.seedSel)){ plantPermanent(tx, ty); return; }
+    // unstick() after: a permanent is SOLID, and the faced tile can be one the player's feet bbox
+    // already overlaps (standing near a tile edge) — so a just-planted tree could trap you. unstick()
+    // nudges you off the newly-solid tile, and no-ops when the placement was refused or you're clear.
+    if(isSapSel(state.seedSel) || isHiveSel(state.seedSel) || isMachSel(state.seedSel) || isDecorSel(state.seedSel)){ plantPermanent(tx, ty); unstick(); return; }
     const c = CROPS[state.seedSel];
     if(skillLvl("Farming") < c.lvl){ toast(`Need Farming ${c.lvl} for ${c.name}.`, "#ff8a7a"); playSfx("error"); return; }
     if(!c.seasons.includes(curSeason())){ toast(`${c.name} only grows in ${c.seasons.join(" & ")}.`, "#ff8a7a"); playSfx("error"); return; }
