@@ -343,6 +343,7 @@ function beginPlay(){
   if(IS_TOUCH) $("touchUI").classList.remove("hidden");
   setMap("farm", 8*TILE+8, 12*TILE, "down");   // always wake on the farm
   ensureStaveSlot();   // v4.0: restore the Stave hotbar slot for a save that already earned it
+  if(typeof applyHud === "function") applyHud();   // v4.0.2: honour the saved HUD dim/hide preference
   refreshHUD(); refreshHotbar(); refreshQuestTracker(); setControlsHint(); clearPickups();
   // recover a stranded finale: reloaded during the handoff, OR the finale's objectives are
   // already met but the festival never fired.

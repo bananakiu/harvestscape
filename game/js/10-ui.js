@@ -1310,6 +1310,30 @@ function hydrateIcons(root){
 }
 
 // ---- settings ----
+// ---- HUD visibility preference (v4.0.2) ----
+// The overlay HUD (clock, gold, energy/Resolve bars, XP orbs, quest tracker, toasts) sits over the
+// game view, so near a map edge or corner — where the camera clamps and real map content reaches the
+// screen edge — it hides that content. This lets the player DIM it (see the map through it) or HIDE it
+// entirely, from Settings or the U key. A display preference, persisted to localStorage like audio —
+// not in the save file, so it follows the device, not the farm. Governs #hud's --hud-op custom
+// property only; the hotbar, dialogue and banners live outside #hud and stay fully crisp.
+const HUDPREF = { on:true, opacity:1 };
+(function loadHudPrefs(){
+  try{ const p = JSON.parse(localStorage.getItem("hs_hud")); if(p){
+    if(typeof p.on === "boolean") HUDPREF.on = p.on;
+    if(typeof p.op === "number") HUDPREF.opacity = clamp(p.op, 0, 1);
+  }}catch(e){}
+})();
+function saveHudPrefs(){ try{ localStorage.setItem("hs_hud", JSON.stringify({ on:HUDPREF.on, op:HUDPREF.opacity })); }catch(e){} }
+function applyHud(){ const h = $("hud"); if(h) h.style.setProperty("--hud-op", HUDPREF.on ? HUDPREF.opacity : 0); }
+function setHudOn(on){ HUDPREF.on = on; saveHudPrefs(); applyHud(); }
+function setHudOpacity(v){ HUDPREF.opacity = clamp(v, 0, 1); HUDPREF.on = true; saveHudPrefs(); applyHud(); }   // dragging the dimmer implies you want it shown
+function toggleHud(){
+  HUDPREF.on = !HUDPREF.on; saveHudPrefs(); applyHud();
+  // the confirmation can't live in #hud (we may have just hidden it), so use the banner — it's outside #hud.
+  banner(HUDPREF.on ? "◔ HUD shown" : "◔ HUD hidden", "Toggle with U · or Settings ▸ Heads-up display");
+  playSfx("select");
+}
 function renderSettings(){
   const b = $("settingsPanel").querySelector(".body");
   b.innerHTML =
@@ -1321,6 +1345,13 @@ function renderSettings(){
       `<button class="dangerBtn" id="setSfxOn" style="min-width:3em;background:${SND.sfxOn?"#3d5a2e":"#332e2b"};border-color:${SND.sfxOn?"#6a8f52":"#544d48"};color:${SND.sfxOn?"#eaffd8":"#a89f98"};">${SND.sfxOn?"On":"Off"}</button>` +
       `<input type="range" id="setSfx" min="0" max="100" value="${Math.round(SND.sfxVol*100)}">` +
       `<span class="val">${Math.round(SND.sfxVol*100)}</span></div>` +
+    // v4.0.2: Heads-up display — On/Off toggle + a dimmer, so the HUD never has to block the map's
+    // edges & corners. Slider floors at 20% (fully hidden is the toggle's / the U key's job).
+    `<div class="setRow"><span>Heads-up display</span>` +
+      `<button class="dangerBtn" id="setHudOn" style="min-width:3em;background:${HUDPREF.on?"#3d5a2e":"#332e2b"};border-color:${HUDPREF.on?"#6a8f52":"#544d48"};color:${HUDPREF.on?"#eaffd8":"#a89f98"};">${HUDPREF.on?"On":"Off"}</button>` +
+      `<input type="range" id="setHud" min="20" max="100" value="${Math.round(HUDPREF.opacity*100)}">` +
+      `<span class="val">${Math.round(HUDPREF.opacity*100)}</span></div>` +
+    `<div class="setRow"><span></span><span style="color:var(--ink-soft);font-size:.8em;">Dim or hide the on-screen display so it doesn't cover the map. Toggle any time with <b>U</b>.</span></div>` +
     `<div class="setRow"><span>How to play</span><button class="dangerBtn" id="setHelp" style="background:#3a4a30;border-color:#6a8f52;color:#eaffd8;">Read the guide</button></div>` +
     `<div class="setRow"><span>Save</span><span style="color:var(--ink-soft);font-size:.85em;">auto-saves each night</span></div>` +
     `<div class="setRow"><span>Version</span><button class="dangerBtn" id="setNews" style="background:#3a3550;border-color:#6a648f;color:#e6e0ff;">v${VERSION.name} — What's New</button></div>` +
@@ -1332,6 +1363,9 @@ function renderSettings(){
   sfx.onchange = () => playSfx("select");
   $("setMusicOn").onclick = () => { setMusicOn(!SND.musicOn); renderSettings(); };
   $("setSfxOn").onclick = () => { setSfxOn(!SND.sfxOn); if(SND.sfxOn) playSfx("select"); renderSettings(); };
+  const hud = $("setHud");
+  hud.oninput = () => { setHudOpacity(hud.value/100); hud.nextElementSibling.textContent = hud.value; };
+  $("setHudOn").onclick = () => { setHudOn(!HUDPREF.on); playSfx("select"); renderSettings(); };
   $("setHelp").onclick = () => { closeAllPanels(); openLetter("❔ How to Play", HOWTO_TEXT); };
   $("setNews").onclick = () => openPanel("newsPanel", renderNews);
   $("setWipe").onclick = () => { if(confirm("Delete your save and restart from the title?")){ wipeSave(); location.reload(); } };
@@ -1425,7 +1459,7 @@ function setControlsHint(){
   // Line 1 = left-hand world verbs (all reachable without leaving WASD); line 2 = right-hand menus.
   $("controlsHint").innerHTML =
     `<b>Move</b> <kbd>WASD</kbd> · <b>Use tool</b> <kbd>Space</kbd> · <b>Interact / harvest / talk</b> <kbd>E</kbd> · <b>Examine</b> <kbd>Q</kbd> · <b>Cycle seeds</b> <kbd>R</kbd> · <b>Eat</b> <kbd>F</kbd> · <b>Gift Maya</b> <kbd>G</kbd><br>` +
-    `<b>Skills</b> <kbd>K</kbd> · <b>Backpack</b> <kbd>I</kbd> · <b>Journal</b> <kbd>J</kbd> · <b>Ride</b> <kbd>H</kbd> · slots <kbd>1</kbd>–<kbd>6</kbd> · Enter buildings, the mine &amp; the coast · <b>Sleep</b> in your bed indoors`;
+    `<b>Skills</b> <kbd>K</kbd> · <b>Backpack</b> <kbd>I</kbd> · <b>Journal</b> <kbd>J</kbd> · <b>Ride</b> <kbd>H</kbd> · <b>Hide HUD</b> <kbd>U</kbd> · slots <kbd>1</kbd>–<kbd>6</kbd> · Enter buildings, the mine &amp; the coast · <b>Sleep</b> in your bed indoors`;
 }
 
 // ---- INPUT ----
@@ -1490,6 +1524,7 @@ document.addEventListener("keydown", e => {
   else if(k === "h"){ if(!uiBlocking()) rideToggle(); }   // v3.22: mount/dismount the horse
   else if(k === "q" || k === "x"){ examine(); }   // Q is the WASD-native primary; X kept as a legacy alias
   else if(k === "m"){ setMusicOn(!SND.musicOn); toast("Music "+(SND.musicOn?"on":"off")); }
+  else if(k === "u"){ if(!uiBlocking()) toggleHud(); }   // v4.0.2: dim/hide the HUD off the map's edges & corners
   else if(k === "escape"){ if(dlg.open) closeDialog(); else closeAllPanels(); }
   else if("1234567".includes(k)) selectSlot(+k-1);   // v4.0: 7th slot is the Stave (only present once earned)
 });

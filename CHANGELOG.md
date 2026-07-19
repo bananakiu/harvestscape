@@ -22,6 +22,33 @@
 
 ---
 
+## 2026-07-19 — v4.0.2 "Clear View" (code 85, tag `v4.0.2`) — a HUD the player controls
+
+### Added — dim/hide the heads-up display (owner report: the HUD blocks the map's edges & corners)
+
+The overlay HUD (`#hud`: clock, gold, energy/Resolve bars, XP orbs, quest tracker, toasts) is drawn
+over the game view, so near a map edge or corner — where the camera clamps and real map content
+reaches the screen edge — it hides that content (the quest tracker's 36%-wide right column and the
+31%-wide energy bar are the worst offenders). Rather than re-lay-out the HUD for everyone, this hands
+the player the control they asked for:
+
+- **Settings ▸ Heads-up display** — an On/Off toggle + a dimmer slider (20–100%), matching the v3.45
+  audio rows. Dim it and the map shows *through* the HUD; switch it off for a fully unobstructed view.
+- **U** toggles the HUD any time (a banner, drawn *outside* `#hud`, confirms — since the toast layer
+  itself may have just been hidden). Added to the on-screen controls hint.
+- The preference **persists to `localStorage` (`hs_hud`)** like the audio prefs — a display
+  preference that follows the device, not the save file — and is re-applied on every play-start.
+
+**Scoped to `#hud` only:** the hotbar, dialogue, and banners live outside it and stay fully crisp, so
+dimming/hiding never costs you your selected tool or a line of story. Implemented via a CSS custom
+property (`--hud-op`) rather than setting `opacity` directly, so the cutscene fade
+(`#stage.cine #hud{opacity:0}`, higher specificity) still wins during scenes — verified: HUD opacity
+computes to 0 mid-cutscene even with the dimmer at 100%.
+
+Verified in-browser at a clamped map corner: baseline occlusion → 35% dim (pond/land visible through
+the HUD) → full hide (map entirely clear, hotbar retained) → toggle back to the chosen dim →
+persistence across a page reload.
+
 ## 2026-07-19 — v4.0.1 "Sure Footing" (code 84, tag `v4.0.1`) — collision fixes
 
 Two "stuck in a solid" bugs, both fixed at the root with the engine's own canonical collision

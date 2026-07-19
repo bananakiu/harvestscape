@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.0.1", code: 84, codename: "Sure Footing", date: "2026-07-19" };
+const VERSION = { name: "4.0.2", code: 85, codename: "Clear View", date: "2026-07-19" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.0.2", code:85, date:"2026-07-19", name:"Clear View", notes:[
+    { t:"new", s:"The on-screen display no longer has to cover the map. In Settings, a new Heads-up display row lets you dim it — so the map shows right through — or switch it off entirely. Whatever you choose is remembered." },
+    { t:"new", s:"Press U any time to hide or show the HUD in a tap — handy when you walk to the edge of a map and the clock, purse or quest cards were sitting over the corner you wanted to see. Your hotbar and any dialogue stay put." },
+  ]},
   { v:"4.0.1", code:84, date:"2026-07-19", name:"Sure Footing", notes:[
     { t:"fix", s:"No more getting wedged in a wall. When a restless thing knocks you back, you'll never be shoved so hard your feet end up inside the stone — you're always set down somewhere you can actually stand." },
     { t:"fix", s:"Planting a tree or a hive right at the edge of a tile could leave you standing on top of the new solid thing, stuck. Now the moment you plant, you step clear of it automatically." },

@@ -63,7 +63,12 @@ body{
 #stage{ font-size:clamp(11px, 2.1vw, 22px); }
 
 /* ---------- HUD ---------- */
-#hud{ z-index:5; }
+/* v4.0.2: the overlay HUD's visibility is a player preference (Settings ▸ Heads-up display, or U).
+   Driven by --hud-op (set on #hud by applyHud, 10-ui.js) so the map can show through / clear entirely
+   at edges & corners. Uses a CUSTOM PROPERTY, not `opacity` directly, so the cutscene fade
+   (`#stage.cine #hud{opacity:0}`) still wins during scenes. Governs #hud only — the hotbar and
+   dialogue live outside it and stay fully crisp. */
+#hud{ z-index:5; opacity:var(--hud-op, 1); transition:opacity .25s ease; }
 #hudTop{
   position:absolute; top:2.2%; left:2.2%; right:2.2%;
   display:flex; justify-content:space-between; align-items:flex-start;
