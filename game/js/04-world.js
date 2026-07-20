@@ -98,6 +98,7 @@ function setMap(id, sx, sy, face){
   endFishing();                 // no bobber left floating on a map you've left
   if(typeof onEnterMap === "function") onEnterMap(id);
   rainDrops.length = 0;
+  if(typeof hitsplats !== "undefined") hitsplats.length = 0;   // v4.0.3: no combat splat lingering onto a new map
   setMusicMode(mapMusicMode(curMap));
   if(curMap.name) banner(curMap.name, curMap.subtitle);
   refreshHUD();

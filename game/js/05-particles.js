@@ -120,6 +120,7 @@ function updateParticles(dt){
     const f = floaters[i]; f.life += dt; f.y += f.vy*dt; f.vy *= (1 - dt*1.5);
     if(f.life >= f.max) floaters.splice(i,1);
   }
+  updateHitsplats(dt);   // v4.0.3
 }
 
 function drawParticles(){
@@ -170,4 +171,37 @@ function drawFloaters(){
     const alpha = k < .8 ? 1 : 1 - (k-.8)/.2;
     queueText(f.x, f.y, f.text, { color:f.color, size:9, weight:"bold", alpha });
   }
+}
+
+// ---- hitsplats (v4.0.3 Warding) ----
+// A RuneScape-style damage splat: a little colored blob on the pixel canvas with the number stamped
+// CRISP on the text overlay (like the floaters). Fixed at spawn, rises a touch, fades. Kinds colour it:
+// a hit you deal (red), the settling blow that finishes a creature (violet), Resolve you lose (blue),
+// and a blocked touch during i-frames (a grey 0). Spawned from the combat code in 15-warding.js.
+const HITSPLAT_COL = { hit:"#c0392b", settle:"#8a4ad0", resolve:"#3a6ad0", block:"#5a6472" };
+function spawnHitsplat(x, y, val, kind){
+  if(hitsplats.length > 60) hitsplats.shift();   // never let a swarm pile up unbounded
+  hitsplats.push({ x, y:y-4, val, kind:kind||"hit", life:0, max:0.85, vy:-9 });
+}
+function updateHitsplats(dt){
+  for(let i=hitsplats.length-1;i>=0;i--){ const h = hitsplats[i];
+    h.life += dt; h.y += h.vy*dt; h.vy *= (1 - dt*2.4);
+    if(h.life >= h.max) hitsplats.splice(i,1);
+  }
+}
+function drawHitsplats(){
+  // blob on the pixel canvas (world space, inside the camera transform); number queued crisp
+  for(const h of hitsplats){
+    const k = h.life/h.max, a = k < .62 ? 1 : 1 - (k-.62)/.38;
+    const col = HITSPLAT_COL[h.kind] || HITSPLAT_COL.hit;
+    const big = h.kind === "settle";
+    const rx = big ? 8 : 6, ry = big ? 7 : 5;
+    const x = Math.round(h.x), y = Math.round(h.y);
+    ctx.globalAlpha = a;
+    ctx.fillStyle = "rgba(0,0,0,0.42)"; ctx.beginPath(); ctx.ellipse(x, y+1, rx, ry, 0, 0, 7); ctx.fill();   // rim
+    ctx.fillStyle = col;                ctx.beginPath(); ctx.ellipse(x, y,   rx, ry, 0, 0, 7); ctx.fill();   // splat
+    ctx.fillStyle = "rgba(255,255,255,0.22)"; ctx.fillRect(x-rx+2, y-ry+2, 2, 1);                            // glint
+    queueText(h.x, h.y + (big?4:3), "" + h.val, { color:"#ffffff", size:big?10:8, weight:"bold", shadow:"rgba(0,0,0,0.65)", alpha:a });
+  }
+  ctx.globalAlpha = 1;
 }

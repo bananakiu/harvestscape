@@ -22,6 +22,44 @@
 
 ---
 
+## 2026-07-19 — v4.0.3 "By the Numbers" (code 86, tag `v4.0.3`) — Warding combat feedback
+
+Owner ask: "continue developing the game, especially the warding system. i want health bars and
+damage hitsplats with numbers." Delivered as combat *readability & juice* — deliberately kept to
+v4.0-tier polish, **not** encroaching on v4.1's reserved content (the Warden's Ledger, Act III
+chapters, mastery trials, new creature families, the Great Knot).
+
+### Added — RuneScape-style numbered hitsplats
+
+A new lightweight `hitsplats` system (`00-core.js` array; `spawnHitsplat`/`updateHitsplats`/
+`drawHitsplats` in `05-particles.js`, alongside the floaters): a small colored blob drawn on the
+pixel canvas with the number stamped **crisp on the text overlay** (same trick the floaters use), so
+the digits never mush at the 4× upscale. Kinds colour it — **red** a hit you deal, **violet + larger**
+the settling blow that finishes a creature, **blue** the Resolve a restless thing takes off you. Fired
+from `hitCreature` (the damage dealt, capped at the target's remaining HP), the stair-knot swing, and
+`drainResolve` (replacing the old `−N resolve` floater). Wired: `drawHitsplats()` between
+`drawParticles` and `drawFloaters` inside the camera transform (so the blob is world-space and its
+number aligns); `updateHitsplats()` inside `updateParticles`. Capped at 60 and cleared on `setMap`, so
+no splat piles up or bleeds onto a safe map.
+
+### Added — creature health bars + nameplates
+
+`drawCreature` now draws a compact health bar (green → amber → red by HP fraction) over any **engaged**
+creature — one that's aggroed/attacking (`cr.state !== "idle"`) or recently struck (`cr.hpBarT`, set on
+each hit, ~2.6s lifetime, decremented in `updateCreatures`). Above the bar, once you've actually hit it,
+its **name · Lv** (e.g. "Knot-Shambler · Lv10"), queued crisp. Idle wanderers stay unlabelled, so the
+screen only fills with combat info when there's combat.
+
+### Added — first-descent combat tip
+
+The very first time you enter the Undercroft (`state.flags.wardTipSeen`), a one-time banner explains the
+settling swing (Space) and the Resolve bar (refills on safe ground; a knockout costs nothing) — later
+descents fall through to the existing bell hint.
+
+Verified in-browser: mid-map combat scene with two shamblers showing "Knot-Shambler · Lv10" nameplates
++ green health bars, a red "2" hitsplat on a struck creature, a blue "15" on the player, the telegraph
+ring on an ember mite; and a killing blow producing the violet "settle" splat + the drop.
+
 ## 2026-07-19 — v4.0.2 "Clear View" (code 85, tag `v4.0.2`) — a HUD the player controls
 
 ### Added — dim/hide the heads-up display (owner report: the HUD blocks the map's edges & corners)

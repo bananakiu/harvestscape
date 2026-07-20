@@ -342,7 +342,13 @@ function enterUndercroft(){
   state.wardDepth = 1; state.wardBest = Math.max(state.wardBest||0, 1);
   state.resolve = resolveMax();               // walk in whole
   travelTo("undercroft", 2*TILE+8, 3*TILE, "down");
-  if((state.wardBells||[]).length) setTimeout(() => toast("A funded Warden's Bell will ring you down from the surface — or back up here.", "#bfe4ff"), 900);
+  // v4.0.3: a one-time orienting beat on the very first descent — the settle verb + the Resolve bar.
+  if(!state.flags.wardTipSeen){
+    state.flags.wardTipSeen = true;
+    setTimeout(() => banner("The Undercroft", "Face a restless thing and swing your Stave (Space) to settle it. Watch the RESOLVE bar — it fills back up on any safe ground, and a knockout costs you nothing."), 1100);
+  } else if((state.wardBells||[]).length) {
+    setTimeout(() => toast("A funded Warden's Bell will ring you down from the surface — or back up here.", "#bfe4ff"), 900);
+  }
 }
 function wardDown(){
   if((state.wardDepth||1) >= WARD_FLOOR_MAX) return;   // floor 15 is the v4.0 bottom

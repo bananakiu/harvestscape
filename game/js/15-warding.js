@@ -76,6 +76,7 @@ function updateCreatures(dt){
     const d = CREATURES[cr.kind];
     cr.hurtT = Math.max(0, (cr.hurtT||0) - dt);
     cr.warm  = Math.max(0, (cr.warm||0) - dt*0.6);
+    cr.hpBarT = Math.max(0, (cr.hpBarT||0) - dt);   // v4.0.3: health bar/nameplate linger after a hit
     if(cr.moving) cr.walk += dt*6;
     cr.moving = false;
     cr.stateT -= dt;
@@ -123,6 +124,20 @@ function drawCreature(cr){
   if(cr.hurtT > 0){ ctx.fillStyle = `rgba(255,255,255,${Math.min(0.7, cr.hurtT*4)})`; ctx.fillRect(dx, dy, w, h); }   // hit flash
   if(tel){ ctx.strokeStyle = "rgba(200,225,255,0.75)"; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(cr.x, cr.y, 10 + Math.sin(animT*20)*2, 0, 7); ctx.stroke(); }   // telegraph ring
+  // v4.0.3: a health bar over an ENGAGED creature (recently hit, or aggroed/attacking), + its
+  // name·Lv once you've actually struck it — so combat reads at a glance without cluttering an
+  // idle wanderer. The bar's a pixel-canvas strip; the nameplate is queued crisp on the overlay.
+  const engaged = (cr.hpBarT||0) > 0 || cr.state !== "idle";
+  if(engaged){
+    const maxhp = CREATURES[cr.kind].hp, frac = clamp(cr.hp / maxhp, 0, 1);
+    const bw = 14, bx = Math.round(cr.x - bw/2), by = dy - 4;
+    ctx.fillStyle = "rgba(0,0,0,0.55)"; ctx.fillRect(bx-1, by-1, bw+2, 4);   // rim
+    ctx.fillStyle = "#3a2a2a";          ctx.fillRect(bx, by, bw, 2);         // empty track
+    ctx.fillStyle = frac>0.5 ? "#6ac86a" : frac>0.25 ? "#e0b04a" : "#d0503a";
+    ctx.fillRect(bx, by, Math.max(1, Math.round(bw*frac)), 2);              // fill: green → amber → red
+    if((cr.hpBarT||0) > 0) queueText(cr.x, by-2, CREATURES[cr.kind].name + " · Lv" + CREATURES[cr.kind].lvl,
+      { color:"#dbe6ff", size:7, shadow:"rgba(0,0,0,0.6)" });
+  }
 }
 
 // ---------------- The Stave's swing — settle a creature, or the stair-knot ----------------
@@ -137,8 +152,10 @@ function staveSwing(tx, ty, power){
   if(hitAny){ cam.shake = 2.2; hitstop = 0.05; return; }
   const o = objAt(tx,ty);
   if(o && o.kind === "knot"){
+    const dealt = Math.min(power, o.hp);
     o.hp -= power; o.shakeT = 0.2; cam.shake = 2.2; hitstop = 0.05;
     playSfx("staveHit"); pChips(fx, fy, "#4a3c2c", 5);
+    spawnHitsplat(fx, fy-8, dealt, o.hp<=0 ? "settle" : "hit");
     if(o.hp <= 0){
       curMap.objects[key(tx,ty)] = { kind:"wardladderdown" };
       addXP("Warding", 12);   // loosening the knot is itself a settle
@@ -151,13 +168,16 @@ function staveSwing(tx, ty, power){
   playSfx("staveHit");   // a soft whiff — the swing still sounds
 }
 function hitCreature(cr, power, fx, fy){
-  cr.hp -= power; cr.hurtT = 0.18; cr.state = "stunned"; cr.stateT = 0.35;
+  const dealt = Math.min(power, cr.hp);   // splat the damage actually taken, never more than it had
+  cr.hp -= power; cr.hurtT = 0.18; cr.hpBarT = 2.6; cr.state = "stunned"; cr.stateT = 0.35;
   const a = Math.atan2(cr.y - fy, cr.x - fx);   // knock it ~a tile back off the strike
   const nx = cr.x + Math.cos(a)*10, ny = cr.y + Math.sin(a)*10;
   if(wardWalkable(nx, cr.y)) cr.x = nx;
   if(wardWalkable(cr.x, ny)) cr.y = ny;
   playSfx("staveHit"); pChips(cr.x, cr.y, CREATURES[cr.kind].col2, 5);
-  if(cr.hp <= 0) settleCreature(cr);
+  const killed = cr.hp <= 0;
+  spawnHitsplat(cr.x, cr.y - 10, dealt, killed ? "settle" : "hit");   // red hit, violet on the settling blow
+  if(killed) settleCreature(cr);
 }
 function settleCreature(cr){
   cr.alive = false;
@@ -178,8 +198,8 @@ function settleCreature(cr){
 function drainResolve(amt, srcX, srcY){
   if(state.iFrame > 0) return;
   if(hasMastery("Warding",75)) amt = Math.round(amt * 0.7);   // ★ Unshaken — the dark's touch costs less
-  const fl = resolveFloor();
-  state.resolve = Math.max(fl, (state.resolve||0) - amt);
+  const fl = resolveFloor(), before = state.resolve||0;
+  state.resolve = Math.max(fl, before - amt);
   state.iFrame = 0.85;   // brief invulnerability so a swarm can't chain-drain you
   // knock the player clear — use blockedAt (the REAL player collision: the 4-point feet bbox), NOT the
   // single-tile wardWalkable, or the knockback can land the feet clipping a wall and wedge you. Axis-
@@ -191,7 +211,7 @@ function drainResolve(amt, srcX, srcY){
   unstick();
   cam.shake = 3.2; hitstop = 0.04;
   pSparkle(state.px, state.py-8, "#dcd6ff", 8);
-  floatText(state.px, state.py-24, "−" + amt + " resolve", "#cfc4ff");
+  spawnHitsplat(state.px, state.py-12, before - state.resolve, "resolve");   // v4.0.3: the Resolve ACTUALLY lost (clamped to the floor), matching the HUD bar — not the raw incoming amt
   refreshHUD();
   if(state.resolve <= fl && fl === 0) wardKnockout();
 }

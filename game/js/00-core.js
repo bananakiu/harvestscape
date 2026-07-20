@@ -41,6 +41,7 @@ let hitstop = 0;                       // brief freeze on impacts (juice)
 const keys = {};                       // held keys
 let particles = [];                    // particle list
 let floaters = [];                     // floating text list
+let hitsplats = [];                    // v4.0.3: RuneScape-style damage splats (blob + number) — Warding combat
 let lights = [];                       // per-frame dynamic light requests
 
 // ---- math ----

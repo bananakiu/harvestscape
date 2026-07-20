@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.0.2", code: 85, codename: "Clear View", date: "2026-07-19" };
+const VERSION = { name: "4.0.3", code: 86, codename: "By the Numbers", date: "2026-07-19" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.0.3", code:86, date:"2026-07-19", name:"By the Numbers", notes:[
+    { t:"new", s:"Warding reads like real combat now. Every restless thing you strike shows a floating damage number — a red splat for a hit, a bigger violet one for the settling blow that finishes it — and the Resolve a creature takes from you pops up in blue, right on you." },
+    { t:"new", s:"Restless things wear a little health bar (green → amber → red) once you've engaged them, with their name and level above it, so you can see at a glance what you're facing and how close it is to settled." },
+    { t:"new", s:"A first-descent note: the very first time you go down the tenth door, a word explains the settling swing and the Resolve bar — so nobody's left guessing what to do in the dark." },
+  ]},
   { v:"4.0.2", code:85, date:"2026-07-19", name:"Clear View", notes:[
     { t:"new", s:"The on-screen display no longer has to cover the map. In Settings, a new Heads-up display row lets you dim it — so the map shows right through — or switch it off entirely. Whatever you choose is remembered." },
     { t:"new", s:"Press U any time to hide or show the HUD in a tap — handy when you walk to the edge of a map and the clock, purse or quest cards were sitting over the corner you wanted to see. Your hotbar and any dialogue stay put." },

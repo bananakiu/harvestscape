@@ -280,7 +280,7 @@ function renderWorld(){
     if(fishing.state === "bite"){ queueText(state.px, state.py-24, "!", { color:"#ffd75a", size:13, weight:"bold" }); }
   }
 
-  drawParticles(); drawFloaters();
+  drawParticles(); drawHitsplats(); drawFloaters();   // v4.0.3: hitsplats between particles and floaters
   ctx.restore();
 
   drawLighting(cam.x - shx, cam.y - shy);
