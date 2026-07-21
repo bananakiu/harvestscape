@@ -246,7 +246,7 @@ function genMine(m){
 // 15 is a dead-end for now (v4.1 "The Warden's Ledger" deepens it). This lives in 13-content.js — not
 // 15-warding.js — because the MAPS literal above references genUndercroft at load time (strict mode
 // would throw on a forward-ref to a not-yet-parsed script). mkCreature/updateCreatures live in 15.
-const WARD_FLOOR_MAX = 15;   // v4.0 bottom of the wing
+const WARD_FLOOR_MAX = 30;   // v4.1 bottom of the wing (was 15 in v4.0); deeper venues (Gloam Grove, Sunken Workings) come later
 function genUndercroft(m){
   const depth = state.wardDepth || 1;
   const rng = makeRng(4200 + depth*137 + state.day*7);   // distinct seed base (the mine uses 9001)
@@ -314,25 +314,36 @@ function genUndercroft(m){
       route = bfsTo(sx,sy);
     }
     if(route){ let k2 = route.endK; while(k2){ onPath.add(k2); k2 = route.prev[k2]; } }
-    put(m, sx, sy, "knot", { hp: 5 + Math.floor(depth/3), stairs:true, shakeT:0 });
     m.meta.knot = {x:sx,y:sy};
-    m.subtitle = "Floor " + depth + "  ·  something down here wants tending";
+    // v4.1: every 10th floor, a Great Knot GUARDS the descent instead of a plain knot — settling the
+    // boss opens the stair at its spot (see settleCreature). Elsewhere, the ordinary stairs-knot.
+    m.meta.bossFloor = (depth % 10 === 0);
+    if(!m.meta.bossFloor) put(m, sx, sy, "knot", { hp: 5 + Math.floor(depth/3), stairs:true, shakeT:0 });
+    m.subtitle = m.meta.bossFloor
+      ? "Floor " + depth + "  ·  something old holds the way down"
+      : "Floor " + depth + "  ·  something down here wants tending";
   } else {
     m.subtitle = "Floor " + depth + "  ·  the wing ends here — for now";
   }
 
   // ---- the restless things — kind by depth band, kept OFF the stairs route and away from the entry ----
   m.creatures = [];
-  const bag = depth < 5  ? ["wisp","wisp","wisp"]
-            : depth < 10 ? ["wisp","wisp","shambler"]
-            :              ["wisp","shambler","shambler","embermite"];
-  const count = 3 + Math.min(4, Math.floor(depth/3));   // 3 shallow → up to 7 deep
+  // Bands deepen like oreTable: the shallow families thin out, families 4–5 phase in past floor 15.
+  const bag = depth < 5   ? ["wisp","wisp","wisp"]
+            : depth < 10  ? ["wisp","wisp","shambler"]
+            : depth < 15  ? ["wisp","shambler","shambler","embermite"]
+            : depth < 20  ? ["shambler","embermite","embermite","hollowwarden"]
+            : depth < 25  ? ["embermite","hollowwarden","hollowwarden","gloamtangle"]
+            :               ["hollowwarden","hollowwarden","gloamtangle","gloamtangle","embermite"];
+  const count = 3 + Math.min(5, Math.floor(depth/3));   // 3 shallow → up to 8 deep
   const spots = floors.filter(([x,y]) => !onPath.has(key(x,y)) && !m.objects[key(x,y)]
     && Math.abs(x-ux)+Math.abs(y-uy) > 5);
   for(let i=0; i<count && spots.length; i++){
     const [x,y] = spots.splice(randiR(rng,0,spots.length-1),1)[0];
     m.creatures.push(mkCreature(bag[randiR(rng,0,bag.length-1)], x, y, rng));
   }
+  // the boss sits ON the stair spot (rooted); settling it drops the ladder there
+  if(m.meta.bossFloor && m.meta.knot){ m.creatures.push(mkCreature("greatknot", m.meta.knot.x, m.meta.knot.y, rng)); }
   m.meta.up = {x:ux,y:uy};
 }
 

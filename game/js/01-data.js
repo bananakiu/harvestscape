@@ -8,13 +8,20 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.0.3", code: 86, codename: "By the Numbers", date: "2026-07-19" };
+const VERSION = { name: "4.1.0", code: 87, codename: "The Great Knot", date: "2026-07-19" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.1.0", code:87, date:"2026-07-19", name:"The Great Knot", notes:[
+    { t:"new", s:"The Undercroft runs deeper — twice as far. Fifteen more floors (down to thirty), with two new restless things waiting in the dark and a proper checkpoint bell on every fifth floor all the way down." },
+    { t:"new", s:"The Hollow Warden — a lost warden's echo that turns to keep its guarded front toward you. Strike it head-on and your Stave clangs off; circle round to its side or back to settle it. Slow, patient, and very hard to hurry." },
+    { t:"new", s:"The Gloam Tangle — a snarl of living thread that splits in two the moment you strike it. Settle both halves before they wear you down." },
+    { t:"new", s:"The first Great Knot — a boss guarding the way down on every tenth floor. Years of untended grief wound into one great whorl, with two clearly-telegraphed moves: a ground-slam that rings out around it (step outside the circle) and a long reaching lunge. Settle it and the stair it guarded opens — and it leaves a Heartknot, the core of the best charm in the wing." },
+    { t:"new", s:"Deeper spoils: Warden's Ash, Snarlthread and the rare Heartknot feed two new charms — the Wardstone (+10 Resolve) and the Settler's Band (+5% Warding XP) — plus the deep bells. Tom's daily salvage now rotates the deeper finds too, so you're never gated on fighting." },
+  ]},
   { v:"4.0.3", code:86, date:"2026-07-19", name:"By the Numbers", notes:[
     { t:"new", s:"Warding reads like real combat now. Every restless thing you strike shows a floating damage number — a red splat for a hit, a bigger violet one for the settling blow that finishes it — and the Resolve a creature takes from you pops up in blue, right on you." },
     { t:"new", s:"Restless things wear a little health bar (green → amber → red) once you've engaged them, with their name and level above it, so you can see at a glance what you're facing and how close it is to settled." },
@@ -380,6 +387,18 @@ const CREATURES = {
                tele:0.7, speed:16, col:"#7a6a52", col2:"#4a3c2c" },   // slow, then a straight root-creak charge
   embermite: { name:"Ember Mite",     lvl:20, hp:6, dmg:15, xp:46, drop:"Ember Grit",   n:1,
                tele:0.5, speed:40, col:"#ffab5a", col2:"#c05a24" },   // skitters, quick, leaves a warm patch behind
+  // v4.1 families 4–5 (V4_BUILD_PLAN §4). Same ladder (30 / 45); XP stays under the ore curve
+  // (gold L30=435, cobalt L45=720) for the band — settling is the frequent action, mining the paying one.
+  hollowwarden:{ name:"Hollow Warden", lvl:30, hp:16, dmg:15, xp:74, drop:"Warden's Ash", n:1, drop2:"Knotwood", n2:1,
+               tele:0.8, speed:14, col:"#8a94b0", col2:"#454a5e", block:true },   // a lost predecessor's echo — turns to face you and GUARDS its front; circle to its back to land a hit
+  gloamtangle:{ name:"Gloam Tangle",   lvl:45, hp:8,  dmg:18, xp:0,  splits:true,
+               tele:0.6, speed:22, col:"#8fe0c0", col2:"#3a7a5c" },   // splits ONCE when first struck — two Tanglets, no loot itself
+  tanglet:   { name:"Tanglet",         lvl:45, hp:6,  dmg:14, xp:65, drop:"Snarlthread", n:1,
+               tele:0.5, speed:30, col:"#8fe0c0", col2:"#3a7a5c" },   // the halves a Gloam Tangle breaks into; these carry the loot
+  // v4.1 the first Great Knot — a named boss guarding the descent on every 10th floor. ~3× a deep
+  // creature's HP, two telegraphed moves (a ground-slam ring + a reaching lunge), a signature drop.
+  greatknot: { name:"The Great Knot",  lvl:40, hp:42, dmg:20, xp:360, drop:"Heartknot", n:1, drop2:"Warden's Ash", n2:3,
+               tele:0.9, speed:12, col:"#6a5a44", col2:"#2c2318", boss:true },
 };
 
 const SEASONS = ["Spring", "Summer", "Fall", "Winter"];
@@ -694,7 +713,11 @@ const ITEM_SELL = { "Wood":4, "Pine Wood":9, "Maple Wood":17, "Willow Wood":11, 
   // gated behind Act II + total-100, so a settler always has iron/gold to mine (68/165g) — these sit
   // well under that, and under the wood ladder they resemble (Maple 17 · Elder 32). Their real value
   // is as materials (charms, bell pledges, machine feed), so resale is a floor, never the point.
-  "Gloam Thread":18, "Knotwood":24, "Ember Grit":30 };
+  "Gloam Thread":18, "Knotwood":24, "Ember Grit":30,
+  // v4.1 deeper drops — same rule: priced under the same-band gather (gold ore 165 · cobalt 300),
+  // fuel for the charm/bell sinks, never a money faucet. Heartknot is a rare boss trophy whose real
+  // value is the top Resolve charm, not the counter.
+  "Warden's Ash":34, "Snarlthread":42, "Heartknot":130 };
 FISH.forEach(f => { ITEM_SELL[f.name] = f.sell; ITEM_SELL["Cooked "+f.name] = Math.floor(f.sell*1.75); });
 LEGENDS.forEach(l => { ITEM_SELL[l.name] = l.sell; });   // trophies. You don't cook a Stormrider.
 for(const k in CROPS) ITEM_SELL[CROPS[k].name] = CROPS[k].sell;
@@ -1134,6 +1157,11 @@ function bellCost(n){
   if(n === 5)  return { g:600,  mats:{ "Knotwood":10, "Wood":40 } };
   if(n === 10) return { g:1500, mats:{ "Knotwood":20, "Gloam Thread":15, "Pine Wood":40 } };
   if(n === 15) return { g:3000, mats:{ "Knotwood":30, "Ember Grit":10, "Iron Ore":8 } };
+  // v4.1 deep bells — the deeper floors sink the deeper warding drops + the deep ore/timber ladder,
+  // scaled up from the lift's tail. bell30 wants a Heartknot (a Great Knot's core) — a deep ask for the deepest ring.
+  if(n === 20) return { g:5000, mats:{ "Warden's Ash":12, "Gold Ore":6, "Elder Wood":30 } };
+  if(n === 25) return { g:7000, mats:{ "Snarlthread":12, "Cobalt Ore":6, "Heartwood":20 } };
+  if(n === 30) return { g:9000, mats:{ "Snarlthread":18, "Heartknot":1, "Deepsilver Ore":5 } };
   return null;
 }
 
@@ -1189,7 +1217,7 @@ function ledgerPledges(){
   const out = [];
   for(const id of ["way3","way6","way9"]) if(pledgeDiscovered(id)) out.push(id);
   for(let n = 5; n <= (state.mineBest||0); n += 5) out.push("lift"+n);
-  for(let n = 5; n <= Math.min(15, state.wardBest||0); n += 5) out.push("bell"+n);   // v4.0 Warden's Bells (floors 1–15 in v4.0)
+  for(let n = 5; n <= Math.min(30, state.wardBest||0); n += 5) out.push("bell"+n);   // v4.1 Warden's Bells (floors 1–30)
   return out;
 }
 
@@ -1212,6 +1240,9 @@ const CHARMS = {
   // Emberlight widens your lantern for the dark. Modest sells; the point is wearing them.
   "Warded Charm":     { sell:150, effect:"+5 maximum Resolve while worn" },
   "Emberlight Charm": { sell:150, effect:"your lantern reaches much farther" },
+  // v4.1 deep-warding charms — the top Resolve charm (from the Great Knot's Heartknot) and a Warding-XP band.
+  "Wardstone Charm":  { sell:300, effect:"+10 maximum Resolve while worn" },
+  "Settler's Band":   { sell:200, effect:"+5% Warding XP while worn" },
 };
 for(const c in CHARMS) ITEM_SELL[c] = CHARMS[c].sell;
 function charmActive(name){ return state.charm === name && (state.inv[name]||0) > 0; }
@@ -1542,6 +1573,11 @@ const EXAMINE = {
   "Ember Grit": "Warm grit that ticks like a cooling stove. It doesn't burn — it only wants to be near something.",
   "Warded Charm": "Thread wound tight around a chip of sapphire. Wearing it, the dark feels a little less like it wants you.",
   "Emberlight Charm": "A pinch of ember grit in a glass bead. It throws your lantern-light farther than any lantern should.",
+  "Warden's Ash": "Pale grey ash that never quite goes cold. It's what an old warden's echo comes apart into — lighter than it should be.",
+  "Snarlthread": "A knot of living thread that keeps trying to tie itself back together in your hand. Best kept in a tight coil.",
+  "Heartknot": "The dense, dark core of a Great Knot — years of untended grief wound into a fist-sized whorl. It hums, very low. The heart of a good charm.",
+  "Wardstone Charm": "A Heartknot bound in ash and sapphire. Worn, it steadies you — the dark takes a good deal longer to wear you down.",
+  "Settler's Band": "A band of snarlthread that's finally learned to lie still. It makes the work of settling come a little quicker to the hand.",
   "Star Metal": "Star-fallen metal that slept in the vault; the Guild's forge wakes with it.",
   "Guild Seal": "Proof a craft was mastered, not merely attempted.",
   "Bouquet": "A Willowbrook bouquet, carried straight to one particular door.",

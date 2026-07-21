@@ -63,8 +63,15 @@ function collectLights(){
   // v4.0: the restless things carry their own cold light (creatures live in curMap.creatures, so the
   // object switch above never reaches them — scan them here, like the windows).
   if(curMap.creatures) for(const cr of curMap.creatures){ if(!cr.alive) continue;
-    L.push({ x:cr.x, y:cr.y-4, r:20, c: cr.kind==="embermite" ? "255,170,90" : "150,215,255",   // the instance carries .kind (CREATURES entries don't)
-             i: 0.4 + 0.2*Math.sin(animT*5 + cr.x) });
+    // v4.1: colour the creature's glow by family so the dark reads — ember warm, tangle green,
+    // boss a low deep amber, the rest cold blue.
+    const gc = cr.kind==="embermite" ? "255,170,90"
+             : (cr.kind==="gloamtangle"||cr.kind==="tanglet") ? "140,230,190"
+             : cr.kind==="greatknot" ? "220,150,90"
+             : cr.kind==="hollowwarden" ? "170,190,235"
+             : "150,215,255";
+    const gr = cr.kind==="greatknot" ? 34 : 20;
+    L.push({ x:cr.x, y:cr.y-4, r:gr, c:gc, i: 0.4 + 0.2*Math.sin(animT*5 + cr.x) });
     if(cr.warm > 0) L.push({ x:cr.x, y:cr.y+2, r:16, c:"255,150,80", i:0.3*cr.warm });   // an ember mite's fading warm patch
   }
   // v4.0: the Emberlight Charm throws the lantern much farther; deep spaces (mine + undercroft) already

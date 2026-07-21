@@ -151,10 +151,18 @@ v4 is an era, shipped in the repo's normal small releases; each lands with chang
 GBP numbers, and visual verification. Order chosen so every release is playable and the
 story never ships ahead of the systems it asks for.
 
+> **Owner-directed reprioritization (2026-07-19):** the owner asked to "build out the rest of the
+> **warding skill**" ahead of the Act III story. So v4.1 was **split**: the *combat* half shipped
+> first as **v4.1.0 "The Great Knot"** (Undercroft floors 16–30, families 4–5, the first Great Knot
+> boss, deep loot + top charms + deeper bells). The *story* half of v4.1 — Act III chapters 1–3, the
+> Warden's Ledger UI, and mastery trials at 50 — **remains unbuilt** and folds into a later release
+> (working name "The Warden's Ledger"). See `CHANGELOG.md` (2026-07-19, v4.1.0).
+
 | Release | Contents |
 |---|---|
 | **v4.0 "The Tenth Door"** | Warding skill + Resolve + knockout; the Undercroft (floors 1–15, 3 creature families); warden's tool tiers 1–3; first loot materials + sinks; door-opening intro quest. The variety spark ships here (small, sets the tone early). |
-| **v4.1 "The Warden's Ledger"** | Act III chapters 1–3 + the Ledger UI; mastery trials at 50 (all six skills); Undercroft deepens (families 4–5, first Great Knot). |
+| **v4.1.0 "The Great Knot"** (SHIPPED) | The Warding *combat* deepening: Undercroft floors 16–30; families 4–5 (Hollow Warden, Gloam Tangle); the first Great Knot boss; deep drops (Warden's Ash, Snarlthread, Heartknot); top charms (Wardstone, Settler's Band); bells 20/25/30. |
+| **"The Warden's Ledger"** (remaining v4.1 story) | Act III chapters 1–3 + the Ledger UI; mastery trials at 50 (all six skills). |
 | **v4.2 "The Gloam Grove"** | 10th grove ring (Woodcutting × Warding venue); chapters 4–5; charm/gear top tiers; the returned-Warden NPC. |
 | **v4.3 "The Sunken Workings"** | Behind the deepest lift stop (Mining × Warding); chapters 6–7; trials at 75. |
 | **v4.4 "The Tenth Lantern"** | Chapter 8 finale + festival integration + epilogue; balance sweep of the whole arc; GBP appendix resync. |

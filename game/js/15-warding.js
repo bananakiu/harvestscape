@@ -24,7 +24,7 @@
 // A place you walk to, not a stat you manage everywhere: Resolve is full on every non-combat map
 // and each dawn; it drains ONLY from a restless thing's touch, in the Undercroft. Empty = a soft
 // knockout (below): you wake at the door with everything. Energy (farm stamina) is untouched by combat.
-function resolveMax(){ return 100 + (charmActive("Warded Charm") ? 5 : 0); }   // Warded Charm lifts the ceiling
+function resolveMax(){ return 100 + (charmActive("Warded Charm") ? 5 : 0) + (charmActive("Wardstone Charm") ? 10 : 0); }   // charms lift the ceiling
 function resolveFloor(){ return hasMastery("Warding", 99) ? 10 : 0; }          // ★ Lanternheart — Resolve never falls below 10
 function inCombatMap(){ return !!(curMap && curMap.id === "undercroft"); }      // the only place Resolve matters
 
@@ -34,10 +34,12 @@ function inCombatMap(){ return !!(curMap && curMap.id === "undercroft"); }      
 // live in curMap.creatures (never curMap.objects), so no pre-v4 code touches them.
 function mkCreature(kind, tx, ty, rng){
   const d = CREATURES[kind];
-  return { kind, x: tx*TILE+8, y: ty*TILE+8, hp: d.hp, face:"down",
+  const x = tx*TILE+8, y = ty*TILE+8;
+  return { kind, x, y, hp: d.hp, face:"down",
            walk:0, moving:false, state:"idle", stateT:0,
            timer: 0.4 + (rng ? rng() : Math.random())*1.4,
-           wvx:0, wvy:0, lvx:0, lvy:0, hurtT:0, warm:0, alive:true, homeFloor: state.wardDepth||1 };
+           wvx:0, wvy:0, lvx:0, lvy:0, hurtT:0, warm:0, alive:true, homeFloor: state.wardDepth||1,
+           rx:x, ry:y, phase:0, split:false, ringT:0 };   // v4.1: rx/ry = boss root; phase = boss move; split = tangle; ringT = slam ring anim
 }
 function wardWalkable(x, y){   // pixel coords → is this a standable Undercroft floor tile
   if(!curMap) return false;
@@ -77,14 +79,25 @@ function updateCreatures(dt){
     cr.hurtT = Math.max(0, (cr.hurtT||0) - dt);
     cr.warm  = Math.max(0, (cr.warm||0) - dt*0.6);
     cr.hpBarT = Math.max(0, (cr.hpBarT||0) - dt);   // v4.0.3: health bar/nameplate linger after a hit
+    cr.ringT = Math.max(0, (cr.ringT||0) - dt);
     if(cr.moving) cr.walk += dt*6;
     cr.moving = false;
     cr.stateT -= dt;
     const pdx = state.px - cr.x, pdy = state.py - cr.y, dist = Math.hypot(pdx, pdy);
 
+    // v4.1 the Great Knot — a rooted boss with two telegraphed moves (a ground-slam ring + a reaching lunge).
+    if(d.boss){ updateGreatKnot(cr, d, dt, pdx, pdy, dist); continue; }
+    // v4.1 the Hollow Warden turns to keep its guarded FRONT toward you — but SLOWLY (a turn-lag), so
+    // you can circle to its side or back faster than it re-faces. Its guard (frontalHit) tests against
+    // your ACTUAL position, so this lag is exactly what makes the "circle it" gimmick both real and beatable.
+    if(d.block && dist < 4.5*TILE && cr.state !== "lunge"){
+      cr.turnT = (cr.turnT||0) - dt;
+      if(cr.turnT <= 0){ cr.face = Math.abs(pdx) > Math.abs(pdy) ? (pdx<0?"left":"right") : (pdy<0?"up":"down"); cr.turnT = 0.55; }
+    }
+
     if(cr.state === "stunned"){ if(cr.stateT <= 0) cr.state = "idle"; continue; }
     if(cr.state === "telegraph"){
-      cr.face = Math.abs(pdx) > Math.abs(pdy) ? (pdx<0?"left":"right") : (pdy<0?"up":"down");
+      if(!d.block) cr.face = Math.abs(pdx) > Math.abs(pdy) ? (pdx<0?"left":"right") : (pdy<0?"up":"down");   // the Warden keeps its lagged guard even winding up
       if(cr.stateT <= 0){   // wind-up done → commit a lunge, direction locked NOW (telegraphed)
         const a = Math.atan2(pdy, pdx); cr.lvx = Math.cos(a); cr.lvy = Math.sin(a);
         cr.state = "lunge"; cr.stateT = cr.kind==="shambler" ? 0.75 : 0.4;
@@ -102,9 +115,44 @@ function updateCreatures(dt){
     if(cr.state === "cooldown"){ wardWander(cr, d, dt); if(cr.stateT <= 0) cr.state = "idle"; continue; }
 
     // idle → aggro when the player lingers within reach
-    const aggro = (cr.kind==="shambler" ? 3.5 : cr.kind==="embermite" ? 2.6 : 3.0) * TILE;
+    const aggro = (cr.kind==="shambler" ? 3.5 : cr.kind==="embermite" ? 2.6 : cr.kind==="hollowwarden" ? 3.2 : 3.0) * TILE;
     if(dist < aggro){ cr.state = "telegraph"; cr.stateT = d.tele; }
     else wardWander(cr, d, dt);
+  }
+}
+// The Great Knot — rooted at its spawn (the stair spot), guards quietly until you close in, then
+// alternates two clearly-telegraphed moves: a ground-slam ring (step out of it) and a reaching lunge.
+// Same settle verb, just a longer fight and bigger tells. Nothing here can take anything (contract).
+function updateGreatKnot(cr, d, dt, pdx, pdy, dist){
+  cr.face = Math.abs(pdx) > Math.abs(pdy) ? (pdx<0?"left":"right") : (pdy<0?"up":"down");
+  if(dist < 6*TILE) cr.hpBarT = Math.max(cr.hpBarT||0, 0.5);   // keep the boss bar + name up while you're near
+  const easeHome = () => { const hx=cr.rx-cr.x, hy=cr.ry-cr.y, hd=Math.hypot(hx,hy);
+    if(hd>1){ const sp=Math.min(hd, 22*dt); moveCreature(cr, hx/hd*sp, hy/hd*sp); cr.moving=true; } };
+  if(cr.state === "stunned"){ if(cr.stateT<=0) cr.state="idle"; return; }
+  if(cr.state === "cooldown" || cr.state === "idle"){
+    easeHome();
+    if(dist > 6*TILE){ cr.stateT = 0.6; return; }        // guard quietly until approached
+    if(cr.stateT <= 0){ cr.phase = cr.phase ? 0 : 1;      // alternate slam / lunge
+      cr.state = cr.phase ? "tel_lunge" : "tel_slam"; cr.stateT = d.tele; }
+    return;
+  }
+  if(cr.state === "tel_slam"){                             // the danger ring grows over the telegraph (drawn in drawCreature)
+    if(cr.stateT <= 0){ cr.state="slam"; cr.stateT=0.18; } return; }
+  if(cr.state === "slam"){
+    if(cr.stateT <= 0){                                    // the ground gives — a ring of force
+      cam.shake = 5; hitstop = 0.06; playSfx("staveHit"); pRing(cr.x, cr.y, "#8a7a5c");
+      if(dist < 1.8*TILE && !(state.iFrame > 0)) drainResolve(d.dmg, cr.x, cr.y);
+      cr.state="cooldown"; cr.stateT=1.4;
+    } return;
+  }
+  if(cr.state === "tel_lunge"){
+    if(cr.stateT <= 0){ const a=Math.atan2(pdy,pdx); cr.lvx=Math.cos(a); cr.lvy=Math.sin(a); cr.state="lunge"; cr.stateT=0.5; }
+    return;
+  }
+  if(cr.state === "lunge"){
+    moveCreature(cr, cr.lvx*d.speed*2.6*dt, cr.lvy*d.speed*2.6*dt); cr.moving=true;
+    if(dist < 13 && !(state.iFrame > 0)) drainResolve(d.dmg, cr.x, cr.y);
+    if(cr.stateT <= 0){ cr.state="cooldown"; cr.stateT=1.4; } return;
   }
 }
 function drawCreature(cr){
@@ -116,27 +164,39 @@ function drawCreature(cr){
             : (cr.moving && (Math.floor(cr.walk)%2) ? -1 : 0);
   const dx = Math.round(cr.x - w/2), dy = Math.round(cr.y - h + 2 + bob);
   if(cr.kind !== "wisp"){ ctx.fillStyle = "rgba(0,0,0,0.22)"; ctx.beginPath(); ctx.ellipse(cr.x, cr.y+1, w*0.32, 2, 0, 0, 7); ctx.fill(); }
-  const tel = cr.state === "telegraph";
+  const cd = CREATURES[cr.kind];
+  const tel = cr.state === "telegraph" || cr.state === "tel_slam" || cr.state === "tel_lunge";
   if(tel) ctx.globalAlpha = 0.55 + 0.45*Math.abs(Math.sin(animT*20));   // a bright warning shimmer
   if(cr.face === "left"){ ctx.save(); ctx.scale(-1,1); ctx.drawImage(s, -dx-w, dy); ctx.restore(); }
   else ctx.drawImage(s, dx, dy);
   ctx.globalAlpha = 1;
   if(cr.hurtT > 0){ ctx.fillStyle = `rgba(255,255,255,${Math.min(0.7, cr.hurtT*4)})`; ctx.fillRect(dx, dy, w, h); }   // hit flash
-  if(tel){ ctx.strokeStyle = "rgba(200,225,255,0.75)"; ctx.lineWidth = 1;
+  // v4.1 the Hollow Warden's guarded front — a faint shield arc on the side it faces
+  if(cd.block && ((cr.hpBarT||0) > 0 || cr.state !== "idle")){
+    const fa = cr.face==="up"?-Math.PI/2 : cr.face==="down"?Math.PI/2 : cr.face==="left"?Math.PI : 0;
+    ctx.strokeStyle = "rgba(180,200,240,0.55)"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cr.x, cr.y-2, 9, fa-0.7, fa+0.7); ctx.stroke();
+  }
+  if(cr.state === "tel_slam"){   // v4.1 boss ground-slam — a filling DANGER ring; step outside before it lands
+    const p = clamp(1 - cr.stateT/(cd.tele||0.9), 0, 1), R = 1.8*TILE;
+    ctx.strokeStyle = "rgba(230,120,90,0.35)"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(cr.x, cr.y, R, 0, 7); ctx.stroke();                 // the full danger radius (faint)
+    ctx.strokeStyle = `rgba(255,150,110,${0.5+0.4*p})`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cr.x, cr.y, 6 + p*(R-6), 0, 7); ctx.stroke();       // the ring reaches the edge as it lands
+  } else if(tel){ ctx.strokeStyle = "rgba(200,225,255,0.75)"; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(cr.x, cr.y, 10 + Math.sin(animT*20)*2, 0, 7); ctx.stroke(); }   // telegraph ring
-  // v4.0.3: a health bar over an ENGAGED creature (recently hit, or aggroed/attacking), + its
-  // name·Lv once you've actually struck it — so combat reads at a glance without cluttering an
-  // idle wanderer. The bar's a pixel-canvas strip; the nameplate is queued crisp on the overlay.
+  // v4.0.3: a health bar over an ENGAGED creature (recently hit, or aggroed/attacking), + its name·Lv.
+  // v4.1: the boss wears a wider bar and its name always shows — so combat reads at a glance.
   const engaged = (cr.hpBarT||0) > 0 || cr.state !== "idle";
   if(engaged){
-    const maxhp = CREATURES[cr.kind].hp, frac = clamp(cr.hp / maxhp, 0, 1);
-    const bw = 14, bx = Math.round(cr.x - bw/2), by = dy - 4;
+    const maxhp = cd.hp, frac = clamp(cr.hp / maxhp, 0, 1);
+    const bw = cd.boss ? 30 : 14, bx = Math.round(cr.x - bw/2), by = dy - (cd.boss ? 6 : 4);
     ctx.fillStyle = "rgba(0,0,0,0.55)"; ctx.fillRect(bx-1, by-1, bw+2, 4);   // rim
     ctx.fillStyle = "#3a2a2a";          ctx.fillRect(bx, by, bw, 2);         // empty track
-    ctx.fillStyle = frac>0.5 ? "#6ac86a" : frac>0.25 ? "#e0b04a" : "#d0503a";
-    ctx.fillRect(bx, by, Math.max(1, Math.round(bw*frac)), 2);              // fill: green → amber → red
-    if((cr.hpBarT||0) > 0) queueText(cr.x, by-2, CREATURES[cr.kind].name + " · Lv" + CREATURES[cr.kind].lvl,
-      { color:"#dbe6ff", size:7, shadow:"rgba(0,0,0,0.6)" });
+    ctx.fillStyle = cd.boss ? "#c86adf" : frac>0.5 ? "#6ac86a" : frac>0.25 ? "#e0b04a" : "#d0503a";
+    ctx.fillRect(bx, by, Math.max(1, Math.round(bw*frac)), 2);              // fill (boss = violet, else green→amber→red)
+    if(cd.boss || (cr.hpBarT||0) > 0) queueText(cr.x, by-2, cd.name + (cd.boss ? "" : " · Lv" + cd.lvl),
+      { color: cd.boss ? "#f0d0ff" : "#dbe6ff", size: cd.boss ? 8 : 7, weight: cd.boss ? "bold" : "", shadow:"rgba(0,0,0,0.6)" });
   }
 }
 
@@ -146,7 +206,9 @@ function drawCreature(cr){
 function staveSwing(tx, ty, power){
   const fx = tx*TILE+8, fy = ty*TILE+8;
   let hitAny = false;
-  if(curMap.creatures) for(const cr of curMap.creatures){
+  // .slice(): a Gloam Tangle's split pushes new Tanglets into curMap.creatures — iterate a snapshot so
+  // they aren't also struck by the same swing (they must be settled on later swings).
+  if(curMap.creatures) for(const cr of curMap.creatures.slice()){
     if(cr.alive && Math.hypot(cr.x-fx, cr.y-fy) <= 15){ hitCreature(cr, power, fx, fy); hitAny = true; }
   }
   if(hitAny){ cam.shake = 2.2; hitstop = 0.05; return; }
@@ -167,14 +229,46 @@ function staveSwing(tx, ty, power){
   }
   playSfx("staveHit");   // a soft whiff — the swing still sounds
 }
+function frontalHit(cr){   // is the PLAYER (the attacker) in the direction the Warden is facing? (its guarded front)
+  const fv = cr.face==="up" ? [0,-1] : cr.face==="down" ? [0,1] : cr.face==="left" ? [-1,0] : [1,0];
+  const dx = state.px - cr.x, dy = state.py - cr.y, dd = Math.hypot(dx,dy) || 1;
+  return (fv[0]*dx + fv[1]*dy)/dd > 0.35;
+}
+function spawnTanglets(cr){   // a Gloam Tangle breaks into two smaller Tanglets (which carry the loot)
+  if(!curMap.creatures) return;
+  for(let i=0;i<2;i++){
+    const ang = Math.random()*Math.PI*2;
+    let tx = Math.floor((cr.x + Math.cos(ang)*11)/TILE), ty = Math.floor((cr.y + Math.sin(ang)*11)/TILE);
+    if(!wardWalkable(tx*TILE+8, ty*TILE+8)){ tx = Math.floor(cr.x/TILE); ty = Math.floor(cr.y/TILE); }
+    const t = mkCreature("tanglet", tx, ty); t.split = true; t.hpBarT = 2.2;
+    curMap.creatures.push(t);
+  }
+}
 function hitCreature(cr, power, fx, fy){
+  const d = CREATURES[cr.kind];
+  // Gloam Tangle — the FIRST strike splits it into two Tanglets rather than damaging it (V4_BUILD_PLAN §4).
+  if(d.splits && !cr.split){
+    cr.alive = false; cr.hurtT = 0.18;   // the parent becomes its halves — no loot of its own
+    playSfx("staveHit"); cam.shake = 2.2; hitstop = 0.05; pSparkle(cr.x, cr.y-2, d.col, 14);
+    spawnTanglets(cr); floatText(cr.x, cr.y-14, "it splits!", d.col);
+    return;
+  }
+  // Hollow Warden — GUARDS the front it faces; a strike from where it's looking clangs off. Circle to its side/back.
+  if(d.block && frontalHit(cr)){
+    cr.hpBarT = 2.6; cr.hurtT = 0.05; cam.shake = 1.0; playSfx("staveHit");
+    spawnHitsplat(cr.x, cr.y-10, 0, "block"); floatText(cr.x, cr.y-16, "guarded", "#9fb0d0");
+    return;
+  }
   const dealt = Math.min(power, cr.hp);   // splat the damage actually taken, never more than it had
-  cr.hp -= power; cr.hurtT = 0.18; cr.hpBarT = 2.6; cr.state = "stunned"; cr.stateT = 0.35;
-  const a = Math.atan2(cr.y - fy, cr.x - fx);   // knock it ~a tile back off the strike
-  const nx = cr.x + Math.cos(a)*10, ny = cr.y + Math.sin(a)*10;
-  if(wardWalkable(nx, cr.y)) cr.x = nx;
-  if(wardWalkable(cr.x, ny)) cr.y = ny;
-  playSfx("staveHit"); pChips(cr.x, cr.y, CREATURES[cr.kind].col2, 5);
+  cr.hp -= power; cr.hurtT = 0.18; cr.hpBarT = 2.6;
+  if(!d.boss){   // normal things stagger + get knocked back; the boss shrugs off a hit (no stunlock)
+    cr.state = "stunned"; cr.stateT = 0.35;
+    const a = Math.atan2(cr.y - fy, cr.x - fx);
+    const nx = cr.x + Math.cos(a)*10, ny = cr.y + Math.sin(a)*10;
+    if(wardWalkable(nx, cr.y)) cr.x = nx;
+    if(wardWalkable(cr.x, ny)) cr.y = ny;
+  }
+  playSfx("staveHit"); pChips(cr.x, cr.y, d.col2, 5);
   const killed = cr.hp <= 0;
   spawnHitsplat(cr.x, cr.y - 10, dealt, killed ? "settle" : "hit");   // red hit, violet on the settling blow
   if(killed) settleCreature(cr);
@@ -182,13 +276,21 @@ function hitCreature(cr, power, fx, fy){
 function settleCreature(cr){
   cr.alive = false;
   const d = CREATURES[cr.kind];
-  pSparkle(cr.x, cr.y-2, d.col, 16);
-  give(d.drop, d.n||1);
-  if(d.drop2 && chance(0.5)) give(d.drop2, d.n2||1);
-  if(hasMastery("Warding",50) && chance(0.15)) give(d.drop, 1);   // ★ Gloamwise — an extra material now and then
-  addXP("Warding", d.xp); bump("warded");
-  playSfx("settle");
-  floatText(cr.x, cr.y-16, d.name + " settled", d.col);
+  pSparkle(cr.x, cr.y-2, d.col, d.boss ? 28 : 16);
+  if(d.drop) give(d.drop, d.n||1);
+  if(d.drop2 && (d.boss || chance(0.5))) give(d.drop2, d.n2||1);   // the boss always yields its ash
+  if(hasMastery("Warding",50) && chance(0.15) && d.drop) give(d.drop, 1);   // ★ Gloamwise — an extra material now and then
+  if(d.xp) addXP("Warding", d.xp); bump("warded");
+  if(d.boss){
+    // the Great Knot guarded the stair — settling it drops the ladder at the spot it rooted on
+    curMap.objects[key(Math.floor(cr.rx/TILE), Math.floor(cr.ry/TILE))] = { kind:"wardladderdown" };
+    cam.shake = 4; playSfx("bellRing"); pSparkle(cr.rx, cr.ry-4, "#ffd88a", 24);
+    banner("❖ " + d.name + " settled", "The old grief comes apart, quiet at last — and the stair it guarded lies open.");
+    floatText(cr.rx, cr.ry-18, "↓ the way down", "#bfe0ff");
+  } else {
+    playSfx("settle");
+    floatText(cr.x, cr.y-16, d.name + " settled", d.col);
+  }
 }
 
 // ---------------- Resolve drain + the zero-cost knockout ----------------
@@ -239,6 +341,9 @@ function wardKnockout(){
 const WARD_RECIPES = [
   { out:"Warded Charm",     mats:{ "Gloam Thread":6, "Wool":1, "Opal":1 }, blurb:"+5 maximum Resolve" },
   { out:"Emberlight Charm", mats:{ "Ember Grit":4 },                       blurb:"your lantern reaches much farther" },
+  // v4.1 deep charms — the top Resolve charm (needs a Great Knot's Heartknot) and a Warding-XP band.
+  { out:"Wardstone Charm",  mats:{ "Heartknot":1, "Warden's Ash":5, "Sapphire":1 }, blurb:"+10 maximum Resolve" },
+  { out:"Settler's Band",   mats:{ "Snarlthread":6, "Gloam Thread":12 },            blurb:"+5% Warding XP while worn" },
 ];
 function openBells(){ openPanel("bellPanel", renderBells); }
 function renderBells(){
@@ -255,7 +360,7 @@ function renderBells(){
     html += pledgeRowHtml("bell"+depth);
     html += `<div class="desc" style="margin-top:.4em;color:var(--ink-soft);">Pledge what you carry — here, or from the Journal (J), anywhere. The ledger keeps the tally.</div>`;
   } else if(depth % 5 !== 0){
-    const next = Math.min(15, Math.ceil(depth/5)*5);
+    const next = Math.min(30, Math.ceil(depth/5)*5);
     if(next > depth) html += `<div class="desc" style="margin-top:.4em;color:var(--ink-soft);">The next Warden's Bell is on floor ${next}.</div>`;
   }
   // the workbench
@@ -298,6 +403,9 @@ const SALVAGE_OFFERS = [
   { item:"Gloam Thread", qty:3, price:90,  want:"A trapper up the coast brought in a hank of that queer silver thread. Odd stuff. Three lengths?", line:"There you are. Whatever you're winding it into, mind your fingers." },
   { item:"Knotwood",     qty:2, price:70,  want:"Somebody left a couple of those grief-dark knots on my step. Bad luck to burn 'em, they say. Two?", line:"Off my step and onto yours. Fair trade, that." },
   { item:"Ember Grit",   qty:2, price:80,  want:"Got a pinch of that warm grit that ticks like a stove. Won't sit near the matches. Two measures?", line:"Careful — it likes to be near things. Mind what you keep it by." },
+  // v4.1 deeper salvage (so a combat-shy save can still stock the deep charm/bell asks)
+  { item:"Warden's Ash", qty:2, price:100, want:"A pedlar traded me a twist of pale ash that won't go cold. Gives me the shivers. Two twists?", line:"Take it, take it. I'll sleep better with it off the shelf." },
+  { item:"Snarlthread",  qty:2, price:110, want:"Bought a coil of thread that keeps re-knotting itself in the drawer. Unnatural. Two coils?", line:"Keep it wound tight. That's my only advice on the matter." },
 ];
 function todaysSalvage(){
   if(state.flags.salvageDay === state.day) return state.flags.salvageIdx >= 0 ? SALVAGE_OFFERS[state.flags.salvageIdx] : null;

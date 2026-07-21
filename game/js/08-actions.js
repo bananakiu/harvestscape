@@ -181,6 +181,7 @@ function addXP(skill, amt){
   }
   if(skill === "Mining" && charmActive("Amber Beetle")) amt = Math.round(amt * 1.05);
   if(skill === "Farming" && charmActive("Grandpa's Pocketwatch")) amt = Math.round(amt * 1.05);   // his time, well spent (v3.32)
+  if(skill === "Warding" && charmActive("Settler's Band")) amt = Math.round(amt * 1.05);   // v4.1 the deep-warding XP charm
   // v4.0 variety spark (V4_PLAN §4) — the first SPARK_CAP grants in a skill each day earn +50% XP.
   // Reward-shaped and never a tax: rotating skills is visibly optimal; single-skill focus is still free.
   // addXP is the single choke point for ALL skill XP (Farming through Warding), so this covers combat too.

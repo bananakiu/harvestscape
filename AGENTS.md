@@ -130,8 +130,12 @@ Treat the changelog as non-optional deliverable output, the same as the code its
   by the Warden's Ledger, mastery trials + variety spark for breadth pacing, and the v4.0–v4.4
   release train. **v4.0 "The Tenth Door" SHIPPED** (Warding + the Undercroft floors 1–15 + the
   three creature families + Resolve/knockout + the Stave + bells/charms + the door-opening quest
-  + the variety spark); v4.1–v4.4 (the Ledger, chapters, mastery trials, deeper venues) remain.
-  Read it (and the owner decision points in its §6) before building anything Act-III-shaped.
+  + the variety spark). **v4.1.0 "The Great Knot" SHIPPED** — the Warding *combat* deepening
+  (owner-directed, ahead of the story): Undercroft floors 16–30, families 4–5 (Hollow Warden,
+  Gloam Tangle), the first Great Knot boss, deep loot + top charms + bells 20/25/30. Still remaining:
+  v4.1's *story* half ("The Warden's Ledger" — Act III chapters 1–3, the Ledger UI, mastery trials
+  at 50) and v4.2–v4.4 (deeper venues, the finale). Read it (and its §6 owner decisions) before
+  building anything Act-III-shaped.
 - `V4_BUILD_PLAN.md` — **the implementation work orders for v4**, written to be executed
   cold by any coding agent: locked decisions, verified engine anchors (symbol names, data
   shapes, integration points), and per-release specs with schemas, starting balance

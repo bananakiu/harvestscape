@@ -22,6 +22,61 @@
 
 ---
 
+## 2026-07-19 — v4.1.0 "The Great Knot" (code 87, tag `v4.1.0`) — the Warding skill, deepened
+
+Owner ask: "continue building… build out the rest of the warding skill." This is the **combat
+depth** of the roadmap's v4.1 (V4_BUILD_PLAN §4), shipped ahead of v4.1's *story* half. **Split
+recorded** in `V4_PLAN.md` §5: v4.1.0 "The Great Knot" is the Warding-combat deepening; Act III
+chapters 1–3, the Warden's Ledger UI, and mastery trials at 50 remain for a later "The Warden's
+Ledger" release. Nothing here touches the cozy contract (§8): still nothing taken, knockout free,
+creatures only in the Undercroft.
+
+### Added — two new creature families (V4_BUILD_PLAN §4)
+
+- **Hollow Warden (L30)** — a lost predecessor's echo that turns to keep its guarded *front* toward
+  you; a frontal Stave strike clangs off (a grey "0" block splat) — you must circle to its side or
+  back to land a hit. Slow (speed 14), tanky (hp 16). Drops **Warden's Ash**. The positional gimmick
+  the plan calls for ("blocks and must be circled").
+- **Gloam Tangle (L45)** — splits **once when first struck** into two **Tanglets** (the parent gives
+  no loot; the halves carry it). Implemented in `hitCreature` before damage; `staveSwing` now iterates
+  a `.slice()` snapshot so a split's fresh Tanglets aren't also struck by the same swing. Tanglets
+  drop **Snarlthread**.
+
+### Added — the first Great Knot (boss)
+
+A named, rooted boss (`greatknot`, hp 42 ≈ 3× a deep creature, xp 360) guarding the descent on every
+**10th floor** — on those floors it *replaces* the stairs-knot, and settling it opens the stair at
+its root (`settleCreature`). Two clearly-telegraphed moves alternating (`updateGreatKnot`): a
+**ground-slam** with a filling danger ring drawn at its exact radius (step outside before it lands)
+and a **reaching lunge**. Immune to stun/knockback so it can't be stunlocked. A wider violet health
+bar with its name always shown. Signature drop **Heartknot** (+ Warden's Ash ×3) — the core of the
+top charm.
+
+### Added — deeper Undercroft + loot sinks
+
+- **Floors 16–30** (`WARD_FLOOR_MAX` 15→30); families band by depth like `oreTable`; **Warden's Bells**
+  at 20/25/30 (`bellCost` + the ledger cap raised), each sinking the deeper drops + the deep ore/timber
+  ladder (bell30 wants a Heartknot). New drops feed two new charms at the bell workbench — **Wardstone
+  Charm** (Heartknot + Warden's Ash ×5 + Sapphire → **+10 max Resolve**, the top Resolve charm) and
+  **Settler's Band** (Snarlthread ×6 + Gloam Thread ×12 → **+5% Warding XP**, hooked in `addXP`). Tom's
+  daily salvage rotates Warden's Ash / Snarlthread too (the combat-averse trickle continues).
+
+### Balance (GBP-checked) & art
+
+Settle XP stays under the ore curve for the band (gold L30=435 · cobalt L45=720): Hollow Warden 74,
+each Tanglet 65 (≈130 for the pair, justified by the extra work), Great Knot 360. Drop sells sit
+under same-band gather (Warden's Ash 34 · Snarlthread 42 · Heartknot 130 — a rare boss trophy whose
+real value is the charm, not the counter). New procedural sprites (`buildWardingArt`) for all three
+creatures + Tanglet + five item icons; per-family creature glow colours in `collectLights`.
+
+### Verified in-browser
+
+Deep-floor spawns (floor 25 → Hollow Warden/Ember Mite/Gloam Tangle), boss floors (floor 20 → a Great
+Knot on the stair spot, no normal knot), 200 AI frames clean, and each gimmick: the Tangle splits into
+2 Tanglets giving the parent no loot; the Hollow Warden blocks a frontal hit (hp unchanged, "0" splat)
+but takes 5 from behind; the Great Knot settle reveals the ladder + drops Heartknot + Ash ×3 + XP.
+Screenshot of a floor-20 boss encounter (danger ring, boss bar, both new families with nameplates).
+
 ## 2026-07-19 — v4.0.3 "By the Numbers" (code 86, tag `v4.0.3`) — Warding combat feedback
 
 Owner ask: "continue developing the game, especially the warding system. i want health bars and

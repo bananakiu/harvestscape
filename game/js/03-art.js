@@ -89,6 +89,45 @@ function buildWardingArt(){
   mkSpr("wardbell", 16, 22, g => { px(g,2,2,12,2,"#5a4a38"); px(g,3,2,1,20,"#4a3c2c"); px(g,12,2,1,20,"#4a3c2c");   // frame
     px(g,6,6,4,2,"#3a6a5a"); px(g,5,7,6,7,"#5a9a86"); px(g,4,13,8,3,"#4a8a76"); px(g,5,7,6,1,"#7ac0a8");            // bell body
     px(g,7,16,2,3,"#3a6a5a"); px(g,7,10,2,3,"#2a4a3e"); });                                                          // clapper + shading
+
+  // ==== v4.1 families 4–5 + the Great Knot boss ====
+  // Hollow Warden — a lost predecessor's echo: a tall armoured silhouette with a cold heart-glint.
+  const hwBody = g => { px(g,4,1,6,3,"#454a5e"); px(g,5,2,4,2,"#2a2d3a");                     // hollow helm
+    px(g,5,2,1,1,"#8fd0ff"); px(g,8,2,1,1,"#8fd0ff");                                          // cold eye-glints
+    px(g,3,4,8,7,"#8a94b0"); px(g,3,4,8,1,"#a2acc8"); px(g,2,5,2,4,"#6a7290"); px(g,10,5,2,4,"#6a7290");
+    px(g,6,6,2,4,"#5f7fbf"); px(g,6,6,2,1,"#9fc4ff"); };                                       // cold core
+  mkSpr("hollowwarden_0", 14, 16, g => { hwBody(g); px(g,4,11,2,4,"#454a5e"); px(g,8,11,2,4,"#454a5e"); });
+  mkSpr("hollowwarden_1", 14, 16, g => { hwBody(g); px(g,5,11,2,4,"#454a5e"); px(g,7,11,2,4,"#454a5e"); });
+  // Gloam Tangle — a knotted snarl of living green thread, with sad little eyes.
+  const gtBody = (g,o) => { for(let i=0;i<7;i++){ const a=i/7*6.28+o; px(g,7+Math.round(Math.cos(a)*4),7+Math.round(Math.sin(a)*4),2,2,"#3a7a5c"); }
+    px(g,4,4,6,6,"#5aa87a"); px(g,5,5,4,4,"#8fe0c0"); px(g,6,6,2,2,"#c8f0e0"); px(g,5,6,1,1,"#2a4a3e"); px(g,8,7,1,1,"#2a4a3e"); };
+  mkSpr("gloamtangle_0", 14, 14, g => gtBody(g,0));
+  mkSpr("gloamtangle_1", 14, 14, g => gtBody(g,0.6));
+  const tgBody = (g,o) => { px(g,2,2,6,6,"#5aa87a"); px(g,3,3,4,4,"#8fe0c0"); px(g,4,4,2,2,"#c8f0e0");
+    px(g,3,4,1,1,"#2a4a3e"); px(g,6,5,1,1,"#2a4a3e");
+    for(let i=0;i<4;i++){ const a=i/4*6.28+o; px(g,5+Math.round(Math.cos(a)*3),5+Math.round(Math.sin(a)*3),1,1,"#3a7a5c"); } };
+  mkSpr("tanglet_0", 10, 10, g => tgBody(g,0));
+  mkSpr("tanglet_1", 10, 10, g => tgBody(g,0.8));
+  // The Great Knot — a big gnarled boss whorl, a low ember in its deep heart, two cold glints for eyes.
+  const gkBody = g => { px(g,3,4,16,15,"#2c2318"); px(g,3,4,16,1,"#4a3c2c"); px(g,5,6,12,11,"#3c3020"); px(g,7,8,8,7,"#2c2318");
+    px(g,9,9,4,4,"#1a140e"); px(g,10,10,2,2,"#6a4a2a");
+    px(g,2,8,2,5,"#4a3c2c"); px(g,18,8,2,5,"#4a3c2c"); px(g,8,2,5,2,"#4a3c2c");
+    px(g,6,7,1,1,"#8fd0ff"); px(g,15,7,1,1,"#8fd0ff");
+    px(g,4,18,2,3,"#2c2318"); px(g,10,18,2,3,"#2c2318"); px(g,16,18,2,3,"#2c2318"); };
+  mkSpr("greatknot_0", 22, 22, g => { gkBody(g); px(g,10,10,1,1,"#ffb060"); });
+  mkSpr("greatknot_1", 22, 22, g => { gkBody(g); px(g,10,10,2,2,"#ffc880"); });   // the heart-ember pulses
+
+  // ==== v4.1 deep item icons ====
+  mkSpr("item_Warden's Ash", 16, 16, g => { px(g,4,10,8,3,"#6a7290"); px(g,5,8,6,3,"#8a94b0"); px(g,6,7,4,2,"#a2acc8");
+    px(g,5,6,1,1,"#c8cfe0"); px(g,8,5,1,1,"#c8cfe0"); px(g,10,7,1,1,"#dfe6f4"); px(g,7,9,1,1,"#454a5e"); });
+  mkSpr("item_Snarlthread", 16, 16, g => { for(let i=0;i<10;i++){ const a=i/10*6.28; px(g,8+Math.round(Math.cos(a*2)*4),8+Math.round(Math.sin(a*1.5)*4),1,1,"#3a7a5c"); }
+    px(g,6,6,4,4,"#5aa87a"); px(g,7,7,2,2,"#8fe0c0"); px(g,5,8,1,1,"#8fe0c0"); px(g,10,7,1,1,"#8fe0c0"); });
+  mkSpr("item_Heartknot", 16, 16, g => { px(g,4,4,8,9,"#2c2318"); px(g,4,4,8,1,"#4a3c2c"); px(g,6,6,4,5,"#3c3020");
+    px(g,7,7,2,3,"#1a140e"); px(g,7,8,1,1,"#ffb060"); px(g,5,5,1,1,"#8fd0ff"); px(g,9,10,1,1,"#8fd0ff"); });
+  mkSpr("item_Wardstone Charm", 16, 16, g => { px(g,5,6,6,6,"#2c2318"); px(g,6,7,4,4,"#6a4a2a"); px(g,7,8,2,2,"#1a140e");
+    px(g,6,4,4,2,"#3a6ad0"); px(g,7,4,2,1,"#9fc4ff"); for(let i=0;i<8;i++) px(g,4+i,13,1,1,"#8a94b0"); });
+  mkSpr("item_Settler's Band", 16, 16, g => { for(let i=0;i<10;i++) px(g,3+i,8+Math.round(Math.sin(i*0.9)*2),1,1,"#3a7a5c");
+    for(let i=0;i<10;i++) px(g,3+i,7+Math.round(Math.sin(i*0.9+1.5)*2),1,1,"#5aa87a"); px(g,4,8,1,1,"#8fe0c0"); px(g,11,7,1,1,"#8fe0c0"); });
 }
 
 /* ---------------- terrain tiles ---------------- */
