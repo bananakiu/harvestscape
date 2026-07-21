@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.6.0", code: 93, codename: "The Kept Chair", date: "2026-07-22" };
+const VERSION = { name: "4.7.0", code: 94, codename: "A Fuller Table", date: "2026-07-22" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.7.0", code:94, date:"2026-07-22", name:"A Fuller Table", notes:[
+    { t:"feature", s:"Five new crops fill the seasons' quiet stretches. Spring no longer dead-ends at Rhubarb — there's Asparagus (Farming 50) and, up high, Peony (75). Winter grows more than two things now: Cloudberry (35) and Frostmelon (60) between Frostbloom and Everbloom. And Summer tops out sweeter with Dragonfruit (82). Each is season-locked, priced on the same honest curve as the Long Climb, and — like every crop — makes its own wine and preserves, feeds the shelf and the Collection, and delights whoever likes it." },
+    { t:"feature", s:"Two new charms round out the set — every skill has a trinket now. The Heron Feather Charm (+5% Fishing XP) and the Hearth Charm (+5% Cooking XP) join the birds'-nest finds, so Fishing and Cooking finally have something to collect and wear the way Woodcutting and Mining always have. One worn at a time, as ever." },
+  ]},
   { v:"4.6.0", code:93, date:"2026-07-22", name:"The Kept Chair", notes:[
     { t:"feature", s:"Elias has a heart to know now. Grow close to the last Warden — at the pond by day, the coast on his fourth days — and he opens up across four quiet scenes: teaching you to sit still enough for the koi to rise; finally opening the letter your grandfather sent him eleven years ago and never dared read; rehearsing on you the apology he owes his daughter; and, at the last, making his peace and pressing a pearl into your hand. Aldous kept a chair by the pond for him the whole time — and, it turns out, one for you." },
     { t:"feature", s:"The valley talks about your Warding now. The whole cast finally has a word for the tenth door and the dark under the Guild — Pip wants to see the magic stick, Bram nods warden-to-quiet-man, Tom would like it on record that his line of work is safer, Maya worries and is proud in the same breath, Rowan owns what he sealed, and word even reaches Nell at the dairy. Two new birthdays, too: Elias (Fall 26) and Nell (Summer 24)." },
@@ -486,6 +490,16 @@ const CROPS = {
   grape:      { name:"Grape",      lvl:64, days:7, seed:560, sell:900,  xp:180, shape:"bush",  seasons:["Summer","Fall"],   pal:["#3f7a2e","#5fa03e","#7a4a9a","#a87ac8"] },
   yam:        { name:"Yam",        lvl:78, days:8, seed:720, sell:1200, xp:235, shape:"root",  seasons:["Fall"],            pal:["#4f8a34","#7fbe55","#c06a3a","#e0955a"] },
   everbloom:  { name:"Everbloom",  lvl:90, days:9, seed:900, sell:1500, xp:300, shape:"star",  seasons:["Winter"],          pal:["#4a6a7a","#6a94a8","#c8b0f0","#eaddff"] },
+  // v4.7 "levelling the seasons" — the Long Climb (v3.10) filled the shared L30–90 desert, but three
+  // seasons stayed lopsided: Spring dead-ended at Rhubarb (L30), Winter had only two crops between
+  // Frostbloom (L14) and Everbloom (L90), and Summer topped out at Grape (L64). Five season-locked crops
+  // close those holes, each priced on the same g/level trend as the Long Climb with long grow times to
+  // keep daily yield honest (GBP §9: a season-exclusive crop makes each season a rolling content unlock).
+  cloudberry: { name:"Cloudberry", lvl:35, days:6, seed:340, sell:540,  xp:108, shape:"bush",  seasons:["Winter"],          pal:["#4a6a7a","#6a94a8","#e8b45a","#ffd98a"] },
+  asparagus:  { name:"Asparagus",  lvl:50, days:6, seed:440, sell:730,  xp:145, shape:"tall",  seasons:["Spring"],          pal:["#4f8a34","#7fbe55","#7a9a4a","#a8c86a"] },
+  frostmelon: { name:"Frostmelon", lvl:60, days:7, seed:520, sell:860,  xp:172, shape:"gourd", seasons:["Winter"],          pal:["#4a6a7a","#6a94a8","#8fb8d8","#c8e4f5"] },
+  peony:      { name:"Peony",      lvl:75, days:8, seed:680, sell:1140, xp:228, shape:"bush",  seasons:["Spring"],          pal:["#3f7a2e","#5fa03e","#e06a9a","#ff9ac0"] },
+  dragonfruit:{ name:"Dragonfruit",lvl:82, days:8, seed:780, sell:1300, xp:252, shape:"star",  seasons:["Summer"],          pal:["#3f7a2e","#5fa03e","#d0407a","#ff7aae"] },
 };
 
 // ---- TREES ----
@@ -1276,6 +1290,8 @@ const CHARMS = {
   "Acorn Ring":          { sell:120, effect:"an extra log, now and then" },
   "Moss Locket":         { sell:120, effect:"forage sometimes comes up double" },
   "Amber Beetle":        { sell:150, effect:"+5% Mining XP while worn" },
+  "Heron Feather Charm": { sell:130, effect:"+5% Fishing XP while worn" },   // v4.7 — the Fishing skill-charm (Wren/Amber pattern), nest-found
+  "Hearth Charm":        { sell:130, effect:"+5% Cooking XP while worn" },    // v4.7 — the Cooking skill-charm; closes the charm-per-skill gap (was 4 of 6)
   "Lantern Charm":       { sell:100, effect:"your light reaches a little farther" },
   "The Forester's Band": { sell:0,   effect:"+8% Woodcutting XP and an extra log, now and then" },  // once per valley
   "Grandpa's Pocketwatch": { sell:0, effect:"+5% Farming XP while worn" },   // dug up where his last letter said (v3.32) — once per valley, never in a nest

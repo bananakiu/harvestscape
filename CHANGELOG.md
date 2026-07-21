@@ -22,6 +22,41 @@
 
 ---
 
+## 2026-07-22 — v4.7.0 "A Fuller Table" (code 94, tag `v4.7.0`) — content breadth: seasonal crops + the last two charms
+
+### Why this release
+
+Pivoting from the story arc (Act III + Elias) to *the game itself*: the flesh-out audit's content-breadth
+dimension found the crop ladder lopsided by season, and the charm set asymmetric (4 of 6 skills had a
+trinket). Both are the highest daily-engagement content per line of pure data.
+
+### Added — five season-locked crops (`CROPS`, `01-data.js`)
+
+The Long Climb (v3.10) filled the *shared* L30–90 desert, but three seasons stayed thin: **Spring**
+dead-ended at Rhubarb (L30), **Winter** had only Frostbloom (L14) and Everbloom (L90) — a 76-level hole —
+and **Summer** topped at Grape (L64). Filled with: **Cloudberry** (Winter, L35), **Asparagus** (Spring,
+L50), **Frostmelon** (Winter, L60), **Peony** (Spring, L75), **Dragonfruit** (Summer, L82). Each is priced
+on the same g/level trend as the Long Climb (sell 540→1300, seeds ~0.63× sell) with long grow times so
+daily yield (sell/days ≈ 90→163 g) interleaves cleanly with the existing curve — GBP-honest, not a faucet.
+Each is pure data and auto-inherits everything a crop gets: the procedural produce+seed sprites (from
+`shape`+`pal`), `ITEM_SELL`, the level-gated seed shop, the Cellar's wine+preserves, Tom's per-item demand,
+gifting, the Harvest Fair, and the Collection. GBP §9 in one line: a season-exclusive crop makes each
+season a rolling content unlock — Spring and Winter now are.
+
+### Added — the last two skill charms (`CHARMS` + `addXP`)
+
+**Heron Feather Charm** (+5% Fishing XP) and **Hearth Charm** (+5% Cooking XP) close the charm-per-skill
+gap — Fishing and Cooking were the only two of six skills with no trinket to collect. They follow the exact
+Wren-Feather/Amber-Beetle pattern: nest-found (they auto-join the birds'-nest pool, which draws any
+undiscovered charm), modest sells (130g), one worn at a time, applied at the single `addXP` choke point.
+
+### Verified
+
+In-browser: all five crops carry correct on-trend fields (sell > seed), both produce and seed sprites
+generate, they plant only in season (off-season planting refused, seed not consumed) and the shop lists the
+seeds level-gated; both charms are in `CHARMS`/`ITEM_SELL`, apply their +5% at `addXP`, and appear in the
+nest pool when undiscovered; the new crop sprites render cleanly. Screenshot confirms the produce art.
+
 ## 2026-07-22 — v4.6.0 "The Kept Chair" (code 93, tag `v4.6.0`) — deepening Elias + the valley's voice on Warding
 
 ### Why this release
