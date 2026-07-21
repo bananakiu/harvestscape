@@ -22,6 +22,28 @@
 
 ---
 
+## 2026-07-19 — v4.2.1 "Easy Does It" (code 89, tag `v4.2.1`) — energy fixes (owner report)
+
+### Changed — Warding costs no energy
+
+The Stave's swing no longer calls `spendEnergy` (owner call: "stop using energy on combat, it just
+gets in the way — there's already a health bar limiting"). Resolve (drained only by a restless
+thing's touch) is the combat limiter, and the v4.0.3 health bars/hitsplats already pace the fight;
+an energy tax on every swing was redundant friction. Consequence: the **★ Steady Ward (25)** mastery
+("some settling swings cost no energy") was now a dead perk, so it's **repurposed** — settling a
+restless thing now **restores +8 Resolve** (a small self-sustain that rewards clearing a room),
+implemented in `settleCreature`.
+
+### Fixed — a missed watering can no longer drains energy
+
+`useTool`'s **Can** branch called `spendEnergy(1)` *before* checking whether any tilled soil was in
+reach, so watering empty ground (or already-watered soil) still cost energy and then toasted "Nothing
+to water there." Now it filters the waterable tiles **first** and returns without spending on a miss —
+matching how the Hoe, Axe, Pick and Rod already gate energy behind a valid target (owner: "much like
+when you use tools but miss, it should not drain any energy"). A real water still costs 1, as before.
+Verified in-browser: 5 Stave swings drain 0 energy; a Can miss drains 0, a real water drains 1; Steady
+Ward restores 8 Resolve on a settle.
+
 ## 2026-07-19 — v4.2.0 "Deeper Still" (code 88, tag `v4.2.0`) — the top of the Warding ladder + ranged combat
 
 Owner: "continue." Completing the Warding **creature ladder** — the skill now has a family at every

@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.2.0", code: 88, codename: "Deeper Still", date: "2026-07-19" };
+const VERSION = { name: "4.2.1", code: 89, codename: "Easy Does It", date: "2026-07-19" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.2.1", code:89, date:"2026-07-19", name:"Easy Does It", notes:[
+    { t:"change", s:"Warding no longer costs energy. Your Resolve — and the health bars on what you're settling — already pace a fight; an energy tax on every swing just got in the way. Settle as long as your Resolve holds. (The Steady Ward mastery now gives back a little Resolve on each settle, instead of the old free-swing.)" },
+    { t:"fix", s:"Watering the empty air no longer tires you out. The can used to spend energy even when there was nothing in reach to water — now a miss costs nothing, the same as swinging a hoe, axe or pick at empty ground." },
+  ]},
   { v:"4.2.0", code:88, date:"2026-07-19", name:"Deeper Still", notes:[
     { t:"new", s:"The Undercroft goes deeper again — down to floor forty-five, the bottom of the wing for now — and Warding finally has a restless thing to settle at every rung of the ladder, all the way to the top." },
     { t:"new", s:"The Deep Knot (Lv70) — a dark, near-stone thing that lowers its head and CHARGES in a straight line. Sidestep it and it slams the wall and knocks itself silly — that's your moment. Stand in the way and it'll run you right over." },
@@ -1000,7 +1004,7 @@ const MASTERY = {
   // v4.0 Warding — cozy, never punishing: the capstone makes you effectively un-knock-out-able
   // (Resolve floored at 10), the earlier tiers ease the grind and soften the dark's touch.
   Warding: {
-    25: "Steady Ward — some settling swings cost no energy",
+    25: "Steady Ward — settling a restless thing gives back a little Resolve",
     50: "Gloamwise — restless things sometimes give an extra material",
     75: "Unshaken — the dark's touch costs you less Resolve",
     99: "Lanternheart — your Resolve never falls below 10",

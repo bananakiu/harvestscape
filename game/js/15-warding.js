@@ -312,6 +312,7 @@ function settleCreature(cr){
   if(d.drop) give(d.drop, d.n||1);
   if(d.drop2 && (d.boss || chance(0.5))) give(d.drop2, d.n2||1);   // the boss always yields its ash
   if(hasMastery("Warding",50) && chance(0.15) && d.drop) give(d.drop, 1);   // ★ Gloamwise — an extra material now and then
+  if(hasMastery("Warding",25)) state.resolve = Math.min(resolveMax(), (state.resolve||0) + 8);   // ★ Steady Ward — a settle steadies you
   if(d.xp) addXP("Warding", d.xp); bump("warded");
   if(d.boss){
     // the Great Knot guarded the stair — settling it drops the ladder at the spot it rooted on

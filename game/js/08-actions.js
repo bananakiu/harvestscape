@@ -442,17 +442,17 @@ function useTool(){
     queuePage(1, 600);                                       // "On Soil"
   }
   else if(tool === "Can"){
-    if(!spendEnergy(1)) return;
     // A better can waters a wider swathe for the same single press — watering stays a morning
     // ritual, it just stops being a per-tile tax. Row runs perpendicular to the way you face.
-    let watered = 0;
-    for(const [x,y] of canTiles(tx, ty, tier, state.face)){
-      if(tileAt(x,y)===T.TILLED){ setTile(x,y,T.WATERED); watered++; pDrops(x*TILE+8, y*TILE+8, 5);
-        const cr = curMap.crops[key(x,y)]; if(cr) cr.wt = animT;   // v3.25: the crop drinks — a little stretch-pop (drawCrops reads .wt)
-      }
+    // v4.2.1 (owner call): a MISS (no tilled soil in reach) costs no energy — check first, then spend,
+    // like the Hoe/Axe/Pick already do. Energy used to drain even when there was nothing to water.
+    const wet = canTiles(tx, ty, tier, state.face).filter(([x,y]) => tileAt(x,y) === T.TILLED);
+    if(!wet.length){ toast("Nothing to water there."); return; }
+    if(!spendEnergy(1)) return;
+    for(const [x,y] of wet){ setTile(x,y,T.WATERED); pDrops(x*TILE+8, y*TILE+8, 5);
+      const cr = curMap.crops[key(x,y)]; if(cr) cr.wt = animT;   // v3.25: the crop drinks — a little stretch-pop (drawCrops reads .wt)
     }
-    if(watered){ addXP("Farming", watered); bump("watered", watered); playSfx("water"); }
-    else toast("Nothing to water there.");
+    addXP("Farming", wet.length); bump("watered", wet.length); playSfx("water");
   }
   else if(tool === "Seeds"){
     // a tree or a hive goes in open ground, not a furrow, and it stays there for good
@@ -580,13 +580,11 @@ function useTool(){
     startFishing(tx,ty);
   }
   else if(tool === "Stave"){
-    // v4.0 Warding: the settling swing. Energy is the swing cost (2, like the Axe/Pick), the same as
-    // every other tool — Resolve is a SEPARATE resource, drained only by a restless thing's touch.
-    // ★ Steady Ward (25) gives some free swings. staveSwing (15-warding.js) settles a creature in reach
-    // or breaks the stair-knot; it no-ops harmlessly outside the Undercroft (nothing to hit up top).
+    // v4.2 Warding costs NO energy (owner call). Resolve — drained only by a restless thing's touch —
+    // is the combat limiter, and the health bars already pace a fight; an energy tax on every swing
+    // just got in the way. staveSwing (15-warding.js) settles a creature in reach or breaks the
+    // stair-knot; it no-ops harmlessly outside the Undercroft (nothing to hit up top).
     if(!state.flags.staveEarned){ toast("You don't carry a warden's tool yet.", "#cbb98f"); return; }
-    const freeSwing = hasMastery("Warding",25) && chance(0.15);
-    if(!freeSwing && !spendEnergy(2)) return;
     staveSwing(tx, ty, power);
     refreshHUD(); return;
   }
