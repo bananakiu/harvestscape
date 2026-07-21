@@ -27,6 +27,8 @@ function freshState(){
     mineDepth:0, mineBest:0,
     groveRing:0, groveBest:0,              // the Deep Grove's rings — mirrors mineDepth/mineBest
     wardDepth:0, wardBest:0,               // v4.0 the Undercroft's floors — mirrors mineDepth/mineBest
+    wardChapter:0,                         // v4.3 the Warden's Ledger: how many Act III chapters closed (index of the OPEN one)
+    wardBundle:{},                         // v4.3 materials deposited toward the CURRENT chapter's bundle {item:qty} — reset when a chapter closes
     resolve:100,                           // v4.0 the combat-only bar; full outside the Undercroft, drains only from contact there
     iFrame:0,                              // v4.0 post-hit invulnerability timer — MUST be a number before combat (undefined<=0 is false, which would silently disable all damage)
     wardBells:[],                          // v4.0 funded Warden's Bells (floor numbers 5/10/15) — permanent, like liftStops

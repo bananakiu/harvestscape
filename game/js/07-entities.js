@@ -130,7 +130,8 @@ const INTERACT_KINDS = new Set(["campfire","stove","counter","stall","shipbin","
   "milestone","shrine","mooring","samphirenode","hollynode",     // v3.36: the Coast Road's landmarks + forage
   "cairn","crater","shardnode","thymenode","snowdropnode",       // v3.43: Starfall Ridge
   "churn",                                                       // v3.44: Butterbrook
-  "wardup","wardbell","wardladderdown","knot"]);                 // v4.0: the Undercroft
+  "wardup","wardbell","wardladderdown","knot",                   // v4.0: the Undercroft
+  "wardledger"]);                                                // v4.3: the Warden's Ledger (Act III) — show the [E] prompt like Rowan's ledger
 function facingInteractable(fx, fy){
   const w = warpAt(fx,fy); if(w && !w.auto) return true;
   const crop = curMap.crops[key(fx,fy)];

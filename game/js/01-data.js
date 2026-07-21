@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.2.1", code: 89, codename: "Easy Does It", date: "2026-07-19" };
+const VERSION = { name: "4.3.0", code: 90, codename: "The Warden's Ledger", date: "2026-07-22" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.3.0", code:90, date:"2026-07-22", name:"The Warden's Ledger", notes:[
+    { t:"feature", s:"Act III begins in earnest. Find Elias's Warden's Ledger — a book by the tenth door in the Guild — and keep it as he once did. Each chapter asks for a bundle of materials AND a round walked in the Undercroft; gather and go deep at your own pace, set down what you carry whenever you pass (the ledger keeps the tally — you never lose a deposit), then close the page. Three chapters to start: Relighting the Rounds, The Old Rounds, and What the Thread Remembers." },
+    { t:"feature", s:"The wing heals where you can see it. Close a chapter and the Guild hall warms — a pair of lanterns catches along the back wall, one pair per chapter, the same felt beat as relighting the nine wings. And Maya finally comes down to paint the place she used to fear." },
+    { t:"note", s:"Nothing here can be lost. The bundles only ever take what you choose to set down; closing a chapter never asks for it twice; there is no failing a round, only one you haven't finished yet." },
+  ]},
   { v:"4.2.1", code:89, date:"2026-07-19", name:"Easy Does It", notes:[
     { t:"change", s:"Warding no longer costs energy. Your Resolve — and the health bars on what you're settling — already pace a fight; an energy tax on every swing just got in the way. Settle as long as your Resolve holds. (The Steady Ward mastery now gives back a little Resolve on each settle, instead of the old free-swing.)" },
     { t:"fix", s:"Watering the empty air no longer tires you out. The can used to spend energy even when there was nothing in reach to water — now a miss costs nothing, the same as swinging a hoe, axe or pick at empty ground." },
@@ -1657,6 +1662,7 @@ const EXAMINE_OBJ = {
   "wardbell": "A Warden's bell, green with age and silent. Fund it and it rings you home — or back down here.",
   "wardup": "Worn stone steps, climbing back toward the Guild and the light.",
   "wardladderdown": "The stair drops away into a deeper, quieter dark.",
+  "wardledger": "Elias's book of rounds. Each page is one thing the wing needs; close it, and the hall warms a little more.",   // v4.3
 };
 const EXAMINE_NPC = {
   "maya": "Always paints the valley greener than it is; lately it obliges.",

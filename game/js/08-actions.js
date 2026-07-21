@@ -270,7 +270,7 @@ const OBJ_TITLE  = { geode:"Geode", bed:"Bed", campfire:"Campfire", stove:"Stove
   churn:"The Butter Churn",
   deadfall:"Deadfall", westtrail:"The Trail West", easttrail:"The Trail Back", waystone:"Waystone", hearttree:"The Heart of the Forest",
   ancient:"Ancient Tree",
-  knot:"The Stair-Knot", wardbell:"The Warden's Bell", wardup:"Worn Steps", wardladderdown:"The Deeper Stair" };   // v4.0 Undercroft
+  knot:"The Stair-Knot", wardbell:"The Warden's Bell", wardup:"Worn Steps", wardladderdown:"The Deeper Stair", wardledger:"The Warden's Ledger" };   // v4.0 Undercroft; wardledger v4.3
 for(const k in DECOR) OBJ_TITLE[k] = DECOR[k].name;   // décor pieces (v3.13) examine under their proper name
 function npcAtTile(tx,ty){ if(!curMap||!curMap.npcs) return null;
   for(const n of curMap.npcs){ if(Math.floor(n.x/TILE)===tx && Math.floor(n.y/TILE)===ty) return n; } return null; }
@@ -642,6 +642,9 @@ function interact(){
       case "sign": showDialog("Weathered Sign", obj.text || "…", "port_sign"); return;
       case "noticeboard": tutTip("tip_board","Someone in the valley wants something small each day. Bring it for coin and goodwill — never required."); showDialog("The Noticeboard", boardText(), "port_sign"); return;
       case "ledger": openProjects(); return;
+      case "wardledger":   // v4.3 the Warden's Ledger — Act III. Latched shut until the tenth door gives.
+        if(!state.flags.tenthDoorOpen){ showDialog("The Warden's Ledger", "A heavy book, still latched, that no one will explain. It smells of cold stone and old lantern-oil. Not yet — not until the tenth door gives.", "port_sign"); return; }
+        openWardLedger(); return;
       case "fountain": tossCoin(); return;
       case "boardwalk": travelTo("beach", 30*TILE+8, 3*TILE, "down"); return;
       case "railcart": {

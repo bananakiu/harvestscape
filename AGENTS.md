@@ -135,10 +135,14 @@ Treat the changelog as non-optional deliverable output, the same as the code its
   creature family at every rung of the ladder (1/10/20/30/45/70/85 — wisp/shambler/embermite/Hollow
   Warden/Gloam Tangle/Deep Knot/Star-Gnarl), the first Great Knot boss every 10th floor, the game's
   first ranged enemy + projectile system, deep loot + charms up to the +15 Starward + bells to 45.
-  Still remaining: v4.1's *story* half ("The Warden's Ledger" — Act III chapters 1–3, the Ledger UI,
-  mastery trials at 50), the dedicated deep venues (Gloam Grove ring, Sunken Workings — spatial-variety
-  now, since their creature ladder shipped in the Undercroft), and the v4.4 finale. Read it (and its
-  §6 owner decisions) before building anything Act-III-shaped.
+  **v4.3.0 "The Warden's Ledger" SHIPPED** — Act III's story spine at last: the Warden's Ledger chapter
+  engine (a book by the tenth door; `state.wardChapter`/`wardBundle`, deliberately independent of the
+  fragile `questIdx` chain), Act III chapters 1–3 (cross-skill bundles deposited partially on the
+  Pledge-Ledger pattern + Undercroft expedition beats), the close-flow with the Guild warming a lantern
+  pair per chapter, and Maya's descent. Still remaining: **mastery trials at 50** (all six skills —
+  deferred, wants its own release), the dedicated deep venues (Gloam Grove ring, Sunken Workings —
+  spatial-variety now, since their creature ladder shipped in the Undercroft), and the v4.4 finale.
+  Read it (and its §6 owner decisions) before building anything Act-III-shaped.
 - `V4_BUILD_PLAN.md` — **the implementation work orders for v4**, written to be executed
   cold by any coding agent: locked decisions, verified engine anchors (symbol names, data
   shapes, integration points), and per-release specs with schemas, starting balance

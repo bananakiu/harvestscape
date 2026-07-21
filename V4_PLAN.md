@@ -154,16 +154,21 @@ story never ships ahead of the systems it asks for.
 > **Owner-directed reprioritization (2026-07-19):** the owner asked to "build out the rest of the
 > **warding skill**" ahead of the Act III story. So v4.1 was **split**: the *combat* half shipped
 > first as **v4.1.0 "The Great Knot"** (Undercroft floors 16–30, families 4–5, the first Great Knot
-> boss, deep loot + top charms + deeper bells). The *story* half of v4.1 — Act III chapters 1–3, the
-> Warden's Ledger UI, and mastery trials at 50 — **remains unbuilt** and folds into a later release
-> (working name "The Warden's Ledger"). See `CHANGELOG.md` (2026-07-19, v4.1.0).
+> boss, deep loot + top charms + deeper bells). The *story* half of v4.1 — Act III chapters 1–3 + the
+> Warden's Ledger UI — then **SHIPPED as v4.3.0 "The Warden's Ledger"** (2026-07-22): the chapter engine
+> (`state.wardChapter`/`wardBundle`, deliberately independent of the `questIdx` chain), the ledger book
+> by the tenth door, cross-skill bundles + expedition beats, the close-flow with the Guild warming
+> visibly per chapter, and Maya coming down to the wing. **Still remaining from v4.1's story half:
+> mastery trials at 50 (all six skills)** — deferred again (they touch every skill's progression and
+> want their own release). See `CHANGELOG.md` (2026-07-22, v4.3.0).
 
 | Release | Contents |
 |---|---|
 | **v4.0 "The Tenth Door"** | Warding skill + Resolve + knockout; the Undercroft (floors 1–15, 3 creature families); warden's tool tiers 1–3; first loot materials + sinks; door-opening intro quest. The variety spark ships here (small, sets the tone early). |
 | **v4.1.0 "The Great Knot"** (SHIPPED) | The Warding *combat* deepening: Undercroft floors 16–30; families 4–5 (Hollow Warden, Gloam Tangle); the first Great Knot boss; deep drops (Warden's Ash, Snarlthread, Heartknot); top charms (Wardstone, Settler's Band); bells 20/25/30. |
 | **v4.2.0 "Deeper Still"** (SHIPPED) | Completes the Warding creature ladder (a family at every rung 1/10/20/30/45/70/85): Undercroft floors 31–45; families 6–7 (Deep Knot L70 charger, Star-Gnarl L85 — the game's first **ranged** enemy + a projectile system); deepest drops (Deepgnarl, Gloamstar); the capstone Starward Charm (+15 Resolve); bells 35/40/45. **Note:** the deep families shipped in the *extended Undercroft*, not in the dedicated deep venues below — those (the Gloam Grove ring, the Sunken Workings) remain as spatial-variety venues, folded into later releases. |
-| **"The Warden's Ledger"** (remaining v4.1 story) | Act III chapters 1–3 + the Ledger UI; mastery trials at 50 (all six skills). |
+| **v4.3.0 "The Warden's Ledger"** (SHIPPED) | Act III's story spine: the Warden's Ledger chapter engine (a book by the tenth door), Act III chapters 1–3 (*Relighting the Rounds* f5, *The Old Rounds* f10+Knot, *What the Thread Remembers* f15), cross-skill bundles deposited partially on the Pledge-Ledger pattern + expedition beats, the close-flow with the Guild warming a lantern pair per chapter, Maya's descent. **Independent of the `questIdx` chain** (self-contained `state.wardChapter`/`wardBundle`). |
+| **mastery trials at 50** (remaining v4.1 story) | The 50-gate trial per skill (all six), each set by the craft's caring NPC. Deferred from v4.3 — touches every skill's progression, wants its own release. |
 | **"The Gloam Grove" / "The Sunken Workings"** (remaining venues) | Dedicated deep Warding venues for spatial variety (Woodcutting × Warding; Mining × Warding), + chapters 4–7, the returned-Warden NPC, trials at 75. The *creature ladder* they'd have hosted already shipped in the Undercroft (v4.2.0); these become variety/story venues when built. |
 | **v4.3 "The Sunken Workings"** | Behind the deepest lift stop (Mining × Warding); chapters 6–7; trials at 75. |
 | **v4.4 "The Tenth Lantern"** | Chapter 8 finale + festival integration + epilogue; balance sweep of the whole arc; GBP appendix resync. |

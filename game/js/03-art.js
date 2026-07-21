@@ -425,6 +425,15 @@ function buildDecor(){
     px(g,4,5,8,8,"#efe6d0"); px(g,5,7,6,1,"#8a7a62"); px(g,5,9,6,1,"#8a7a62"); px(g,5,11,4,1,"#8a7a62");
     px(g,12,4,1,10,"#5e3c24"); px(g,6,3,4,1,"#c03a3a");
   });
+  // v4.3 the Warden's Ledger — a closed book on a small lectern, warden-blue with a lantern-gold clasp.
+  mkSpr("wardledger", 16, 16, g => {
+    px(g,4,13,8,2,"#3a2c22"); px(g,7,11,2,2,"#4a3728");          // little lectern stand
+    px(g,3,3,10,9,"#243a52"); px(g,3,3,10,1,"#33506e");          // cover (deep warden blue)
+    px(g,4,4,8,7,"#1a2c40");                                     // inner board
+    px(g,11,3,2,9,"#16222f");                                    // spine shadow
+    px(g,7,3,1,9,"#ffcf6a");                                     // gold clasp band down the face
+    px(g,6,6,4,3,"#bfe4ff"); px(g,7,7,2,1,"#eaf6ff");            // a warden's-bell mark, glowing
+  });
 
   // ---- the orchard ----
   // three stages per tree: a switch in the ground, a young crown, and a bearing tree

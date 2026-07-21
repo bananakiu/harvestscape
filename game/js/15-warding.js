@@ -315,6 +315,7 @@ function settleCreature(cr){
   if(hasMastery("Warding",25)) state.resolve = Math.min(resolveMax(), (state.resolve||0) + 8);   // ★ Steady Ward — a settle steadies you
   if(d.xp) addXP("Warding", d.xp); bump("warded");
   if(d.boss){
+    state.flags.firstKnotSettled = true;   // v4.3 an Act III expedition beat (the Warden's Ledger, ch.2)
     // the Great Knot guarded the stair — settling it drops the ladder at the spot it rooted on
     curMap.objects[key(Math.floor(cr.rx/TILE), Math.floor(cr.ry/TILE))] = { kind:"wardladderdown" };
     cam.shake = 4; playSfx("bellRing"); pSparkle(cr.rx, cr.ry-4, "#ffd88a", 24);
@@ -501,3 +502,96 @@ function buySalvage(){
     npc:"elias", flag:"tenthDoorOpen", ack:"ack_elias_warden",
     line:"Still going down there, are you? Good. It's less lonely, the tending, when somebody minds it. …Mind the bells. That's all I ask." });
 })();
+
+// ============================================================================
+// THE WARDEN'S LEDGER (v4.3 "The Warden's Ledger") — Act III, chaptered.
+// ----------------------------------------------------------------------------
+// The story spine the combat now hangs off of. Act III is NOT modelled as QUESTS
+// entries (the linear questIdx chain is fragile to touch and its report-in machinery
+// wants a fixed guild NPC) — instead it's a self-contained progression driven entirely
+// by Elias's ledger, a book by the tenth door. Each chapter asks for a cross-skill
+// BUNDLE (deposited partially, from anywhere, on the Pledge-Ledger pattern — the ledger
+// remembers the tally, never the player) plus one EXPEDITION beat (walk the round: reach
+// a floor / settle a Knot). When both are met you CLOSE the chapter at the book: a short
+// scene plays, the Guild visibly warms (a lantern pair lights along the back wall — the
+// hall waking, mirroring the nine-wings theme), and the next page opens. Nothing is ever
+// taken beyond the bundle you chose to set down; there is no failure, only unfinished.
+//
+// Data + pure helpers live here (loads before 10-ui/14-story); the panel, deposit and
+// close-flow (which need startCutscene/openLetter/toast) live in 10-ui.js and call these
+// at runtime. Bundles are GBP-honest: every material a chapter asks for is gatherable at
+// or above the floor its own expedition names (Gloam Thread f1+, Knotwood f5+, Warden's
+// Ash from the f10 Knot / hollowwardens f15+, Ember Grit f10+).
+// ============================================================================
+const WARD_LEDGER_INTRO =
+  "Tucked inside the front cover, in a warden's small, careful hand:\n\n" +
+  "“If you're reading this, the boards are down and the tending's yours. This book was never rules — it's rounds. Each page is one thing the wing needs done, and a blank line to write that you did it.\n\n" +
+  "Gather what a page asks. Walk the round it names. Then come back and close the page, and feel the hall take one more breath of warm air. That is the whole of the craft. It was never anything grander, and it was never anything less.\n\n" +
+  "Go gently. Mind the bells. Come up for supper. — E.”";
+
+const WARD_CHAPTERS = [
+  { id:"ch1", title:"Relighting the Rounds", world:"wardLit1",
+    blurb:"The round-lanterns died the day the last warden stopped walking them. Frame new ones, carry light down to the first floor, and the wing stops being a hole in the ground and starts being a room again.",
+    bundle:{ "Wood":24, "Iron Ore":6, "Gloam Thread":6 },
+    expedition:{ depth:5, text:"Walk the first round — reach Undercroft floor 5" },
+    reward:{ gold:400 },
+    done:"The first floor is warm. The wing has a tended room again.",
+    scene:(ensure)=>[
+      { type:"run", fn:()=>{ ensure("elias", 13, 3, "down"); } },
+      { type:"wait", t:0.4 },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"You framed them yourself. Good hands. The old warden used to say a dark round isn't a round at all — it's just falling down stairs with extra steps." },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"Go down now and you'll find the first floor warm. Eleven years it was a throat of cold air. Tonight it's a room again — a tended one." },
+      { type:"say", who:"You", portrait:"port_player", text:"It felt less lonely down there. Once the lanterns caught." },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"That's the whole of the craft, and you found it on the first page. Keep the ledger. Write what you mend. A place remembers being minded — you'll feel it start to lean toward you." },
+    ] },
+
+  { id:"ch2", title:"The Old Rounds", world:"wardLit2",
+    blurb:"Elias walked a deeper circuit once every seventh day for thirty years — down to where the wing knots hardest, and back by supper. Walk it yourself: reach the tenth floor and steady the Great Knot the way he taught, and prove the round can still be kept.",
+    bundle:{ "Knotwood":20, "Warden's Ash":4, "Iron Ore":10 },
+    expedition:{ depth:10, knot:true, text:"Keep the old round — reach floor 10 and settle a Great Knot" },
+    reward:{ gold:800 },
+    done:"The old round is walked again — deep floor to warm door.",
+    scene:(ensure)=>[
+      { type:"run", fn:()=>{ ensure("elias", 13, 3, "down"); } },
+      { type:"wait", t:0.4 },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"Floor ten, and you steadied the Knot that sat on its stair. …I walked that round every seventh day for thirty years, and I still felt it in my teeth every single time." },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"A Great Knot isn't a beast, whatever it looks like. It's grief that got left alone so long it grew a shape. You didn't kill it. You sat with it until it could let go. That's the difference, and you kept it." },
+      { type:"say", who:"You", portrait:"port_player", text:"…Whose grief was it?" },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"The Guild's. Mine. Everyone who walked out and told themselves the wing would keep itself. It won't. That's why there's a warden. That's why, now, there's you." },
+    ] },
+
+  { id:"ch3", title:"What the Thread Remembers", world:"wardLit3",
+    blurb:"The wing is quiet enough now that Maya asked to come down and paint it. Bring what the deeper floors give up, hang the last of the lanterns, and let someone who isn't a warden stand in it — that is how a place stops being a wound.",
+    bundle:{ "Gloam Thread":12, "Ember Grit":10, "Warden's Ash":8 },
+    expedition:{ depth:15, text:"Carry the round deep — reach Undercroft floor 15" },
+    reward:{ gold:1200 },
+    done:"Lantern to lantern, door to deep stair — the wing is warm the whole way down.",
+    scene:(ensure)=>[
+      { type:"run", fn:()=>{ ensure("elias", 13, 3, "down"); ensure("maya", 11, 4, "up"); } },
+      { type:"wait", t:0.4 },
+      { type:"say", who:"Maya", portrait:"port_maya", text:"So THIS is where you keep vanishing to. Elias finally let me down the stair — I brought a lamp, my paints, and every intention of being frightened." },
+      { type:"say", who:"Maya", portrait:"port_maya", text:"And it's… quiet. Warm, even, in the strangest way. It doesn't feel like a place things go wrong in. It feels like a place someone comes back to." },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"That's the sign we were never taught to watch for. When someone who isn't a warden asks to see it. When the wing stops being a wound and turns into a room with a view worth painting." },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"You carried it that far in three rounds. …The old warden took ten years. Don't tell him I said so — he's me, and I'm insufferable about it." },
+      { type:"say", who:"Maya", portrait:"port_maya", text:"I'm painting the two of you exactly like this. Warden and warden, bickering in lantern-light. Hold still." },
+    ] },
+];
+
+// ---- pure helpers (called at runtime by the 10-ui panel/deposit/close flow) ----
+function wardChapterDef(){ return WARD_CHAPTERS[state.wardChapter||0] || null; }
+function wardBundleRemaining(){
+  const def = wardChapterDef(); if(!def) return {};
+  const paid = state.wardBundle||{}, rem = {};
+  for(const it in def.bundle){ const r = def.bundle[it] - (paid[it]||0); if(r > 0) rem[it] = r; }
+  return rem;
+}
+function wardBundleFunded(){ return Object.keys(wardBundleRemaining()).length === 0; }
+function wardExpeditionDone(def){
+  def = def || wardChapterDef(); if(!def) return false;
+  const e = def.expedition || {};
+  if((state.wardBest||0) < (e.depth||0)) return false;
+  if(e.knot && !state.flags.firstKnotSettled) return false;
+  return true;
+}
+function wardChapterReady(def){ def = def || wardChapterDef(); return !!def && wardBundleFunded() && wardExpeditionDone(def); }
+function wardChaptersAllDone(){ return (state.wardChapter||0) >= WARD_CHAPTERS.length; }

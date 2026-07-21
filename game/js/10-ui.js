@@ -558,6 +558,7 @@ function journalQuestsHtml(){
     html += `</div>`;
   });
   if(state.questIdx >= QUESTS.length) html += `<div style="text-align:center;color:var(--gold-hi);">✦ Every task complete. The valley is yours. ✦</div>`;
+  if(state.flags.tenthDoorOpen && typeof renderWardLedgerJournal === "function") html += renderWardLedgerJournal();   // v4.3 Act III mirror
   html += renderPages();
   return html;
 }
@@ -1231,6 +1232,116 @@ function renderRestorations(){
     if(pledgeDone(id)){ h += `<div class="obj done">✔ ${cap(pledgeName(id))} — restored</div>`; continue; }
     h += pledgeRowHtml(id);
   }
+  h += `</div>`;
+  return h;
+}
+
+// ---- The Warden's Ledger (v4.3): Act III's hub, the book by the tenth door ----
+// The deposit flow mirrors the Pledge Ledger (partial funding, the tally lives in the book);
+// the close flow plays the chapter's scene, warms the Guild, and turns the page. Data + the
+// pure state helpers (wardChapterDef/wardBundleRemaining/…) live in 15-warding.js.
+function openWardLedger(){
+  // First read is a discovery: Elias's note in the front cover, then the panel.
+  if(!state.flags.wardLedgerSeen){
+    state.flags.wardLedgerSeen = true; saveGame();
+    openLetter("❖ The Warden's Ledger", WARD_LEDGER_INTRO, () => openPanel("wardLedgerPanel", renderWardLedger));
+    return;
+  }
+  openPanel("wardLedgerPanel", renderWardLedger);
+}
+function renderWardLedger(){
+  const b = $("wardLedgerPanel").querySelector(".body");
+  if(wardChaptersAllDone()){
+    b.innerHTML = `<div class="desc" style="margin-bottom:.5em;">Every page you set out to keep is kept. The wing is warm from the tenth door to the deep stair — tended, and staying tended, because you come back to it.</div>` +
+      WARD_CHAPTERS.map(c => `<div class="obj done">✔ ${c.title}</div>`).join("");
+    return;
+  }
+  const def = wardChapterDef(), idx = state.wardChapter||0;
+  let h = `<div class="desc" style="margin-bottom:.4em;color:var(--ink-soft);">Elias's book, kept in your hand now.  ·  Chapter ${idx+1} of ${WARD_CHAPTERS.length}</div>`;
+  h += `<div class="jq"><h3 style="color:#bfe4ff">❖ ${def.title}</h3><div class="desc">“${def.blurb}”</div>`;
+  // the bundle — deposit what you carry, a portion or all (the ledger keeps the remainder)
+  if(wardBundleFunded()){
+    h += `<div class="obj done">✔ The bundle is gathered — every material set down.</div>`;
+  } else {
+    for(const it in def.bundle){
+      const need = def.bundle[it], paid = (state.wardBundle||{})[it]||0, have = state.inv[it]||0, got = paid >= need;
+      h += `<div class="obj ${got?"done":""}">${got?"✔":"•"} ${it} ${Math.min(paid,need)}/${need}` +
+           (got ? "" : ` <span class="sub">(carrying ${have})</span>`) + `</div>`;
+    }
+    const canAny = Object.keys(wardBundleRemaining()).some(it => (state.inv[it]||0) > 0);
+    h += `<div class="row"><span class="lead"><span class="sub">Set down what you carry — the ledger keeps the tally.</span></span>` +
+      `<span><button ${canAny?"":"disabled"} onclick="contributeChapter(0.5)">half</button> ` +
+      `<button class="buy" ${canAny?"":"disabled"} onclick="contributeChapter(1)">all</button></span></div>`;
+  }
+  // the expedition beat
+  const expDone = wardExpeditionDone(def);
+  h += `<div class="obj ${expDone?"done":""}">${expDone?"✔":"•"} ${def.expedition.text}</div></div>`;
+  // close the chapter, once both are met
+  if(wardChapterReady(def)){
+    h += `<div class="row"><span class="lead"><span style="color:var(--gold-hi)">The round is walked and the bundle set down.</span></span>` +
+      `<span><button class="buy" onclick="closeWardChapter()">Close the page</button></span></div>`;
+  } else {
+    h += `<div class="desc" style="color:var(--ink-soft);margin-top:.3em;">Gather the bundle and walk the round — then come back and close the page here.</div>`;
+  }
+  b.innerHTML = h;
+}
+// Deposit toward the current chapter's bundle. frac 0.5 = half of each material's TOTAL this click,
+// 1 = everything you carry that's still owed. Materials are TAKEN now and remembered in state.wardBundle
+// (never lost — closing the chapter doesn't ask for them again; they're already in the book).
+function contributeChapter(frac){
+  const def = wardChapterDef(); if(!def || wardBundleFunded()) return;
+  frac = frac || 1;
+  const chunk = v => frac >= 1 ? Infinity : Math.max(1, Math.ceil(v * frac));
+  const rem = wardBundleRemaining();
+  if(!state.wardBundle) state.wardBundle = {};
+  const gave = [];
+  for(const it in rem){
+    const d = Math.min(state.inv[it]||0, rem[it], chunk(def.bundle[it]||rem[it]));
+    if(d > 0 && take(it, d)){ state.wardBundle[it] = (state.wardBundle[it]||0) + d; gave.push(d + "× " + it); }
+  }
+  if(!gave.length){ toast("Nothing on you the ledger still needs.", "#c98a6a"); playSfx("error"); return; }
+  const r2 = wardBundleRemaining(), owed = [];
+  for(const it in r2) owed.push(r2[it] + "× " + it);
+  if(!owed.length) toast("Set down " + gave.join(", ") + ".  The bundle's complete.", "#8fe8c8");
+  else toast("Set down " + gave.join(", ") + ".  Still wanted: " + owed.join(", "), "#8fe8c8");
+  playSfx("coin");
+  saveGame(); refreshHUD();
+  if(openPanels.has("wardLedgerPanel")) renderWardLedger();
+}
+// Close the current chapter: the Guild warms (a lantern pair lights, live), the scene plays,
+// then the reward lands and the page turns. Guarded so it can only fire when genuinely ready.
+function closeWardChapter(){
+  const def = wardChapterDef(); if(!def || !wardChapterReady(def)) return;
+  closeAllPanels(true);
+  const ensure = (id, x, y, face) => { let n = curMap.npcs.find(v => v.id === id);
+    if(!n){ n = mkNpc(id, x*TILE, y*TILE, {face}); curMap.npcs.push(n); } return n; };
+  const steps = [
+    { type:"run", fn:()=>{
+        if(def.world){ state.flags[def.world] = true; if(typeof wardWorldProps === "function") wardWorldProps(curMap); }
+        pSparkle(state.px, state.py-12, "#ffd88a", 18); playSfx("upgrade"); } },
+    ...def.scene(ensure),
+    { type:"banner", big:"❖ " + def.title, small:def.done || "A page closes in the Warden's Ledger.", t:3.0 },
+  ];
+  startCutscene(steps, () => {
+    const r = def.reward || {};
+    if(r.gold){ state.gold += r.gold; floatText(state.px, state.py-24, "+" + r.gold + "g", "#ffce5a"); }
+    if(r.items) for(const it in r.items) give(it, r.items[it], true);
+    state.wardChapter = (state.wardChapter||0) + 1;
+    state.wardBundle = {};
+    playSfx("quest"); saveGame(); refreshHUD();
+    if(wardChaptersAllDone()) setTimeout(() => banner("❖ The Warden's Ledger", "Every page kept. The wing is warm the whole way down — and it will stay so, because you tend it."), 1200);
+  });
+}
+// The Journal's read-only mirror of the ledger — so Act III's arc is visible in J, like the quests.
+function renderWardLedgerJournal(){
+  const n = Math.min(state.wardChapter||0, WARD_CHAPTERS.length);
+  let h = `<div class="jq"><h3 style="color:#bfe4ff">❖ The Warden's Ledger <span style="color:var(--ink-soft);font-size:.8em;">— Act III · kept for Elias</span></h3>`;
+  h += `<div class="desc" style="margin-bottom:.3em;">The book by the tenth door. ${n}/${WARD_CHAPTERS.length} pages closed — the Guild warms with each one.</div>`;
+  WARD_CHAPTERS.forEach((c, i) => {
+    const done = (state.wardChapter||0) > i, active = (state.wardChapter||0) === i;
+    if(!done && !active) return;   // pages you haven't reached stay unwritten
+    h += `<div class="obj ${done?"done":""}">${done?"✔":"✒"} ${c.title}</div>`;
+  });
   h += `</div>`;
   return h;
 }

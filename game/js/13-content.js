@@ -89,6 +89,7 @@ function genGuild(m){
   // The planked-shut door at the far end of the back wall — the first thing that makes you ask
   // what actually happened here. Rowan won't discuss it. (It pays off in Act II.)
   put(m, 15, 1, "olddoor");
+  put(m, 14, 1, "wardledger");            // v4.3 Elias's Warden's Ledger — Act III, beside the tenth door
   // Rowan's desk area
   put(m,7,3,"desk"); put(m,8,3,"desk"); put(m,6,3,"bookshelf"); put(m,10,3,"bookshelf");
   put(m,9,3,"ledger");                    // the valley's unfinished work, in Rowan's hand
@@ -97,7 +98,19 @@ function genGuild(m){
   for(let y=5;y<=7;y++) for(let x=6;x<=10;x++) m.tiles[y*W+x]=T.CARPET;
   put(m,4,7,"crate"); put(m,12,7,"barrel");
   put(m,1,7,"sign",{text:"Nine crafts. Nine wings. Tend them all, and the valley wakes."});
+  wardWorldProps(m);                          // v4.3 the Guild warms as Warden's Ledger chapters close
   exitAt(m,8,"village",20*TILE+8,7*TILE+8);   // just below the Guild door, on its path
+}
+// v4.3 the visible reward of the Warden's Ledger: each closed chapter lights a lantern pair along the
+// Guild's back wall — the hall waking, the same felt beat as the nine wings. Also called live (with
+// curMap) from closeWardChapter so the light catches during the closing scene, not just on next entry.
+// Placed on the furniture row (y=3), where objects already sit and never block the player's path.
+function wardWorldProps(m){
+  if(!m || m.id !== "guild" || !state.flags) return;
+  const lamp = (x,y) => { if(!m.objects[key(x,y)]) m.objects[key(x,y)] = { kind:"lantern" }; };
+  if(state.flags.wardLit1){ lamp(5,3);  lamp(11,3); }
+  if(state.flags.wardLit2){ lamp(4,3);  lamp(12,3); }
+  if(state.flags.wardLit3){ lamp(3,3);  lamp(13,3); }
 }
 
 // ---------------- the mine (procedural floors) ----------------

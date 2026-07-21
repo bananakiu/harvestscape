@@ -22,6 +22,63 @@
 
 ---
 
+## 2026-07-22 — v4.3.0 "The Warden's Ledger" (code 90, tag `v4.3.0`) — Act III begins: the story spine
+
+### Why this release
+
+Version 4 shipped its *combat* first (v4.0–v4.2 — Warding, the Undercroft floors 1–45, seven creature
+families, the Great Knot). That was deliberate (owner directed the combat deepening ahead of the story),
+but it left the pillar the whole version is named for — **"the story is the spine; skills level as a
+byproduct along the way"** — unbuilt. The Undercroft was a place to grind with no reason to. This
+release gives it the reason: **Act III, told through the Warden's Ledger.**
+
+### Added — the Warden's Ledger (Act III, chaptered)
+
+Elias's old book of rounds, now kept by the player. It sits by the tenth door in the Guild (`wardledger`
+object, `genGuild`) and drives a **self-contained chapter progression** — deliberately NOT modelled as
+`QUESTS` entries. Two reasons: (1) the `questIdx` chain is a raw index, fragile to touch, and its
+report-in machinery wants a fixed guild NPC the Undercroft story doesn't have; (2) an independent
+`state.wardChapter` / `state.wardBundle` pair is trivially save-migratable (backfilled by `migrateSave`'s
+generic loop, zero new migration code) and can't corrupt the main quest line. Data + pure helpers live in
+`15-warding.js` (`WARD_CHAPTERS`, `wardChapterDef`/`wardBundleRemaining`/`wardExpeditionDone`/
+`wardChapterReady`/…); the panel, deposit and close-flow in `10-ui.js`.
+
+Each chapter asks two things at once — a cross-skill **bundle** (deposited *partially, from anywhere*, on
+the proven Pledge-Ledger pattern: materials are `take()`n on deposit and remembered in `state.wardBundle`,
+the ledger keeps the remainder, the player never re-carries a completed portion) **and an expedition
+beat** (reach a floor / settle a Great Knot — `state.flags.firstKnotSettled`, now set in `settleCreature`).
+When both are met, **Close the page** at the book: a short scene plays and the next page opens. The three
+opening chapters — *Relighting the Rounds* (f5), *The Old Rounds* (f10 + a Knot), *What the Thread
+Remembers* (f15) — are GBP-honest: every material a chapter asks for is gatherable at or above the floor
+its own expedition names.
+
+### Added — the wing heals where you can see it
+
+The point of a story spine is that progress is *felt*, not read in a panel. Closing a chapter warms the
+Guild: a lantern pair lights along the back wall (`wardWorldProps`, reading `state.flags.wardLit1/2/3`),
+one pair per chapter — the same emotional beat as relighting the nine wings, and applied *live* to
+`curMap` during the closing scene so the light catches while Elias speaks, not on the next entry. The
+lanterns sit on the furniture row (y=3), where objects already block and the player never needs to stand.
+Chapter 3 brings Maya down to paint the wing she used to fear — the register's "a place stops being a
+wound when someone who isn't a warden wants to stand in it."
+
+### Design — the cozy contract, kept
+
+Nothing here can be lost. Bundles only ever take what the player chooses to set down (`contributeChapter`
+caps every take at what's *owed* and what's *held*); `closeWardChapter` is guarded by `wardChapterReady`
+and consumes nothing further (the materials are already in the book); there is no failure state, only a
+round not yet finished. A save that dies mid-closing-scene reloads consistent (the deposit persisted, the
+chapter simply hasn't advanced — re-close it).
+
+### Verified
+
+Programmatic in-browser: bundle deposits take *exactly* what's owed (leftovers kept), the expedition gate
+honours both depth and the Knot, closing sets the world flag + places the lanterns + pays the reward +
+advances + resets the bundle; chapter-2 gating requires both floor 10 and a settled Knot; the panel
+renders the tally with carry-counts; the ledger sprite and both lit lantern pairs render in the Guild;
+console clean. Adversarial multi-agent review (cozy-contract / save-migration / deposit-math /
+integration) before ship.
+
 ## 2026-07-19 — v4.2.1 "Easy Does It" (code 89, tag `v4.2.1`) — energy fixes (owner report)
 
 ### Changed — Warding costs no energy
