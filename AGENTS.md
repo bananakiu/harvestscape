@@ -149,10 +149,16 @@ Treat the changelog as non-optional deliverable output, the same as the code its
   wing he sealed / the last warden Orla's name / the deepest knot) + the finale (ch8 "The Tenth Lantern"
   — the tenth craft lit and counted, Rowan lights the tenth door, the Guild hall blazes, `tenthWingLit`
   glows the olddoor for good). Pure data into the v4.3 chapter engine; GBP-honest deep bundles.
+  **v4.6.0 "The Kept Chair" SHIPPED** — deepened Elias (the Act III centerpiece): a 4-scene HEART_EVENTS
+  arc (koi / Aldous's unopened letter / a rehearsed apology to Maya / peace + a Pearl; the wing-referencing
+  5♥+6♥ beats gate on `tenthDoorOpen` via a new per-event `req` predicate in `heartEventFor`) + Undercroft
+  small-talk (6 NPC_RECOG lines so the cast reacts to Warding) + birthdays for Elias (Fall 26) & Nell
+  (Summer 24). Pure data; caught in test that `heartsOf` caps at 6 (an early `hearts:8` event was
+  unreachable → retiered 2/4/5/6).
   Still remaining: **mastery trials at 50** (all six skills — the audit's #2 pick, but must be
   bank-and-release, never a level that regresses, + grandfather high-level saves), the dedicated deep
-  venues (Gloam Grove ring, Sunken Workings — spatial-variety), and misc backlog (Elias heart events +
-  birthday, Undercroft small-talk, seasonal crop gaps, a repeatable gold sink, cottage decoration).
+  venues (Gloam Grove ring, Sunken Workings — spatial-variety), and misc backlog (seasonal crop gaps, a
+  repeatable gold sink, cottage decoration, recipes for orphaned goods, Fishing/Cooking charms).
   Read `V4_PLAN.md` (and its §6 owner decisions) before building anything Act-III-shaped.
 - `V4_BUILD_PLAN.md` — **the implementation work orders for v4**, written to be executed
   cold by any coding agent: locked decisions, verified engine anchors (symbol names, data

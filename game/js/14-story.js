@@ -1159,11 +1159,45 @@ const HEART_EVENTS = {
       { type:"run", fn:()=>{ give("Shell",1); } },
     ]},
   ],
+  // v4.6 Elias, the last Warden — the man behind the Ledger. His HEART arc is the DOMESTIC story (the
+  // koi, Aldous's unopened letter, the eleven years, peace with Maya) that runs parallel to the Ledger's
+  // WARDEN story, and is order-safe with it: it never depends on which Act III chapter you've reached, and
+  // it introduces Orla (the warden before him, lost in the deep) gently, working whether or not the Ledger
+  // has already named her. He's reachable at the pond by day / the coast on his fourth days (act2Done).
+  elias: [
+    { hearts:2, flag:"he_elias_2", steps:[
+      { type:"say", who:"Elias", portrait:"port_elias", text:"Sit a moment, if you've one to spare. No — don't cast. Just watch the water. …There. See how the koi come up once it goes still? They won't rise for a man in a hurry. Never have." },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"Maya was five when I taught her that. Sit still enough and the valley shows you things. Then I spent eleven years too far off and too busy to take my own advice." },
+      { type:"say", who:"You", portrait:"port_player", text:"You're taking it now." },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"I'm taking it now. …It helps, having someone to be still beside. That's a smaller thing to give than you'd think, and a far harder one to find. Thank you for it." },
+    ]},
+    { hearts:4, flag:"he_elias_4", steps:[
+      { type:"say", who:"Elias", portrait:"port_elias", text:"I told you once your grandfather wrote to me. Eleven years ago. I never opened it — carried it every mile since, unread, like a stone I hadn't the right to set down." },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"…I opened it last night. I think because you would have. You open every shut door in this valley, sooner or later. Here. Read it. Aldous wouldn't mind — he never minded much, your grandfather." },
+      { type:"letter", head:"✒ Aldous's letter to Elias — eleven years late", text:"“Elias — I know why you went, and I'll not say one word against it. Grief walks a man where it walks him, and there's no arguing with its feet.\n\nBut the chair by the pond is still yours. The koi still rise of an evening. And one day my grandchild will have this farm and not a soul left to show them the valley's quiet ways.\n\nCome home when you can bear to. There's no clock on it — only a chair, and a friend keeping it warm. — A.”" },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"He kept the chair. All that time. …And you're the grandchild he meant — he was setting a place for you before you were old enough to know the word for it. Go on, now. I need a moment with the water." },
+    ]},
+    { hearts:5, flag:"he_elias_5", req:()=>!!state.flags.tenthDoorOpen, steps:[
+      { type:"say", who:"Elias", portrait:"port_elias", text:"May I say a thing aloud that I've not managed to say to Maya yet? It comes easier, rehearsing it on you first. If you'll allow an old man his rehearsal." },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"I left when she needed me, and I stayed gone eleven years, and no ferry-work forty miles north was ever worth one supper I missed. She forgave me before I'd earned a scrap of it. Children do that. It's the cruelest kind thing they do." },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"You gave me a way back that wasn't just walking through the door with my hat in my hands. A wing to tend. A reason to be of use. A table with my daughter at it. That's not a small thing you handed me. That's the whole of a life, given back." },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"…Right. That's the rehearsal done. Now I've only to say it to her. Wish me the courage — you've plenty to spare, and I find I'm short." },
+    ]},
+    { hearts:6, flag:"he_elias_6", req:()=>!!state.flags.tenthDoorOpen, steps:[
+      { type:"say", who:"Elias", portrait:"port_elias", text:"I said it to Maya. All of it. She cried, and then she laughed at me for needing eleven years and a stranger's example to manage four sentences. She gets that tongue from her mother." },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"There was a warden before me — Orla. She taught me the rounds. If you walk the wing deep enough you'll find her name kept in the stone; perhaps you already have. I'd rather you heard it from me than only from the dark: she was the best of us, the dark took her, and it was never her failing that it did." },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"You've done what she'd have wanted and I never could — kept the wing lit AND come up for supper every single night you went down. Here. For the koi you'll never quite catch. A warden ought to own one beautiful, useless thing." },
+      { type:"run", fn:()=>{ give("Pearl", 1, true); } },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"Now go home, warden. There's a valley out there with every one of its chairs filled at last — and one of them, these eleven years, was always being kept for you." },
+    ]},
+  ],
 };
 function heartEventFor(id){
   const evs = HEART_EVENTS[id]; if(!evs) return null;
   const h = heartsOf(id);
-  for(const ev of evs){ if(h >= ev.hearts && !state.flags[ev.flag]) return ev; }
+  // an event may carry a `req` predicate — a story precondition beyond the heart tier (v4.6: Elias's
+  // wing-referencing beats wait for the tenth door to be open, even if you gifted him to 5–6 hearts first).
+  for(const ev of evs){ if(h >= ev.hearts && !state.flags[ev.flag]){ if(ev.req && !ev.req()) continue; return ev; } }
   return null;
 }
 

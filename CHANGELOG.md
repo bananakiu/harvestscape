@@ -22,6 +22,54 @@
 
 ---
 
+## 2026-07-22 — v4.6.0 "The Kept Chair" (code 93, tag `v4.6.0`) — deepening Elias + the valley's voice on Warding
+
+### Why this release
+
+The flesh-out audit's #3 pick, and the natural companion to the just-completed Act III: **Elias is now
+the most load-bearing character in the game** — the last Warden, the author of the Ledger the whole spine
+hangs on, Maya's father — yet he had *zero heart events and no birthday*, and the entire v4 Warding layer
+drew exactly one line of village dialogue (Elias at the door). All of this is pure data into engines that
+already accept any NPC id (HEART_EVENTS, BIRTHDAYS, NPC_RECOG), so it's high value at low risk.
+
+### Added — Elias's heart-event arc (`14-story.js`)
+
+Four scenes, the *domestic* counterpart to the Ledger's *warden* story (they run parallel and never depend
+on which Act III chapter you've reached): **2♥** the koi and sitting still (the thing he taught Maya at
+five, then forgot for eleven years); **4♥** he finally opens **Aldous's letter** — eleven years unread —
+and lets you read it (a `letter` step; it pays off his standing NPC line about the letter he never opened,
+and reveals Aldous kept a chair by the pond for him *and* set a place for you before you were born); **5♥**
+he rehearses on you the apology he owes Maya; **6♥** he's said it, made his peace, tells you of **Orla**
+(the warden before him — order-safe with the Ledger's reveal) and presses a **Pearl** into your hand.
+
+Two mechanical points worth recording: (1) `heartsOf` caps at 6, so an early draft's `hearts:8` event was
+**unreachable** — caught in testing, the four events were redistributed to reachable tiers 2/4/5/6. (2) The
+two wing-referencing beats (5/6) presuppose you've taken up the wing, but a player can gift Elias to 5–6
+hearts *before* opening the tenth door — so `heartEventFor` gained an optional per-event `req` predicate and
+those two events now gate on `tenthDoorOpen` (the 2/4 domestic beats still fire regardless). Both were
+flagged and fixed pre-ship (the second by an adversarial canon/tone review).
+
+### Added — Undercroft small-talk + two birthdays
+
+Six `NPC_RECOG` entries (`13-content.js`) give the whole cast a voice on your Warding, the same "shipped ≠
+integrated" pass v3.34 did for ice-fishing and geodes — keyed off flags that already exist (`tenthDoorOpen`,
+`firstKnotSettled`, `state.wardBest`): Pip (wants to see the stave), Bram (warden-to-quiet-man respect), Tom
+(his line of work is safer, for the record), Maya (worry + pride, "keep it a joke"), Rowan (owns the door he
+sealed), Nell (word reaches the dairy). Plus `BIRTHDAYS` for **Elias** (Fall 26) and **Nell** (Summer 24),
+both clear of existing birthdays and festivals.
+
+### Design — canon kept
+
+A dedicated canon/tone review confirmed: Orla stays distinct from the *living* Nell (Tom's dairy wife);
+Maya's mother stays unnamed (as in canon); every Elias fact aligns (Marrow Point, the eleven years, the
+unopened letter, the koi); tone matches his measured, grief-touched voice. All additive — nothing taken.
+
+### Verified
+
+In-browser: all four Elias events fire in order at 6 hearts (2→4→5→6), the letter and Pearl both land with
+no error; without `tenthDoorOpen`, only 2 and 4 are offered and 5/6 correctly wait; all six small-talk recog
+gates are open; birthdays register on clear dates; console clean. Adversarial canon/tone review pre-ship.
+
 ## 2026-07-22 — v4.5.0 "The Tenth Lantern" (code 92, tag `v4.5.0`) — Act III completed: the story spine reaches the bottom
 
 ### Why this release

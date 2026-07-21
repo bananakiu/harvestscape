@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.5.0", code: 92, codename: "The Tenth Lantern", date: "2026-07-22" };
+const VERSION = { name: "4.6.0", code: 93, codename: "The Kept Chair", date: "2026-07-22" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.6.0", code:93, date:"2026-07-22", name:"The Kept Chair", notes:[
+    { t:"feature", s:"Elias has a heart to know now. Grow close to the last Warden — at the pond by day, the coast on his fourth days — and he opens up across four quiet scenes: teaching you to sit still enough for the koi to rise; finally opening the letter your grandfather sent him eleven years ago and never dared read; rehearsing on you the apology he owes his daughter; and, at the last, making his peace and pressing a pearl into your hand. Aldous kept a chair by the pond for him the whole time — and, it turns out, one for you." },
+    { t:"feature", s:"The valley talks about your Warding now. The whole cast finally has a word for the tenth door and the dark under the Guild — Pip wants to see the magic stick, Bram nods warden-to-quiet-man, Tom would like it on record that his line of work is safer, Maya worries and is proud in the same breath, Rowan owns what he sealed, and word even reaches Nell at the dairy. Two new birthdays, too: Elias (Fall 26) and Nell (Summer 24)." },
+  ]},
   { v:"4.5.0", code:92, date:"2026-07-22", name:"The Tenth Lantern", notes:[
     { t:"feature", s:"Act III is complete. The Warden's Ledger now runs all the way to the bottom of the wing — five new chapters and a finale. Walk past where Elias himself always turned back (floor 20); make the deep floors safe enough that Rowan comes down to the wing he sealed with his own hands; find the mark of Orla, the warden before Elias, on a floor that keeps her name; settle the oldest, deepest knot she went down for and never rose from (floor 40); then stand at the very bottom (floor 45) and come up to light the Tenth Lantern." },
     { t:"feature", s:"The Tenth Lantern — the finale. The Warden's wing is counted at last: the tenth of the ten crafts. Rowan lights the tenth door, eleven years late, with the whole valley watching; the cold planked door becomes a warm-lit wing for good, and the Guild hall blazes corner to corner. The story that began with a farmer's letter ends with a valley made truly whole." },
@@ -451,7 +455,9 @@ const BIRTHDAYS = {
   pip:   { season:"Spring", day:5  },
   maya:  { season:"Spring", day:19 },
   tom:   { season:"Summer", day:6  },
+  nell:  { season:"Summer", day:24 },   // v4.6 — the dairy keeper, Tom's wife (clear of the Luau d14)
   rowan: { season:"Fall",   day:3  },
+  elias: { season:"Fall",   day:26 },   // v4.6 — the last Warden; late fall, clear of the Harvest Fair d22
   bram:  { season:"Winter", day:11 },
 };
 
