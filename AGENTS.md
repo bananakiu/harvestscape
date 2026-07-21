@@ -139,10 +139,15 @@ Treat the changelog as non-optional deliverable output, the same as the code its
   engine (a book by the tenth door; `state.wardChapter`/`wardBundle`, deliberately independent of the
   fragile `questIdx` chain), Act III chapters 1–3 (cross-skill bundles deposited partially on the
   Pledge-Ledger pattern + Undercroft expedition beats), the close-flow with the Guild warming a lantern
-  pair per chapter, and Maya's descent. Still remaining: **mastery trials at 50** (all six skills —
-  deferred, wants its own release), the dedicated deep venues (Gloam Grove ring, Sunken Workings —
-  spatial-variety now, since their creature ladder shipped in the Undercroft), and the v4.4 finale.
-  Read it (and its §6 owner decisions) before building anything Act-III-shaped.
+  pair per chapter, and Maya's descent. **v4.4.0 "Hold the Line" SHIPPED** — the Warden's Guard, a
+  block/parry for Undercroft combat (owner report: the Hollow Warden could only be run from): a timed
+  guard (Shift / right-click in the Undercroft / touch 🛡) that parries a facing blow — perfect timing
+  negates all Resolve loss, staggers the attacker, and knocks a Hollow Warden's guarded front open for a
+  riposte; a late guard blocks ¾. Free, cooldown-gated, one-hit-per-press, no-ops outside the Undercroft.
+  Still remaining: **mastery trials at 50** (all six skills — deferred, wants its own release), the
+  dedicated deep venues (Gloam Grove ring, Sunken Workings — spatial-variety now, since their creature
+  ladder shipped in the Undercroft), and the finale. Read it (and its §6 owner decisions) before
+  building anything Act-III-shaped.
 - `V4_BUILD_PLAN.md` — **the implementation work orders for v4**, written to be executed
   cold by any coding agent: locked decisions, verified engine anchors (symbol names, data
   shapes, integration points), and per-release specs with schemas, starting balance

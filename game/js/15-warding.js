@@ -28,6 +28,36 @@ function resolveMax(){ return 100 + (charmActive("Warded Charm") ? 5 : 0) + (cha
 function resolveFloor(){ return hasMastery("Warding", 99) ? 10 : 0; }          // ★ Lanternheart — Resolve never falls below 10
 function inCombatMap(){ return !!(curMap && curMap.id === "undercroft"); }      // the only place Resolve matters
 
+// ---------------- The Warden's Guard (v4.4) ----------------
+// The counterplay that turns "run from the Hollow Warden" into "stand and settle it". A TAP raises
+// the Stave to brace for GUARD_WINDOW seconds; any restless thing's touch (or a bolt) coming from the
+// front is stopped. Timing is the skill: a hit caught in the first GUARD_PARRY of the window is a
+// PARRY — no Resolve lost, the attacker staggered, and a Warden's guarded front knocked OPEN for a
+// riposte; a later catch is a plain BLOCK (¾ absorbed). One press stops ONE strike, then a short
+// cooldown — no turtling. Costs nothing (energy-free like every Warding action; Resolve is only ever
+// saved, never spent, by guarding). Undercroft-only, gated at the input so it no-ops everywhere else.
+const GUARD_WINDOW = 0.55, GUARD_PARRY = 0.25, GUARD_CD = 0.35;
+function startGuard(){
+  if(typeof uiBlocking === "function" && uiBlocking()) return;   // v4.4: self-gate on menus/dialogue/cutscene — covers all input paths (Shift already checks this; right-click/touch didn't)
+  if(!inCombatMap() || !state.flags.staveEarned) return;   // a combat move, and only once you carry the Stave
+  if((state.guardT||0) > 0 || (state.guardCd||0) > 0) return;   // already braced, or still on cooldown
+  state.guardT = GUARD_WINDOW;
+  playSfx("guardBlock"); pSparkle(state.px, state.py-8, "#9fb0d0", 5);
+}
+// is the damage source within the braced front arc? (you must FACE what you block — no 360° turtle)
+function guardFacing(sx, sy){
+  const fv = state.face==="up" ? [0,-1] : state.face==="down" ? [0,1] : state.face==="left" ? [-1,0] : [1,0];
+  const dx = sx - state.px, dy = sy - state.py, dd = Math.hypot(dx,dy) || 1;
+  return (fv[0]*dx + fv[1]*dy)/dd > 0.1;   // front hemisphere, a touch lenient
+}
+function nearestCreature(x, y, maxD){
+  if(!curMap || !curMap.creatures) return null;
+  let best = null, bd = (maxD||24);
+  for(const cr of curMap.creatures){ if(!cr.alive) continue;
+    const d = Math.hypot(cr.x-x, cr.y-y); if(d < bd){ bd = d; best = cr; } }
+  return best;
+}
+
 // ---------------- The restless things — spawn, tick, draw ----------------
 // Melancholy nature-spirits, not animals or people. Every attack is TELEGRAPHED (a shimmer/creak,
 // CREATURES[kind].tele seconds ≥ 0.5) — the bible's cozy-combat rule; you always get to react. They
@@ -73,10 +103,14 @@ function wardWander(cr, d, dt){
 function updateCreatures(dt){
   if(!curMap || !curMap.creatures) return;   // no-op everywhere but the Undercroft
   if(state.iFrame > 0) state.iFrame = Math.max(0, state.iFrame - dt);
+  // v4.4 the Warden's Guard clock: the brace window counts down, then a short cooldown before you can raise it again.
+  if((state.guardT||0) > 0){ state.guardT = Math.max(0, state.guardT - dt); if(state.guardT === 0) state.guardCd = GUARD_CD; }
+  else if((state.guardCd||0) > 0) state.guardCd = Math.max(0, state.guardCd - dt);
   for(const cr of curMap.creatures){
     if(!cr.alive) continue;
     const d = CREATURES[cr.kind];
     cr.hurtT = Math.max(0, (cr.hurtT||0) - dt);
+    cr.guardOpen = Math.max(0, (cr.guardOpen||0) - dt);   // v4.4: a parried Hollow Warden's dropped-guard window
     cr.warm  = Math.max(0, (cr.warm||0) - dt*0.6);
     cr.hpBarT = Math.max(0, (cr.hpBarT||0) - dt);   // v4.0.3: health bar/nameplate linger after a hit
     cr.ringT = Math.max(0, (cr.ringT||0) - dt);
@@ -124,7 +158,12 @@ function updateCreatures(dt){
       if(moveCreature(cr, Math.cos(a)*d.speed*0.9*dt, Math.sin(a)*d.speed*0.9*dt)) cr.moving = true; }
     // idle → aggro when the player lingers within reach (the ranged one reaches much farther)
     const aggro = (d.ranged ? 5.5 : cr.kind==="shambler" ? 3.5 : cr.kind==="embermite" ? 2.6 : cr.kind==="hollowwarden" ? 3.2 : cr.kind==="deepknot" ? 3.8 : 3.0) * TILE;
-    if(dist < aggro){ cr.state = "telegraph"; cr.stateT = d.tele; }
+    if(dist < aggro){ cr.state = "telegraph"; cr.stateT = d.tele;
+      // v4.4: teach the Guard the first time a Hollow Warden (which blocks your front) winds up on you —
+      // it's the creature the mechanic answers. One-time, for every save (not npxGame-gated like tutTip).
+      if(cr.kind === "hollowwarden" && !state.flags.guardTipSeen){ state.flags.guardTipSeen = true;
+        toast("It guards the side it faces. Raise your Guard — Shift, right-click, or 🛡 — as it strikes: a well-timed parry breaks its stance so you can settle it.", "#bfe4ff"); playSfx("select"); }
+    }
     else wardWander(cr, d, dt);
   }
   if(curMap.creatures) updateWardBolts(dt);   // v4.2 the Star-Gnarl's projectiles (undercroft-only, like the creatures)
@@ -170,13 +209,13 @@ function updateGreatKnot(cr, d, dt, pdx, pdy, dist){
 // A hit drains Resolve like a touch (still free knockout); it fizzles on a wall or after a short life.
 function fireStarBolt(cr){
   const a = Math.atan2(state.py - cr.y, state.px - cr.x), sp = 60;   // slow enough to step out of
-  wardBolts.push({ x:cr.x, y:cr.y-4, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:0, max:2.4, dmg: CREATURES[cr.kind].dmg });
+  wardBolts.push({ x:cr.x, y:cr.y-4, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:0, max:2.4, dmg: CREATURES[cr.kind].dmg, src:cr });   // v4.4: carry the firer so a parried bolt staggers the Star-Gnarl, not whatever's nearest the player
   playSfx("staveHit"); pSparkle(cr.x, cr.y-4, "#c8b8ff", 6);
 }
 function updateWardBolts(dt){
   for(let i=wardBolts.length-1;i>=0;i--){ const b = wardBolts[i];
     b.life += dt; b.x += b.vx*dt; b.y += b.vy*dt;
-    if(Math.hypot(b.x-state.px, b.y-(state.py-4)) < 9 && !(state.iFrame > 0)){ drainResolve(b.dmg, b.x, b.y); wardBolts.splice(i,1); continue; }
+    if(Math.hypot(b.x-state.px, b.y-(state.py-4)) < 9 && !(state.iFrame > 0)){ drainResolve(b.dmg, b.x, b.y, b.src); wardBolts.splice(i,1); continue; }
     if(b.life >= b.max || !wardWalkable(b.x, b.y)){ pSparkle(b.x, b.y, "#c8b8ff", 5); wardBolts.splice(i,1); }
   }
 }
@@ -285,8 +324,9 @@ function hitCreature(cr, power, fx, fy){
     spawnTanglets(cr); floatText(cr.x, cr.y-14, "it splits!", d.col);
     return;
   }
-  // Hollow Warden — GUARDS the front it faces; a strike from where it's looking clangs off. Circle to its side/back.
-  if(d.block && frontalHit(cr)){
+  // Hollow Warden — GUARDS the front it faces; a strike from where it's looking clangs off. Circle to its
+  // side/back — OR parry its blow (v4.4) to knock its guard open (cr.guardOpen), then a frontal strike lands.
+  if(d.block && frontalHit(cr) && !(cr.guardOpen > 0)){
     cr.hpBarT = 2.6; cr.hurtT = 0.05; cam.shake = 1.0; playSfx("staveHit");
     spawnHitsplat(cr.x, cr.y-10, 0, "block"); floatText(cr.x, cr.y-16, "guarded", "#9fb0d0");
     return;
@@ -331,8 +371,35 @@ function settleCreature(cr){
 // The whole point of the amended contract: a knockout takes NOTHING. It fades you out, a beat of
 // story, and you wake at the Guild door with every item, coin and XP intact. The only cost is the
 // wasted run-depth — softened by the Warden's Bells you can ring back down to.
-function drainResolve(amt, srcX, srcY){
+function drainResolve(amt, srcX, srcY, attacker){
   if(state.iFrame > 0) return;
+  // v4.4 the Warden's Guard intercepts BEFORE any drain — every damage source (melee/slam/lunge/bolt)
+  // funnels through here, so one check covers them all. A braced, FACING guard stops the strike.
+  if((state.guardT||0) > 0 && guardFacing(srcX, srcY)){
+    const perfect = state.guardT > GUARD_WINDOW - GUARD_PARRY;   // caught in the opening beat = a parry
+    state.guardT = 0; state.guardCd = GUARD_CD; state.iFrame = 0.7;   // one press stops one strike
+    // melee sources pass the attacker's own center (nearestCreature returns it at dist 0); a bolt passes
+    // its impact point near the player, so prefer the explicit firer (attacker) when we have one still alive.
+    const cr = (attacker && attacker.alive) ? attacker : nearestCreature(srcX, srcY, 26);
+    if(perfect){
+      floatText(state.px, state.py-20, "⟡ Parry!", "#bfe4ff"); playSfx("guardParry");
+      pSparkle(state.px, state.py-8, "#eaf6ff", 16); cam.shake = 2; hitstop = 0.05;
+      if(cr && !CREATURES[cr.kind].boss){   // stagger + shove the attacker (bosses shrug off stuns, like a struck boss)
+        cr.state = "stunned"; cr.stateT = 1.5; cr.hpBarT = 2.2;
+        const a = Math.atan2(cr.y - state.py, cr.x - state.px);
+        const nx = cr.x + Math.cos(a)*12, ny = cr.y + Math.sin(a)*12;
+        if(wardWalkable(nx, cr.y)) cr.x = nx;
+        if(wardWalkable(cr.x, ny)) cr.y = ny;
+        if(CREATURES[cr.kind].block) cr.guardOpen = 1.8;   // ← the Hollow Warden's front is knocked OPEN: strike it now
+      }
+      addXP("Warding", 6);   // a parry is a skill beat — a small reward
+      return;                // parried: nothing lost
+    }
+    // a valid but late guard — most of the blow caught
+    floatText(state.px, state.py-20, "block", "#9fb0d0"); playSfx("guardBlock");
+    pSparkle(state.px, state.py-8, "#9fb0d0", 8);
+    amt = Math.max(1, Math.round(amt * 0.25));   // ¾ absorbed
+  }
   if(hasMastery("Warding",75)) amt = Math.round(amt * 0.7);   // ★ Unshaken — the dark's touch costs less
   const fl = resolveFloor(), before = state.resolve||0;
   state.resolve = Math.max(fl, before - amt);

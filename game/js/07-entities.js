@@ -161,6 +161,21 @@ function drawHeldTool(x, y, face){
   ctx.rotate((face==="left"?-1:1) * (0.6 - arc*0.9));
   ctx.drawImage(s, -8, -8); ctx.restore();
 }
+// v4.4 the Warden's Guard — a braced arc of light in the facing direction; bright during the parry beat,
+// softer as the window fades. Drawn over the player only while a guard is raised (Undercroft only).
+function drawGuard(x, y, face){
+  if(!(state.guardT > 0)) return;
+  const perfect = typeof GUARD_WINDOW !== "undefined" && state.guardT > GUARD_WINDOW - GUARD_PARRY;
+  const fv = face==="up" ? [0,-1] : face==="down" ? [0,1] : face==="left" ? [-1,0] : [1,0];
+  const a0 = Math.atan2(fv[1], fv[0]);
+  ctx.save();
+  ctx.globalAlpha = perfect ? 0.9 : 0.5;
+  ctx.strokeStyle = perfect ? "#eaf6ff" : "#9fb0d0";
+  ctx.lineWidth = perfect ? 2 : 1.4;
+  ctx.beginPath(); ctx.arc(Math.round(x), Math.round(y-9), 10, a0-0.95, a0+0.95); ctx.stroke();
+  if(perfect && chance(0.4)) pSparkle(x + fv[0]*10, y-9 + fv[1]*8, "#eaf6ff", 1);
+  ctx.restore();
+}
 
 // ---- the renderer ----
 // Windows are procedural: any upper-facade WALL tile (a WALL with another WALL below it) gets one
@@ -231,6 +246,7 @@ function renderWorld(){
       drawChar("player", state.px, state.py, state.face, p, bob); ctx.restore(); }
     else drawChar("player", state.px, state.py, state.face, p, bob);
     if(!state.mounted) drawHeldTool(state.px, state.py, state.face);   // no tool-swinging from the saddle
+    drawGuard(state.px, state.py, state.face);                          // v4.4: the raised Warden's Guard (self-gates on state.guardT)
   }});
   // v3.23: your horse waits by the stable when you're not riding it — render-only (drawn whenever the
   // stable stands, so it shows immediately for saves that built it in v3.22). Press H out here to ride.

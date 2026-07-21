@@ -297,6 +297,10 @@ const SFX = {
   settle(){ const t=T0(); [67,64,60,57].forEach((m,i)=>blip(midi(m),t+i*0.07,0.24,"sine",0.11,{rev:true})); },
   knockout(){ const t=T0(); note(midi(64),t,1.2,{type:"sine",gain:0.12,atk:0.03,rel:1.0,glide:midi(43),dest:SND.sfxGain,rev:true}); burst(t+0.1,0.5,{freq:180,sweep:60,ftype:"lowpass",q:0.6,gain:0.09}); },
   bellRing(){ const t=T0(); [72,79,84].forEach((m,i)=>blip(midi(m),t+i*0.12,0.7,"sine",0.12,{rev:true,delay:true})); },
+  // v4.4 The Warden's Guard — a parry is a bright two-note ting (Stave-on-dark, the strike turned aside);
+  // a plain block is a duller wooden clop (the blow caught, but felt).
+  guardParry(){ const t=T0(); blip(midi(84),t,0.11,"triangle",0.15,{rev:true}); blip(midi(91),t+0.02,0.2,"sine",0.11,{rev:true,delay:true}); },
+  guardBlock(){ const t=T0(); burst(t,0.09,{freq:210,sweep:-40,ftype:"lowpass",q:1,gain:0.18}); blip(dj(150),t,0.09,"triangle",0.09,{rev:true}); },
 };
 function T0(){ return SND.ctx ? SND.ctx.currentTime + 0.001 : 0; }
 function playSfx(name){ if(SND.sfxOn && SND.ctx && SFX[name]) SFX[name](); }

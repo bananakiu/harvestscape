@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.3.0", code: 90, codename: "The Warden's Ledger", date: "2026-07-22" };
+const VERSION = { name: "4.4.0", code: 91, codename: "Hold the Line", date: "2026-07-22" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.4.0", code:91, date:"2026-07-22", name:"Hold the Line", notes:[
+    { t:"feature", s:"The Warden's Guard — stand your ground. Raise your Stave to guard (Shift, right-click in the Undercroft, or the 🛡 on touch) and a restless thing's blow coming from the front is turned aside. Time it right — guard just as the strike lands — and it's a PARRY: no Resolve lost, the attacker staggered, and the Hollow Warden's guarded stance knocked open so your next swing lands. A beat late is still a BLOCK — most of the blow caught. One press stops one strike, then a short breath before you can raise it again." },
+    { t:"change", s:"The Hollow Warden is a fight now, not a footrace. It still guards the side it faces — but instead of only circling behind it, you can meet its strike, parry, and break its stance where it stands. You must face what you block, and you can't turtle: guarding is a timed beat, not a wall." },
+    { t:"note", s:"Guarding costs nothing (like every Warding action) and can only ever SAVE Resolve, never spend it — fully in keeping with the cozy contract. A first Hollow Warden shows you how." },
+  ]},
   { v:"4.3.0", code:90, date:"2026-07-22", name:"The Warden's Ledger", notes:[
     { t:"feature", s:"Act III begins in earnest. Find Elias's Warden's Ledger — a book by the tenth door in the Guild — and keep it as he once did. Each chapter asks for a bundle of materials AND a round walked in the Undercroft; gather and go deep at your own pace, set down what you carry whenever you pass (the ledger keeps the tally — you never lose a deposit), then close the page. Three chapters to start: Relighting the Rounds, The Old Rounds, and What the Thread Remembers." },
     { t:"feature", s:"The wing heals where you can see it. Close a chapter and the Guild hall warms — a pair of lanterns catches along the back wall, one pair per chapter, the same felt beat as relighting the nine wings. And Maya finally comes down to paint the place she used to fear." },

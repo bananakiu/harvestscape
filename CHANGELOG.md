@@ -22,6 +22,67 @@
 
 ---
 
+## 2026-07-22 — v4.4.0 "Hold the Line" (code 91, tag `v4.4.0`) — the Warden's Guard (block/parry)
+
+### Why this release (owner report)
+
+> "There should be a guard function… right now you just have to run away from the hollow guardians.
+> There should be a shield sort of click."
+
+Correct diagnosis. Warding combat had offense (the Stave) and dodge (walk out of a telegraph), but no
+*defensive* verb — so the Hollow Warden, which clangs off any strike to the front it faces, could only
+be answered by circling to its back or running. That's a footrace, not a fight. This adds the missing
+verb: a **guard** you can time against an incoming blow, which turns the Hollow Warden into a
+bait-parry-riposte duel you can win standing still.
+
+### Added — the Warden's Guard
+
+A **tap** raises the Stave to brace for `GUARD_WINDOW` (0.55s). Inputs, all honouring the owner's
+"shield sort of click": **Shift**, **right-click while in the Undercroft** (right-click still interacts
+everywhere else — the Undercroft rarely needs it, so it's free for the shield), and a **🛡 touch button**
+that appears only in the Undercroft. Costs nothing (energy-free like every Warding action since v4.2.1),
+gated by a short cooldown so it can't be held — one press stops one strike.
+
+The block resolves at the game's single damage choke point, `drainResolve(amt, srcX, srcY)` in
+`15-warding.js` — every damage source (melee contact, the Great Knot's slam and lunge, the Star-Gnarl's
+bolts) funnels through it, so one interception covers them all uniformly. You must **face** the source
+(a front-arc dot-product test) — no 360° turtling. Timing is the skill:
+
+- **Parry** (the strike caught in the first `GUARD_PARRY` = 0.25s of the window): **no Resolve lost**,
+  the attacker **staggered** (stunned 1.5s, shoved back), and — for a Hollow Warden — its guarded front
+  **knocked open** (`cr.guardOpen = 1.8s`), during which `hitCreature` skips its usual frontal clang so
+  your next swing lands. A small Warding-XP nod (+6) rewards the read. Bosses shrug off the stun (like a
+  struck boss elsewhere) but their blow is still fully negated.
+- **Block** (a beat later, still within the window): **¾ of the blow absorbed** (`amt × 0.25`, min 1).
+
+Feedback: a braced arc of light in the facing direction (bright on the parry beat, softer late), a
+"⟡ Parry!" / "block" floater, and two new synth cues (`guardParry` a bright ting, `guardBlock` a duller
+clop). A one-time toast teaches the guard the first time a Hollow Warden winds up on you (not
+`npxGame`-gated, so existing saves get it too).
+
+### Design — skillful but still cozy
+
+The guard can only ever *prevent* Resolve loss, never cause any — nothing is taken, the knockout still
+costs zero (cozy contract intact). It stays skillful rather than a safety blanket via three limits: the
+**cooldown** (`GUARD_CD` 0.35s after the window), **one strike per press**, and the **facing
+requirement**. It no-ops cleanly outside the Undercroft (gated on `inCombatMap()` + the Stave) and resets
+on every map change; old saves get `guardT/guardCd = 0` for free from the `freshState` backfill.
+
+### Verified
+
+Programmatic in-browser: parry negates all Resolve loss + stuns the attacker 1.5s + sets `guardOpen`;
+block absorbs exactly ¾ (5 of 20) and spends the guard; a hit from **behind** is not blocked and does
+**not** waste the guard; the cooldown blocks re-raising; a boss parry negates damage without stunning
+the boss; a `guardOpen` Hollow Warden takes a frontal hit (16→10) that otherwise clangs; the guard arc
+renders; control-hint + touch button wired; console clean. Adversarial multi-agent review
+(balance-exploit / correctness / integration) before ship — it surfaced two low-severity bugs, both
+fixed in this release: (1) a parried Star-Gnarl **bolt** staggered whatever creature was nearest the
+*player* rather than the Gnarl that fired it (melee was already correct — its source is the attacker's
+own centre); fixed by tagging each bolt with its firer and threading it through `drainResolve`'s new
+optional `attacker` param. (2) The right-click and touch guard inputs skipped the `!uiBlocking()` gate
+the Shift path had, so a guard could be raised (and its arc left frozen) over an open menu; fixed by
+self-gating `startGuard()` on `uiBlocking()`, covering all three inputs uniformly.
+
 ## 2026-07-22 — v4.3.0 "The Warden's Ledger" (code 90, tag `v4.3.0`) — Act III begins: the story spine
 
 ### Why this release

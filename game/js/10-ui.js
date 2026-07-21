@@ -145,6 +145,7 @@ function refreshHUD(){
   if(rw){
     const combat = typeof inCombatMap === "function" && inCombatMap();
     rw.classList.toggle("hidden", !combat);
+    const gb = $("btnGuard"); if(gb) gb.classList.toggle("hidden", !(combat && IS_TOUCH));   // v4.4: the touch 🛡 appears only in the Undercroft
     if(combat){
       const rmax = resolveMax(), rp = Math.max(0, Math.min(rmax, state.resolve || 0));
       const rbar = $("resolveBar"); rbar.style.width = Math.round(rp/rmax*100) + "%";
@@ -1569,7 +1570,7 @@ function showSleepCard(s){
 function setControlsHint(){
   // Line 1 = left-hand world verbs (all reachable without leaving WASD); line 2 = right-hand menus.
   $("controlsHint").innerHTML =
-    `<b>Move</b> <kbd>WASD</kbd> · <b>Use tool</b> <kbd>Space</kbd> · <b>Interact / harvest / talk</b> <kbd>E</kbd> · <b>Examine</b> <kbd>Q</kbd> · <b>Cycle seeds</b> <kbd>R</kbd> · <b>Eat</b> <kbd>F</kbd> · <b>Gift Maya</b> <kbd>G</kbd><br>` +
+    `<b>Move</b> <kbd>WASD</kbd> · <b>Use tool</b> <kbd>Space</kbd> · <b>Interact / harvest / talk</b> <kbd>E</kbd> · <b>Examine</b> <kbd>Q</kbd> · <b>Cycle seeds</b> <kbd>R</kbd> · <b>Eat</b> <kbd>F</kbd> · <b>Gift Maya</b> <kbd>G</kbd> · <b>Guard</b> <kbd>Shift</kbd> <span style="opacity:.7">(in the Undercroft)</span><br>` +
     `<b>Skills</b> <kbd>K</kbd> · <b>Backpack</b> <kbd>I</kbd> · <b>Journal</b> <kbd>J</kbd> · <b>Ride</b> <kbd>H</kbd> · <b>Hide HUD</b> <kbd>U</kbd> · slots <kbd>1</kbd>–<kbd>6</kbd> · Enter buildings, the mine &amp; the coast · <b>Sleep</b> in your bed indoors`;
 }
 
@@ -1636,6 +1637,7 @@ document.addEventListener("keydown", e => {
   else if(k === "q" || k === "x"){ examine(); }   // Q is the WASD-native primary; X kept as a legacy alias
   else if(k === "m"){ setMusicOn(!SND.musicOn); toast("Music "+(SND.musicOn?"on":"off")); }
   else if(k === "u"){ if(!uiBlocking()) toggleHud(); }   // v4.0.2: dim/hide the HUD off the map's edges & corners
+  else if(k === "shift"){ if(!uiBlocking()) startGuard(); }   // v4.4: raise the Warden's Guard (also right-click in the Undercroft / the touch 🛡)
   else if(k === "escape"){ if(dlg.open) closeDialog(); else closeAllPanels(); }
   else if("1234567".includes(k)) selectSlot(+k-1);   // v4.0: 7th slot is the Stave (only present once earned)
 });
@@ -1652,7 +1654,7 @@ cv.addEventListener("mousedown", e => {
   e.preventDefault();
   if(!$("intro").classList.contains("hidden")) return;   // letter handles its own clicks
   if(isCutscene()){ cutsceneAdvance(); return; }
-  if(e.button === 2){ interact(); return; }
+  if(e.button === 2){ if(inCombatMap()){ startGuard(); return; } interact(); return; }   // v4.4: right-click is the "shield click" in the Undercroft; interact everywhere else
   if(fishing.state === "reel") fishHold = true;          // held, not tapped
   else if(fishing.state !== "idle") reelOrCatch();
   else if(!uiBlocking()) useTool();
@@ -1698,6 +1700,10 @@ function wireTouch(){
   // the Look (examine) button — the touch parity for Q/X. examine() self-guards, so no extra checks.
   const lookBtn = $("btnLook");
   if(lookBtn) lookBtn.addEventListener("pointerdown", e => { e.preventDefault(); firstGesture(); examine(); });
+
+  // v4.4 the Guard button — touch parity for Shift / right-click. startGuard() self-gates (Undercroft + Stave).
+  const guardBtn = $("btnGuard");
+  if(guardBtn) guardBtn.addEventListener("pointerdown", e => { e.preventDefault(); firstGesture(); startGuard(); });
 
   // Backpack / Journal / Skills / Settings have no key on a touch device — give them a menu.
   const RENDER = { invPanel:renderInv, questPanel:renderJournal, skillsPanel:renderSkills, settingsPanel:renderSettings };

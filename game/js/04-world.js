@@ -31,6 +31,7 @@ function freshState(){
     wardBundle:{},                         // v4.3 materials deposited toward the CURRENT chapter's bundle {item:qty} — reset when a chapter closes
     resolve:100,                           // v4.0 the combat-only bar; full outside the Undercroft, drains only from contact there
     iFrame:0,                              // v4.0 post-hit invulnerability timer — MUST be a number before combat (undefined<=0 is false, which would silently disable all damage)
+    guardT:0, guardCd:0,                    // v4.4 the Warden's Guard: brace window remaining / cooldown after (both seconds; transient, reset on map change)
     wardBells:[],                          // v4.0 funded Warden's Bells (floor numbers 5/10/15) — permanent, like liftStops
     pledges:{},                            // the Pledge Ledger: id → { gPaid, mats:{item:n} } (see 01-data.js)
     waystones:[],                          // awakened waystone ids ("way3"…) — permanent, like liftStops
@@ -102,6 +103,7 @@ function setMap(id, sx, sy, face){
   rainDrops.length = 0;
   if(typeof hitsplats !== "undefined") hitsplats.length = 0;   // v4.0.3: no combat splat lingering onto a new map
   if(typeof wardBolts !== "undefined") wardBolts.length = 0;   // v4.2: no star-bolt following you out of the Undercroft
+  state.guardT = 0; state.guardCd = 0;                         // v4.4: never carry a raised guard across a map change
   setMusicMode(mapMusicMode(curMap));
   if(curMap.name) banner(curMap.name, curMap.subtitle);
   refreshHUD();
