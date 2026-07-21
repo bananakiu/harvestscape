@@ -43,6 +43,7 @@ function collectLights(){
       case "knot":      L.push({x:cx,y:cy-2,r:26,c:"150,200,255",i:0.45+0.14*Math.sin(animT*2.4+x)}); break;   // v4.0: the stair-knot's cold pulse
       case "wardbell":  L.push({x:cx,y:cy-4,r:32,c:"200,235,255",i:0.6+0.1*Math.sin(animT*2)}); break;         // v4.0: the bell's threshold glow
       case "wing":      if(wingLit(o.wing)) L.push({x:cx,y:cy-2,r:26,c:"255,170,80",i:flick*0.9}); break;
+      case "olddoor":   if(state.flags.tenthWingLit) L.push({x:cx,y:cy-2,r:30,c:"255,190,110",i:flick*0.95}); break;   // v4.5: the tenth door, lit as a wing at last (Act III finale)
       case "lantern":   L.push({x:cx,y:cy-2,r:30,c:"255,200,110",i:0.85+0.12*Math.sin(animT*3+x)}); break;
       case "stall":     L.push({x:cx,y:cy-4,r:34,c:"255,200,120",i:0.9}); break;
       case "banner":    L.push({x:cx,y:cy-6,r:24,c:"255,210,120",i:0.5}); break;

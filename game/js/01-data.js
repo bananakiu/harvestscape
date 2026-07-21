@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.4.0", code: 91, codename: "Hold the Line", date: "2026-07-22" };
+const VERSION = { name: "4.5.0", code: 92, codename: "The Tenth Lantern", date: "2026-07-22" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.5.0", code:92, date:"2026-07-22", name:"The Tenth Lantern", notes:[
+    { t:"feature", s:"Act III is complete. The Warden's Ledger now runs all the way to the bottom of the wing — five new chapters and a finale. Walk past where Elias himself always turned back (floor 20); make the deep floors safe enough that Rowan comes down to the wing he sealed with his own hands; find the mark of Orla, the warden before Elias, on a floor that keeps her name; settle the oldest, deepest knot she went down for and never rose from (floor 40); then stand at the very bottom (floor 45) and come up to light the Tenth Lantern." },
+    { t:"feature", s:"The Tenth Lantern — the finale. The Warden's wing is counted at last: the tenth of the ten crafts. Rowan lights the tenth door, eleven years late, with the whole valley watching; the cold planked door becomes a warm-lit wing for good, and the Guild hall blazes corner to corner. The story that began with a farmer's letter ends with a valley made truly whole." },
+    { t:"note", s:"Each chapter still asks only a bundle you gather at your own pace plus a floor to reach — nothing is ever taken, there is no failing, only a round not yet walked. The deep grind (floors 20–45, the Great Knots, the +15 charms) finally has a story to be the point of." },
+  ]},
   { v:"4.4.0", code:91, date:"2026-07-22", name:"Hold the Line", notes:[
     { t:"feature", s:"The Warden's Guard — stand your ground. Raise your Stave to guard (Shift, right-click in the Undercroft, or the 🛡 on touch) and a restless thing's blow coming from the front is turned aside. Time it right — guard just as the strike lands — and it's a PARRY: no Resolve lost, the attacker staggered, and the Hollow Warden's guarded stance knocked open so your next swing lands. A beat late is still a BLOCK — most of the blow caught. One press stops one strike, then a short breath before you can raise it again." },
     { t:"change", s:"The Hollow Warden is a fight now, not a footrace. It still guards the side it faces — but instead of only circling behind it, you can meet its strike, parry, and break its stance where it stands. You must face what you block, and you can't turtle: guarding is a timed beat, not a wall." },

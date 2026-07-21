@@ -144,10 +144,16 @@ Treat the changelog as non-optional deliverable output, the same as the code its
   guard (Shift / right-click in the Undercroft / touch 🛡) that parries a facing blow — perfect timing
   negates all Resolve loss, staggers the attacker, and knocks a Hollow Warden's guarded front open for a
   riposte; a late guard blocks ¾. Free, cooldown-gated, one-hit-per-press, no-ops outside the Undercroft.
-  Still remaining: **mastery trials at 50** (all six skills — deferred, wants its own release), the
-  dedicated deep venues (Gloam Grove ring, Sunken Workings — spatial-variety now, since their creature
-  ladder shipped in the Undercroft), and the finale. Read it (and its §6 owner decisions) before
-  building anything Act-III-shaped.
+  **v4.5.0 "The Tenth Lantern" SHIPPED — Act III is COMPLETE.** The Warden's Ledger now runs all 8
+  chapters to the bottom of the wing (floor 45): ch4–7 (past where Elias kept / Rowan comes down to the
+  wing he sealed / the last warden Orla's name / the deepest knot) + the finale (ch8 "The Tenth Lantern"
+  — the tenth craft lit and counted, Rowan lights the tenth door, the Guild hall blazes, `tenthWingLit`
+  glows the olddoor for good). Pure data into the v4.3 chapter engine; GBP-honest deep bundles.
+  Still remaining: **mastery trials at 50** (all six skills — the audit's #2 pick, but must be
+  bank-and-release, never a level that regresses, + grandfather high-level saves), the dedicated deep
+  venues (Gloam Grove ring, Sunken Workings — spatial-variety), and misc backlog (Elias heart events +
+  birthday, Undercroft small-talk, seasonal crop gaps, a repeatable gold sink, cottage decoration).
+  Read `V4_PLAN.md` (and its §6 owner decisions) before building anything Act-III-shaped.
 - `V4_BUILD_PLAN.md` — **the implementation work orders for v4**, written to be executed
   cold by any coding agent: locked decisions, verified engine anchors (symbol names, data
   shapes, integration points), and per-release specs with schemas, starting balance

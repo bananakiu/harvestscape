@@ -1316,13 +1316,17 @@ function closeWardChapter(){
   closeAllPanels(true);
   const ensure = (id, x, y, face) => { let n = curMap.npcs.find(v => v.id === id);
     if(!n){ n = mkNpc(id, x*TILE, y*TILE, {face}); curMap.npcs.push(n); } return n; };
+  const scene = def.scene(ensure);
   const steps = [
     { type:"run", fn:()=>{
         if(def.world){ state.flags[def.world] = true; if(typeof wardWorldProps === "function") wardWorldProps(curMap); }
         pSparkle(state.px, state.py-12, "#ffd88a", 18); playSfx("upgrade"); } },
-    ...def.scene(ensure),
-    { type:"banner", big:"❖ " + def.title, small:def.done || "A page closes in the Warden's Ledger.", t:3.0 },
+    ...scene,
   ];
+  // Append the closing card — UNLESS the scene already ends on its own banner (the ch8 finale does),
+  // or the two would render the same "❖ <title>" headline back-to-back (v4.5 review fix).
+  if(!(scene.length && scene[scene.length-1].type === "banner"))
+    steps.push({ type:"banner", big:"❖ " + def.title, small:def.done || "A page closes in the Warden's Ledger.", t:3.0 });
   startCutscene(steps, () => {
     const r = def.reward || {};
     if(r.gold){ state.gold += r.gold; floatText(state.px, state.py-24, "+" + r.gold + "g", "#ffce5a"); }

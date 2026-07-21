@@ -22,6 +22,77 @@
 
 ---
 
+## 2026-07-22 — v4.5.0 "The Tenth Lantern" (code 92, tag `v4.5.0`) — Act III completed: the story spine reaches the bottom
+
+### Why this release
+
+A high-level six-dimension audit of the whole game (run as a multi-agent workflow) ranked this the #1
+thing to build, and *two independent dimensions* (story and economy) named it the single biggest gap:
+V4's founding thesis is **"the story is the spine; skills level as a byproduct"** — yet the spine
+dead-ended at chapter 3 / floor 15 while the *systems* already reached floor 45 with a boss and +15
+charms. The deep grind had no narrative destination, and a rich, skilled player in the 220–380
+total-level band had nothing to work toward. The Warden's Ledger engine shipped in v4.3 was built to be
+extended by pure data — so this release is scene + bundle authoring: **five new chapters and the finale**,
+carrying Act III all the way to the bottom of the wing and lighting the tenth lantern the whole valley
+arc has pointed at since a farmer's letter in Act I.
+
+### Added — Act III chapters 4–8 (the deep rounds)
+
+Appended to `WARD_CHAPTERS` (`15-warding.js`). The arc deepens past what any single warden could keep:
+- **ch4 "Past Where He Kept" (floor 20)** — you walk past floor 15, the place Elias turned back every
+  seventh day for thirty years; he admits it was never his knees.
+- **ch5 "The Door He Nailed" (floor 25)** — Rowan, who sealed the wing with his own hands eleven years
+  ago and called it "structural," finally comes *down* the stair, because you made it warm enough.
+- **ch6 "The Last Warden's Hand" (floor 30)** — you find the mark of **Orla**, the warden before Elias
+  who taught him the round and never rose from it — the real reason he stopped at fifteen. (Orla is a new
+  name, deliberately distinct from **Nell**, Tom's living wife at the Butterbrook dairy since v3.44 — a
+  canon check during authoring caught the collision before ship.)
+- **ch7 "The Deepest Dark" (floor 40)** — you settle the oldest, deepest knot, the one Orla went down
+  for; Elias can't make this round, so you walk it for both of you, and come back up for supper.
+
+Bundles are GBP-honest (every material gatherable at or below the chapter's own expedition floor:
+Snarlthread f20+, Heartknot from the Great Knots, Deepgnarl f35+, Gloamstar f45) and the gold rewards
+escalate 1600→3200, a sensible sink-and-reward curve that finally pays the deep grind a story.
+
+### Added — the Tenth Lantern (the finale)
+
+**ch8 "The Tenth Lantern" (floor 45, the bottom of the wing).** The capstone the nine-wings structure
+has always implied: the Warden's craft — the tenth, uncounted for the whole game — is lit and *counted*
+at last. Rowan lights the tenth door eleven years late with the valley watching; the run step sets
+`state.flags.tenthWingLit`, so the cold planked `olddoor` gains a warm wing-glow for good (a new
+`collectLights` case in `06-weather.js`) and the Guild hall — which has been warming a lantern-pair per
+chapter via `wardWorldProps` — blazes corner to corner. Elias, who walked home from Marrow Point sure
+the wing was lost, finally has "somewhere to hand it." Reward 5000g; the real payoff is the valley made
+truly whole. Chapters 4–7 spread their lantern pairs down the sides of the hall (the y=3 row filled in
+v4.3); lanterns are walkable decor, so no placement can trap the player.
+
+### Design — the cozy contract, unchanged
+
+Every chapter still asks only a bundle gathered at the player's own pace plus a floor to reach; materials
+are taken only on deposit and never re-asked; there is no failure, only a round not yet walked. Nothing
+is ever lost.
+
+### Verified
+
+Programmatic in-browser: all 8 chapters fund and close with the correct escalating rewards
+(400→5000g) and advance `state.wardChapter` 1→8; the finale scene runs all 67 beats including Rowan's
+walk to the door and the live door-lighting, with no error; `tenthWingLit` and every `wardLit` flag set;
+the guild ends with 16 lanterns lit and the tenth door glowing; console clean. Screenshot confirms the
+hall ablaze with the tenth door aglow. Adversarial multi-agent review (GBP-balance / cozy-correctness /
+world-mutation placement) before ship confirmed one low-severity cosmetic bug, fixed here: the ch8 finale
+ended with its *own* banner step while `closeWardChapter` also appends a generic closing banner, so the
+"❖ The Tenth Lantern" card rendered twice back-to-back (ch1–7 end on a "say" step, so they never doubled).
+Fixed at the engine level — `closeWardChapter` now skips the appended banner when a scene already ends on
+one (verified: every chapter ch1–8 produces exactly one banner).
+
+### Fixed — a canon collision caught during authoring
+
+A canon pass before ship caught that the dead-warden character I'd first named **Nell** collides with the
+*existing, living* **Nell** — Tom's wife and the Butterbrook dairy keeper since v3.44. Renamed the dead
+warden (Elias's predecessor and teacher) to **Orla** throughout the chapters and docs; the dairy Nell is
+untouched. The rest of the lore the chapters lean on was verified against canon (Marrow Point as Elias's
+northern ferry town, the eleven years, Rowan sealing the tenth door).
+
 ## 2026-07-22 — v4.4.0 "Hold the Line" (code 91, tag `v4.4.0`) — the Warden's Guard (block/parry)
 
 ### Why this release (owner report)

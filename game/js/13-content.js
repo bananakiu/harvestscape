@@ -111,6 +111,14 @@ function wardWorldProps(m){
   if(state.flags.wardLit1){ lamp(5,3);  lamp(11,3); }
   if(state.flags.wardLit2){ lamp(4,3);  lamp(12,3); }
   if(state.flags.wardLit3){ lamp(3,3);  lamp(13,3); }
+  // v4.5 Act III chapters 4–7: the hall keeps warming as the wing is kept deeper (y=3 is full, so these
+  // spread down the sides of the hall). The finale lights the tenth door itself — cold planked wood for
+  // eleven years, now a lit wing at last (collectLights adds a warm pool at the door; see 06-weather.js).
+  if(state.flags.wardLit4){ lamp(4,5);  lamp(12,5); }
+  if(state.flags.wardLit5){ lamp(2,8);  lamp(14,8); }
+  if(state.flags.wardLit6){ lamp(5,9);  lamp(11,9); }
+  if(state.flags.wardLit7){ lamp(1,3);  lamp(15,3); }
+  if(state.flags.tenthWingLit){ lamp(13,5); lamp(15,5); }   // flanking the tenth door — the tenth lantern lit for good
 }
 
 // ---------------- the mine (procedural floors) ----------------
