@@ -22,6 +22,45 @@
 
 ---
 
+## 2026-07-19 — v4.2.0 "Deeper Still" (code 88, tag `v4.2.0`) — the top of the Warding ladder + ranged combat
+
+Owner: "continue." Completing the Warding **creature ladder** — the skill now has a family at every
+rung of the unified tier ladder (1/10/20/30/45/70/85), matching the tools/ores/trees. Shipped by
+extending the Undercroft (floors 31–45) rather than opening the roadmap's dedicated deep venues (the
+Gloam Grove ring, the Sunken Workings) — those remain, folded into a later release; noted in
+`V4_PLAN.md` §5. Contract intact (§8): nothing taken, knockout free, creatures/projectiles only in
+the Undercroft.
+
+### Added — two top-tier families, one of them a first for the game
+
+- **Deep Knot (L70, `charger`)** — telegraphs then **charges in a straight line**; if the charge
+  hits a wall it **stuns itself** (a long recovery window to punish). Dodge-and-punish combat.
+  *Bug caught in testing + fixed:* `moveCreature`'s `moved` flag is `true` even for a fully
+  wall-blocked pure-axis charge (its other-axis check is a no-op on the standing tile), so the
+  wall-stun never fired — now detected by **actual displacement** (`hypot(cr − old) < sp·0.5`).
+- **Star-Gnarl (L85, `ranged`)** — **the game's first ranged enemy.** It keeps its distance (kites
+  away if you crowd it, aggros from 5.5 tiles) and, after a telegraph, **lobs a slow star-bolt at
+  where you stand** — sidestep it. New lightweight `wardBolts` projectile system (`00-core` array;
+  `fireStarBolt`/`updateWardBolts`/`drawWardBolts` in `15-warding`): a bolt travels, drains Resolve
+  on contact (respecting i-frames, still a free knockout), fizzles on a wall or after ~2.4s, carries
+  its own star-light in `collectLights`, draws between particles and hitsplats, and is cleared on
+  `setMap` so nothing follows you out.
+
+### Added — the deep floors, loot & the capstone charm
+
+Floors 31–45 (`WARD_FLOOR_MAX` 30→45) band the new families in; **Warden's Bells** at 35/40/45.
+New drops **Deepgnarl** (55g) and the star-touched **Gloamstar** (85g) — both priced under same-band
+gather (deepsilver ore 370). They forge the **Starward Charm** (Gloamstar + Heartknot + Diamond →
+**+15 max Resolve**, the capstone), and fund the deep bells; Tom's salvage rotates Deepgnarl.
+
+### Balance (GBP) & verify
+
+Settle XP under the deep ore curve (deepsilver L70=1050, star metal L85=1560): Deep Knot 190,
+Star-Gnarl 270. New sprites + item icons + per-family glow colours. Verified in-browser: floor-42
+spawns (both new families), the Star-Gnarl firing a travelling star-bolt that hits + drains Resolve,
+the Deep Knot's wall-stun + punish window, descent 1→45 clean (floor 45 dead-end), old-save
+migration. Screenshot of a deep floor with both families + a star-bolt in flight.
+
 ## 2026-07-19 — v4.1.0 "The Great Knot" (code 87, tag `v4.1.0`) — the Warding skill, deepened
 
 Owner ask: "continue building… build out the rest of the warding skill." This is the **combat

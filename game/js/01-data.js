@@ -8,13 +8,19 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.1.0", code: 87, codename: "The Great Knot", date: "2026-07-19" };
+const VERSION = { name: "4.2.0", code: 88, codename: "Deeper Still", date: "2026-07-19" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.2.0", code:88, date:"2026-07-19", name:"Deeper Still", notes:[
+    { t:"new", s:"The Undercroft goes deeper again — down to floor forty-five, the bottom of the wing for now — and Warding finally has a restless thing to settle at every rung of the ladder, all the way to the top." },
+    { t:"new", s:"The Deep Knot (Lv70) — a dark, near-stone thing that lowers its head and CHARGES in a straight line. Sidestep it and it slams the wall and knocks itself silly — that's your moment. Stand in the way and it'll run you right over." },
+    { t:"new", s:"The Star-Gnarl (Lv85) — the first restless thing that fights from a distance. It keeps its space and lobs slow star-bolts at where you're standing; watch the wind-up and step aside. Settle it for the deepest spoils in the wing." },
+    { t:"new", s:"The deepest finds — Deepgnarl and the star-touched Gloamstar — forge the Starward Charm, the finest ward a Warden ever wore (+15 Resolve), and fund the deep bells at floors 35, 40 and 45. Tom's salvage will part with the odd Deepgnarl too, for the coin." },
+  ]},
   { v:"4.1.0", code:87, date:"2026-07-19", name:"The Great Knot", notes:[
     { t:"new", s:"The Undercroft runs deeper — twice as far. Fifteen more floors (down to thirty), with two new restless things waiting in the dark and a proper checkpoint bell on every fifth floor all the way down." },
     { t:"new", s:"The Hollow Warden — a lost warden's echo that turns to keep its guarded front toward you. Strike it head-on and your Stave clangs off; circle round to its side or back to settle it. Slow, patient, and very hard to hurry." },
@@ -399,6 +405,12 @@ const CREATURES = {
   // creature's HP, two telegraphed moves (a ground-slam ring + a reaching lunge), a signature drop.
   greatknot: { name:"The Great Knot",  lvl:40, hp:42, dmg:20, xp:360, drop:"Heartknot", n:1, drop2:"Warden's Ash", n2:3,
                tele:0.9, speed:12, col:"#6a5a44", col2:"#2c2318", boss:true },
+  // v4.2 the top two tiers — Warding now has a family at every rung of the unified ladder (1/10/20/30/45/70/85).
+  // XP stays under the deep ore curve (deepsilver L70=1050, star metal L85=1560).
+  deepknot:  { name:"Deep Knot",       lvl:70, hp:22, dmg:20, xp:190, drop:"Deepgnarl", n:1, drop2:"Snarlthread", n2:1,
+               tele:0.7, speed:20, col:"#5a4a6a", col2:"#2a2038", charger:true },   // telegraphs a long charge; slams a wall and STUNS itself — punish the recovery
+  stargnarl: { name:"Star-Gnarl",      lvl:85, hp:18, dmg:18, xp:270, drop:"Gloamstar", n:1, drop2:"Deepgnarl", n2:1,
+               tele:0.75, speed:16, col:"#c8b8ff", col2:"#6a5a9a", ranged:true },   // the first RANGED restless thing — lobs a slow star-bolt at where you stand; sidestep it
 };
 
 const SEASONS = ["Spring", "Summer", "Fall", "Winter"];
@@ -717,7 +729,10 @@ const ITEM_SELL = { "Wood":4, "Pine Wood":9, "Maple Wood":17, "Willow Wood":11, 
   // v4.1 deeper drops — same rule: priced under the same-band gather (gold ore 165 · cobalt 300),
   // fuel for the charm/bell sinks, never a money faucet. Heartknot is a rare boss trophy whose real
   // value is the top Resolve charm, not the counter.
-  "Warden's Ash":34, "Snarlthread":42, "Heartknot":130 };
+  "Warden's Ash":34, "Snarlthread":42, "Heartknot":130,
+  // v4.2 deepest drops — still under same-band gather (deepsilver ore 370 · star metal shard 450);
+  // Gloamstar is the star-touched warding material, its real value the ultimate charm.
+  "Deepgnarl":55, "Gloamstar":85 };
 FISH.forEach(f => { ITEM_SELL[f.name] = f.sell; ITEM_SELL["Cooked "+f.name] = Math.floor(f.sell*1.75); });
 LEGENDS.forEach(l => { ITEM_SELL[l.name] = l.sell; });   // trophies. You don't cook a Stormrider.
 for(const k in CROPS) ITEM_SELL[CROPS[k].name] = CROPS[k].sell;
@@ -1162,6 +1177,10 @@ function bellCost(n){
   if(n === 20) return { g:5000, mats:{ "Warden's Ash":12, "Gold Ore":6, "Elder Wood":30 } };
   if(n === 25) return { g:7000, mats:{ "Snarlthread":12, "Cobalt Ore":6, "Heartwood":20 } };
   if(n === 30) return { g:9000, mats:{ "Snarlthread":18, "Heartknot":1, "Deepsilver Ore":5 } };
+  // v4.2 the deepest bells sink the deep drops + the deepest ore/timber — the wing's long-arc project.
+  if(n === 35) return { g:11000, mats:{ "Deepgnarl":10, "Heartwood":25, "Deepsilver Ore":6 } };
+  if(n === 40) return { g:13000, mats:{ "Deepgnarl":16, "Heartknot":1, "Silverwood":20 } };
+  if(n === 45) return { g:15000, mats:{ "Gloamstar":8, "Star Metal Shard":3, "Heartknot":1 } };
   return null;
 }
 
@@ -1217,7 +1236,7 @@ function ledgerPledges(){
   const out = [];
   for(const id of ["way3","way6","way9"]) if(pledgeDiscovered(id)) out.push(id);
   for(let n = 5; n <= (state.mineBest||0); n += 5) out.push("lift"+n);
-  for(let n = 5; n <= Math.min(30, state.wardBest||0); n += 5) out.push("bell"+n);   // v4.1 Warden's Bells (floors 1–30)
+  for(let n = 5; n <= Math.min(45, state.wardBest||0); n += 5) out.push("bell"+n);   // v4.2 Warden's Bells (floors 1–45)
   return out;
 }
 
@@ -1243,6 +1262,8 @@ const CHARMS = {
   // v4.1 deep-warding charms — the top Resolve charm (from the Great Knot's Heartknot) and a Warding-XP band.
   "Wardstone Charm":  { sell:300, effect:"+10 maximum Resolve while worn" },
   "Settler's Band":   { sell:200, effect:"+5% Warding XP while worn" },
+  // v4.2 the capstone Resolve charm — forged around a Star-Gnarl's Gloamstar.
+  "Starward Charm":   { sell:500, effect:"+15 maximum Resolve while worn" },
 };
 for(const c in CHARMS) ITEM_SELL[c] = CHARMS[c].sell;
 function charmActive(name){ return state.charm === name && (state.inv[name]||0) > 0; }
@@ -1578,6 +1599,9 @@ const EXAMINE = {
   "Heartknot": "The dense, dark core of a Great Knot — years of untended grief wound into a fist-sized whorl. It hums, very low. The heart of a good charm.",
   "Wardstone Charm": "A Heartknot bound in ash and sapphire. Worn, it steadies you — the dark takes a good deal longer to wear you down.",
   "Settler's Band": "A band of snarlthread that's finally learned to lie still. It makes the work of settling come a little quicker to the hand.",
+  "Deepgnarl": "A knuckle of wood so old and so deep it's gone almost to stone. Cold in the middle, always.",
+  "Gloamstar": "A splinter of the founding star, tangled through with gloam-thread. It holds a little of the sky it fell from — and a little of the dark it landed in.",
+  "Starward Charm": "A Gloamstar set in a Heartknot, ringed with diamond. The finest ward a Warden ever wore: the deep dark barely touches you at all.",
   "Star Metal": "Star-fallen metal that slept in the vault; the Guild's forge wakes with it.",
   "Guild Seal": "Proof a craft was mastered, not merely attempted.",
   "Bouquet": "A Willowbrook bouquet, carried straight to one particular door.",

@@ -69,11 +69,15 @@ function collectLights(){
              : (cr.kind==="gloamtangle"||cr.kind==="tanglet") ? "140,230,190"
              : cr.kind==="greatknot" ? "220,150,90"
              : cr.kind==="hollowwarden" ? "170,190,235"
+             : cr.kind==="deepknot" ? "150,120,200"
+             : cr.kind==="stargnarl" ? "200,184,255"
              : "150,215,255";
     const gr = cr.kind==="greatknot" ? 34 : 20;
     L.push({ x:cr.x, y:cr.y-4, r:gr, c:gc, i: 0.4 + 0.2*Math.sin(animT*5 + cr.x) });
     if(cr.warm > 0) L.push({ x:cr.x, y:cr.y+2, r:16, c:"255,150,80", i:0.3*cr.warm });   // an ember mite's fading warm patch
   }
+  // v4.2 the Star-Gnarl's bolts carry their own star-light along their arc
+  if(typeof wardBolts !== "undefined") for(const b of wardBolts) L.push({ x:b.x, y:b.y, r:14, c:"200,184,255", i:0.65 });
   // v4.0: the Emberlight Charm throws the lantern much farther; deep spaces (mine + undercroft) already
   // run a wide warm pool, so add the charm on top of whichever base applies.
   const charmR = (charmActive("Lantern Charm") ? 12 : 0) + (charmActive("Emberlight Charm") ? 8 : 0);

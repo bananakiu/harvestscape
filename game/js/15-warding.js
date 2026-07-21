@@ -24,7 +24,7 @@
 // A place you walk to, not a stat you manage everywhere: Resolve is full on every non-combat map
 // and each dawn; it drains ONLY from a restless thing's touch, in the Undercroft. Empty = a soft
 // knockout (below): you wake at the door with everything. Energy (farm stamina) is untouched by combat.
-function resolveMax(){ return 100 + (charmActive("Warded Charm") ? 5 : 0) + (charmActive("Wardstone Charm") ? 10 : 0); }   // charms lift the ceiling
+function resolveMax(){ return 100 + (charmActive("Warded Charm") ? 5 : 0) + (charmActive("Wardstone Charm") ? 10 : 0) + (charmActive("Starward Charm") ? 15 : 0); }   // charms lift the ceiling (one worn at a time)
 function resolveFloor(){ return hasMastery("Warding", 99) ? 10 : 0; }          // ★ Lanternheart — Resolve never falls below 10
 function inCombatMap(){ return !!(curMap && curMap.id === "undercroft"); }      // the only place Resolve matters
 
@@ -98,27 +98,36 @@ function updateCreatures(dt){
     if(cr.state === "stunned"){ if(cr.stateT <= 0) cr.state = "idle"; continue; }
     if(cr.state === "telegraph"){
       if(!d.block) cr.face = Math.abs(pdx) > Math.abs(pdy) ? (pdx<0?"left":"right") : (pdy<0?"up":"down");   // the Warden keeps its lagged guard even winding up
-      if(cr.stateT <= 0){   // wind-up done → commit a lunge, direction locked NOW (telegraphed)
-        const a = Math.atan2(pdy, pdx); cr.lvx = Math.cos(a); cr.lvy = Math.sin(a);
-        cr.state = "lunge"; cr.stateT = cr.kind==="shambler" ? 0.75 : 0.4;
+      if(cr.stateT <= 0){   // wind-up done → commit, direction locked NOW (telegraphed)
+        if(d.ranged){ fireStarBolt(cr); cr.state = "cooldown"; cr.stateT = 1.4; }   // v4.2 Star-Gnarl LOBS a bolt (no melee)
+        else { const a = Math.atan2(pdy, pdx); cr.lvx = Math.cos(a); cr.lvy = Math.sin(a);
+          cr.state = "lunge"; cr.stateT = cr.kind==="shambler" ? 0.75 : d.charger ? 0.95 : 0.4; }   // the Deep Knot charges longer + farther
       }
       continue;
     }
     if(cr.state === "lunge"){
-      const sp = d.speed * 2.3 * dt;
+      const sp = d.speed * (d.charger ? 3.4 : 2.3) * dt;
+      const ox = cr.x, oy = cr.y;   // measure ACTUAL displacement — moveCreature's `moved` flag is true even when a pure-axis charge is wall-blocked (its other-axis check is a no-op)
       moveCreature(cr, cr.lvx*sp, cr.lvy*sp); cr.moving = true;
       if(cr.kind === "embermite") cr.warm = 1;   // leaves a fading warm patch
       if(dist < 11 && !(state.iFrame > 0)) drainResolve(d.dmg, cr.x, cr.y);   // !(x>0) is undefined-safe (undefined<=0 is false, which would disable all damage)
+      if(d.charger && cr.stateT < 0.82 && Math.hypot(cr.x-ox, cr.y-oy) < sp*0.5){   // v4.2 the Deep Knot slammed a wall — STUN itself; your window to punish. The stateT gate lets the charge COMMIT for a beat first, so a wall already in front can't cheese an instant frame-1 self-stun.
+        cr.state = "stunned"; cr.stateT = 1.6; cam.shake = 3; hitstop = 0.03; playSfx("staveHit"); pChips(cr.x, cr.y, d.col2, 7); continue;
+      }
       if(cr.stateT <= 0){ cr.state = "cooldown"; cr.stateT = 1.1; }
       continue;
     }
     if(cr.state === "cooldown"){ wardWander(cr, d, dt); if(cr.stateT <= 0) cr.state = "idle"; continue; }
 
-    // idle → aggro when the player lingers within reach
-    const aggro = (cr.kind==="shambler" ? 3.5 : cr.kind==="embermite" ? 2.6 : cr.kind==="hollowwarden" ? 3.2 : 3.0) * TILE;
+    // v4.2 the Star-Gnarl kites — it drifts AWAY if you crowd it, so its ranged game reads as ranged.
+    if(d.ranged && dist < 2.2*TILE){ const a=Math.atan2(cr.y-state.py, cr.x-state.px);
+      if(moveCreature(cr, Math.cos(a)*d.speed*0.9*dt, Math.sin(a)*d.speed*0.9*dt)) cr.moving = true; }
+    // idle → aggro when the player lingers within reach (the ranged one reaches much farther)
+    const aggro = (d.ranged ? 5.5 : cr.kind==="shambler" ? 3.5 : cr.kind==="embermite" ? 2.6 : cr.kind==="hollowwarden" ? 3.2 : cr.kind==="deepknot" ? 3.8 : 3.0) * TILE;
     if(dist < aggro){ cr.state = "telegraph"; cr.stateT = d.tele; }
     else wardWander(cr, d, dt);
   }
+  if(curMap.creatures) updateWardBolts(dt);   // v4.2 the Star-Gnarl's projectiles (undercroft-only, like the creatures)
 }
 // The Great Knot — rooted at its spawn (the stair spot), guards quietly until you close in, then
 // alternates two clearly-telegraphed moves: a ground-slam ring (step out of it) and a reaching lunge.
@@ -153,6 +162,29 @@ function updateGreatKnot(cr, d, dt, pdx, pdy, dist){
     moveCreature(cr, cr.lvx*d.speed*2.6*dt, cr.lvy*d.speed*2.6*dt); cr.moving=true;
     if(dist < 13 && !(state.iFrame > 0)) drainResolve(d.dmg, cr.x, cr.y);
     if(cr.stateT <= 0){ cr.state="cooldown"; cr.stateT=1.4; } return;
+  }
+}
+
+// ---------------- Star-bolts — the Star-Gnarl's ranged attack (v4.2, the first ranged restless thing) ----
+// Telegraphed (the gnarl winds up, then locks your position and lobs a SLOW mote you can sidestep).
+// A hit drains Resolve like a touch (still free knockout); it fizzles on a wall or after a short life.
+function fireStarBolt(cr){
+  const a = Math.atan2(state.py - cr.y, state.px - cr.x), sp = 60;   // slow enough to step out of
+  wardBolts.push({ x:cr.x, y:cr.y-4, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:0, max:2.4, dmg: CREATURES[cr.kind].dmg });
+  playSfx("staveHit"); pSparkle(cr.x, cr.y-4, "#c8b8ff", 6);
+}
+function updateWardBolts(dt){
+  for(let i=wardBolts.length-1;i>=0;i--){ const b = wardBolts[i];
+    b.life += dt; b.x += b.vx*dt; b.y += b.vy*dt;
+    if(Math.hypot(b.x-state.px, b.y-(state.py-4)) < 9 && !(state.iFrame > 0)){ drainResolve(b.dmg, b.x, b.y); wardBolts.splice(i,1); continue; }
+    if(b.life >= b.max || !wardWalkable(b.x, b.y)){ pSparkle(b.x, b.y, "#c8b8ff", 5); wardBolts.splice(i,1); }
+  }
+}
+function drawWardBolts(){
+  for(const b of wardBolts){ const x = Math.round(b.x), y = Math.round(b.y);
+    ctx.fillStyle = "rgba(200,184,255,0.35)"; ctx.beginPath(); ctx.arc(x, y, 4, 0, 7); ctx.fill();
+    ctx.fillStyle = "#e8dcff"; ctx.fillRect(x-1, y-1, 2, 2);
+    ctx.fillStyle = "#c8b8ff"; ctx.fillRect(x-2, y, 1, 1); ctx.fillRect(x+1, y, 1, 1); ctx.fillRect(x, y-2, 1, 1); ctx.fillRect(x, y+1, 1, 1);   // a little four-point star
   }
 }
 function drawCreature(cr){
@@ -344,6 +376,8 @@ const WARD_RECIPES = [
   // v4.1 deep charms — the top Resolve charm (needs a Great Knot's Heartknot) and a Warding-XP band.
   { out:"Wardstone Charm",  mats:{ "Heartknot":1, "Warden's Ash":5, "Sapphire":1 }, blurb:"+10 maximum Resolve" },
   { out:"Settler's Band",   mats:{ "Snarlthread":6, "Gloam Thread":12 },            blurb:"+5% Warding XP while worn" },
+  // v4.2 the capstone Resolve charm — a Gloamstar set in a Heartknot, ringed with diamond.
+  { out:"Starward Charm",   mats:{ "Gloamstar":1, "Heartknot":1, "Diamond":1 },     blurb:"+15 maximum Resolve" },
 ];
 function openBells(){ openPanel("bellPanel", renderBells); }
 function renderBells(){
@@ -360,7 +394,7 @@ function renderBells(){
     html += pledgeRowHtml("bell"+depth);
     html += `<div class="desc" style="margin-top:.4em;color:var(--ink-soft);">Pledge what you carry — here, or from the Journal (J), anywhere. The ledger keeps the tally.</div>`;
   } else if(depth % 5 !== 0){
-    const next = Math.min(30, Math.ceil(depth/5)*5);
+    const next = Math.min(45, Math.ceil(depth/5)*5);
     if(next > depth) html += `<div class="desc" style="margin-top:.4em;color:var(--ink-soft);">The next Warden's Bell is on floor ${next}.</div>`;
   }
   // the workbench
@@ -406,6 +440,7 @@ const SALVAGE_OFFERS = [
   // v4.1 deeper salvage (so a combat-shy save can still stock the deep charm/bell asks)
   { item:"Warden's Ash", qty:2, price:100, want:"A pedlar traded me a twist of pale ash that won't go cold. Gives me the shivers. Two twists?", line:"Take it, take it. I'll sleep better with it off the shelf." },
   { item:"Snarlthread",  qty:2, price:110, want:"Bought a coil of thread that keeps re-knotting itself in the drawer. Unnatural. Two coils?", line:"Keep it wound tight. That's my only advice on the matter." },
+  { item:"Deepgnarl",    qty:1, price:120, want:"A miner traded me a knuckle of wood gone near to stone. Cold as a well-bottom. Just the one — that's all I'd take.", line:"There. And I'll not be handling another." },
 ];
 function todaysSalvage(){
   if(state.flags.salvageDay === state.day) return state.flags.salvageIdx >= 0 ? SALVAGE_OFFERS[state.flags.salvageIdx] : null;

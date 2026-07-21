@@ -162,8 +162,9 @@ story never ships ahead of the systems it asks for.
 |---|---|
 | **v4.0 "The Tenth Door"** | Warding skill + Resolve + knockout; the Undercroft (floors 1–15, 3 creature families); warden's tool tiers 1–3; first loot materials + sinks; door-opening intro quest. The variety spark ships here (small, sets the tone early). |
 | **v4.1.0 "The Great Knot"** (SHIPPED) | The Warding *combat* deepening: Undercroft floors 16–30; families 4–5 (Hollow Warden, Gloam Tangle); the first Great Knot boss; deep drops (Warden's Ash, Snarlthread, Heartknot); top charms (Wardstone, Settler's Band); bells 20/25/30. |
+| **v4.2.0 "Deeper Still"** (SHIPPED) | Completes the Warding creature ladder (a family at every rung 1/10/20/30/45/70/85): Undercroft floors 31–45; families 6–7 (Deep Knot L70 charger, Star-Gnarl L85 — the game's first **ranged** enemy + a projectile system); deepest drops (Deepgnarl, Gloamstar); the capstone Starward Charm (+15 Resolve); bells 35/40/45. **Note:** the deep families shipped in the *extended Undercroft*, not in the dedicated deep venues below — those (the Gloam Grove ring, the Sunken Workings) remain as spatial-variety venues, folded into later releases. |
 | **"The Warden's Ledger"** (remaining v4.1 story) | Act III chapters 1–3 + the Ledger UI; mastery trials at 50 (all six skills). |
-| **v4.2 "The Gloam Grove"** | 10th grove ring (Woodcutting × Warding venue); chapters 4–5; charm/gear top tiers; the returned-Warden NPC. |
+| **"The Gloam Grove" / "The Sunken Workings"** (remaining venues) | Dedicated deep Warding venues for spatial variety (Woodcutting × Warding; Mining × Warding), + chapters 4–7, the returned-Warden NPC, trials at 75. The *creature ladder* they'd have hosted already shipped in the Undercroft (v4.2.0); these become variety/story venues when built. |
 | **v4.3 "The Sunken Workings"** | Behind the deepest lift stop (Mining × Warding); chapters 6–7; trials at 75. |
 | **v4.4 "The Tenth Lantern"** | Chapter 8 finale + festival integration + epilogue; balance sweep of the whole arc; GBP appendix resync. |
 

@@ -99,6 +99,7 @@ function setMap(id, sx, sy, face){
   if(typeof onEnterMap === "function") onEnterMap(id);
   rainDrops.length = 0;
   if(typeof hitsplats !== "undefined") hitsplats.length = 0;   // v4.0.3: no combat splat lingering onto a new map
+  if(typeof wardBolts !== "undefined") wardBolts.length = 0;   // v4.2: no star-bolt following you out of the Undercroft
   setMusicMode(mapMusicMode(curMap));
   if(curMap.name) banner(curMap.name, curMap.subtitle);
   refreshHUD();

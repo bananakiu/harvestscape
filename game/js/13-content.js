@@ -246,7 +246,7 @@ function genMine(m){
 // 15 is a dead-end for now (v4.1 "The Warden's Ledger" deepens it). This lives in 13-content.js — not
 // 15-warding.js — because the MAPS literal above references genUndercroft at load time (strict mode
 // would throw on a forward-ref to a not-yet-parsed script). mkCreature/updateCreatures live in 15.
-const WARD_FLOOR_MAX = 30;   // v4.1 bottom of the wing (was 15 in v4.0); deeper venues (Gloam Grove, Sunken Workings) come later
+const WARD_FLOOR_MAX = 45;   // v4.2 bottom of the wing (v4.0=15, v4.1=30); dedicated deep venues (Gloam Grove, Sunken Workings) come later
 function genUndercroft(m){
   const depth = state.wardDepth || 1;
   const rng = makeRng(4200 + depth*137 + state.day*7);   // distinct seed base (the mine uses 9001)
@@ -334,7 +334,10 @@ function genUndercroft(m){
             : depth < 15  ? ["wisp","shambler","shambler","embermite"]
             : depth < 20  ? ["shambler","embermite","embermite","hollowwarden"]
             : depth < 25  ? ["embermite","hollowwarden","hollowwarden","gloamtangle"]
-            :               ["hollowwarden","hollowwarden","gloamtangle","gloamtangle","embermite"];
+            : depth < 30  ? ["hollowwarden","hollowwarden","gloamtangle","gloamtangle","embermite"]
+            : depth < 35  ? ["gloamtangle","hollowwarden","deepknot","deepknot"]
+            : depth < 40  ? ["deepknot","deepknot","gloamtangle","stargnarl"]
+            :               ["deepknot","stargnarl","stargnarl","gloamtangle"];
   const count = 3 + Math.min(5, Math.floor(depth/3));   // 3 shallow → up to 8 deep
   const spots = floors.filter(([x,y]) => !onPath.has(key(x,y)) && !m.objects[key(x,y)]
     && Math.abs(x-ux)+Math.abs(y-uy) > 5);

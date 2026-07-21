@@ -42,6 +42,7 @@ const keys = {};                       // held keys
 let particles = [];                    // particle list
 let floaters = [];                     // floating text list
 let hitsplats = [];                    // v4.0.3: RuneScape-style damage splats (blob + number) — Warding combat
+let wardBolts = [];                    // v4.2: the Star-Gnarl's ranged star-bolts (Undercroft-only)
 let lights = [];                       // per-frame dynamic light requests
 
 // ---- math ----

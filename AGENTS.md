@@ -130,12 +130,15 @@ Treat the changelog as non-optional deliverable output, the same as the code its
   by the Warden's Ledger, mastery trials + variety spark for breadth pacing, and the v4.0–v4.4
   release train. **v4.0 "The Tenth Door" SHIPPED** (Warding + the Undercroft floors 1–15 + the
   three creature families + Resolve/knockout + the Stave + bells/charms + the door-opening quest
-  + the variety spark). **v4.1.0 "The Great Knot" SHIPPED** — the Warding *combat* deepening
-  (owner-directed, ahead of the story): Undercroft floors 16–30, families 4–5 (Hollow Warden,
-  Gloam Tangle), the first Great Knot boss, deep loot + top charms + bells 20/25/30. Still remaining:
-  v4.1's *story* half ("The Warden's Ledger" — Act III chapters 1–3, the Ledger UI, mastery trials
-  at 50) and v4.2–v4.4 (deeper venues, the finale). Read it (and its §6 owner decisions) before
-  building anything Act-III-shaped.
+  + the variety spark). **v4.1.0 "The Great Knot"** + **v4.2.0 "Deeper Still" SHIPPED** — the Warding
+  *combat* deepening (owner-directed, ahead of the story): the Undercroft now runs floors 1–45 with a
+  creature family at every rung of the ladder (1/10/20/30/45/70/85 — wisp/shambler/embermite/Hollow
+  Warden/Gloam Tangle/Deep Knot/Star-Gnarl), the first Great Knot boss every 10th floor, the game's
+  first ranged enemy + projectile system, deep loot + charms up to the +15 Starward + bells to 45.
+  Still remaining: v4.1's *story* half ("The Warden's Ledger" — Act III chapters 1–3, the Ledger UI,
+  mastery trials at 50), the dedicated deep venues (Gloam Grove ring, Sunken Workings — spatial-variety
+  now, since their creature ladder shipped in the Undercroft), and the v4.4 finale. Read it (and its
+  §6 owner decisions) before building anything Act-III-shaped.
 - `V4_BUILD_PLAN.md` — **the implementation work orders for v4**, written to be executed
   cold by any coding agent: locked decisions, verified engine anchors (symbol names, data
   shapes, integration points), and per-release specs with schemas, starting balance

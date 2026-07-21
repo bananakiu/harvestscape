@@ -128,6 +128,26 @@ function buildWardingArt(){
     px(g,6,4,4,2,"#3a6ad0"); px(g,7,4,2,1,"#9fc4ff"); for(let i=0;i<8;i++) px(g,4+i,13,1,1,"#8a94b0"); });
   mkSpr("item_Settler's Band", 16, 16, g => { for(let i=0;i<10;i++) px(g,3+i,8+Math.round(Math.sin(i*0.9)*2),1,1,"#3a7a5c");
     for(let i=0;i<10;i++) px(g,3+i,7+Math.round(Math.sin(i*0.9+1.5)*2),1,1,"#5aa87a"); px(g,4,8,1,1,"#8fe0c0"); px(g,11,7,1,1,"#8fe0c0"); });
+
+  // ==== v4.2 deep families 6–7 + the deepest icons ====
+  // Deep Knot — a dark violet knuckle of near-stone wood; a charger.
+  const dkBody = g => { px(g,3,4,10,10,"#2a2038"); px(g,3,4,10,1,"#4a3c5e"); px(g,5,6,6,6,"#3a2e4e"); px(g,6,7,4,4,"#2a2038");
+    px(g,7,8,2,2,"#1a1428"); px(g,4,10,2,2,"#5a4a6a"); px(g,10,6,2,2,"#5a4a6a"); px(g,5,6,1,1,"#b8a8ff"); px(g,9,7,1,1,"#b8a8ff"); };
+  mkSpr("deepknot_0", 16, 16, g => { dkBody(g); px(g,5,13,2,3,"#2a2038"); px(g,9,13,2,3,"#2a2038"); });
+  mkSpr("deepknot_1", 16, 16, g => { dkBody(g); px(g,6,13,2,3,"#2a2038"); px(g,8,13,2,3,"#2a2038"); });
+  // Star-Gnarl — a star-touched gnarl with a bright violet-white core; the ranged one.
+  const sgBody = g => { px(g,3,5,8,9,"#3a2e5e"); px(g,3,5,8,1,"#5a4a8a"); px(g,4,6,6,6,"#4a3a7a");
+    px(g,6,7,2,3,"#c8b8ff"); px(g,6,7,2,1,"#e8dcff"); px(g,4,6,1,1,"#e8dcff"); px(g,9,7,1,1,"#e8dcff");
+    px(g,2,8,1,1,"#c8b8ff"); px(g,11,9,1,1,"#c8b8ff"); px(g,5,3,1,1,"#e8dcff"); };
+  mkSpr("stargnarl_0", 14, 16, g => { sgBody(g); px(g,5,14,2,2,"#3a2e5e"); px(g,8,14,2,2,"#3a2e5e"); });
+  mkSpr("stargnarl_1", 14, 16, g => { sgBody(g); px(g,4,14,2,2,"#3a2e5e"); px(g,9,14,2,2,"#3a2e5e"); px(g,7,2,1,1,"#e8dcff"); });
+
+  mkSpr("item_Deepgnarl", 16, 16, g => { px(g,4,4,8,9,"#2a2038"); px(g,4,4,8,1,"#4a3c5e"); px(g,6,6,4,5,"#3a2e4e");
+    px(g,7,7,2,3,"#1a1428"); px(g,5,5,1,1,"#b8a8ff"); px(g,9,10,1,1,"#b8a8ff"); px(g,5,11,2,1,"#5a4a6a"); });
+  mkSpr("item_Gloamstar", 16, 16, g => { px(g,7,3,2,10,"#c8b8ff"); px(g,3,7,10,2,"#c8b8ff"); px(g,6,6,4,4,"#e8dcff"); px(g,7,7,2,2,"#ffffff");
+    for(let i=0;i<6;i++) px(g,3+((i*1.6)|0), 8+Math.round(Math.sin(i)*3), 1,1, "#5aa87a"); });
+  mkSpr("item_Starward Charm", 16, 16, g => { px(g,4,5,8,8,"#2c2318"); px(g,5,6,6,6,"#3c3020"); px(g,6,6,4,4,"#c8b8ff"); px(g,7,7,2,2,"#ffffff");
+    px(g,3,8,1,1,"#b8ecf7"); px(g,12,8,1,1,"#b8ecf7"); px(g,7,3,1,1,"#b8ecf7"); px(g,7,13,1,1,"#b8ecf7"); });
 }
 
 /* ---------------- terrain tiles ---------------- */
