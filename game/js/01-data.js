@@ -8,13 +8,16 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.7.0", code: 94, codename: "A Fuller Table", date: "2026-07-22" };
+const VERSION = { name: "4.8.0", code: 95, codename: "Nothing Wasted", date: "2026-07-22" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.8.0", code:95, date:"2026-07-22", name:"Nothing Wasted", notes:[
+    { t:"feature", s:"The kitchen catches up — ten new dishes, so nothing you grow or make dead-ends at the counter. The dairy's own Cheese and Fine Cheese, the orchard's apples, cherries and plums, the prized Starfruit, and every one of last update's new crops now have a recipe: Apple Crumble, Cheese Toastie, Cherry Tart, Starfruit Sorbet, Asparagus Quiche, Plum Pudding, Cloudberry Preserve, Frostmelon Ice, Peony Cordial and the Dragonfruit Parfait, learned from Cooking 20 up to 84. Each is worth more cooked than sold raw, and slots into the gaps on the recipe ladder — so Cooking keeps teaching you something new the whole climb." },
+  ]},
   { v:"4.7.0", code:94, date:"2026-07-22", name:"A Fuller Table", notes:[
     { t:"feature", s:"Five new crops fill the seasons' quiet stretches. Spring no longer dead-ends at Rhubarb — there's Asparagus (Farming 50) and, up high, Peony (75). Winter grows more than two things now: Cloudberry (35) and Frostmelon (60) between Frostbloom and Everbloom. And Summer tops out sweeter with Dragonfruit (82). Each is season-locked, priced on the same honest curve as the Long Climb, and — like every crop — makes its own wine and preserves, feeds the shelf and the Collection, and delights whoever likes it." },
     { t:"feature", s:"Two new charms round out the set — every skill has a trinket now. The Heron Feather Charm (+5% Fishing XP) and the Hearth Charm (+5% Cooking XP) join the birds'-nest finds, so Fishing and Cooking finally have something to collect and wear the way Woodcutting and Mining always have. One worn at a time, as ever." },
@@ -908,7 +911,24 @@ const RECIPES = [
   { name:"Fisherman's Pie",   lvl:74, ing:{Salmon:1, Yam:1, Milk:1},         energy:100, sell:2250, xp:178, col:"#d0a060" },
   { name:"Everbloom Cordial", lvl:82, ing:{Everbloom:1, Honey:1},            energy:90,  sell:2400, xp:215, col:"#c8b0f0" },
   { name:"Grand Feast",       lvl:90, ing:{"Gulf Sturgeon":1, Yam:1, Everbloom:1}, energy:100, sell:5400, xp:285, col:"#e0c070" },
+  // v4.8 "the kitchen catches up" — every produced good should feed a downstream loop (GBP §3.5,
+  // reward-is-an-input), but several premium goods dead-ended at the counter: the Cheese Press's own
+  // Cheese/Fine Cheese, the orchard's Apple/Cherry/Plum, Starfruit, and v4.7's five new crops all had
+  // NO recipe. Ten dishes close those loops, priced ~1.4–1.5× their ingredient cost (so cooking always
+  // beats selling the raw good) and slotted into the Cooking unlock ladder's gaps (L20–84). Sell tracks
+  // the ingredients (a Starfruit dish is dear, a Plum dish humble), not strictly the level.
+  { name:"Apple Crumble",       lvl:20, ing:{Apple:3, Wheat:1},               energy:80,  sell:420,  xp:32,  col:"#d0403a" },   // orchard: Apple
+  { name:"Cheese Toastie",      lvl:26, ing:{Cheese:2, Wheat:1},              energy:76,  sell:500,  xp:40,  col:"#e8c85a" },   // dairy: Cheese
+  { name:"Cherry Tart",         lvl:34, ing:{Cherry:3, Egg:1, Wheat:1},       energy:82,  sell:580,  xp:50,  col:"#c02a3a" },   // orchard: Cherry
+  { name:"Starfruit Sorbet",    lvl:38, ing:{Starfruit:1, Milk:1},            energy:88,  sell:1480, xp:56,  col:"#ffe25a" },   // Starfruit (premium)
+  { name:"Asparagus Quiche",    lvl:46, ing:{Asparagus:1, Egg:2, Cheese:1},   energy:92,  sell:1400, xp:98,  col:"#7a9a4a" },   // v4.7 crop + Cheese
+  { name:"Plum Pudding",        lvl:52, ing:{Plum:3, "Large Milk":1},         energy:90,  sell:720,  xp:110, col:"#7a4a9a" },   // orchard: Plum
+  { name:"Cloudberry Preserve", lvl:58, ing:{Cloudberry:2, Honey:1},          energy:70,  sell:1700, xp:125, col:"#e8b45a" },   // v4.7 crop
+  { name:"Frostmelon Ice",      lvl:64, ing:{Frostmelon:1, "Large Milk":1},   energy:90,  sell:1500, xp:142, col:"#8fb8d8" },   // v4.7 crop
+  { name:"Peony Cordial",       lvl:78, ing:{Peony:1, Honey:1},               energy:88,  sell:1820, xp:192, col:"#e06a9a" },   // v4.7 crop
+  { name:"Dragonfruit Parfait", lvl:84, ing:{Dragonfruit:1, "Fine Cheese":1}, energy:94,  sell:2300, xp:228, col:"#d0407a" },   // v4.7 crop + Fine Cheese
 ];
+RECIPES.sort((a,b) => a.lvl - b.lvl);   // v4.8: keep the Kitchen list level-ordered so appended recipes slot in (nothing indexes RECIPES by position)
 RECIPES.forEach(r => { ITEM_SELL[r.name] = r.sell; EDIBLE[r.name] = r.energy; });
 
 // ---- ROWAN'S RESTORATION PROJECTS ----

@@ -22,6 +22,35 @@
 
 ---
 
+## 2026-07-22 — v4.8.0 "Nothing Wasted" (code 95, tag `v4.8.0`) — the kitchen catches up: recipes for the orphaned goods
+
+### Why this release
+
+The companion to v4.7's crops, and GBP §3.5 (reward-is-an-input): every produced good should feed a
+downstream loop or it reverts to a flat gold faucet. Several premium goods dead-ended at Tom's counter —
+the Cheese Press's own **Cheese/Fine Cheese**, the orchard's **Apple/Cherry/Plum**, **Starfruit**, and all
+**five new crops** from v4.7 had no recipe. Ten dishes close those loops.
+
+### Added — ten recipes (`RECIPES`, `01-data.js`)
+
+Apple Crumble (Cooking 20), Cheese Toastie (26), Cherry Tart (34), Starfruit Sorbet (38), Asparagus Quiche
+(46), Plum Pudding (52), Cloudberry Preserve (58), Frostmelon Ice (64), Peony Cordial (78), Dragonfruit
+Parfait (84 — closes Fine Cheese too). Each is priced at **~1.4–1.5× its ingredient cost** (verified
+margins 1.42–1.57), so cooking always beats selling the raw good; the sell tracks the *ingredients* (a
+Starfruit dish is dear at 1480, a Plum dish humble at 720), not strictly the unlock level. They slot into
+the Cooking ladder's gaps between the existing 21 dishes, so the skill keeps teaching a new recipe the
+whole climb to 90. Pure data: each auto-inherits its plate sprite (from `col`), `ITEM_SELL`, `EDIBLE`, the
+Kitchen list, gifting, and the Collection.
+
+One tidy-up: `RECIPES` is now `.sort`ed by level once at load (nothing indexes it by position), so appended
+recipes display level-ordered in the Kitchen without hand-placing each into the array.
+
+### Verified
+
+In-browser: all ten recipes present and level-sorted (31 total); every one profitable (sell > ingredient
+cost, margins 1.42–1.57); plate sprites generate; `EDIBLE`/`ITEM_SELL` registered; each cooks correctly
+(ingredients consumed, dish produced) and is locked below its Cooking level.
+
 ## 2026-07-22 — v4.7.0 "A Fuller Table" (code 94, tag `v4.7.0`) — content breadth: seasonal crops + the last two charms
 
 ### Why this release
