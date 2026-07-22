@@ -22,6 +22,39 @@
 
 ---
 
+## 2026-07-22 — v4.12.0 "The Skill Guide" (code 99, tag `v4.12.0`) — owner update 1: the full per-skill unlock guide
+
+### Why this release
+
+Owner request: "like RuneScape's skill pop-ups/UI that details ALL the unlocks throughout the whole
+leveling system for each skill." The skills panel already showed the *next* unlock and earned masteries;
+this adds the complete 1→99 ladder.
+
+### Added — the Skill Guide (`skillGuideHtml`, 10-ui.js)
+
+Inside each skill's detail (Skills panel → tap a skill), an expandable **"📖 Skill guide — everything <skill>
+unlocks (N milestones)"** lists every level that unlocks something, in order, built **straight from
+`unlocksAt`** so it can never drift from the real gates. Each row is `✔ Lv — <what>` (reached, gold) or
+`🔒 Lv — <what>` (locked, dimmed), and the list scrolls inside the panel. It interleaves content and the
+four mastery perks: e.g. Warding shows Gloam Wisp (1), Knot-Shambler (10), Ember Mite (20), ★ Steady Ward
+(25), Hollow Warden (30), The Great Knot (40) … Star-Gnarl (85), ★ Lanternheart (99). Milestone counts:
+Farming 25, Cooking 34, Fishing 22, Warding 12, etc.
+
+### Changed — Warding gains real content unlocks
+
+To make its guide (and the rest of the UI) meaningful, `unlocksAt` and `nextUnlock` gained a **Warding
+branch** — the restless-thing families by their level (`CREATURES[k].lvl`, excluding the Tanglet split
+child). Side effects: the skills panel and the level-up banner now name Warding's *next* unlock ("Unlocks
+The Great Knot at Lv 40") instead of going silent, and `unlocksAt` also picked up Fishing's **legends**
+(it listed only the common fish before, though `nextUnlock` already had them).
+
+### Verified
+
+In-browser: the guide renders per skill with correct milestone counts (Farming 25 / Cooking 34 / Fishing
+22 / Warding 12) built from `unlocksAt`; Warding at Lv 35 shows 5 reached (wisp/shambler/embermite/Hollow
+Warden + Steady Ward) and 7 locked (Great Knot/Gloam Tangle/Deep Knot/Star-Gnarl + masteries 50/75/99),
+correctly ticked/padlocked; the panel's next-unlock line now works for Warding; console clean; screenshot.
+
 ## 2026-07-22 — v4.11.0 "Less Fuss" (code 98, tag `v4.11.0`) — daily-loop QoL: swathe harvest, crop cues, sell-all
 
 ### Why this release

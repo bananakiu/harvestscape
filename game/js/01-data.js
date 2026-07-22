@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.11.0", code: 98, codename: "Less Fuss", date: "2026-07-22" };
+const VERSION = { name: "4.12.0", code: 99, codename: "The Skill Guide", date: "2026-07-22" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.12.0", code:99, date:"2026-07-22", name:"The Skill Guide", notes:[
+    { t:"feature", s:"Every skill now has a full Skill Guide, like RuneScape's. Open Skills (K), tap a skill, and expand its guide to see everything it unlocks across the whole climb to 99 — every crop, tree, ore, fish, recipe and (for Warding) restless-thing family, plus the four mastery perks, listed in level order. What you've already reached is ticked; what's still ahead is padlocked, so you always know exactly what the next level is for." },
+    { t:"change", s:"Warding's progress is clearer everywhere as a side effect: it now names its next unlock (the next creature family) in the skills panel and at level-up, instead of going quiet." },
+  ]},
   { v:"4.11.0", code:98, date:"2026-07-22", name:"Less Fuss", notes:[
     { t:"change", s:"Harvesting keeps up with your watering can now. A ripe harvest gathers the same swathe your can waters — a whole row or 3×3 in one press, not one tile at a time. (A basic can still picks a single tile; upgrade it and your reach grows for both.) Only ripe crops in reach are taken; anything still growing is left alone." },
     { t:"change", s:"Crops tell you what they need at a glance: a warm gold sparkle bobs over anything ripe and ready to pick, and a faint droplet marks a crop sitting on dry soil that won't grow tonight until it's watered." },

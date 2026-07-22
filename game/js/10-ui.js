@@ -390,6 +390,24 @@ function panelTabs(panelId, stripId, tabs, render){
 const SKILL_ICON = { Farming:"item_Turnip", Woodcutting:"item_Wood", Mining:"item_Stone", Fishing:"item_Sardine", Cooking:"item_Berry Bun", Warding:"item_Stave" };   // v4.0
 let skillSel = null;   // which skill's detail is expanded (null = grid only)
 function selectSkill(s){ skillSel = (skillSel === s) ? null : s; playSfx("select"); renderSkills(); }
+// v4.11 (owner update 1) — a RuneScape-style Skill Guide: EVERY level that unlocks something, for the
+// whole climb to 99, built straight from unlocksAt (so it can never drift from the real gates). Reached
+// milestones are ticked + gold; the rest are dimmed and padlocked. Scrolls inside the detail panel.
+function skillGuideHtml(s){
+  const lvl = levelFor(state.skills[s]);
+  let rows = "", count = 0;
+  for(let L = 1; L <= 99; L++){
+    const u = (typeof unlocksAt === "function") ? unlocksAt(s, L) : [];
+    if(!u.length) continue;
+    count++;
+    const got = lvl >= L;
+    rows += `<div style="display:flex;gap:.5em;padding:1px 4px;${got?'':'opacity:.5;'}">` +
+      `<span style="min-width:3.4em;font-weight:bold;color:${got?'var(--gold-hi)':'var(--ink-soft)'};">${got?'✔':'🔒'} ${L}</span>` +
+      `<span style="flex:1;">${u.join(", ")}</span></div>`;
+  }
+  return `<details class="skillGuide"><summary style="cursor:pointer;color:var(--gold-hi);margin-top:.5em;font-size:.95em;">📖 Skill guide — everything ${s} unlocks (${count} milestones)</summary>` +
+    `<div style="max-height:210px;overflow-y:auto;margin-top:.3em;font-size:.92em;line-height:1.4;border-top:1px solid rgba(255,255,255,.08);padding-top:.2em;">${rows}</div></details>`;
+}
 function skillDetailHtml(s){
   if(!s || !(s in state.skills))
     return `<div class="skillHint">Tap a skill for its XP, unlocks and mastery milestones.</div>`;
@@ -405,6 +423,7 @@ function skillDetailHtml(s){
   const nx = nextMastery(s);
   if(nx) h += `<div class="sdLine next">☆ Lv ${nx.at}: ${nx.text}</div>`;
   else if(!un) h += `<div class="sdLine earned">Mastered — every craft learned.</div>`;
+  h += skillGuideHtml(s);   // v4.11: the full unlock ladder, 1→99
   return h;
 }
 function renderSkills(){

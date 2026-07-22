@@ -159,6 +159,7 @@ function nextUnlock(skill){
   if(skill==="Mining")      for(const k in ORES)  add(ORES[k].lvl,  ORES[k].name);
   if(skill==="Fishing"){ FISH.forEach(f=>add(f.lvl, f.name)); LEGENDS.forEach(l=>add(l.lvl, l.name+" (legend)")); }
   if(skill==="Cooking") for(const r of RECIPES) add(r.lvl, r.name);
+  if(skill==="Warding") for(const k in CREATURES){ if(k!=="tanglet") add(CREATURES[k].lvl, CREATURES[k].name); }   // v4.11: the restless-thing families you grow strong enough to settle
   return best;
 }
 
@@ -167,8 +168,9 @@ function unlocksAt(skill, lvl){
   if(skill==="Farming") for(const k in CROPS) if(CROPS[k].lvl===lvl) u.push(CROPS[k].name+" seeds");
   if(skill==="Woodcutting") for(const k in TREES) if(TREES[k].lvl===lvl) u.push(TREES[k].name);
   if(skill==="Mining") for(const k in ORES) if(ORES[k].lvl===lvl) u.push(ORES[k].name);
-  if(skill==="Fishing") FISH.forEach(f=>{ if(f.lvl===lvl) u.push(f.name); });
+  if(skill==="Fishing"){ FISH.forEach(f=>{ if(f.lvl===lvl) u.push(f.name); }); LEGENDS.forEach(l=>{ if(l.lvl===lvl) u.push(l.name+" (legend)"); }); }
   if(skill==="Cooking") for(const r of RECIPES) if(r.lvl===lvl) u.push(r.name);
+  if(skill==="Warding") for(const k in CREATURES){ if(k!=="tanglet" && CREATURES[k].lvl===lvl) u.push(CREATURES[k].name); }   // v4.11
   if(MASTERY[skill] && MASTERY[skill][lvl]) u.push("★ " + MASTERY[skill][lvl]);
   return u;
 }
