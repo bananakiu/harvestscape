@@ -22,6 +22,48 @@
 
 ---
 
+## 2026-07-22 — v4.10.0 "Clear & Fair" (code 97, tag `v4.10.0`) — QoL/balance pass: clarity fixes + tightenings (audit-driven)
+
+### Why this release
+
+Serves the owner's "more balanced and fun, QoL, without making it too easy," and offsets v4.9's flat
+pricing (which strengthened gold faucets). All four items came from a multi-agent QoL+balance audit that
+tagged each with a difficultyImpact and an explicit "does this make it too easy?" check.
+
+### Fixed — the level-up banner stops lying (correctness)
+
+`nextUnlock` (08-actions.js) has branches for Farming/Woodcutting/Mining/Fishing/Cooking but **none for
+Warding**, and the level-up banner fell back to `nextUnlock` but never to `nextMastery`. Result: at nearly
+every Warding level, and for the 8–13 levels past a grind skill's last content unlock, the banner declared
+**"Mastery. Nothing left to learn"** — a lie (masteries at 25/50/75/99 and deeper content were still
+ahead). Fixed with a `nextMastery` fallback: when no content unlock is ahead, the banner points at the
+next mastery tier ("Next: ★ Steady Ward … at Lv 25") and only says "nothing left to learn" at the true
+end (L99). Restores the bible's §4.3 "always show the next unlock," which the skills panel already honored.
+
+### Changed — numeric Energy & Resolve readouts (clarity)
+
+`refreshHUD` now writes the value into the bar labels: **ENERGY 73**, **RESOLVE 42/100**. Two eyeballed
+bars become plannable numbers ("one more till?", "one more hit?") — pure clarity, only surfacing state the
+game already computes; nothing about difficulty changes.
+
+### Balance — two honest tightenings (nothing taken)
+
+1. **Orchard cap.** Fruit trees were the ONLY uncapped placeable (hives cap at 4, machines at their `.max`,
+   décor at 40) — an unbounded passive faucet, more warranted to cap now flat pricing removed the sell-side
+   brake. `ORCHARD_MAX = 30` (a full orchard), checked in `plantPermanent` before energy is spent, like the
+   other caps. **Grandfathered:** it only refuses NEW plantings past the cap; existing trees are untouched.
+2. **Parry-XP mill.** The v4.4 Guard granted a flat `addXP("Warding",6)` per parry with no cooldown, so a
+   single safe floor-1 wisp could be re-parried forever for risk-free XP (decoupling Warding from the
+   descend-deeper danger loop). Now gated by a per-creature `cr.parryXpT` (10s): each creature rewards a
+   parry once per window; settling stays the real XP. Real combat XP is untouched.
+
+### Verified
+
+In-browser: the Warding banner points at the ★25 mastery (was "nothing left"); Farming L92 falls back to
+the ★99 mastery; a real content level still shows "Unlocked: Carrot seeds"; HUD reads "ENERGY 73" /
+"RESOLVE 42/100"; the 31st fruit tree is refused with the sapling kept (30 stand, grandfathered); a parry
+gives XP, an immediate re-parry gives 0, and XP returns after the cooldown; console clean.
+
 ## 2026-07-22 — v4.9.0 "Worth the Trip" (code 96, tag `v4.9.0`) — commerce: Demand retired + specialty vendors (owner requests)
 
 ### Why this release

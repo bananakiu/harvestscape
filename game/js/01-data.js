@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.9.0", code: 96, codename: "Worth the Trip", date: "2026-07-22" };
+const VERSION = { name: "4.10.0", code: 97, codename: "Clear & Fair", date: "2026-07-22" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.10.0", code:97, date:"2026-07-22", name:"Clear & Fair", notes:[
+    { t:"fix", s:"Levelling up tells the truth now. The 'nothing left to learn' line used to appear far too early — at nearly every Warding level, and a dozen levels before the end on the older skills. It now points you at the next thing to work toward (a new crop or catch, or the next mastery) right up until there genuinely is nothing left." },
+    { t:"change", s:"The Energy and Resolve bars show their numbers now, so you can plan the exact swing or the last safe hit at a glance." },
+    { t:"balance", s:"A couple of honest tightenings (nothing taken from you): the orchard now caps at 30 fruit trees — a full orchard, but no longer an endless one (any trees you've already planted stay) — and re-parrying the same restless thing over and over no longer farms Warding XP (each creature only rewards a parry once every little while; settling is still the real teacher). Both keep the game from getting too easy now that selling is flat-priced." },
+  ]},
   { v:"4.9.0", code:96, date:"2026-07-22", name:"Worth the Trip", notes:[
     { t:"change", s:"Selling is simple again. The old market-demand system — where dumping a lot of one thing dropped its price — is gone. Every crop, fish and good now sells at its full price, always, however much you bring." },
     { t:"feature", s:"The coast and the dairy have their own shops now, each stocking something you can't buy in town. Tom's General Store keeps the seeds, food, tools and décor. Down at the beach, Bram's Bait & Tackle sells fresh bait — carry it and the fish bite quicker (it's used up as you land them). Out at the Butterbrook dairy, Nell's Larder sells the kitchen staples — milk, honey, eggs (milk moved here from Tom's, where it never really belonged). You can still sell anything at any of them; they just differ by what's for sale." },
@@ -712,6 +717,7 @@ const DECOR = {
                  blurb:"Every task the valley ever asked — done, and told. It flies for the teller." },
 };
 const DECOR_MAX = 40;   // a generous cap so a farm can be dressed, but not infinitely spammed
+const ORCHARD_MAX = 30;   // v4.9: fruit trees were the ONE uncapped placeable (hives/machines/décor all cap). A full orchard, bounded — restores passive-beats-active income (more warranted now flat pricing removed the sell-side brake). Grandfathered: only blocks NEW plantings past the cap.
 
 // ---- THE DEEP RUN (v3.15) ----
 // The mine froze time (v2.9) to be cozy — but that also removed every trace of expedition tension

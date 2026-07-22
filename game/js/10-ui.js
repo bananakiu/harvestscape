@@ -133,6 +133,7 @@ function refreshHUD(){
   // gold is drawn by syncGold() each frame so it counts up (see below); don't snap it here
   const e = state.energy, bar = $("energyBar");
   bar.style.width = e + "%";
+  { const el = $("energyLabel"); if(el) el.textContent = "ENERGY " + Math.round(e); }   // v4.9: a plannable number, not just an eyeballed bar
   // Warm all the way down — green → gold → deep amber. Energy is deliberately non-hazardous (you can
   // always eat or sleep), so "low" must not read as a survival-red alarm at the player (Cozy Contract
   // + palette discipline 8.1): the narrowing bar already says "low"; the tone just deepens, never reddens.
@@ -149,6 +150,7 @@ function refreshHUD(){
     if(combat){
       const rmax = resolveMax(), rp = Math.max(0, Math.min(rmax, state.resolve || 0));
       const rbar = $("resolveBar"); rbar.style.width = Math.round(rp/rmax*100) + "%";
+      { const rl = $("resolveLabel"); if(rl) rl.textContent = "RESOLVE " + Math.round(rp) + "/" + rmax; }   // v4.9: exact Resolve — "one more hit?"
       const frac = rp/rmax;
       rbar.style.background = frac>0.5 ? "linear-gradient(#bfe4ff,#5a9ad8)"
                            : frac>0.25 ? "linear-gradient(#cfe0ff,#6a86d0)"

@@ -205,9 +205,14 @@ function addXP(skill, amt){
     // §4.3 "always show the next unlock" — at the level-up moment too, not only in the panel: when
     // this level unlocked nothing, point at what's still ahead so the grind always has a destination.
     const nu = unl.length ? null : nextUnlock(skill);
+    // v4.9 fix: when no CONTENT unlock is ahead, fall back to the next MASTERY tier before declaring
+    // "nothing left to learn". This stops the banner lying — at nearly every Warding level (nextUnlock
+    // has no Warding branch) and on grind skills for the 13+ levels past their last content unlock.
+    const nm = (!unl.length && !nu) ? nextMastery(skill) : null;
     banner("⬆ "+skill+" Lv "+after+"!",
       unl.length ? ("Unlocked: "+unl.join(", "))
       : nu       ? ("Next: "+nu.label+" at Lv "+nu.at)
+      : nm       ? ("Next: ★ "+nm.text+" at Lv "+nm.at)
       :            "Mastery. Nothing left to learn — only to perfect.");
     playSfx("level"); pSparkle(state.px, state.py-14, "#8fd3ff", 14); refreshHotbar();
     // a neighbour notices when you cross a mastery tier — one warm line, in their own voice
@@ -1347,6 +1352,8 @@ function plantPermanent(tx, ty){
   }
   const sap = hive ? null : FRUIT_TREES[state.seedSel.slice(4)];
   if(!hive && !sap){ toast("Nothing to plant."); playSfx("error"); return; }
+  if(sap && Object.values(curMap.objects).filter(o => o.kind === "fruittree").length >= ORCHARD_MAX){   // v4.9 orchard cap (grandfathered; refuse BEFORE spending energy, like the hive/machine caps)
+    toast(`${ORCHARD_MAX} fruit trees is a full orchard.`); playSfx("error"); return; }
   if((state.inv[hive ? "Beehive" : sap.name] || 0) < 1){ toast("You don't have one."); playSfx("error"); return; }
   if(!spendEnergy(2)) return;
 

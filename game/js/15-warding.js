@@ -111,6 +111,7 @@ function updateCreatures(dt){
     const d = CREATURES[cr.kind];
     cr.hurtT = Math.max(0, (cr.hurtT||0) - dt);
     cr.guardOpen = Math.max(0, (cr.guardOpen||0) - dt);   // v4.4: a parried Hollow Warden's dropped-guard window
+    cr.parryXpT  = Math.max(0, (cr.parryXpT||0)  - dt);   // v4.9: per-creature parry-XP cooldown (anti-mill)
     cr.warm  = Math.max(0, (cr.warm||0) - dt*0.6);
     cr.hpBarT = Math.max(0, (cr.hpBarT||0) - dt);   // v4.0.3: health bar/nameplate linger after a hit
     cr.ringT = Math.max(0, (cr.ringT||0) - dt);
@@ -392,7 +393,10 @@ function drainResolve(amt, srcX, srcY, attacker){
         if(wardWalkable(cr.x, ny)) cr.y = ny;
         if(CREATURES[cr.kind].block) cr.guardOpen = 1.8;   // ← the Hollow Warden's front is knocked OPEN: strike it now
       }
-      addXP("Warding", 6);   // a parry is a skill beat — a small reward
+      // v4.9: a parry is a skill beat worth a little XP — but ONLY once per creature per 10s, or a single
+      // safe floor-1 wisp could be re-parried forever for a risk-free XP mill (the Guard's own exploit).
+      // Settling is still the real XP; this keeps parry-XP a garnish, not a grind that skips the danger loop.
+      if(cr && !(cr.parryXpT > 0)){ addXP("Warding", 6); cr.parryXpT = 10; }
       return;                // parried: nothing lost
     }
     // a valid but late guard — most of the blow caught
