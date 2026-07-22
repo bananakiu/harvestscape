@@ -22,6 +22,46 @@
 
 ---
 
+## 2026-07-22 — v4.11.0 "Less Fuss" (code 98, tag `v4.11.0`) — daily-loop QoL: swathe harvest, crop cues, sell-all
+
+### Why this release
+
+The neutral (non-easier) friction-removers from the QoL/balance audit — the biggest one being that
+harvesting was the *last* core field verb still charging a per-tile tax while the Hoe tills and the Can
+waters in swathes. Nothing here touches challenge or the economy; it removes clicks and squinting.
+
+### Changed — row/swathe harvesting
+
+A ripe interact (E) now sweeps the **Can's footprint** (`canTiles(tx,ty, state.tools.Can, face)` — the
+exact shape the can waters): a tier-1 can harvests a 3-wide row, tier-3+ a 3×3, tier-0 the single faced
+tile (backward-compatible). Only *ripe* crops in reach are taken; unripe ones and anything outside the
+footprint are left. Yields, XP and the Bountiful/Fields-of-Gold double rolls are per-crop and byte-
+identical to before — harvest has no timing element, so this is pure friction removal, not challenge.
+
+### Changed — glanceable crop cues (07-entities.js)
+
+Replaced the lone harsh-blinking pixel with two readable, cozy tells in the same crop-draw loop: a **warm
+gold sparkle that gently bobs** over any ripe crop (a real "pick me," not a strobe), and — on a still-
+growing crop whose soil is dry (`TILLED`, not `WATERED`, so it won't advance overnight) — a **faint cool
+droplet**. Mutually exclusive (ripe crops are always mature); the thirst tell is deliberately subtle since
+the soil colour already half-says it.
+
+### Added — "Sell all produce" (owner-flagged footgun guard baked in)
+
+One button at the top of the sell counter sells every **crop, raw fish and cooked dish** (incl. grilled
+"Cooked X") in your bag in a single press — and **never** materials: `isProduce` matches only
+`CROP_NAMES ∪ FISH_NAMES ∪ RECIPE_NAMES ∪ "Cooked …"`, so wood, ore, warding drops, gems, star metal,
+charms and bought foods (Berry Bun, etc.) are all left alone. Economy-neutral under flat pricing (identical
+to clicking each row's "all"); still feeds the Harvest Fair's best-crop tracking. The button shows the
+exact total it'll fetch.
+
+### Verified
+
+In-browser: a 3×3 harvest gathers 8 of 9 ripe crops (the 1 unripe + the out-of-range crop correctly left);
+tier-0 can harvests a single tile (its neighbour kept); sell-all sells crops/fish/dishes (970g) and keeps
+Wood/Iron Ore/Gloam Thread and Berry Bun; the gold ripe glint and thirsty droplet render (screenshot);
+console clean.
+
 ## 2026-07-22 — v4.10.0 "Clear & Fair" (code 97, tag `v4.10.0`) — QoL/balance pass: clarity fixes + tightenings (audit-driven)
 
 ### Why this release

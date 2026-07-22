@@ -797,6 +797,10 @@ function renderShop(){
   if(shopTab === "sell"){
     const sellables = Object.keys(state.inv).filter(i => ITEM_SELL[i]);
     if(!sellables.length) html += `<div class="locked">Nothing to sell yet — go harvest, chop, mine or fish!</div>`;
+    // v4.11: one-click "sell all produce" — crops, fish & cooked dishes only (materials are kept safe).
+    const pv = (typeof produceValue === "function") ? produceValue() : 0;
+    if(pv > 0) html += `<div class="row"><span class="lead"><span style="color:var(--gold-hi)">Sell all produce <span class="sub">crops, fish &amp; cooked dishes — your materials stay put</span></span></span>` +
+      `<span><button class="buy" onclick="sellAllProduce()">sell all · ${pv}g</button></span></div>`;
     sellables.forEach((i, idx) => {
       // v4.9: Tom's Demand retired — every unit sells at full base price, so no more "demand %" note.
       const now = nextUnitPrice(i);   // = the full base unit price

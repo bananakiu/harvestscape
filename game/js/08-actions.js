@@ -613,17 +613,27 @@ function interact(){
   // Interior exit doors are excluded (their warp lives on the mat, and the map isn't outdoor).
   if(tt === T.DOOR && curMap.outdoor){ toast("You knock. Quiet inside — nobody's home just now.", "#cbb98f"); return; }
 
-  // harvest crop
+  // harvest crop — v4.11: a ripe interact now SWEEPS the Can's footprint (canTiles), gathering every ripe
+  // crop in reach in one press. Harvesting was the last core field verb still charging a per-tile tax while
+  // the Hoe tills and the Can waters in swathes. Yields/XP are byte-identical (harvest has no timing/skill
+  // element), so this removes friction, not challenge. Tier-0 Can = just the faced tile (backward-compatible).
   const crop = curMap.crops[k];
   if(crop){
     const c = CROPS[crop.type];
-    if(crop.days >= c.days){ delete curMap.crops[k]; setTile(tx,ty,T.TILLED);
-      // ★ Bountiful (50) / Fields of Gold (99) — the field starts giving back
-      const dbl = hasMastery("Farming",99) ? 0.20 : hasMastery("Farming",50) ? 0.10 : 0;
-      const n = 1 + (dbl && chance(dbl) ? 1 : 0);
-      give(c.name, n);
-      if(n>1) floatText(tx*TILE+8, ty*TILE-6, "double!", "#ffd75a");
-      addXP("Farming", c.xp); bump("harvested"); pSparkle(tx*TILE+8, ty*TILE+6, c.pal[3], n>1?18:12); playSfx("harvest"); }
+    if(crop.days >= c.days){
+      const dbl = hasMastery("Farming",99) ? 0.20 : hasMastery("Farming",50) ? 0.10 : 0;   // ★ Bountiful (50) / Fields of Gold (99)
+      let picked = 0, dblAny = false;
+      for(const [hx,hy] of canTiles(tx, ty, state.tools.Can||0, state.face)){
+        const cr = curMap.crops[key(hx,hy)]; if(!cr) continue;
+        const cc = CROPS[cr.type]; if(cr.days < cc.days) continue;   // only the RIPE crops in the swathe
+        delete curMap.crops[key(hx,hy)]; setTile(hx,hy,T.TILLED);
+        const n = 1 + (dbl && chance(dbl) ? 1 : 0); if(n>1) dblAny = true;
+        give(cc.name, n); addXP("Farming", cc.xp); bump("harvested");
+        pSparkle(hx*TILE+8, hy*TILE+6, cc.pal[3], n>1?18:12); picked++;
+      }
+      if(dblAny) floatText(tx*TILE+8, ty*TILE-6, "double!", "#ffd75a");
+      if(picked) playSfx("harvest");
+    }
     else toast(`${c.name}: day ${crop.days}/${c.days}${tt===T.WATERED?"":" — needs water"}`);
     return;
   }
@@ -1532,6 +1542,27 @@ function sellItem(item, n){
   toast(`Sold ${n} ${item} (+${gain}g)` + note, discounted ? "#e0b46a" : "#ffce5a");
   if(discounted && soldToday(item) >= demandFree(item) + 12 && chance(0.4)) setTimeout(() =>
     toast(pick(TOM_GLUT).replace(/\{item\}/g, item), "#e9dcc0"), 700);
+  playSfx("sell"); refreshHUD(); renderShop();
+}
+
+// v4.11 "sell all produce" — collapses the end-of-day click-fest into one button. Deliberately sells ONLY
+// produce (crops, raw fish, and cooked dishes incl. grilled "Cooked X"), NEVER materials — so it can't
+// footgun away the Wood/ore/warding-drops/gems/star-metal you're saving for tools, bells, charms or
+// projects. Economy-neutral under flat pricing (identical to clicking each row's "all").
+function isProduce(item){ return CROP_NAMES.has(item) || FISH_NAMES.has(item) || RECIPE_NAMES.has(item) || item.indexOf("Cooked ") === 0; }
+function produceValue(){ let g = 0; for(const it of Object.keys(state.inv)) if(isProduce(it) && ITEM_SELL[it] && state.inv[it] > 0) g += bundlePrice(it, state.inv[it]); return g; }
+function sellAllProduce(){
+  let gain = 0, count = 0, best = state.stats.bestCropSold || 0, bestName = null;
+  for(const it of Object.keys(state.inv)){
+    if(!isProduce(it) || !ITEM_SELL[it]) continue;
+    const n = state.inv[it] || 0; if(n <= 0) continue;
+    gain += bundlePrice(it, n); count += n; take(it, n);
+    if(CROP_NAMES.has(it) && (ITEM_SELL[it]||0) > best){ best = ITEM_SELL[it]; bestName = it; }   // still feeds the Harvest Fair
+  }
+  if(!count){ toast("Nothing to sell — no crops, fish or cooked dishes on you."); playSfx("error"); return; }
+  state.gold += gain; bump("earned", gain); bump("sold", count);
+  if(bestName){ state.stats.bestCropSold = best; state.flags.bestCropName = bestName; }
+  toast(`Sold ${count} — crops, fish & dishes (+${gain}g). Materials kept.`, "#ffce5a");
   playSfx("sell"); refreshHUD(); renderShop();
 }
 

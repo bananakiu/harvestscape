@@ -224,7 +224,15 @@ function renderWorld(){
       else if(kk >= 1) delete c.wt;   // pop finished — drop the transient stamp so it's never saved/replayed
     }
     ctx.drawImage(spr["crop_"+c.type+"_"+stage], -8, -16); ctx.restore();
-    if(c.days >= cfg.days && Math.floor(animT*3)%2) px(ctx, cx*TILE+11, cy*TILE+1, 2, 2, "#fff6b0");
+    // v4.11 glanceable cues (replaces the lone blinking pixel): a warm gold "ready" glint that gently bobs
+    // on ripe crops, or — on a still-growing crop whose soil is dry (TILLED, not WATERED, so it won't
+    // advance tonight) — a faint cool "thirsty" droplet. Mutually exclusive (ripe crops are always mature).
+    if(c.days >= cfg.days){
+      const gy = cy*TILE - 2 + Math.round(Math.sin(animT*3 + cx)*1.2), gx = cx*TILE + 7;
+      px(ctx, gx+1, gy-1, 1, 1, "#ffffff"); px(ctx, gx, gy, 4, 1, "#ffd75a"); px(ctx, gx+1, gy, 2, 2, "#fff2a0"); px(ctx, gx+1, gy+2, 2, 1, "#ffca4a");
+    } else if(tileAt(cx,cy) === T.TILLED){
+      ctx.globalAlpha = 0.5; px(ctx, cx*TILE+11, cy*TILE, 2, 3, "#a8cfe8"); px(ctx, cx*TILE+11, cy*TILE+3, 2, 1, "#7aa0c8"); ctx.globalAlpha = 1;
+    }
   }
 
   // depth-sorted entities

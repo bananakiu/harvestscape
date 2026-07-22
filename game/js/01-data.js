@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.10.0", code: 97, codename: "Clear & Fair", date: "2026-07-22" };
+const VERSION = { name: "4.11.0", code: 98, codename: "Less Fuss", date: "2026-07-22" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.11.0", code:98, date:"2026-07-22", name:"Less Fuss", notes:[
+    { t:"change", s:"Harvesting keeps up with your watering can now. A ripe harvest gathers the same swathe your can waters — a whole row or 3×3 in one press, not one tile at a time. (A basic can still picks a single tile; upgrade it and your reach grows for both.) Only ripe crops in reach are taken; anything still growing is left alone." },
+    { t:"change", s:"Crops tell you what they need at a glance: a warm gold sparkle bobs over anything ripe and ready to pick, and a faint droplet marks a crop sitting on dry soil that won't grow tonight until it's watered." },
+    { t:"feature", s:"A 'Sell all produce' button at the top of the sell counter — one press sells every crop, fish and cooked dish you're carrying, and deliberately leaves your materials (wood, ore, warding drops, gems) untouched, so you can't fat-finger away what you're saving for tools and projects." },
+  ]},
   { v:"4.10.0", code:97, date:"2026-07-22", name:"Clear & Fair", notes:[
     { t:"fix", s:"Levelling up tells the truth now. The 'nothing left to learn' line used to appear far too early — at nearly every Warding level, and a dozen levels before the end on the older skills. It now points you at the next thing to work toward (a new crop or catch, or the next mastery) right up until there genuinely is nothing left." },
     { t:"change", s:"The Energy and Resolve bars show their numbers now, so you can plan the exact swing or the last safe hit at a glance." },
