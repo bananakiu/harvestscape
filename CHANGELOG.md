@@ -22,6 +22,49 @@
 
 ---
 
+## 2026-07-23 — v4.14.0 "Never Stranded" (code 101, tag `v4.14.0`) — HUD-disappears bug fix
+
+### Why this release
+
+Owner report: "There's an issue right now with the heads-up display, it disappears when I play."
+
+**Root cause (diagnosed, not guessed).** The HUD is only ever hidden by one path: the *Hide HUD*
+toggle (`U` key, or the Settings toggle) → `setHudOn(false)`. That preference is **persisted** to
+`localStorage` under `hs_hud` as `{on:false}`, and `beginPlay` honors it via `applyHud()` on every
+session start. So the failure mode matches the report exactly: the moment the toggle goes off — a
+deliberate press, or a stray `U` while moving — the HUD vanishes, and because the off-state is
+remembered, it stays gone the next session too, with **no on-screen affordance** telling the player
+how to bring it back. To a player who doesn't know `U` is the culprit, the HUD has simply
+"disappeared while playing." (Every *other* HUD-touching path was audited and cleared: cutscenes
+add `.cine` which only *dims* via CSS and is always removed on scene end; travel/panels/combat never
+touch `HUDPREF`; and a NaN energy value can't blank the whole HUD — only the one bar.)
+
+The cozy contract is "nothing is ever taken from the player." A HUD you can't recover violates the
+spirit of that, even though it's only a display toggle. The fix is a guaranteed way back.
+
+### Fixed
+
+- **A permanent, always-visible restore affordance.** Added a small `#hudHint` button
+  ("◔ Show HUD · U") pinned to the **bottom-left corner**, shown **only while the HUD is hidden**.
+  Clicking it (or pressing `U`) calls `setHudOn(true)` and restores everything. Because the button
+  lives **outside** the `#hud` element in the DOM, it is *not* itself hidden when the HUD's opacity
+  goes to 0 — that was the key structural choice; a hint nested inside `#hud` would vanish with it
+  and defeat the purpose.
+  - `applyHud()` now also toggles the hint's visibility: `hint.classList.toggle("hidden", HUDPREF.on !== false)`
+    — i.e. the hint is present exactly when the HUD is off. One function stays the single source of
+    truth for "is the HUD showing," so the hint and the HUD can never disagree.
+  - Wired a click handler next to the panel-close wiring in `10-ui.js`; `playSfx("select")` for feedback.
+  - New `#hudHint` CSS (bottom-left, `z-index:7` so it sits above the hidden HUD, muted parchment
+    styling to match the game's palette, `.hidden{display:none}`).
+
+### Files
+
+- `game/index.html` — `#hudHint` button added after the `#hud` div (outside it); cache-buster `?v=119`.
+- `game/css/style.css` — `#hudHint` styling.
+- `game/js/10-ui.js` — `applyHud()` toggles the hint; click handler restores the HUD.
+
+---
+
 ## 2026-07-22 — v4.13.0 "Butterbrook" (code 100, tag `v4.13.0`) — owner update 2: build out Butterbrook + Nell's friendship payoff
 
 ### Why this release

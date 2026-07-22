@@ -8,13 +8,16 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.13.0", code: 100, codename: "Butterbrook", date: "2026-07-22" };
+const VERSION = { name: "4.14.0", code: 101, codename: "Never Stranded", date: "2026-07-23" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.14.0", code:101, date:"2026-07-23", name:"Never Stranded", notes:[
+    { t:"fix", s:"The heads-up display can't vanish on you anymore. Pressing U (Hide HUD) turns it off and — because that choice is remembered between sessions — it used to stay off with no obvious way back, so it looked like the HUD had simply disappeared while you played. Now, whenever the HUD is hidden, a small '◔ Show HUD · U' button sits in the bottom-left corner: click it (or press U) to bring everything back. You can never be stranded without your clock, gold and energy again." },
+  ]},
   { v:"4.13.0", code:100, date:"2026-07-22", name:"Butterbrook", notes:[
     { t:"feature", s:"Butterbrook is worth the walk now. The salt meadow grows Sea Aster — a lilac wildflower that blooms nowhere else in the valley; gather it for coin and Farming practice, fresh every day. And there's a bench at the water's edge, for when you just want to let the coast be the coast." },
     { t:"feature", s:"Nell has a heart to know, and a secret to share. Grow close to the dairy keeper across three quiet scenes — the twenty-year supply-line she calls a marriage, why she came to the coast where a thing takes exactly as long as it takes — and at the last, as a true friend, she teaches you her own recipe: the Butterbrook Reserve. The finest cheese, the richest milk, and a handful of the meadow's sea asters, cooked into a dish you can make nowhere else and sell for a fine price. It's the ONLY way to learn it." },

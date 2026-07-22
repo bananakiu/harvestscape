@@ -7,7 +7,7 @@
 <title>Harvestscape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=117">
+<link rel="stylesheet" href="css/style.css?v=119">
 </head>
 <body>
 <div id="frame">
@@ -45,6 +45,11 @@
       <div id="toasts"></div>
       <div id="pickups"></div>   <!-- fading item-collection log -->
     </div>
+
+    <!-- Always-visible restore affordance: shown ONLY while the HUD is hidden, so pressing U (or a
+         stray keypress) can never strand the player with no HUD and no clue how to get it back.
+         Lives OUTSIDE #hud so it isn't hidden along with it. -->
+    <button id="hudHint" class="hidden" title="Show the heads-up display (U)">◔ Show HUD · U</button>
 
     <!-- ============ HOTBAR ============ -->
     <div id="hotbar" class="hidden"></div>
@@ -155,21 +160,21 @@
   </div>
 </div>
 
-<script src="js/00-core.js?v=117"></script>
-<script src="js/01-data.js?v=117"></script>
-<script src="js/02-audio.js?v=117"></script>
-<script src="js/03-art.js?v=117"></script>
-<script src="js/04-world.js?v=117"></script>
-<script src="js/05-particles.js?v=117"></script>
-<script src="js/06-weather.js?v=117"></script>
-<script src="js/07-entities.js?v=117"></script>
-<script src="js/08-actions.js?v=117"></script>
-<script src="js/09-quests.js?v=117"></script>
-<script src="js/13-content.js?v=117"></script>
-<script src="js/15-warding.js?v=117"></script>
-<script src="js/10-ui.js?v=117"></script>
-<script src="js/11-title.js?v=117"></script>
-<script src="js/14-story.js?v=117"></script>
-<script src="js/12-game.js?v=117"></script>
+<script src="js/00-core.js?v=119"></script>
+<script src="js/01-data.js?v=119"></script>
+<script src="js/02-audio.js?v=119"></script>
+<script src="js/03-art.js?v=119"></script>
+<script src="js/04-world.js?v=119"></script>
+<script src="js/05-particles.js?v=119"></script>
+<script src="js/06-weather.js?v=119"></script>
+<script src="js/07-entities.js?v=119"></script>
+<script src="js/08-actions.js?v=119"></script>
+<script src="js/09-quests.js?v=119"></script>
+<script src="js/13-content.js?v=119"></script>
+<script src="js/15-warding.js?v=119"></script>
+<script src="js/10-ui.js?v=119"></script>
+<script src="js/11-title.js?v=119"></script>
+<script src="js/14-story.js?v=119"></script>
+<script src="js/12-game.js?v=119"></script>
 </body>
 </html>

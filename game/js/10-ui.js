@@ -1492,7 +1492,9 @@ const HUDPREF = { on:true, opacity:1 };
   }}catch(e){}
 })();
 function saveHudPrefs(){ try{ localStorage.setItem("hs_hud", JSON.stringify({ on:HUDPREF.on, op:HUDPREF.opacity })); }catch(e){} }
-function applyHud(){ const h = $("hud"); if(h) h.style.setProperty("--hud-op", HUDPREF.on ? HUDPREF.opacity : 0); }
+function applyHud(){ const h = $("hud"); if(h) h.style.setProperty("--hud-op", HUDPREF.on ? HUDPREF.opacity : 0);
+  const hint = $("hudHint"); if(hint) hint.classList.toggle("hidden", HUDPREF.on !== false);   // v4.14: the restore affordance shows ONLY while the HUD is hidden
+}
 function setHudOn(on){ HUDPREF.on = on; saveHudPrefs(); applyHud(); }
 function setHudOpacity(v){ HUDPREF.opacity = clamp(v, 0, 1); HUDPREF.on = true; saveHudPrefs(); applyHud(); }   // dragging the dimmer implies you want it shown
 function toggleHud(){
@@ -1721,6 +1723,8 @@ cv.addEventListener("contextmenu", e => e.preventDefault());
 document.querySelectorAll(".pclose").forEach(btn => {
   btn.onclick = () => { const p = btn.closest(".panel"); if(p) closePanel(p.id); };
 });
+// v4.14: click/tap the "Show HUD" affordance to bring the HUD back (same as pressing U when it's on).
+{ const hh = $("hudHint"); if(hh) hh.onclick = () => { setHudOn(true); playSfx("select"); }; }
 
 // touch controls
 function wireTouch(){

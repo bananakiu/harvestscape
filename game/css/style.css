@@ -69,6 +69,13 @@ body{
    (`#stage.cine #hud{opacity:0}`) still wins during scenes. Governs #hud only — the hotbar and
    dialogue live outside it and stay fully crisp. */
 #hud{ z-index:5; opacity:var(--hud-op, 1); transition:opacity .25s ease; }
+/* Restore affordance — only visible while the HUD is hidden (applyHud toggles .hidden). A stray U press
+   can no longer leave the player with a blank corner and no way back. Bottom-left, clear of the hotbar. */
+#hudHint{ position:absolute; left:8px; bottom:8px; z-index:7; font-family:inherit; font-size:11px;
+  color:#e9dcc0; background:rgba(20,15,10,0.82); border:1px solid #6a5d4e; border-radius:6px;
+  padding:4px 9px; cursor:pointer; opacity:.9; transition:opacity .2s; }
+#hudHint:hover{ opacity:1; background:rgba(40,30,20,0.92); }
+#hudHint.hidden{ display:none; }
 #hudTop{
   position:absolute; top:2.2%; left:2.2%; right:2.2%;
   display:flex; justify-content:space-between; align-items:flex-start;
