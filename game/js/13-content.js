@@ -458,6 +458,13 @@ function genButterbrook(m){
   // v4.9: Nell's Larder — the dairy's own shop stand, on the meadow by the creamery. Placed AFTER the
   // path-scrub above so it survives, and off row 8 so it never blocks the coast path.
   { delete m.objects[key(3,10)]; put(m, 3, 10, "stall", {vendor:"nell"}); put(m, 5, 10, "sign", {text:"Nell's Larder — milk, honey, and what a kitchen wants"}); }
+  // v4.13: Sea Aster — Butterbrook's own salt-meadow wildflower (it grows nowhere else). A daily gather,
+  // and the secret ingredient in Nell's Reserve. Reshuffles on the day-seed; kept on meadow grass and off
+  // the coast path (row 8), placed after the path-scrub so it survives.
+  for(let i=0;i<7;i++){ const ax=randiR(rng,6,40), ay=randiR(rng,10,m.h-11);
+    if(t[ay*W+ax]===T.GRASS && !m.objects[key(ax,ay)]) put(m, ax, ay, "asternode"); }
+  // a bench where the meadow meets the sea — somewhere to let the coast be the coast for a while
+  { const bx=22, by=m.h-11; if(t[by*W+bx]===T.GRASS){ delete m.objects[key(bx,by)]; put(m, bx, by, "bench"); } }
 }
 function genDairy(m){
   genRoom(m, T.PLANK, T.IWALL);
@@ -940,7 +947,7 @@ const NPCDEF = {
   pip:   { name:"Pip",         portrait:"port_pip",   spr:"pip",
            loved:["Opal","Berry Bun"], liked:["Shell","Starfruit","Topaz","Wool","Melon"] },   // Opal for Gary's friend (Amethyst is Gary himself now)
   nell:  { name:"Nell",        portrait:"port_nell",  spr:"nell",
-           loved:["Fine Cheese","Cheese","Prize Fleece"], liked:["Milk","Wool","Honey","Large Egg","Berry Bun"] },   // Tom's wife, the coast dairy (v3.44) — "Cheese" covers Fine Cheese; "Milk" covers Large Milk; "Egg" avoided (would eat plain Egg too — Large Egg is the treat)
+           loved:["Fine Cheese","Cheese","Prize Fleece"], liked:["Sea Aster","Milk","Wool","Honey","Large Egg","Berry Bun"] },   // Tom's wife, the coast dairy (v3.44); Sea Aster v4.13 — "Cheese" covers Fine Cheese; "Milk" covers Large Milk; "Egg" avoided (would eat plain Egg too — Large Egg is the treat)
   elias: { name:"Elias",       portrait:"port_elias", spr:"elias",
            loved:["Golden Koi","Pearl","Prize Fleece"], liked:["Trout","Salmon","Coral","Cooked","Wool"] },
 };

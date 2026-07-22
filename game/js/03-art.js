@@ -1271,6 +1271,11 @@ function buildBeachArt(){
   mkSpr("item_Sea Holly", 16, 16, g => {
     px(g,6,3,4,3,"#7a9ac8"); px(g,7,2,2,1,"#a8c0e0"); px(g,5,4,1,1,"#7a9ac8"); px(g,10,4,1,1,"#7a9ac8"); px(g,7,4,2,1,"#dce8f8");
     px(g,7,6,2,7,"#5a7a4a"); px(g,5,8,2,1,"#5a7a4a"); px(g,9,9,2,1,"#5a7a4a"); });
+  // v4.13 Butterbrook's own coastal wildflower — a lilac aster with a gold eye
+  const aster = (g,cx,cy) => { px(g,cx,cy-2,1,1,"#b98adf"); px(g,cx,cy+2,1,1,"#b98adf"); px(g,cx-2,cy,1,1,"#b98adf"); px(g,cx+2,cy,1,1,"#b98adf");
+    px(g,cx-1,cy-1,1,1,"#caa4ea"); px(g,cx+1,cy-1,1,1,"#caa4ea"); px(g,cx-1,cy+1,1,1,"#caa4ea"); px(g,cx+1,cy+1,1,1,"#caa4ea"); px(g,cx,cy,1,1,"#ffd75a"); };
+  mkSpr("asternode", 16, 16, g => { px(g,5,10,1,4,"#5a8a54"); px(g,10,11,1,3,"#5a8a54"); px(g,8,9,1,5,"#6a9a64"); aster(g,5,7); aster(g,10,8); aster(g,8,5); });
+  mkSpr("item_Sea Aster", 16, 16, g => { px(g,8,8,1,6,"#5a8a54"); px(g,6,11,2,1,"#5a8a54"); px(g,9,12,2,1,"#5a8a54"); aster(g,8,6); });
   // v3.43 STARFALL RIDGE — the summit's furniture and forage
   mkSpr("cairn", 16, 18, g => {                                                       // stacked by every hand that made the climb
     px(g,4,13,8,3,"#8a8478"); px(g,4,13,8,1,"#a8a296");                               // base stones

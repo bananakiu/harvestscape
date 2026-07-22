@@ -158,7 +158,7 @@ function nextUnlock(skill){
   if(skill==="Woodcutting") for(const k in TREES) add(TREES[k].lvl, TREES[k].name);
   if(skill==="Mining")      for(const k in ORES)  add(ORES[k].lvl,  ORES[k].name);
   if(skill==="Fishing"){ FISH.forEach(f=>add(f.lvl, f.name)); LEGENDS.forEach(l=>add(l.lvl, l.name+" (legend)")); }
-  if(skill==="Cooking") for(const r of RECIPES) add(r.lvl, r.name);
+  if(skill==="Cooking") for(const r of RECIPES) if(!r.flag) add(r.lvl, r.name);   // v4.13: flag-gated (friendship-taught) recipes aren't level unlocks
   if(skill==="Warding") for(const k in CREATURES){ if(k!=="tanglet") add(CREATURES[k].lvl, CREATURES[k].name); }   // v4.11: the restless-thing families you grow strong enough to settle
   return best;
 }
@@ -169,7 +169,7 @@ function unlocksAt(skill, lvl){
   if(skill==="Woodcutting") for(const k in TREES) if(TREES[k].lvl===lvl) u.push(TREES[k].name);
   if(skill==="Mining") for(const k in ORES) if(ORES[k].lvl===lvl) u.push(ORES[k].name);
   if(skill==="Fishing"){ FISH.forEach(f=>{ if(f.lvl===lvl) u.push(f.name); }); LEGENDS.forEach(l=>{ if(l.lvl===lvl) u.push(l.name+" (legend)"); }); }
-  if(skill==="Cooking") for(const r of RECIPES) if(r.lvl===lvl) u.push(r.name);
+  if(skill==="Cooking") for(const r of RECIPES) if(!r.flag && r.lvl===lvl) u.push(r.name);   // v4.13: friendship-taught recipes aren't level unlocks
   if(skill==="Warding") for(const k in CREATURES){ if(k!=="tanglet" && CREATURES[k].lvl===lvl) u.push(CREATURES[k].name); }   // v4.11
   if(MASTERY[skill] && MASTERY[skill][lvl]) u.push("★ " + MASTERY[skill][lvl]);
   return u;
@@ -274,7 +274,7 @@ const OBJ_TITLE  = { geode:"Geode", bed:"Bed", campfire:"Campfire", stove:"Stove
   fountain:"Fountain", boardwalk:"Boardwalk", railcart:"Minecart", memorial:"Standing Stone", berrybush:"Berry Bush",
   frostberry:"Frostberry Bush", fruittree:"Fruit Tree", beehive:"Beehive", torch:"Torch", lamp:"Lamp", lantern:"Lantern",
   crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift", olddoor:"A Planked Door", keg:"Keg", jar:"Preserves Jar", sawmill:"Sawmill", press:"Cheese Press", bench:"Bench", plantpot:"Flower Planter",
-  milestone:"The Milestone", shrine:"Roadside Shrine", mooring:"The Ferry Landing", samphirenode:"Samphire", hollynode:"Sea Holly",
+  milestone:"The Milestone", shrine:"Roadside Shrine", mooring:"The Ferry Landing", samphirenode:"Samphire", hollynode:"Sea Holly", asternode:"Sea Aster",
   cairn:"The Cairn", crater:"The Crater Dell", shardnode:"Starlight", thymenode:"Mountain Thyme", snowdropnode:"Snowdrops",
   churn:"The Butter Churn",
   deadfall:"Deadfall", westtrail:"The Trail West", easttrail:"The Trail Back", waystone:"Waystone", hearttree:"The Heart of the Forest",
@@ -772,6 +772,7 @@ function interact(){
       case "seaweednode": forageNode(tx,ty,obj,"Seaweed","Fishing",6); return;
       case "coralnode": forageNode(tx,ty,obj, chance(0.12)?"Pearl":"Coral","Fishing",12); return;
       case "samphirenode": forageNode(tx,ty,obj,"Samphire","Fishing",8); return;   // v3.36: the road's tideline forage
+      case "asternode": forageNode(tx,ty,obj,"Sea Aster","Farming",10); return;   // v4.13: Butterbrook's salt-meadow wildflower
       case "hollynode": forageNode(tx,ty,obj,"Sea Holly","Fishing",6); return;
       case "thymenode": forageNode(tx,ty,obj,"Mountain Thyme","Farming",7); return;   // v3.43: the ridge's alpine forage
       case "snowdropnode": forageNode(tx,ty,obj,"Snowdrop","Farming",6); return;
@@ -984,6 +985,7 @@ function useWaystone(tx, ty, obj){
 function cook(){ openCooking(); }
 function cookRecipe(i){
   const r = RECIPES[i]; if(!r) return;
+  if(r.flag && !state.flags[r.flag]){ toast(`You haven't been taught ${r.name} yet.`, "#ff8a7a"); playSfx("error"); return; }   // v4.13 friendship-taught recipes
   if(skillLvl("Cooking") < r.lvl){ toast(`Need Cooking ${r.lvl} to make ${r.name}.`, "#ff8a7a"); playSfx("error"); return; }
   if(!Object.keys(r.ing).every(it => (state.inv[it]||0) >= r.ing[it])){ toast("Missing ingredients."); playSfx("error"); return; }
   for(const it in r.ing) take(it, r.ing[it]);

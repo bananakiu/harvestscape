@@ -1449,6 +1449,9 @@ function renderCooking(){
   }
   html += `<h2 style="font-size:1em;color:var(--gold-hi);margin:.4em 0 .2em;">RECIPES</h2>`;
   RECIPES.forEach((r,i) => {
+    // v4.13: a flag-gated recipe is a SECRET taught by a friend, not learned by level — hide it entirely
+    // until you know it (a padlocked "learned at Cooking 0" would be a nonsense spoiler on the list).
+    if(r.flag && !state.flags[r.flag]) return;
     const lvlOk = skillLvl("Cooking") >= r.lvl;
     if(!lvlOk){
       html += `<div class="row locked"><span class="lead" data-icon="item_${r.name}"><canvas></canvas>` +

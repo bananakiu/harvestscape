@@ -1191,6 +1191,30 @@ const HEART_EVENTS = {
       { type:"say", who:"Elias", portrait:"port_elias", text:"Now go home, warden. There's a valley out there with every one of its chairs filled at last — and one of them, these eleven years, was always being kept for you." },
     ]},
   ],
+  // v4.13 (owner update 2) Nell, the Butterbrook dairy — her friendship was a dead end (no events, no
+  // payoff). This arc gives her a voice and a real reward: her SECRET recipe, the Butterbrook Reserve,
+  // taught at 6♥ (sets state.flags.nellRecipe — the one way to learn it). Dry, warm, unhurried — her voice.
+  nell: [
+    { hearts:2, flag:"he_nell_2", steps:[
+      { type:"say", who:"Nell", portrait:"port_nell", text:"You keep turning up down here. Most folk make the walk once, see it's just cows and cheese and a great deal of quiet, and never come back. …I find I'm glad you're not most folk." },
+      { type:"say", who:"Nell", portrait:"port_nell", text:"Tom and I have run it the same twenty years — him up the valley behind his counter, me down here behind mine. Folk call it a great romance. It's mostly a supply line. …Though he does tuck a note in the churn with the morning milk, some days. Twenty years. The man cannot help himself." },
+      { type:"run", fn:()=>{ give("Cheese", 2, true); } },
+      { type:"say", who:"Nell", portrait:"port_nell", text:"Here — off the shelf, on the house. A friend of the dairy eats well. Go on, before I change my mind and charge you." },
+    ]},
+    { hearts:4, flag:"he_nell_4", steps:[
+      { type:"say", who:"Nell", portrait:"port_nell", text:"Can I tell you the thing about cheese nobody's got the patience to hear? It isn't the milk, and it isn't the cool room. It's the WAITING. A good wheel wants a month you can't hurry, in a dark you can't cheat. Every year I swear I'll sell the young stuff quicker. Every year I let it sit." },
+      { type:"say", who:"Nell", portrait:"port_nell", text:"…I think that's why I came down to the coast, truth be told. Everything up the valley moved so fast after the Guild went dark — folk leaving, or grieving, or both at once. Down here a thing takes exactly as long as it takes. I found I could breathe again." },
+      { type:"say", who:"Nell", portrait:"port_nell", text:"You've a bit of that in you, I think. You wake things slowly and let them keep. …Ah, listen to me go on. Take some fleece for the road — the sheep shan't miss it." },
+      { type:"run", fn:()=>{ give("Wool", 2, true); } },
+    ]},
+    { hearts:6, flag:"he_nell_6", steps:[
+      { type:"say", who:"Nell", portrait:"port_nell", text:"Right. Come round the back of the churn a moment. I'm going to show you a thing I've shown exactly two souls in twenty years — and one of them was Tom, and he only wanted to know if it'd sell." },
+      { type:"say", who:"Nell", portrait:"port_nell", text:"The Butterbrook Reserve. My own. You take the finest cheese you've got, and the richest pail — a well-loved cow's, none of your thin stuff — and then you go out to the salt meadow and pick the sea asters. The lilac ones. They grow nowhere else in the valley, and they make the whole wheel taste the way the coast smells of an evening." },
+      { type:"run", fn:()=>{ state.flags.nellRecipe = true; playSfx("upgrade"); pSparkle(state.px, state.py-12, "#f0e0a8", 16); } },
+      { type:"say", who:"Nell", portrait:"port_nell", text:"There. It's yours. Cook it at any stove — you'll find it written in your book now. …And don't go handing the recipe round. Sell the CHEESE, gladly, at a dear price. But the how of it stays between friends. Which is what we are, you and I. Took you long enough to walk down here and earn it." },
+      { type:"banner", big:"♥ Nell, 6 hearts", small:"She taught you the Butterbrook Reserve — her secret dish. Gather Sea Asters on the meadow to make it.", t:3.4 },
+    ]},
+  ],
 };
 function heartEventFor(id){
   const evs = HEART_EVENTS[id]; if(!evs) return null;

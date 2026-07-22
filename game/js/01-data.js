@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.12.0", code: 99, codename: "The Skill Guide", date: "2026-07-22" };
+const VERSION = { name: "4.13.0", code: 100, codename: "Butterbrook", date: "2026-07-22" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.13.0", code:100, date:"2026-07-22", name:"Butterbrook", notes:[
+    { t:"feature", s:"Butterbrook is worth the walk now. The salt meadow grows Sea Aster — a lilac wildflower that blooms nowhere else in the valley; gather it for coin and Farming practice, fresh every day. And there's a bench at the water's edge, for when you just want to let the coast be the coast." },
+    { t:"feature", s:"Nell has a heart to know, and a secret to share. Grow close to the dairy keeper across three quiet scenes — the twenty-year supply-line she calls a marriage, why she came to the coast where a thing takes exactly as long as it takes — and at the last, as a true friend, she teaches you her own recipe: the Butterbrook Reserve. The finest cheese, the richest milk, and a handful of the meadow's sea asters, cooked into a dish you can make nowhere else and sell for a fine price. It's the ONLY way to learn it." },
+  ]},
   { v:"4.12.0", code:99, date:"2026-07-22", name:"The Skill Guide", notes:[
     { t:"feature", s:"Every skill now has a full Skill Guide, like RuneScape's. Open Skills (K), tap a skill, and expand its guide to see everything it unlocks across the whole climb to 99 — every crop, tree, ore, fish, recipe and (for Warding) restless-thing family, plus the four mastery perks, listed in level order. What you've already reached is ticked; what's still ahead is padlocked, so you always know exactly what the next level is for." },
     { t:"change", s:"Warding's progress is clearer everywhere as a side effect: it now names its next unlock (the next creature family) in the skills panel and at level-up, instead of going quiet." },
@@ -889,6 +893,7 @@ EDIBLE["Egg"] = 16; EDIBLE["Milk"] = 22; EDIBLE["Large Milk"] = 40;
 // earn their margin from the wait, never from thin air)
 ITEM_SELL["Cheese"] = 135; ITEM_SELL["Fine Cheese"] = 250;
 ITEM_SELL["Bait"] = 8;   // v4.9 fishing bait — cheap; bought at Bram's (15g), a low resale so there's no buy-low-sell-high loop
+ITEM_SELL["Sea Aster"] = 55; EDIBLE["Sea Aster"] = 12;   // v4.13 Butterbrook's coastal wildflower forage — a garnish's worth of coin, and the key to Nell's secret dish
 EDIBLE["Cheese"] = 30; EDIBLE["Fine Cheese"] = 50;
 // Sheep (v3.8): the barn's third resident, and the honest source that finally makes Wool obtainable.
 // Wool is priced above milk but regrows over several days, not daily — a coat is worth the wait, and
@@ -947,6 +952,10 @@ const RECIPES = [
   { name:"Frostmelon Ice",      lvl:64, ing:{Frostmelon:1, "Large Milk":1},   energy:90,  sell:1500, xp:142, col:"#8fb8d8" },   // v4.7 crop
   { name:"Peony Cordial",       lvl:78, ing:{Peony:1, Honey:1},               energy:88,  sell:1820, xp:192, col:"#e06a9a" },   // v4.7 crop
   { name:"Dragonfruit Parfait", lvl:84, ing:{Dragonfruit:1, "Fine Cheese":1}, energy:94,  sell:2300, xp:228, col:"#d0407a" },   // v4.7 crop + Fine Cheese
+  // v4.13 (owner update 2) — Nell's secret. NOT learned by Cooking level: it's flag-gated on `nellRecipe`,
+  // which only her 6♥ heart event sets — a true friendship payoff. Uses the finest dairy + a Butterbrook
+  // Sea Aster, so it ties her Larder, the coast forage and a well-loved cow together into one prize dish.
+  { name:"Butterbrook Reserve", lvl:0, flag:"nellRecipe", ing:{"Fine Cheese":1, "Large Milk":1, "Sea Aster":2}, energy:95, sell:1100, xp:150, col:"#f0e0a8" },
 ];
 RECIPES.sort((a,b) => a.lvl - b.lvl);   // v4.8: keep the Kitchen list level-ordered so appended recipes slot in (nothing indexes RECIPES by position)
 RECIPES.forEach(r => { ITEM_SELL[r.name] = r.sell; EDIBLE[r.name] = r.energy; });
@@ -1584,6 +1593,8 @@ const EXAMINE = {
   "Grayling": "The lady of the stream — a sail of a fin, violet in the right light. The Gullwater's pride.",
   "Rainrunner": "It runs up the river only when the storm is on the sea. Bram always said the rain brings something with it.",
   "Samphire": "Crisp green spears from the tideline, salty as the wind that grew them.",
+  "Sea Aster": "A lilac wildflower that only takes to the salt meadow at Butterbrook. Nell swears by it.",
+  "Butterbrook Reserve": "Nell's secret — the finest cheese, the richest milk, and a Butterbrook flower. She'd only teach it to a true friend.",
   "Sea Holly": "A steel-blue bloom that thrives on salt and neglect. Maya would paint it; Bram would call it a weed.",
   "Mountain Thyme": "Tough little leaves from the high scree — half the flavour of the valley in a pinch.",
   "Snowdrop": "It blooms where the snow never quite leaves. Proof that stubbornness can be delicate.",
@@ -1784,6 +1795,7 @@ const EXAMINE_TILE = {
   EXAMINE_OBJ["shrine"] = "Leave what you can spare; take what you need. Today: a pebble, a flower, half a biscuit.";
   EXAMINE_OBJ["mooring"] = "Nothing has tied up here in years. Somebody keeps the boards good anyway.";
   EXAMINE_OBJ["samphirenode"] = "Salty green spears, growing where only the tide waters them.";
+  EXAMINE_OBJ["asternode"] = "Lilac asters, nodding in the salt wind. They grow nowhere but this meadow.";
   EXAMINE_OBJ["hollynode"] = "Steel-blue and stubborn — the headland's one flower.";
   // v3.43 Starfall Ridge
   EXAMINE_OBJ["cairn"] = "Stacked by every hand that ever made the climb. The view is the payment.";

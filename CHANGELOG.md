@@ -22,6 +22,43 @@
 
 ---
 
+## 2026-07-22 — v4.13.0 "Butterbrook" (code 100, tag `v4.13.0`) — owner update 2: build out Butterbrook + Nell's friendship payoff
+
+### Why this release
+
+Owner: "build out Butterbrook — it's empty, no reason to visit apart from relationship points; and the NPC
+there has no secrets or extra things to gain from a good friendship. Update that." (v4.9 already gave the
+dairy Nell's Larder shop; this adds the *reasons to explore* and the *friendship reward*.)
+
+### Added — Butterbrook content
+
+- **Sea Aster** — a lilac salt-meadow wildflower that grows **nowhere else**. A new forage node
+  (`asternode`) scatters ~7 across the Butterbrook meadow each day (placed on grass, after the path-scrub
+  so it survives, off the coast path); interact to gather **Sea Aster** (Farming XP + coin). New sprites
+  (`asternode`, `item_Sea Aster`), examine text, `INTERACT_KINDS` entry. It's also Nell's *liked* gift and
+  the secret ingredient below — tying forage, gift and recipe together.
+- **A bench** at the water's edge — a scenic rest spot (reuses the `bench` object).
+
+### Added — Nell's friendship arc + her secret recipe
+
+- **Nell heart events** (2/4/6♥) in `HEART_EVENTS` — her voice at last (dry, warm, unhurried): the twenty-
+  year "supply line" she calls a marriage, why she came to the coast "where a thing takes exactly as long
+  as it takes," and — at 6♥ — the payoff.
+- **The Butterbrook Reserve** — Nell's secret dish, a genuine **friendship-only unlock**. It's a new
+  `RECIPES` entry gated on `flag:"nellRecipe"` (not a Cooking level), which **only** her 6♥ event sets. To
+  support this, the recipe system gained flag-gating: `cookRecipe` refuses an unknown recipe, `renderCooking`
+  hides a flag-gated recipe from the Kitchen until it's learned (no padlocked "Cooking 0" spoiler), and
+  `unlocksAt`/`nextUnlock` skip flag-gated recipes so they don't appear in the new skill guide as level
+  unlocks. It cooks Fine Cheese + Large Milk + 2 Sea Aster into a 1100g dish — a reward that pulls a
+  well-loved cow, the Larder and the coast forage into one prize you can make nowhere else.
+
+### Verified
+
+In-browser: Butterbrook spawns 7 Sea Aster nodes + a bench + the Larder; the node and item sprites render,
+the node is interactable and yields Sea Aster; Nell's three heart events fire in order and the 6♥ sets
+`nellRecipe`; the Reserve is flag-gated (refused before the flag, cooks after), excluded from the skill
+guide, sells 1100g; console clean; screenshot of the meadow.
+
 ## 2026-07-22 — v4.12.0 "The Skill Guide" (code 99, tag `v4.12.0`) — owner update 1: the full per-skill unlock guide
 
 ### Why this release
