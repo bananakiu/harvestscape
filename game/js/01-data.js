@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.8.0", code: 95, codename: "Nothing Wasted", date: "2026-07-22" };
+const VERSION = { name: "4.9.0", code: 96, codename: "Worth the Trip", date: "2026-07-22" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.9.0", code:96, date:"2026-07-22", name:"Worth the Trip", notes:[
+    { t:"change", s:"Selling is simple again. The old market-demand system — where dumping a lot of one thing dropped its price — is gone. Every crop, fish and good now sells at its full price, always, however much you bring." },
+    { t:"feature", s:"The coast and the dairy have their own shops now, each stocking something you can't buy in town. Tom's General Store keeps the seeds, food, tools and décor. Down at the beach, Bram's Bait & Tackle sells fresh bait — carry it and the fish bite quicker (it's used up as you land them). Out at the Butterbrook dairy, Nell's Larder sells the kitchen staples — milk, honey, eggs (milk moved here from Tom's, where it never really belonged). You can still sell anything at any of them; they just differ by what's for sale." },
+  ]},
   { v:"4.8.0", code:95, date:"2026-07-22", name:"Nothing Wasted", notes:[
     { t:"feature", s:"The kitchen catches up — ten new dishes, so nothing you grow or make dead-ends at the counter. The dairy's own Cheese and Fine Cheese, the orchard's apples, cherries and plums, the prized Starfruit, and every one of last update's new crops now have a recipe: Apple Crumble, Cheese Toastie, Cherry Tart, Starfruit Sorbet, Asparagus Quiche, Plum Pudding, Cloudberry Preserve, Frostmelon Ice, Peony Cordial and the Dragonfruit Parfait, learned from Cooking 20 up to 84. Each is worth more cooked than sold raw, and slots into the gaps on the recipe ladder — so Cooking keeps teaching you something new the whole climb." },
   ]},
@@ -869,6 +873,7 @@ EDIBLE["Egg"] = 16; EDIBLE["Milk"] = 22; EDIBLE["Large Milk"] = 40;
 // v3.33: the press's wheels — Milk×1.5 and Large Milk×~1.5, on the keg discipline (processed goods
 // earn their margin from the wait, never from thin air)
 ITEM_SELL["Cheese"] = 135; ITEM_SELL["Fine Cheese"] = 250;
+ITEM_SELL["Bait"] = 8;   // v4.9 fishing bait — cheap; bought at Bram's (15g), a low resale so there's no buy-low-sell-high loop
 EDIBLE["Cheese"] = 30; EDIBLE["Fine Cheese"] = 50;
 // Sheep (v3.8): the barn's third resident, and the honest source that finally makes Wool obtainable.
 // Wool is priced above milk but regrows over several days, not daily — a coat is worth the wait, and
@@ -1015,12 +1020,12 @@ function demandFree(item){
   const base = ITEM_SELL[item] || 40;
   return Math.max(3, Math.min(14, Math.round(280 / base) + 3));
 }
-// price multiplier for the (k+1)-th unit of `item` sold today, k = how many already went
-function demandMult(item, k){
-  const free = demandFree(item);
-  if(k < free) return 1;
-  return Math.max(DEMAND.floor, Math.pow(DEMAND.decay, k - free + 1));
-}
+// v4.9 (owner call): Tom's Demand is RETIRED. The per-item, per-day price slide (the v2.0
+// anti-hoarding tax) is gone — every unit now sells at full base price, always. This function is
+// kept as a no-op so all its call sites (nextUnitPrice / bundlePrice / sellItem / the sell panel)
+// keep working untouched; they just always see a multiplier of 1. The rest of the demand plumbing
+// (state.market tracking, the overnight halving) is now dormant and harmless.
+function demandMult(item, k){ return 1; }
 
 // ---- MASTERY ----
 // The 1-99 curve promised mastery and paid out nothing past the last content unlock.

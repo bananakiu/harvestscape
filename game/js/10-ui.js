@@ -775,27 +775,32 @@ function projectsRowsHtml(){
 }
 
 // ---- shop ----
-function openShop(tab, silent){ _panelTab["shopPanel"] = tab || "sell"; openPanel("shopPanel", renderShop);
-  if(!silent) toast(pick(TOM_GREET), "#e9dcc0"); }
+// v4.9 specialty vendors: the shop panel is shared, but each vendor stocks different BUY wares
+// (selling is universal — sell anything, anywhere, at full price). Tom is the general store (+ tools,
+// décor); Bram's Bait & Tackle is on the coast; Nell's Larder is at the Butterbrook dairy.
+let _shopVendor = "tom";
+const SHOP_TITLES = { tom:"TOM'S GENERAL STORE", bram:"BRAM'S BAIT & TACKLE", nell:"NELL'S LARDER" };
+function openShop(tab, silent, vendor){ _shopVendor = vendor || "tom"; _panelTab["shopPanel"] = tab || "sell"; openPanel("shopPanel", renderShop);
+  if(!silent && _shopVendor === "tom") toast(pick(TOM_GREET), "#e9dcc0"); }
 function renderShop(){
   const b = $("shopPanel").querySelector(".body");
-  const shopTab = panelTabs("shopPanel", "shopTabs", [["sell","Sell"],["buy","Seeds & Food"],["tools","Tools"],["decor","Décor"]], renderShop);
+  const vendor = _shopVendor || "tom";
+  const h2 = $("shopPanel").querySelector(".phead h2"); if(h2) h2.textContent = SHOP_TITLES[vendor] || "SHOP";
+  const TABS = vendor === "tom"  ? [["sell","Sell"],["buy","Seeds & Food"],["tools","Tools"],["decor","Décor"]]
+             : vendor === "bram" ? [["sell","Sell"],["buy","Bait & Tackle"]]
+             :                     [["sell","Sell"],["buy","Larder"]];
+  if(!TABS.some(t => t[0] === _panelTab["shopPanel"])) _panelTab["shopPanel"] = "sell";   // snap to a tab this vendor has
+  const shopTab = panelTabs("shopPanel", "shopTabs", TABS, renderShop);
   let html = "";
   if(shopTab === "sell"){
     const sellables = Object.keys(state.inv).filter(i => ITEM_SELL[i]);
     if(!sellables.length) html += `<div class="locked">Nothing to sell yet — go harvest, chop, mine or fish!</div>`;
     sellables.forEach((i, idx) => {
-      // Tom's demand: show what the NEXT one fetches, and say so plainly when it has slipped.
-      // v3.40 (owner sweep): the owned count is ALWAYS visible — the demand note used to REPLACE
-      // it, hiding "how much do I have left" at the exact moment (mid-selloff) it matters most.
-      const now = nextUnitPrice(i), base = Math.round(baseUnitPrice(i)), lvl = demandLevel(i);
-      const dipped = now < base;
-      const note = `<span class="sub">×${state.inv[i]}</span>` + (dipped
-        ? ` <span class="sub" style="color:#c98a6a">demand ${Math.round(lvl*100)}% · ${soldToday(i)} sold today</span>` : "");
-      const priceHtml = dipped
-        ? `<span class="price" style="color:#c98a6a">${now}g</span> <span class="sub" style="text-decoration:line-through;opacity:.55">${base}g</span>`
-        : `<span class="price">${now}g</span>`;
-      // "all" shows the blended total it will actually fetch, not just the next unit's price
+      // v4.9: Tom's Demand retired — every unit sells at full base price, so no more "demand %" note.
+      const now = nextUnitPrice(i);   // = the full base unit price
+      const note = `<span class="sub">×${state.inv[i]}</span>`;
+      const priceHtml = `<span class="price">${now}g</span>`;
+      // "all" total = base × count (no more slide)
       const allTotal = bundlePrice(i, state.inv[i]);
       // v3.40: the owner's quantity controls — clickable ± arrows around a real number box,
       // "sell" for that many, "all" for the lot. The box id is index-based (names carry spaces).
@@ -809,6 +814,23 @@ function renderShop(){
         `<button onclick="sellItem('${jsq(i)}',${state.inv[i]})" title="${allTotal}g for all ${state.inv[i]}">all · ${allTotal}g</button></span></div>`;
     });
   } else if(shopTab === "buy"){
+    if(vendor === "bram" || vendor === "nell"){
+      // the specialty vendors: a small, distinct buy list (buyFood is generic — spends gold, gives the item).
+      const row = (item, cost, sub) => { const qid = "vq_" + item.replace(/[^a-z0-9]/gi,"");
+        return `<div class="row"><span class="lead" data-icon="item_${item}"><canvas></canvas><span>${item} <span class="sub">×${state.inv[item]||0}</span> <span class="sub">${sub}</span></span></span>` +
+          `<span><span class="price">${cost}g</span> ${qtyCtl(qid, Math.floor(state.gold/cost))} ` +
+          `<button class="buy" ${state.gold>=cost?"":"disabled"} onclick="buyFood('${jsq(item)}',${cost},qv('${qid}'))">buy</button></span></div>`; };
+      if(vendor === "bram"){
+        html += `<div class="desc" style="margin-bottom:.5em;color:var(--ink-soft);">Bram's bait &amp; tackle. Fresh bait brings the fish in quicker — they bite while you carry it.</div>`;
+        html += row("Bait", 15, "faster bites · used up as you land them");
+      } else {
+        html += `<div class="desc" style="margin-bottom:.5em;color:var(--ink-soft);">Nell's larder — the dairy's own goods, and what a kitchen wants. (Sell her your surplus, too.)</div>`;
+        html += row("Milk", 110, "fresh from the dairy · for cooking");
+        html += row("Large Milk", 200, "the rich pail · for finer dishes");
+        html += row("Honey", 120, "from the hives · sweetens a recipe");
+        html += row("Egg", 70, "a good brown egg · for baking");
+      }
+    } else {
     // v4.0: Tom's daily "warden's salvage" — the non-combat trickle for warding materials (V4_PLAN §2),
     // an EXPLICIT buy row (own button), never an auto-drain. Only once the tenth door is open.
     { const o = (typeof todaysSalvage === "function") ? todaysSalvage() : null;
@@ -838,7 +860,7 @@ function renderShop(){
     };
     html += foodRow("Berry Bun", 30, "+34 energy");
     html += foodRow("Field Salad", 24, "+26 energy");
-    html += foodRow("Milk", 160, "fresh from the coast dairy · for cooking");
+    // (Milk moved to Nell's Larder at the Butterbrook dairy — v4.9)
     if(anyConfided() && !state.flags.married){
       const hasBq = (state.inv["Bouquet"]||0)>0;
       html += `<h2 style="font-size:1em;color:var(--rose);margin:.4em 0 .2em;">COURTSHIP</h2>`;
@@ -877,6 +899,7 @@ function renderShop(){
     const sheep = (state.animals.sheep||[]).length;
     html += `<div class="row"><span class="lead" data-icon="item_Wool"><canvas></canvas><span>Sheep <span class="sub">shear a full coat every few days · shares the barn · ${sheep}/${SHEEP_MAX} sheep</span></span></span><span><span class="price">${SHEEP_COST}g</span> <button class="buy" ${state.gold>=SHEEP_COST&&sheep<SHEEP_MAX?"":"disabled"} onclick="buySheep()">buy</button></span></div>`;
     html += `<div class="row"><span class="lead" data-icon="item_Shears"><canvas></canvas><span>Shears <span class="sub">${state.flags.hasShears?"you own a pair — shear any sheep with E":"gather wool from your sheep · one and done"}</span></span></span><span><span class="price">${SHEARS_COST}g</span> <button class="buy" ${!state.flags.hasShears&&state.gold>=SHEARS_COST?"":"disabled"} onclick="buyShears()">${state.flags.hasShears?"owned":"buy"}</button></span></div>`;
+    }   // end Tom's buy list (v4.9 vendor split)
   } else if(shopTab === "decor"){
     const placed = (state.farm ? Object.values(state.farm.objects) : []).filter(o => DECOR[o.kind]).length;
     html += `<div class="desc" style="margin-bottom:.5em;color:var(--ink-soft);">Pieces to make the farm yours — buy one, then set it down like a hive (select it, press USE on open ground; the axe lifts it again). Purely for the joy of it. <span style="color:var(--gold-hi)">${placed}/${DECOR_MAX} placed.</span></div>`;

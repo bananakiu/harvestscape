@@ -455,6 +455,9 @@ function genButterbrook(m){
     if(t[y*W+x]===T.SAND && !m.objects[key(x,y)]) put(m, x, y, "samphirenode"); }
   // the path may never be sealed
   for(let x=0;x<=44;x++){ const o=m.objects[key(x,8)]; if(o && !["sign","churn"].includes(o.kind)) delete m.objects[key(x,8)]; }
+  // v4.9: Nell's Larder — the dairy's own shop stand, on the meadow by the creamery. Placed AFTER the
+  // path-scrub above so it survives, and off row 8 so it never blocks the coast path.
+  { delete m.objects[key(3,10)]; put(m, 3, 10, "stall", {vendor:"nell"}); put(m, 5, 10, "sign", {text:"Nell's Larder — milk, honey, and what a kitchen wants"}); }
 }
 function genDairy(m){
   genRoom(m, T.PLANK, T.IWALL);
@@ -877,6 +880,9 @@ function genBeach(m){
   for(let y=1;y<=5;y++) delete m.objects[key(ex,y)];   // a palm must never seal the village door's approach
   for(let y=4;y<=8;y++) for(let x=m.w-4;x<m.w;x++) if(m.objects[key(x,y)] && m.objects[key(x,y)].kind==="palm") delete m.objects[key(x,y)];   // …nor the road east
   for(let i=0;i<5;i++){ const x=randiR(rng,3,m.w-4), y=m.h-9; put(m,x,y,"driftwood"); }
+  // v4.9: Bram's Bait & Tackle — a plank stand up on the grass where the coast folk gather (the coast's
+  // own shop). Fixed spot; clear whatever the tide left so a palm never buries it for a day.
+  { const bx=13, by=m.h-11; delete m.objects[key(bx,by)]; put(m, bx, by, "stall", {vendor:"bram"}); put(m, bx-2, by, "sign", {text:"Bram's Bait & Tackle"}); }
   // forage nodes near the tideline
   for(let i=0;i<14;i++){ const x=randiR(rng,3,m.w-4), y=m.h-9+randiR(rng,0,1);
     if(t[y*W+x]===T.SAND){ const r=rng(); put(m,x,y, r<0.4?"shellnode":r<0.7?"seaweednode":r<0.9?"coralnode":"starfish"); } }

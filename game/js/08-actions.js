@@ -628,6 +628,9 @@ function interact(){
       case "bed": if(curMap.id==="cottage") doSleep(); else showDialog("A Bed","Cozy — but not yours. Best sleep in your own cottage.","port_valley"); return;
       case "campfire": case "stove": cook(); return;
       case "counter": case "stall": {
+        // v4.9 specialty vendors: a stand tagged with a vendor opens that vendor's shop directly
+        // (Bram's Bait & Tackle on the coast, Nell's Larder at the dairy). Untagged = Tom's counter.
+        if(obj.vendor === "bram" || obj.vendor === "nell"){ openShop(null, false, obj.vendor); return; }
         const r=ensureRel("tom"); if(r.talkedDay!==state.day){ r.talkedDay=state.day; r.points+=10; }
         checkQuests();
         // Tom stands behind the counter and can't be talked to directly, so his turn-ins
@@ -1013,6 +1016,7 @@ function startFishing(tx,ty){
   if(hasMastery("Fishing",25)) fishing.t *= 0.75;              // ★ Still Water
   if(isRain()) fishing.t *= 0.6;                               // rain brings them up
   if(state.inv["Bram's Oilskin"]) fishing.t *= 0.7;           // the master's touch — the fish come to you
+  if((state.inv["Bait"]||0) > 0) fishing.t *= 0.6;            // v4.9: fresh bait from Bram brings them in quicker (consumed on a catch — see landFish)
   playSfx("splash"); pSplash(tx*TILE+8, ty*TILE+8, 8); toast("Cast… wait for the !");
 }
 function updateFishing(dt){
@@ -1154,6 +1158,7 @@ function updateReel(dt){
 
 function landFish(){
   const f = fishing.fish;
+  if((state.inv["Bait"]||0) > 0) take("Bait");   // v4.9: a catch uses up one bait (the buff in startFishing reads inv.Bait)
   const tol = REEL.perfectT * (hasMastery("Fishing",75) ? 2 : 1);   // ★ Angler's Eye
   const perfect = fishing.outT < tol;
   const legend = isLegend(f);

@@ -22,6 +22,50 @@
 
 ---
 
+## 2026-07-22 — v4.9.0 "Worth the Trip" (code 96, tag `v4.9.0`) — commerce: Demand retired + specialty vendors (owner requests)
+
+### Why this release
+
+Two owner calls: (1) "remove the demand/lowering-price system for selling — it seems unnecessary at this
+point," and (2) "separate out the stores so there's a reason to visit different locations; all shops sell
+and buy the same things right now." The reality behind (2): there was only ever *one* vendor (Tom),
+reachable identically from the store counter and the farm market stall, and no other location had a shop.
+
+### Changed — Tom's Demand is retired
+
+The v2.0 per-item, per-day price slide (dump 50 starfruit → keep ~half) is gone: `demandMult` is now a
+no-op returning 1, so every unit sells at full base price, always. All its call sites (`nextUnitPrice`,
+`bundlePrice`, `sellItem`, the sell panel) keep working untouched — they just always see a multiplier of
+1 — and the now-dead "demand %" note is removed from the sell rows. The `state.market` tracking and the
+overnight-halving plumbing are left dormant and harmless. **Balance note:** with no sell-side diminishing
+returns, gold faucets are stronger; the follow-up balance pass adds the offsetting tightenings the QoL/
+balance audit flagged (an orchard cap; the parry-XP mill fix) so this doesn't tip "too easy."
+
+### Added — specialty vendors (owner design: "differ by what you can BUY")
+
+The shop panel is now vendor-aware (`_shopVendor` + `SHOP_TITLES`; `renderShop` picks tabs, title and buy
+stock by vendor). **Selling stays universal** — sell anything at any shop at full price — but each place
+BUYS you different wares:
+- **Tom's General Store** (village counter / farm stall): seeds, food, **tools** (the smith), **décor**,
+  orchard/apiary, courtship, warden's salvage — the general store. (Milk moved out; see Nell.)
+- **Bram's Bait & Tackle** (a new stall on the beach): **Bait** — a new consumable. While you carry it,
+  `startFishing` cuts the bite-wait to 0.6× (stacking with rain / Oilskin / masteries); `landFish` uses
+  one up per catch. Bought at 15g, sells for only 8g (no buy-low/sell-high loop). New `item_Bait` sprite.
+- **Nell's Larder** (a new stall at the Butterbrook dairy): the cooking staples — **Milk** (moved here
+  from Tom's, where it never belonged — it's *her* product), **Large Milk, Honey, Egg**.
+
+Both new stalls reuse the existing `stall` object with a `{vendor}` tag; the interact case routes a
+tagged stall straight to that vendor's shop (untagged = Tom's counter, with his turn-ins/requests/recog
+intact). Stalls are placed on clear, reachable tiles (beach 13,13 · Butterbrook 3,10 — 4 walkable
+neighbours each) and survive their maps' nightly regen.
+
+### Verified
+
+In-browser: Demand gone (50 starfruit fetch full 47,500g); each vendor shows the right title, tabs and
+exclusive buy stock (Tom = seeds/tools/décor with Milk gone; Bram = Bait; Nell = Milk/Honey/Egg); selling
+is universal across all three; Bait makes bites faster (0.66 vs 1.10) and is consumed on a catch; both
+stalls exist, render (Bait sprite included), and are reachable; console clean; screenshot of Bram's shop.
+
 ## 2026-07-22 — v4.8.0 "Nothing Wasted" (code 95, tag `v4.8.0`) — the kitchen catches up: recipes for the orphaned goods
 
 ### Why this release

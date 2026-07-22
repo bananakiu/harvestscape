@@ -1311,6 +1311,7 @@ function buildBeachArt(){
   // shore item icons
   mkSpr("item_Shell", 16, 16, g => { px(g,4,7,8,5,"#f0dcc0"); px(g,4,7,8,1,"#fff0dc"); for(let i=0;i<4;i++) px(g,5+i*2,7,1,5,"#d8b8a0"); px(g,7,6,2,1,"#f0dcc0"); });
   mkSpr("item_Coral", 16, 16, g => { px(g,6,6,2,7,"#ff7d9c"); px(g,4,8,2,5,"#ff9ab0"); px(g,9,5,2,8,"#ff5a7a"); px(g,7,4,2,3,"#ffbecb"); });
+  mkSpr("item_Bait", 16, 16, g => { px(g,4,8,8,3,"#c07a4a"); px(g,4,8,8,1,"#d89a6a"); for(let i=0;i<4;i++) px(g,5+i*2,9,1,1,"#8a5228"); px(g,12,7,2,3,"#a86438"); px(g,3,9,1,1,"#d89a6a"); });   // v4.9 fishing bait — a fat little grub
   mkSpr("item_Seaweed", 16, 16, g => { for(let i=0;i<4;i++){ const x=4+i*2; px(g,x,4,1,10,"#3f8a5a"); px(g,x,4,1,4,"#57ad74"); } });
   mkSpr("item_Clam", 16, 16, g => { px(g,4,6,8,5,"#e0cbb0"); px(g,4,10,8,2,"#c9b499"); for(let i=0;i<4;i++) px(g,5+i*2,6,1,5,"#c9b499"); px(g,6,7,4,2,"#f5b0c0"); });
   mkSpr("item_Pearl", 16, 16, g => { px(g,5,5,6,6,"#f0f0f5"); px(g,4,6,8,4,"#f8f8ff"); px(g,6,6,2,2,"#ffffff"); px(g,8,9,2,1,"#d0d0e0"); });
