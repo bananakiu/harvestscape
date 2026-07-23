@@ -891,6 +891,14 @@ function crackGeode(tx, ty){
 // Felling a grove tree sometimes shakes a nest loose — RS's birds' nests, in forest language.
 // Tiers: seeds/food (most), a charm (uncommon), a fruit sapling (rare), and once per valley,
 // the old Forester's Band. Ancients always drop one, never from the common tier.
+//
+// The single source of truth for what a nest may contain: an unowned charm that isn't story-gifted
+// (Band, Pocketwatch) and isn't crafted at a Warden's Bell (the whole Warding set — flagged v4.15).
+// Both the tier-fallback check and the award draw read this, so they can never disagree again.
+function nestCharmPool(){
+  return Object.keys(CHARMS).filter(c =>
+    c !== "The Forester's Band" && c !== "Grandpa's Pocketwatch" && !CHARMS[c].crafted && !state.discovered[c]);
+}
 function maybeNest(tx, ty, guaranteed){
   if(curMap.id !== "grove") return;
   const ring = state.groveRing || 1;
@@ -908,8 +916,7 @@ function maybeNest(tx, ty, guaranteed){
   // the band and charms fall through sensibly when already owned
   if(tier === "band" && state.flags.foundBand) tier = "charm";
   if(tier === "charm"){
-    const unowned = Object.keys(CHARMS).filter(c => c !== "The Forester's Band" && !state.discovered[c]);
-    if(!unowned.length) tier = "rare";
+    if(!nestCharmPool().length) tier = "rare";
   }
   playSfx("get"); pLeaves(tx*TILE+8, ty*TILE-4, "#8a9a5a", 8);
   if(tier === "common"){
@@ -921,8 +928,7 @@ function maybeNest(tx, ty, guaranteed){
     return;
   }
   if(tier === "charm"){
-    // the Band and the Pocketwatch (v3.32) have their own stories — never from a nest
-    const unowned = Object.keys(CHARMS).filter(c => c !== "The Forester's Band" && c !== "Grandpa's Pocketwatch" && !state.discovered[c]);
+    const unowned = nestCharmPool();
     if(!unowned.length){ give("Berry Bun", 2); toast("A nest tumbles down — berries, baked hard by the sun.", "#cbb98f"); return; }   // every charm already found
     const c = unowned[Math.floor(Math.random()*unowned.length)];
     give(c, 1);
@@ -1498,6 +1504,13 @@ const FISH_NAMES = new Set(FISH.map(f => f.name)
   .concat(FISH.map(f => "Cooked "+f.name))
   .concat(LEGENDS.map(l => l.name)));
 
+// v4.15: the five legends are TROPHIES, not produce. legendHere() gates on !caught_<id>, so each one
+// rises exactly once per valley — a legend that leaves your bag can never be caught again. Bulk actions
+// must therefore never sweep them up (v4.11's "Sell all produce" did, silently, since FISH_NAMES
+// includes them). Selling one deliberately at the counter is still the player's call; having five
+// irreplaceable trophies vanish on a convenience button is the game taking something, which we don't do.
+const LEGEND_NAMES = new Set(LEGENDS.map(l => l.name));
+
 // what one unit of `item` is worth right now, before demand — season and mastery bonuses included
 function baseUnitPrice(item){
   let p = ITEM_SELL[item] || 0;
@@ -1553,7 +1566,7 @@ function sellItem(item, n){
 // produce (crops, raw fish, and cooked dishes incl. grilled "Cooked X"), NEVER materials — so it can't
 // footgun away the Wood/ore/warding-drops/gems/star-metal you're saving for tools, bells, charms or
 // projects. Economy-neutral under flat pricing (identical to clicking each row's "all").
-function isProduce(item){ return CROP_NAMES.has(item) || FISH_NAMES.has(item) || RECIPE_NAMES.has(item) || item.indexOf("Cooked ") === 0; }
+function isProduce(item){ return !LEGEND_NAMES.has(item) && (CROP_NAMES.has(item) || FISH_NAMES.has(item) || RECIPE_NAMES.has(item) || item.indexOf("Cooked ") === 0); }
 function produceValue(){ let g = 0; for(const it of Object.keys(state.inv)) if(isProduce(it) && ITEM_SELL[it] && state.inv[it] > 0) g += bundlePrice(it, state.inv[it]); return g; }
 function sellAllProduce(){
   let gain = 0, count = 0, best = state.stats.bestCropSold || 0, bestName = null;

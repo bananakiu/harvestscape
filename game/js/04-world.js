@@ -8,7 +8,12 @@ const SAVE_KEY = "harvestscape_save_v2";
 let curMap = null;                        // the active map's data
 
 // object kinds you can walk over (everything else placed blocks)
-const WALKABLE_OBJ = new Set(["ladder","exitmat","flower","rugdot","lantern"]);
+// v4.15: the Undercroft stairs join the mine's "ladder" here. They are stairs — you step onto them —
+// and while they blocked, settling a Great Knot could ENTOMB you: the boss's stair drops on its root
+// tile (15-warding.js), creatures don't block movement so you can be standing there, and blockedAt
+// tests the player's whole 8x5 hitbox — once it is inside a 16px blocked tile no incremental step can
+// ever clear it. Walkable stairs make that impossible by construction.
+const WALKABLE_OBJ = new Set(["ladder","exitmat","flower","rugdot","lantern","wardup","wardladderdown"]);
 
 function freshState(){
   return {

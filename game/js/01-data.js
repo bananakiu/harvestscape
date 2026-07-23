@@ -8,13 +8,19 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.14.0", code: 101, codename: "Never Stranded", date: "2026-07-23" };
+const VERSION = { name: "4.15.0", code: 102, codename: "Nothing Lost", date: "2026-07-24" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.15.0", code:102, date:"2026-07-24", name:"Nothing Lost", notes:[
+    { t:"fix", s:"'Sell all produce' will never sell your legendary fish. The five trophy catches each rise exactly once in the whole valley — landed one and it's gone for good — so having a convenience button quietly ship one off to market broke the promise that nothing is ever taken from you. Sell-all now leaves every legend (and every warding material) right where it belongs; you can still sell one by hand at the counter if you truly mean to." },
+    { t:"fix", s:"Settling a Great Knot can never trap you anymore. When the boss came apart it dropped its stair on the very tile it had rooted on — which could be the tile you were standing on — and the old stone would pen you in with no way to step off it. The Undercroft's stairs are now something you simply stand on, like the mine's ladders, and you're nudged gently clear for good measure. (This was the boss that guards the second chapter of the Warden's Ledger — no one gets stranded there again.)" },
+    { t:"fix", s:"A knockout in the Undercroft now only re-tangles the floor you fell on — not the whole valley. Waking at the door used to quietly reshuffle every mine seam, grove ring and forage patch in the world, which handed out an unlimited re-roll of a day's gathering for the price of a free, painless knockout. The floors still knit themselves back so a restless thing can't be whittled down across trips; everything else you'd already uncovered stays exactly as you left it." },
+    { t:"fix", s:"The forged Warden's charms no longer turn up free in a bird's nest. The Warded, Emberlight, Wardstone, Settler's and Starward charms are meant to be earned at a Warden's Bell from what you settle in the dark — the top one costs a Star-Gnarl's gloamstar — so finding the best charm in the game shaken out of a tree in the grove undercut the whole climb. Nests go back to the woodland charms they were always for." },
+  ]},
   { v:"4.14.0", code:101, date:"2026-07-23", name:"Never Stranded", notes:[
     { t:"fix", s:"The heads-up display can't vanish on you anymore. Pressing U (Hide HUD) turns it off and — because that choice is remembered between sessions — it used to stay off with no obvious way back, so it looked like the HUD had simply disappeared while you played. Now, whenever the HUD is hidden, a small '◔ Show HUD · U' button sits in the bottom-left corner: click it (or press U) to bring everything back. You can never be stranded without your clock, gold and energy again." },
   ]},
@@ -1350,13 +1356,18 @@ const CHARMS = {
   // v4.0 — the first CRAFTED charms (forged at a Warden's Bell from settling drops, not nest-found).
   // They extend the v3.3 one-charm system rather than adding armour: Warded lifts your Resolve cap,
   // Emberlight widens your lantern for the dark. Modest sells; the point is wearing them.
-  "Warded Charm":     { sell:150, effect:"+5 maximum Resolve while worn" },
-  "Emberlight Charm": { sell:150, effect:"your lantern reaches much farther" },
+  // `crafted:true` is load-bearing, not documentation: the canopy-nest pools (08-actions.js) exclude
+  // every crafted charm by this flag. Until v4.15 they only excluded the Band and the Pocketwatch by
+  // name, so a nest could hand you the Starward — a Gloamstar + Heartknot + Diamond — for free,
+  // contradicting the "not nest-found" note above. Flagging beats name-listing: the next crafted
+  // charm is covered the day it is added, instead of silently leaking until someone notices.
+  "Warded Charm":     { sell:150, crafted:true, effect:"+5 maximum Resolve while worn" },
+  "Emberlight Charm": { sell:150, crafted:true, effect:"your lantern reaches much farther" },
   // v4.1 deep-warding charms — the top Resolve charm (from the Great Knot's Heartknot) and a Warding-XP band.
-  "Wardstone Charm":  { sell:300, effect:"+10 maximum Resolve while worn" },
-  "Settler's Band":   { sell:200, effect:"+5% Warding XP while worn" },
+  "Wardstone Charm":  { sell:300, crafted:true, effect:"+10 maximum Resolve while worn" },
+  "Settler's Band":   { sell:200, crafted:true, effect:"+5% Warding XP while worn" },
   // v4.2 the capstone Resolve charm — forged around a Star-Gnarl's Gloamstar.
-  "Starward Charm":   { sell:500, effect:"+15 maximum Resolve while worn" },
+  "Starward Charm":   { sell:500, crafted:true, effect:"+15 maximum Resolve while worn" },
 };
 for(const c in CHARMS) ITEM_SELL[c] = CHARMS[c].sell;
 function charmActive(name){ return state.charm === name && (state.inv[name]||0) > 0; }

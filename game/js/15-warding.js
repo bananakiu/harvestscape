@@ -359,6 +359,9 @@ function settleCreature(cr){
     state.flags.firstKnotSettled = true;   // v4.3 an Act III expedition beat (the Warden's Ledger, ch.2)
     // the Great Knot guarded the stair — settling it drops the ladder at the spot it rooted on
     curMap.objects[key(Math.floor(cr.rx/TILE), Math.floor(cr.ry/TILE))] = { kind:"wardladderdown" };
+    unstick();   // v4.15: belt-and-braces — the stair lands on the boss's ROOT tile, which you may be
+                 // standing on. WALKABLE_OBJ now covers this, but never let the boss that gates Act III
+                 // ch.2 be the thing that strands a player (same rescue drainResolve already uses).
     cam.shake = 4; playSfx("bellRing"); pSparkle(cr.rx, cr.ry-4, "#ffd88a", 24);
     banner("❖ " + d.name + " settled", "The old grief comes apart, quiet at last — and the stair it guarded lies open.");
     floatText(cr.rx, cr.ry-18, "↓ the way down", "#bfe0ff");
@@ -430,7 +433,12 @@ function wardKnockout(){
   playSfx("knockout");
   // Snapshot for the contract test / audit: knockout must diff inventory+gold+XP to zero.
   startCutscene([
-    { type:"fade", on:true, then:()=>{ state.resolve = resolveMax(); clearMapCache(); setMap("guild", 15*TILE+8, 2*TILE, "down"); } },
+    // v4.15: drop ONLY the floor you fell on, not the whole world. This used to call clearMapCache(),
+    // which wipes mapCache entirely — every mine floor, every grove ring, every forage node in the
+    // valley regenerated on a free, self-inflicted knockout. That handed the player an unlimited
+    // re-roll of the two energy-free faucets and quietly voided every daily-limit in the game. The
+    // wipe's real job is only to stop a boss being whittled down across knockouts, and one key does that.
+    { type:"fade", on:true, then:()=>{ state.resolve = resolveMax(); delete mapCache["undercroft:" + (state.wardDepth||1)]; setMap("guild", 15*TILE+8, 2*TILE, "down"); } },
     { type:"wait", t:0.5 },
     { type:"fade", on:false },
     { type:"say", who:"", portrait:"port_valley", text:"The lantern-bearers found you before the dark had a chance to. They always do — that is the whole reason for the bells." },

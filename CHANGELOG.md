@@ -22,6 +22,83 @@
 
 ---
 
+## 2026-07-24 — v4.15.0 "Nothing Lost" (code 102, tag `v4.15.0`) — four contract/safety fixes surfaced by the v4.14 gap audit
+
+### Why this release
+
+With the HUD bug closed, I ran a full 9-dimension audit of the live v4.14 build (73 agents,
+find → adversarially-verify → synthesize; see the session workflow `w7snyvc9q`). It graded the game
+**C+ overall** — "an excellent cozy engine with a completed story and no second act" — and produced a
+ranked build plan (headline gap: the post-finale void + the orphaned Warding economy). That content
+work is real and is queued as **v4.16.0 "The Warden's Round."**
+
+But the audit also turned up four **defects a real player can hit today**, two of which quietly break
+the game's one inviolable promise — *nothing is ever taken from the player.* Those don't wait behind a
+content release. I re-verified all four against live code myself (the audit refuted 0 of 63 findings,
+which warranted independent spot-checks), fixed them, and confirmed each in-browser. Shipping them
+first also matters because the content release's daily-limit balance **depends on** fix #3 being in
+place.
+
+### Fixed
+
+- **"Sell all produce" permanently destroyed the legendary fish.** `isProduce()` (08-actions.js) keyed
+  off `FISH_NAMES`, which is built to *include* the five `LEGENDS` — and `legendHere()` (08-actions.js)
+  gates each legend on `!state.flags["caught_"+id]`, so a legend rises **exactly once per valley** and,
+  once out of your bag, can never be caught again. So v4.11's convenience button swept all five
+  irreplaceable trophies to market in one click. This is the contract failing on the least-recoverable
+  items in the game. Fix: a `LEGEND_NAMES` set, and `isProduce()` now excludes it — sell-all leaves
+  legends (and, as before, all raw materials) untouched; a deliberate counter sale is still allowed.
+  → `game/js/08-actions.js`.
+- **Settling a Great Knot could entomb the player (hard soft-lock).** The boss drops the descent stair
+  on the tile it rooted on (`15-warding.js`), creatures don't block movement so the player can be
+  standing there, `wardladderdown` was **not** in `WALKABLE_OBJ`, and `blockedAt()` (04-world.js) tests
+  the whole 8×5 hitbox against a 16px tile — so once the hitbox is inside a newly-blocking tile, no
+  incremental step can ever clear it (`cornerNudge` can't escape either). The only "rescue" was being
+  hit by another creature, which fails on a cleared or parried floor. And this is the boss that gates
+  **Warden's Ledger chapter 2** — a story blocker. Fix: `wardup` + `wardladderdown` join the mine's
+  `ladder` in `WALKABLE_OBJ`, and the boss-settle path calls `unstick()` as belt-and-braces (the same
+  one-liner `drainResolve` already uses). → `game/js/04-world.js`, `game/js/15-warding.js`.
+- **A free knockout re-rolled the entire valley's gatherables.** `wardKnockout()` (15-warding.js) called
+  `clearMapCache()`, which wipes **all** of `mapCache` — every mine floor, grove ring and forage node in
+  the world regenerates. Since a knockout costs nothing (the contract) and Resolve refills at the bell by
+  the entry, this was an unlimited re-roll of the two energy-free gathering faucets, and it silently
+  voided every daily limit the game has. The wipe's actual job is only to stop a boss being whittled down
+  across knockouts — one key does that. Fix: `delete mapCache["undercroft:" + (state.wardDepth||1)]`
+  (the exact key `getMap` builds at 04-world.js:84) instead of the world wipe. → `game/js/15-warding.js`.
+- **Canopy nests handed out the forged Warden's charms for free.** The nest pools (`maybeNest`,
+  08-actions.js) excluded only the Forester's Band and the Pocketwatch by name — so the five crafted
+  Warding charms (Warded / Emberlight / Wardstone / Settler's / **Starward**) were eligible, and ~40% of
+  charm-tier nests could hand you the +15 Starward whose intended cost is a Star-Gnarl's Gloamstar + a
+  Heartknot + a Diamond. This directly contradicted the code's own comment ("forged at a Warden's Bell…
+  *not* nest-found"). Fix: a `crafted:true` flag on all five charms (01-data.js), and a single
+  `nestCharmPool()` helper both nest sites now read — so the two pools can never disagree again (they
+  previously used *different* exclusion lists) and the next crafted charm is covered the day it's added.
+  → `game/js/01-data.js`, `game/js/08-actions.js`.
+
+### Verification
+
+All four confirmed in a live play state (console clean): sell-all keeps a Sunfleck (legend) and a
+Heartknot (material) while selling Salmon + Turnip; both Undercroft stairs report walkable; the nest
+pool excludes Starward/Warded and still offers the Wren charm; and a simulated knockout drops only
+`undercroft:5` from a cache holding `mine:3` / `grove:2` / `undercroft:1` / `village`.
+
+### Files
+
+- `game/js/08-actions.js` — `LEGEND_NAMES`, `isProduce()` legend exclusion, `nestCharmPool()` helper, both nest sites.
+- `game/js/04-world.js` — `WALKABLE_OBJ` gains `wardup` + `wardladderdown`.
+- `game/js/15-warding.js` — boss-settle `unstick()`; knockout wipes only the current floor.
+- `game/js/01-data.js` — `crafted:true` on the five Warden charms; VERSION + in-game CHANGELOG.
+- `game/index.html` — cache-buster `?v=120`.
+
+### Follow-on (not in this release)
+
+The audit's content plan starts with **v4.16.0 "The Warden's Round"**: a repeatable post-finale
+deep-material commission, two monument sinks for the eight Warding drops, a "The Tenth Wing" Collection
+section, and — critically — synthesizing the HUD quest tracker from the Warden's Ledger so Act III
+stops showing a blank next-step and the game stops firing "Every Story Told" eight chapters early.
+
+---
+
 ## 2026-07-23 — v4.14.0 "Never Stranded" (code 101, tag `v4.14.0`) — HUD-disappears bug fix
 
 ### Why this release
