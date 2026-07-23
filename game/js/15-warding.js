@@ -542,6 +542,64 @@ function buySalvage(){
   refreshHUD(); if(typeof renderShop === "function") renderShop();
 }
 
+// ---------------- The Warden's Round (v4.16) — the post-finale repeatable ------------------------------
+// Act III ends with Elias saying a warden "only holds the wing lit long enough to hand it on." The Round
+// IS the handing-on: once every chapter is closed, the Ledger keeps writing itself one fresh page a day —
+// a single deep-material the wing still needs tended out of it, walked for gold + Warding XP. This is the
+// answer to "why open the tenth door tomorrow": before it, the eight Undercroft drops fed only one-time
+// sinks (8 chapter bundles, 9 bells, 5 charms), so a finished save had no reason to descend. Now the deep
+// keeps asking, gently, forever.
+//
+// Structurally a twin of Nell's daily order (13-content.js) and Tom's salvage above: {item, qty, xp, want,
+// line}, its own flag namespace (roundDay / roundIdx / roundDone), one per day, seeded off the day. It is
+// FILLED at the Ledger (renderWardLedger's all-done branch, 10-ui.js) — never an auto-drain on open.
+// Balance (GBP §2.4 / §6.1): pays 1.6× the material's sell in gold — modest, always under a good farm day —
+// plus Warding XP sized to a floor-clear's worth, scaled by the material's depth. Warding costs no energy,
+// so the Round must never become the dominant XP or gold faucet; it's a reason to go down, not a payday.
+const WARD_ROUNDS = [
+  { item:"Gloam Thread", qty:8, xp:120, want:"The first-floor lanterns want re-wicking — eight lengths of gloam thread should see the round lit.",   line:"Wicks trimmed, the first floor's warm again. A page closes; another opens tomorrow. That's the round." },
+  { item:"Knotwood",     qty:6, xp:140, want:"Six knots have grown back over the second landing. Loosen them before they set — that's the whole of tending.",          line:"The landing's clear. Grief left alone grows a shape; grief tended just… loosens. You keep learning it." },
+  { item:"Ember Grit",   qty:6, xp:160, want:"The deep-round braziers have gone cold. Six measures of ember grit will keep the dark from closing back in.",           line:"The braziers tick and glow again. A warm round is a walked round. Good hands, as ever." },
+  { item:"Warden's Ash", qty:5, xp:200, want:"A hollow warden has knotted up on the tenth-floor stair again. Settle it and bring five twists of its ash to the book.",  line:"Ash on the ledger, stair kept clear. Orla walked this exact round; so did I; now so do you. It's a good line to stand in." },
+  { item:"Snarlthread",  qty:5, xp:250, want:"The twentieth floor's tangles are re-knitting. Five coils of snarlthread, cut clean — the wing will breathe easier.",    line:"The tangle's combed out. Five coils, and a floor that stays a floor. The book thanks you in its quiet way." },
+  { item:"Deepgnarl",    qty:4, xp:320, want:"Deep, past where I ever kept — four knuckles of deepgnarl need lifting before the dark down there sets like stone.",       line:"Lifted, and the deep round holds. I never walked that far, you know. Every day you make me a little less of a coward." },
+  { item:"Gloamstar",    qty:3, xp:400, want:"The bottom of the wing has grown three star-gnarls in the root-dark. Settle them, bring the gloamstars up into the light.",  line:"Star-light out of the root-dark, and the whole wing lit corner to corner. Orla would have loved your hands. So do I." },
+];
+// Chosen once per day and remembered (so it can't reshuffle when you descend mid-morning), gated on the
+// finale being lit — the Round is Elias handing the craft on, which can't happen until ch8 is closed.
+function todaysWardRound(){
+  if(!wardChaptersAllDone()) return null;
+  if(state.flags.roundDay === state.day) return state.flags.roundIdx >= 0 ? WARD_ROUNDS[state.flags.roundIdx] : null;
+  const rng = makeRng(4045 + state.day*23);
+  state.flags.roundDay = state.day;
+  state.flags.roundIdx = Math.floor(rng() * WARD_ROUNDS.length);
+  return WARD_ROUNDS[state.flags.roundIdx];
+}
+function wardRoundFilled(){ return state.flags.roundDone === state.day; }
+function wardRoundPay(o){ return Math.max(250, Math.round((ITEM_SELL[o.item]||0) * o.qty * 1.6)); }
+// An EXPLICIT walk (a button on the Ledger), never an auto-drain — matches the salvage/décor UI rule that
+// an interface must never silently spend what you carry.
+function walkWardRound(){
+  const o = todaysWardRound(); if(!o) return false;
+  if(wardRoundFilled()){ toast("Today's round is already walked. The book rests till tomorrow.", "#bfe4ff"); return false; }
+  if((state.inv[o.item]||0) < o.qty){ toast(`The round wants ${o.qty}× ${o.item} — you're carrying ${state.inv[o.item]||0}.`, "#c98a6a"); playSfx("error"); return false; }
+  take(o.item, o.qty);
+  const pay = wardRoundPay(o);
+  // Mark the round walked BEFORE the bumps: bump() -> checkQuests() -> refreshQuestTracker(), which now
+  // re-renders the Act III corner card from wardTrackerData(). If roundDone were still yesterday's value
+  // at that point, the tracker would re-draw the round as "still needed (0/N)" right after take() emptied
+  // the bag — reading as "my round didn't count." (tryFulfillRequest sets its own done-flag the same way.)
+  state.flags.roundDone = state.day;
+  state.gold += pay; bump("earned", pay); bump("rounds", 1);
+  addXP("Warding", o.xp);
+  playSfx("coin"); floatText(state.px, state.py-24, "+"+pay+"g", "#ffce5a"); pSparkle(state.px, state.py-14, "#bfe4ff", 14);
+  refreshHUD(); if(typeof refreshQuestTracker === "function") refreshQuestTracker();   // refreshHUD doesn't touch the tracker; clear the round card now that it's walked
+  banner("❖ The round is walked", o.line);
+  setTimeout(() => toast(`Warden's Round — +${pay}g, +${o.xp} Warding XP`, "#bfe4ff"), 300);
+  if(typeof renderWardLedger === "function" && openPanels.has("wardLedgerPanel")) renderWardLedger();
+  return true;
+}
+
 // ---------------- Act III opener: "The Tenth Door" turn-in scene (Elias takes the boards down) --------
 // Attached here (not in 01-data) because it needs QUESTS + NPCDEF + mkNpc, all defined by the time this
 // file loads. Matches the "One Last Letter" / Homecoming temperature: quiet, earned, restrained. Rowan

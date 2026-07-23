@@ -22,6 +22,121 @@
 
 ---
 
+## 2026-07-24 — v4.16.0 "The Warden's Round" (code 103, tag `v4.16.0`) — the post-finale loop + deep-material sinks + Act III made visible
+
+### Why this release
+
+The v4.14 gap audit's headline finding: *"the game has just finished being a story and has not yet
+become a place."* The moment the Tenth Lantern lights (v4.5), three things happen at once and none
+were designed — (1) the on-screen next-step goes permanently blank, because Act III lives in the
+Warden's Ledger rather than the `QUESTS` chain and `trackerData()` early-returned `null` past the
+chain; (2) the game fires its completionist fanfare *eight chapters early* (the tenth-door turn-in
+that OPENS Act III is the last `QUESTS` entry, so "Every Story Told" flashed as the act began, above
+a 0/8 ledger); and (3) the entire deep-loot economy reverts to sell-only, because all eight
+Undercroft drops fed exclusively one-time sinks (8 chapter bundles + 9 bells + 5 charms) that are
+spent once and never again — deliberately priced *below* the surface mine, so there was no reason to
+descend after the finale.
+
+This release is the audit's #1 and #2 picks together: give the wing a permanent repeatable purpose
+**and** restore the signposting the whole of Act III was missing. It's the direct answer to *"why open
+the tenth door tomorrow."*
+
+### Added — the Warden's Round (the post-finale repeatable)
+
+- **`WARD_ROUNDS` + the daily Round** (`game/js/15-warding.js`). Once `wardChaptersAllDone()`, the
+  Ledger keeps writing itself one page a day: a single deep material the wing still needs tended out
+  of it (rotating across seven of the eight drops — Heartknot, the rare Great-Knot boss trophy, stays
+  reserved for the top charm and the Round-Lantern rather than a daily ask), walked at the Ledger for
+  **gold + Warding XP**. Structurally
+  a twin of Nell's daily order and Tom's salvage — `{item, qty, xp, want, line}`, its own flag namespace
+  (`roundDay`/`roundIdx`/`roundDone`), one per day, seeded off the day; `todaysWardRound()` /
+  `wardRoundFilled()` / `wardRoundPay()` / `walkWardRound()`. **Filled explicitly** via a button on the
+  Ledger (`renderWardLedger`'s previously-dead all-done branch), never an auto-drain on open — the
+  standing UI rule that an interface must never silently spend what you carry.
+  - **Balance (GBP §2.4 / §6.1):** pays `max(250, sell × qty × 1.6)` in gold — modest, always under a
+    good farm day — plus Warding XP scaled by the material's depth (120 for surface Gloam Thread up to
+    400 for the root-dark Gloamstar). Warding costs no energy, so the Round is sized as *a reason to
+    descend*, never the dominant XP or gold faucet. Fiction: Elias's "a warden only holds the wing lit
+    long enough to hand it on" — the Round is the handing-on.
+- **Two repeatable monument sinks** (`DECOR`, `game/js/01-data.js` + sprites `03-art.js`), the exact
+  v3.29 move that closed the same hole for the mine's terminal ore: **Settled Cairn** (4,000g +
+  Deepgnarl ×10 / Snarlthread ×16 / Warden's Ash ×12 — the bulk sink) and **Warden's Round-Lantern**
+  (6,000g + Gloamstar ×3 / Heartknot ×1 / Gold Ore ×10 — the capstone). Both inherit `DECOR_MAX` 40, so
+  they're a genuinely repeatable home for what you settle in the dark.
+- **A "The Tenth Wing" Collection section** (`MUSEUM`, `game/js/10-ui.js`), **derived from `CREATURES`**
+  (`drop` + `drop2`), not hand-listed — so the day a new family is added, its spoils join the Collection
+  for free (the exact lesson the v3.37 review taught when a hand-list forgot Deepsilver). Sea Aster (v4.13)
+  also joins The Shore, which had never listed it.
+- **The wing's finds are giftable** (`NPCDEF`, `game/js/13-content.js`): Elias — the last Warden —
+  *loves* Warden's Ash and *likes* Gloam Thread / Knotwood (he knows his own wing's spoils; the ash of a
+  settled hollow warden means the most); Rowan — who sealed the wing — *likes* the deep trophies
+  (Heartknot, Gloamstar). Verified no substring over-match against the `includes()` gift semantics.
+
+### Changed — Act III made visible (the audit's #2)
+
+- **`trackerData()` synthesizes an Act III card from the Ledger** (`game/js/09-quests.js`, new
+  `wardTrackerData()`). Past the `QUESTS` chain it rebuilds the same `{title, reportTo, objs}` shape the
+  HUD already draws, straight from the live ledger helpers: during a chapter it lists the bundle progress
+  + the expedition beat; when both are met it points back to "the Warden's Ledger" to close the page;
+  after the finale it surfaces today's Round. Only engages once `tenthDoorOpen` — Acts I–II are untouched.
+- **The morning wake-card and the Continue recap** (`10-ui.js` sleep card, `11-title.js` `storySoFar()`)
+  dropped their `questIdx < QUESTS.length` guards so both fall through to the same synthesized source —
+  three signposts restored for all of Act III in one change. The HUD tracker line reads "Close the page
+  at the Warden's Ledger" rather than "Report to" for ledger cards.
+
+### Fixed — the false endings
+
+- **The "Every Story Told" banner** (`09-quests.js`) kept its `qpAllTold` **latch** (the Storyteller's
+  Banner / quest cape stays earned — cozy contract), but the fanfare is **reworded and rescoped**: it now
+  says *"The Book of Tasks, Complete"* — accurate, because the quest cape is for the QUEST book
+  (Acts I–II), which genuinely IS done at the tenth-door turn-in. The grand "valley whole at last" belongs
+  to Act III's own finale (the Tenth Lantern), where it already fires.
+- **The Journal's "Every task complete. The valley is yours." line** (`10-ui.js` `journalQuestsHtml()`)
+  now waits for `wardChaptersAllDone()` (or a save that finished the quest book without ever opening the
+  door), instead of printing directly above a 0/8 open ledger the instant Act III began.
+
+### Verification (all in a live play state, console clean)
+
+- Tracker synthesis: mid-Act-III (ch2) HUD shows "The Old Rounds" with live bundle progress
+  (Knotwood 5/20 …) + the expedition line; post-finale HUD shows "The Warden's Round · Bring 8× Gloam
+  Thread to the Ledger." Screenshotted the Ledger panel rendering Today's Round with the Walk button.
+- The Round: rolls a material, pays `max(250, …)` + Warding XP (the +180 vs base 120 seen in test is the
+  variety spark applying, as intended), sets `roundDone`, and clears the tracker when walked.
+- Monuments: both buy for gold + consume the exact deep materials, add the placeable; both sprites render.
+- Collection: "The Tenth Wing" derives all eight drops from `CREATURES`; The Shore now includes Sea Aster.
+- Gating: the triumphant Journal line is absent mid-Act-III, present once all chapters are closed.
+- Gifts: Elias loves Warden's Ash / likes Gloam Thread + Knotwood; Rowan likes Heartknot + Gloamstar; no
+  over-match (Rowan's Star Metal still *loved*; Elias doesn't match Gloamstar).
+
+**Adversarial review pass** (4-lens diff review, each finding verified against live code) caught one real
+bug, fixed before commit: `walkWardRound()` set `state.flags.roundDone` *after* its `bump()` calls, and
+`bump() → checkQuests() → refreshQuestTracker()` re-rendered the new Act III corner card while `roundDone`
+was still stale — so the instant a round was walked and paid, the HUD briefly re-drew it as "still needed
+(0/N)", reading as "my round didn't count." `refreshHUD()` doesn't touch the tracker, so nothing corrected
+it until the next stat-bumping action. Fix: set `roundDone` *before* the bumps, and call
+`refreshQuestTracker()` on completion (the exact shape `tryFulfillRequest` already uses for the noticeboard).
+Verified: walking a round now clears the corner card immediately. No cozy-contract impact (materials/gold/XP
+were always exchanged exactly once); this was display-only.
+
+### Files
+
+- `game/js/15-warding.js` — `WARD_ROUNDS` + the Round helpers.
+- `game/js/09-quests.js` — `wardTrackerData()` + `trackerData()` fallthrough; the reworded/rescoped cape banner.
+- `game/js/10-ui.js` — Ledger all-done branch renders the Round; tracker "close the page" phrasing; sleep-card guard dropped; Journal triumph-line gating; MUSEUM "Tenth Wing" + Sea Aster.
+- `game/js/11-title.js` — `storySoFar()` guard dropped.
+- `game/js/01-data.js` — two `DECOR` monuments; VERSION + in-game CHANGELOG.
+- `game/js/03-art.js` — the two monument sprites.
+- `game/js/13-content.js` — Elias & Rowan gift entries.
+- `game/index.html` — cache-buster `?v=121`.
+
+### Still ahead (from the audit)
+
+Touch parity (four world verbs have no touch input), the world reacting to the Tenth Lantern (NPC lines
++ an annual ceremony + the epilogue letter), the Undercroft "run" (a Resolve consumable + a depth slope),
+and the economy re-measurement v4.9 deferred. Tracked in the session's roadmap task.
+
+---
+
 ## 2026-07-24 — v4.15.0 "Nothing Lost" (code 102, tag `v4.15.0`) — four contract/safety fixes surfaced by the v4.14 gap audit
 
 ### Why this release

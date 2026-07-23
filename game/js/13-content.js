@@ -941,7 +941,7 @@ const NPCDEF = {
   tom:   { name:"Tom",         portrait:"port_tom",   spr:"tom",
            loved:["Pumpkin","Gold Ore"], liked:["Wood","Copper Ore","Iron Ore","Silverwood","Heartwood"] },   // single-word woods need naming (includes() is case-sensitive; "Silverwood" ⊅ "Wood")
   rowan: { name:"Elder Rowan", portrait:"port_rowan", spr:"rowan",
-           loved:["Star Metal","Diamond"], liked:["Emerald","Ruby","Starfruit","Guild Seal","Cobalt Ore"] },   // "Star Metal" already covers the Shard
+           loved:["Star Metal","Diamond"], liked:["Emerald","Ruby","Starfruit","Guild Seal","Cobalt Ore","Heartknot","Gloamstar"] },   // "Star Metal" already covers the Shard; v4.16 the deep trophies of the wing he sealed
   bram:  { name:"Bram",        portrait:"port_bram",  spr:"bram",  romance:true,
            loved:["Golden Koi","Pearl","Coelacanth"], liked:["Salmon","Coral","Cooked Salmon","Gulf Sturgeon"] },
   pip:   { name:"Pip",         portrait:"port_pip",   spr:"pip",
@@ -949,7 +949,7 @@ const NPCDEF = {
   nell:  { name:"Nell",        portrait:"port_nell",  spr:"nell",
            loved:["Fine Cheese","Cheese","Prize Fleece"], liked:["Sea Aster","Milk","Wool","Honey","Large Egg","Berry Bun"] },   // Tom's wife, the coast dairy (v3.44); Sea Aster v4.13 — "Cheese" covers Fine Cheese; "Milk" covers Large Milk; "Egg" avoided (would eat plain Egg too — Large Egg is the treat)
   elias: { name:"Elias",       portrait:"port_elias", spr:"elias",
-           loved:["Golden Koi","Pearl","Prize Fleece"], liked:["Trout","Salmon","Coral","Cooked","Wool"] },
+           loved:["Golden Koi","Pearl","Prize Fleece","Warden's Ash"], liked:["Trout","Salmon","Coral","Cooked","Wool","Gloam Thread","Knotwood"] },   // v4.16 the last Warden knows his own wing's spoils; ash of a settled hollow warden means the most
 };
 
 // dialogue by heart tier (index clamps); some react to progress

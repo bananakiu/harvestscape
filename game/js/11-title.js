@@ -155,9 +155,13 @@ function continueGame(){
 }
 // A gentle "story so far" on load, so a returning player re-enters the arc, not just the sandbox.
 function storySoFar(){
-  if(!state || state.questIdx >= QUESTS.length) return;
+  if(!state) return;
+  // v4.16: dropped the `questIdx >= QUESTS.length` early-out — trackerData() now synthesizes an Act III
+  // card from the Warden's Ledger past the QUESTS chain, so the Continue recap keeps naming the thread
+  // through all of Act III instead of going blank the moment the tenth door opens. Returns null (and we
+  // stay silent) only when there is genuinely nothing pending.
   const t = trackerData(); if(!t) return;
-  const where = t.reportTo ? `Report to ${t.reportTo}` : (t.objs[0] ? t.objs[0].text : t.title);
+  const where = t.reportTo ? `${t.ledger ? "Close the page at" : "Report to"} ${t.reportTo}` : (t.objs[0] ? t.objs[0].text : t.title);
   setTimeout(() => toast(`${actInfo().title} · ${where}`, "#e8d18a"), 1400);
 }
 function migrateSave(s){

@@ -980,6 +980,20 @@ function buildInteriors(){
     px(g,6,12,4,3,"#4a6ac8"); px(g,6,12,4,1,"#5a7ad0");                                    // cobalt mount
     px(g,4,6,8,4,"#c9922f"); px(g,4,6,8,1,"#e0b84a"); px(g,11,4,2,3,"#c8b8ff"); px(g,5,7,1,1,"#fff0a0"); },  // brass tube + starstone lens
     g => { px(g,4,11,2,3,"#3a3a44"); px(g,10,11,2,3,"#3a3a44"); px(g,4,4,8,4,"#c9922f"); px(g,11,3,2,3,"#c8b8ff"); });
+  // v4.16 the WARDEN'S monuments — grief-dark wood, pale warden's ash, and a gloamstar flame
+  mkDecor("settledcairn", "Settled Cairn", 16, 18, g => {
+    px(g,4,15,8,3,"#2c2318"); px(g,4,15,8,1,"#3c3020");                                     // base stones (heartknot-dark)
+    px(g,5,12,6,3,"#3a2e22"); px(g,5,12,6,1,"#4a3c2c"); px(g,6,9,4,3,"#463a2c"); px(g,6,9,4,1,"#5a4a38"); // stacked knots
+    px(g,7,6,2,3,"#544636"); px(g,7,6,2,1,"#6a5a44");                                       // capstone
+    px(g,5,13,1,1,"#8a94b0"); px(g,10,13,1,1,"#8a94b0"); px(g,8,10,1,1,"#a2acc8"); },       // flecks of pale ash
+    g => { px(g,4,11,8,3,"#2c2318"); px(g,5,8,6,3,"#3a2e22"); px(g,6,5,4,3,"#463a2c"); px(g,7,5,1,1,"#a2acc8"); });
+  mkDecor("wardenlantern", "Warden's Round-Lantern", 16, 22, g => {
+    px(g,6,18,4,3,"#4a3c2c"); px(g,6,18,4,1,"#5e4c34");                                     // wood base
+    px(g,7,10,2,8,"#6e5a3e"); px(g,7,10,2,1,"#8a7250");                                     // post
+    px(g,5,4,6,7,"#3a4650"); px(g,5,4,6,1,"#55636e"); px(g,5,10,6,1,"#55636e");             // lantern housing (dark iron)
+    px(g,6,5,4,5,"#c8b8ff"); px(g,7,6,2,3,"#e8dcff"); px(g,7,7,2,1,"#ffffff");              // gloamstar flame
+    px(g,7,2,2,2,"#55636e"); px(g,7,1,2,1,"#6e7c86"); },                                    // ring hook
+    g => { px(g,6,12,4,3,"#4a3c2c"); px(g,5,3,6,8,"#3a4650"); px(g,6,4,4,6,"#c8b8ff"); px(g,7,5,2,3,"#ffffff"); });
   mkDecor("storybanner", "Storyteller's Banner", 16, 24, g => {                       // v3.32: the quest cape, flown
     px(g,7,2,2,20,"#7a5734"); px(g,7,2,1,20,"#9a744a");                               // the pole
     px(g,6,1,4,1,"#c9a44a"); px(g,7,0,2,1,"#ffce5a");                                 // gilt finial

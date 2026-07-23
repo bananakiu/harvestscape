@@ -338,7 +338,7 @@ function refreshQuestTracker(){
       html += `<div class="qt-obj ${o.done?"done":""}">${o.done?'<span class="chk">✔</span> ':"• "}${o.text}` +
               (o.max>1 && !o.done ? ` (${o.cur}/${o.max})` : "") + `</div>`;
     }
-    if(q.reportTo) html += `<div class="qt-obj" style="color:var(--gold-hi)">▸ Report to ${q.reportTo}</div>`;
+    if(q.reportTo) html += `<div class="qt-obj" style="color:var(--gold-hi)">▸ ${q.ledger ? "Close the page at" : "Report to"} ${q.reportTo}</div>`;
     html += `</div>`;
   }
   html += boardTrackerHtml();
@@ -515,12 +515,16 @@ const MUSEUM = [
   { name:"Fish",          items:()=>FISH.map(f=>f.name) },
   { name:"The Legends",   items:()=>LEGENDS.map(l=>l.name) },
   { name:"Gems",          items:()=>Object.keys(GEM_SELL) },
-  { name:"The Shore",     items:()=>[...Object.keys(SHORE), ...Object.keys(ROADSIDE)] },   // + the coast road's forage (v3.36)
+  { name:"The Shore",     items:()=>[...Object.keys(SHORE), ...Object.keys(ROADSIDE), "Sea Aster"] },   // + the coast road's forage (v3.36); Sea Aster the salt-meadow bloom (v4.16)
   { name:"Farm & Forage", items:()=>["Field Salad","Frostberry","Berry Bun","Honey","Egg","Large Egg","Milk","Large Milk","Cheese","Fine Cheese","Wool","Prize Fleece","Mountain Thyme","Snowdrop"] },   // Wool since v3.8; Cheese v3.33; the ridge's forage v3.43
   { name:"The Kitchen",   items:()=>RECIPES.map(r=>r.name) },
   { name:"Materials",     items:()=>["Wood","Pine Wood","Maple Wood","Willow Wood","Elder Wood","Heartwood","Silverwood",...Object.values(WOOD_TO_LUMBER),...Object.values(ORES).map(o=>o.drop)] },   // + milled lumber (v3.21); ores DERIVED from ORES (v3.37 review fix — a hand-list forgot Deepsilver the day it shipped; now the next ore can't be missed)
   { name:"The Deep",      items:()=>[...GEODE_CURIOS, "Geode Heart", "Starlight Shard"] },   // v3.28: geode curios; v3.43: the summit's splinter joins the celestial family
   { name:"The Canopy",    items:()=>Object.keys(CHARMS) },
+  // v4.16 — the eight materials the Undercroft's restless things are knotted from. DERIVED from CREATURES
+  // (drop + drop2), not hand-listed, so the day a new family is added its spoils join the Collection for
+  // free — the exact lesson the v3.37 review taught when a hand-list forgot Deepsilver the day it shipped.
+  { name:"The Tenth Wing", items:()=>[...new Set(Object.values(CREATURES).flatMap(c=>[c.drop,c.drop2]).filter(Boolean))] },
 ];
 // (The Collection tile grid now lives in renderCollectionHtml, the Journal's Collection tab.)
 // The Journal, once a single 3-screen scroll of nine unrelated systems, is now a tabbed book —
@@ -579,7 +583,12 @@ function journalQuestsHtml(){
       html += `<div class="obj ${d?"done":""}">${d?"✔":"•"} ${o.text}${m>1?` (${c}/${m})`:""}</div>`; });
     html += `</div>`;
   });
-  if(state.questIdx >= QUESTS.length) html += `<div style="text-align:center;color:var(--gold-hi);">✦ Every task complete. The valley is yours. ✦</div>`;
+  // v4.16: this triumphant line used to print the instant the QUESTS chain finished — which is the exact
+  // moment the tenth-door turn-in OPENS Act III, so it sat directly above a 0/8 ledger claiming the valley
+  // was done while its longest act was just beginning. Now it waits until Act III is genuinely closed (or
+  // shows for the rare save that finished the quest book without ever opening the door).
+  if(state.questIdx >= QUESTS.length && (!state.flags.tenthDoorOpen || (typeof wardChaptersAllDone === "function" && wardChaptersAllDone())))
+    html += `<div style="text-align:center;color:var(--gold-hi);">✦ Every task complete. The valley is yours. ✦</div>`;
   if(state.flags.tenthDoorOpen && typeof renderWardLedgerJournal === "function") html += renderWardLedgerJournal();   // v4.3 Act III mirror
   html += renderPages();
   return html;
@@ -1301,8 +1310,27 @@ function openWardLedger(){
 function renderWardLedger(){
   const b = $("wardLedgerPanel").querySelector(".body");
   if(wardChaptersAllDone()){
-    b.innerHTML = `<div class="desc" style="margin-bottom:.5em;">Every page you set out to keep is kept. The wing is warm from the tenth door to the deep stair — tended, and staying tended, because you come back to it.</div>` +
-      WARD_CHAPTERS.map(c => `<div class="obj done">✔ ${c.title}</div>`).join("");
+    let h = `<div class="desc" style="margin-bottom:.5em;">Every page you set out to keep is kept. The wing is warm from the tenth door to the deep stair — tended, and staying tended, because you come back to it.</div>`;
+    // v4.16 — the standing Round: the Ledger keeps writing itself one page a day now that the craft is yours.
+    const o = todaysWardRound();
+    if(o){
+      const have = state.inv[o.item]||0, done = wardRoundFilled(), ready = have >= o.qty;
+      h += `<div class="jq" style="margin-bottom:.5em;"><h3 style="color:#bfe4ff">❖ Today's Round</h3>`;
+      h += `<div class="desc">“${o.want}”</div>`;
+      if(done){
+        h += `<div class="obj done">✔ Walked — the wing is tended for today. A fresh page opens at dawn.</div>`;
+      } else {
+        h += `<div class="obj ${ready?"done":""}">${ready?"✔":"•"} ${o.item} ${Math.min(have,o.qty)}/${o.qty}` +
+             (ready ? "" : ` <span class="sub">(carrying ${have})</span>`) + `</div>`;
+        h += `<div class="obj"><span class="sub">Pays ${wardRoundPay(o)}g · +${o.xp} Warding XP</span></div>`;
+        h += `<div class="row"><span class="lead"><span class="sub">${ready?"The round is ready to walk.":"Bring what the round asks, then walk it here."}</span></span>` +
+          `<span><button class="buy" ${ready?"":"disabled"} onclick="walkWardRound()">Walk the round</button></span></div>`;
+      }
+      h += `</div>`;
+    }
+    h += `<div class="desc" style="color:var(--ink-soft);margin:.3em 0 .2em;">The book's kept pages:</div>`;
+    h += WARD_CHAPTERS.map(c => `<div class="obj done">✔ ${c.title}</div>`).join("");
+    b.innerHTML = h;
     return;
   }
   const def = wardChapterDef(), idx = state.wardChapter||0;
@@ -1602,10 +1630,12 @@ function showSleepCard(s){
     else
       lines.push(`${icon} ${ev.name} is tomorrow`);
   }
-  // the morning names the mission — every day starts with the story's thread in hand
-  if(state.questIdx < QUESTS.length){
+  // the morning names the mission — every day starts with the story's thread in hand.
+  // v4.16: no longer gated on questIdx < QUESTS.length, so Act III (which lives in the Warden's Ledger,
+  // past the QUESTS chain) gets its morning line too instead of going silent for three releases.
+  {
     const t = trackerData();
-    if(t) lines.push(t.reportTo ? `✒ ${t.reportTo} is waiting to hear from you` : `✒ The story waits: ${t.title}`);
+    if(t) lines.push(t.reportTo ? `✒ ${t.reportTo} ${t.ledger ? "waits to be closed" : "is waiting to hear from you"}` : `✒ The story waits: ${t.title}`);
   }
   lines.push("☕ Energy restored");
   lines.push("💾 Progress saved");

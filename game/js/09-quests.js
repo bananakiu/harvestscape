@@ -103,8 +103,12 @@ function checkQuests(){
   // the Storyteller's Banner (the quest cape). Flag, not a QP compare: cozy contract says the
   // banner stays earned even if later releases append more quests to the book.
   if(!state.flags.qpAllTold && state.questIdx >= QUESTS.length){
-    state.flags.qpAllTold = true;
-    setTimeout(() => { banner("✦ Every Story Told ✦", questPoints() + " Quest Points — the valley's whole book. Tom has kept something for the teller.");
+    state.flags.qpAllTold = true;   // latch — the quest cape stays earned no matter what (cozy contract)
+    // v4.16: but the QUESTS chain now finishes at the tenth-door turn-in, which is the exact moment Act III
+    // OPENS. Firing "Every Story Told" here announced the whole story was over as its longest act began.
+    // The quest cape is for the QUEST book (Acts I–II) and is genuinely complete now — so say THAT. The
+    // grand "the valley whole" fanfare belongs to Act III's own finale (the Tenth Lantern), where it fires.
+    setTimeout(() => { banner("✦ The Book of Tasks, Complete ✦", questPoints() + " Quest Points — every quest in the valley's book is told. Tom has kept the Storyteller's Banner for you.");
       playSfx("legend"); }, 3600);   // let the final quest's own banner (3.2s) finish first
   }
   _questGuard = false;
@@ -166,7 +170,7 @@ function completeQuest(q){
 // data for the on-screen tracker (current quest only)
 function trackerData(){
   const q = curQuest();
-  if(!q) return null;
+  if(!q) return wardTrackerData();   // v4.16: past the QUESTS chain, Act III lives in the Warden's Ledger
   if(state.questReady){
     const npc = QUEST_GIVER_NPC[q.giver];
     return { title:q.title, reportTo: npc ? NPCDEF[npc].name : "", objs:[] };
@@ -175,4 +179,36 @@ function trackerData(){
     title: q.title,
     objs: q.obj.map(o => { const [c,m] = objProgress(o); return { text:o.text, cur:c, max:m, done:c>=m }; }),
   };
+}
+// v4.16 — Act III's on-screen next-step, SYNTHESIZED from the Warden's Ledger. Act III is deliberately
+// NOT in the QUESTS chain (15-warding.js explains why: the ledger is self-contained), so the whole of it
+// used to leave trackerData() returning null — the HUD card, the morning line and the Continue recap all
+// went blank for three releases of content. This rebuilds the same {title, reportTo, objs} shape the HUD
+// already knows how to draw, straight from the live ledger helpers. Only engages once the tenth door is
+// open; before that (Acts I–II, or a save that never went down) it returns null exactly as before.
+function wardTrackerData(){
+  if(typeof wardChaptersAllDone !== "function" || !state.flags.tenthDoorOpen) return null;
+  if(wardChaptersAllDone()){
+    // finale done: point at the standing Round if today's page isn't walked yet, else nothing pressing.
+    if(typeof todaysWardRound === "function"){
+      const o = todaysWardRound();
+      if(o && !wardRoundFilled()){
+        const have = state.inv[o.item]||0;
+        return { title:"The Warden's Round", reportTo:"", ledger:true,
+          objs:[{ text:`Bring ${o.qty}× ${o.item} to the Ledger`, cur:Math.min(have,o.qty), max:o.qty, done:have>=o.qty }] };
+      }
+    }
+    return null;
+  }
+  const def = wardChapterDef(); if(!def) return null;
+  if(wardChapterReady(def))   // both halves met — send them to the book to close the page
+    return { title:def.title, reportTo:"the Warden's Ledger", ledger:true, objs:[] };
+  const objs = [];
+  const rem = wardBundleRemaining(), paid = state.wardBundle||{};
+  for(const it in def.bundle){
+    const need = def.bundle[it], got = need - (rem[it]||0);
+    objs.push({ text:it, cur:Math.min(got,need), max:need, done:!rem[it] });
+  }
+  objs.push({ text:def.expedition.text, cur:wardExpeditionDone(def)?1:0, max:1, done:wardExpeditionDone(def) });
+  return { title:def.title, reportTo:"", ledger:true, objs };
 }

@@ -8,13 +8,20 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.15.0", code: 102, codename: "Nothing Lost", date: "2026-07-24" };
+const VERSION = { name: "4.16.0", code: 103, codename: "The Warden's Round", date: "2026-07-24" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.16.0", code:103, date:"2026-07-24", name:"The Warden's Round", notes:[
+    { t:"feature", s:"The tenth door is worth opening forever now. Once you've lit the Tenth Lantern and the Warden's Ledger's every page is kept, the book keeps writing itself — one fresh Round a day: a single thing the wing still needs tended out of it, from re-wicking the first-floor lanterns to lifting deepgnarl from the root-dark. Bring what it asks and walk it at the Ledger for good coin and Warding practice. It's the standing reason to keep descending — the deep never quite stops needing a warden." },
+    { t:"feature", s:"Two Warden's monuments for the farm, built from the deep's own spoils. The Settled Cairn stacks grief-dark wood and pale ash into something quiet and kept; the Warden's Round-Lantern burns a gloamstar that never quite goes out. They give everything you settle in the dark — deepgnarl, snarlthread, warden's ash, the star-touched gloamstar — a standing home in the light, the way the star-tier monuments did for the mine's rarest ore." },
+    { t:"change", s:"Act III finally shows on-screen. For three releases the whole Warden's Ledger arc left the corner tracker, the morning wake-card and the Continue recap blank — the game went quiet the moment its longest act began. Now the tracker names your current chapter and what it still wants (the bundle and the round to walk), points you back to the book to close a finished page, and after the finale shows today's Round. You always know the next step again." },
+    { t:"fix", s:"The game no longer announces it's over eight chapters early. Finishing the valley's quest book used to flash 'Every Story Told' and print 'Every task complete — the valley is yours' the instant Act III opened — directly above a ledger with eight pages still to keep. The quest cape you earn there is for the book of tasks, and it says so now; the grand 'valley whole at last' is saved for where it belongs, the Tenth Lantern." },
+    { t:"change", s:"The wing's finds are welcome as gifts at last. Elias — the last Warden — treasures a twist of warden's ash and likes the gloam thread and knotwood you tend out of his wing; Rowan, who sealed it, values the deep trophies (a heartknot, a gloamstar). And every restless-thing material now has a page in the Collection, under a new 'Tenth Wing' heading (Sea Aster joins The Shore, too)." },
+  ]},
   { v:"4.15.0", code:102, date:"2026-07-24", name:"Nothing Lost", notes:[
     { t:"fix", s:"'Sell all produce' will never sell your legendary fish. The five trophy catches each rise exactly once in the whole valley — landed one and it's gone for good — so having a convenience button quietly ship one off to market broke the promise that nothing is ever taken from you. Sell-all now leaves every legend (and every warding material) right where it belongs; you can still sell one by hand at the counter if you truly mean to." },
     { t:"fix", s:"Settling a Great Knot can never trap you anymore. When the boss came apart it dropped its stair on the very tile it had rooted on — which could be the tile you were standing on — and the old stone would pen you in with no way to step off it. The Undercroft's stairs are now something you simply stand on, like the mine's ladders, and you're nudged gently clear for good measure. (This was the boss that guards the second chapter of the Warden's Ledger — no one gets stranded there again.)" },
@@ -732,6 +739,14 @@ const DECOR = {
                  blurb:"A finger of star metal on a silverwood plinth, pointing back the way it fell." },
   observatory: { name:"Great Telescope", cost:12000,  mats:{ "Cobalt Ore":8, "Heartwood Beam":6, "Starstone":1 },
                  blurb:"Brass and cobalt, a Starstone for its lens. Rowan says the Guild kept one, once — to watch for the next star to fall." },
+  // v4.16 — the WARDEN'S monuments. Same move the star tier made for the mine's terminal ore (§3.5): once
+  // Act III's bundles, the nine bells and the five charms were all fed, the eight Undercroft drops had no
+  // repeatable consumer and reverted to sell-only. These two give the deep's spoils a standing home on the
+  // farm — a bulk sink for the mid-deep materials, and a capstone that eats the rarest of them.
+  settledcairn: { name:"Settled Cairn", cost:4000, mats:{ "Deepgnarl":10, "Snarlthread":16, "Warden's Ash":12 },
+                 blurb:"A cairn of grief-dark wood and pale ash, stacked and settled. Each stone was a knot in the dark once — quiet now, and kept in the light." },
+  wardenlantern:{ name:"Warden's Round-Lantern", cost:6000, mats:{ "Gloamstar":3, "Heartknot":1, "Gold Ore":10 },
+                 blurb:"A round-lantern like the ones you relit down the whole wing, a gloamstar for its flame. It never quite goes out — the way a tended place never quite goes cold." },
   // The Storyteller's Banner (v3.32) — the quest cape. Tom shows it locked until every quest in
   // the book is done (state.flags.qpAllTold, set in checkQuests); price is the RuneScape nod —
   // you earned it, but the vendor still charges for the cloth.
