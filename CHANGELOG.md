@@ -22,6 +22,59 @@
 
 ---
 
+## 2026-07-24 — v4.18.0 "The Standing Board" (code 105, tag `v4.18.0`) — the noticeboard scales with the player
+
+### Why this release
+
+The v4.14 gap audit's #9, and something I'd independently flagged at the audit's very start: the village
+noticeboard — the game's *only* scaling-free daily social loop — was a 20-row table whose hardest ask
+gated at **level 22** (a couple of pumpkins), and `todaysRequest()` picked **uniformly** from every
+*reachable* request. So a 99/99/99 farmer walking up to the board pinned by the shop door they visit daily
+had a 1-in-20 chance of "Tom wants 8 Wood, 60g." The daily directed objective went stale mid-game and never
+recovered. (`GAME_BALANCE_PRINCIPLES` flags the late-game board pay at ~330g against a 1,500g Everbloom
+tile.)
+
+### Added — sixteen higher-tier requests
+
+`REQUESTS` (`game/js/01-data.js`) gains 16 entries spanning **lvl 16–90** — Corn/Cranberry/Starfruit/Melon/
+Artichoke/Grape/Yam/Dragonfruit/Everbloom (Farming), Gulf Sturgeon/Coelacanth (Fishing), Gold/Cobalt/
+Deepsilver Ore + Ruby (Mining) — each with an in-character line. **Appended, never inserted**, so any save's
+cached `reqIdx` stays valid (it's a raw index into `REQUESTS`). Requesters stay the board's original five
+(tom/pip/maya/bram/rowan) — Nell and Elias have their own daily loops (NELL_ORDERS / the Warden's Round), so
+adding them here would collide.
+
+### Changed — band-weighted daily pick
+
+- **`requestWeight(r)`** + a weighted draw in `todaysRequest()` (`game/js/14-story.js`), replacing the
+  uniform pick. Weight is smooth and **self-scaling to any player level** — `0.25 + (min(1, lvl/max(10, pl)))² × 2.5`
+  — so an ask right at your mastery pulls ~4× as hard as a trivial one far below it, with no hardcoded level
+  bands. Un-gated favours (eggs, shells, salad — `requestSkill` returns null) keep a steady modest weight
+  (0.9) and never `NaN` (the audit's explicit gotcha). The seeded per-day RNG and the once-a-day cache are
+  preserved, so the pick stays deterministic and can't reshuffle mid-morning.
+- Pay is unchanged (`max(60, sell × qty × 1.4)`) — it was already a share of the item's worth, so the higher-
+  value asks pay proportionally more *for free*: the reward ceiling rose with the ask ceiling without a
+  separate pay-tier system.
+- **`ORE_ITEMS`** (14-story.js) gains Cobalt/Deepsilver so the new deep-ore asks gate on Mining level — they
+  were absent, so a Cobalt request would have read as un-gated and been offerable to a level-1 miner.
+
+### Verification (500-day Monte-Carlo per band, in the live build)
+
+- **Maxed (all 99):** 54% high-tier asks, top five all high-value (Dragonfruit/Coelacanth/Everbloom/Yam/
+  Grape), **grind-asks (Wood/Stone/Turnip/Potato/Wheat) down to 5%** (from ~1-in-20), **avg pay 2,239g** (was
+  ~330g).
+- **Mid (~40):** mid-tier dominates with level-appropriate asks (Ruby/Cobalt/Melon/Gold Ore/Rhubarb), avg 956g.
+- **New (level 1):** only reachable low-tier — the cozy starter favours (Field Salad/Shell/Egg/Sardine/Stone).
+- Determinism holds (same day → same request); no `NaN` `reqIdx`; the live board text and the HUD board
+  tracker both render the high-tier ask ("📌 Noticeboard • 1 × Coelacanth — Bram (0/1)"). Console clean.
+
+### Files
+
+- `game/js/01-data.js` — 16 higher-tier `REQUESTS`; VERSION + in-game CHANGELOG.
+- `game/js/14-story.js` — `requestWeight()` + weighted `todaysRequest()`; `ORE_ITEMS` deep ores.
+- `game/index.html` — cache-buster `?v=127`.
+
+---
+
 ## 2026-07-24 — v4.17.0 "After the Lantern" (code 104, tag `v4.17.0`) — the world reacts to the finale
 
 ### Why this release

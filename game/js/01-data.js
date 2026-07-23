@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.17.0", code: 104, codename: "After the Lantern", date: "2026-07-24" };
+const VERSION = { name: "4.18.0", code: 105, codename: "The Standing Board", date: "2026-07-24" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.18.0", code:105, date:"2026-07-24", name:"The Standing Board", notes:[
+    { t:"feature", s:"The noticeboard grows up with you. It used to top out early — its hardest ask was a couple of pumpkins — so a seasoned farmer would wander up to the board by Tom's door and get asked for eight logs. Now there are sixteen new higher requests running all the way to the Everbloom and the coelacanth, and the board leans toward asks near your own skill: a master angler gets asked for the deep-water fish, a master miner for cobalt and deepsilver, and the trivial little errands fade to rare. New hands still get the small starter favours they can actually fill — nothing's out of reach, and nothing's beneath notice for long." },
+    { t:"change", s:"Because the board asks for finer things now, it pays for them: the reward has always been a share of the item's worth, so a request for a coelacanth or a winter Everbloom is worth a proper day's coin, not pocket change. The daily board is a reason to visit town again, whatever your level." },
+  ]},
   { v:"4.17.0", code:104, date:"2026-07-24", name:"After the Lantern", notes:[
     { t:"feature", s:"The valley finally reacts to the tenth lantern. Before this, lighting the Warden's wing — the whole point of Act III — changed almost nothing anyone could see. Now the entire cast speaks to it: Rowan walks all ten windows of an evening and thanks you for counting the wing he couldn't; Maya's painted the two wardens in lantern-light and hung it in the Guild; Tom's ordered more festival lanterns and is loudly not complaining; Pip is scandalised the number was ten all along; Nell sees a tired man set something down; and Elias — the last Warden — finally sleeps the night through." },
     { t:"feature", s:"A letter, in a warden's hand. The morning after the tenth lantern is lit, Elias leaves you one last letter — his own, in the register of Grandpa's — closing the thread of Orla, the warden before him, and handing the craft on for good. It's the quiet coda the long descent was always walking toward." },
@@ -1150,6 +1154,25 @@ const REQUESTS = [
   { who:"bram",  item:"Salmon",      qty:2,  lvl:20, line:"Not for me. For the smoker. The smoker doesn't care whose hands did the work — and neither do I." },
   { who:"rowan", item:"Emerald",     qty:1,  lvl:20, line:"For the Guild seal. Green for growing. Your grandfather chose that stone and I have never told him I agreed." },
   { who:"tom",   item:"Pumpkin",     qty:2,  lvl:22, line:"Two. Enormous ones. I want them in the window and I want the whole valley to see them." },
+  // v4.18 "The Standing Board" — higher-tier asks so the board stays worth reading past the early game.
+  // Appended (never inserted) so any save's cached reqIdx stays valid. Requesters stay the board's five
+  // (tom/pip/maya/bram/rowan) — Nell and Elias have their own daily loops (NELL_ORDERS / the Warden's Round).
+  { who:"maya",  item:"Corn",         qty:4,  lvl:16, line:"Gold on the stalk — I want to paint a whole field of it, and I've run clean out of yellow twice already. Four ears?" },
+  { who:"tom",   item:"Cranberry",    qty:4,  lvl:18, line:"Cranberries, a crate of them. I've a plan involving a sauce and a very large customer, and I'll say no more than that." },
+  { who:"maya",  item:"Starfruit",    qty:2,  lvl:24, line:"A starfruit, cut across — a perfect star, right there inside it. I don't believe it every single time. Two, so I can eat one and doubt the other." },
+  { who:"rowan", item:"Gold Ore",     qty:3,  lvl:30, line:"Gold for the hall's old fittings. Not for show — for the doing of a thing properly, which is the only kind of show I'll permit." },
+  { who:"maya",  item:"Rhubarb",      qty:3,  lvl:30, line:"Rhubarb's an ugly, wonderful thing and nobody paints it. I intend to correct the record. Three stalks." },
+  { who:"tom",   item:"Melon",        qty:3,  lvl:40, line:"Melons — big ones. I've a mind to slice them at the counter and give the pieces away, which my ledger calls madness and I call Tuesday." },
+  { who:"rowan", item:"Ruby",         qty:1,  lvl:45, line:"A ruby, for the forge-master's seal we never recut after the fire. Red for the hearth. …It's time we did." },
+  { who:"rowan", item:"Cobalt Ore",   qty:2,  lvl:45, line:"Cobalt — the deep blue. The Guild used it for the cold-work, and I've forgotten more of that craft than I'd care to admit. Two, to remember by." },
+  { who:"maya",  item:"Artichoke",    qty:3,  lvl:52, line:"An artichoke is a rose that decided to become a vegetable, and I respect it enormously. Three, for a study." },
+  { who:"tom",   item:"Grape",        qty:4,  lvl:64, line:"Grapes — for the good wine, the sort I don't sell to just anyone. You qualify. Four bunches?" },
+  { who:"bram",  item:"Gulf Sturgeon",qty:1,  lvl:70, line:"A gulf sturgeon. Old fish, deep water, older than the Guild. Land me one and I'll not ask where — and ask Maya to keep it off her plate, she'll try." },
+  { who:"rowan", item:"Deepsilver Ore",qty:2, lvl:70, line:"Deepsilver, from below the old workings — pale as a winter moon. The founders swore it kept the dark honest. I've a mind to test the claim." },
+  { who:"tom",   item:"Yam",          qty:3,  lvl:78, line:"Yams. Don't laugh. There's a woman up the coast who trades me cheese for them, and I'll not jeopardise that arrangement for anyone." },
+  { who:"pip",   item:"Dragonfruit",  qty:2,  lvl:82, line:"DRAGON. FRUIT. It's PINK and it has SPIKES and it's the COOLEST fruit and I need TWO — one to eat and one to scare Gary with." },
+  { who:"bram",  item:"Coelacanth",   qty:1,  lvl:85, line:"…The coelacanth. The fish that was meant to be gone before there were people to miss it. Land one and don't tell me it was easy. Let an old man keep the mystery." },
+  { who:"maya",  item:"Everbloom",    qty:2,  lvl:90, line:"The Everbloom — the flower that keeps through winter. Gran said they only grow for someone who never gave up on the valley. Two, to paint. …And to prove her right about you. ♥" },
 ];
 
 // ---- TOOLS ----

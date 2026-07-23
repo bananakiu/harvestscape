@@ -478,7 +478,9 @@ function legendConditions(l){
 // ===================== THE VILLAGE NOTICEBOARD =====================
 // One request a day, chosen from what you could plausibly have. Skippable, expires at dawn.
 const WOOD_ITEMS = new Set(["Wood","Pine Wood","Maple Wood"]);
-const ORE_ITEMS  = new Set(["Stone","Copper Ore","Iron Ore","Gold Ore"]);
+// v4.18: Cobalt/Deepsilver added so the high-tier board asks gate on Mining level (they were missing,
+// so a Cobalt Ore request would have read as un-gated — offerable to a level-1 miner who can't reach it).
+const ORE_ITEMS  = new Set(["Stone","Copper Ore","Iron Ore","Gold Ore","Cobalt Ore","Deepsilver Ore"]);
 
 function requestSkill(item){
   if(CROP_NAMES.has(item)) return "Farming";
@@ -491,14 +493,36 @@ function requestSkill(item){
 function requestReachable(r){ const s = requestSkill(r.item); return !s || skillLvl(s) >= r.lvl; }
 function requestPay(r){ return Math.max(60, Math.round((ITEM_SELL[r.item]||0) * r.qty * 1.4)); }
 
+// v4.18: weight the daily pick toward asks near your current mastery, so a late-game farmer stops being
+// handed "8 Wood, 60g" one day in twenty off the board pinned by the shop door. Reachability already
+// EXCLUDES anything above your level; this de-emphasises anything trivially BELOW it. Un-gated favours
+// (eggs, shells, salad — requestSkill returns null) stay timeless at a steady moderate weight, never
+// NaN. Higher-value asks pay proportionally more through the existing 1.4×-sell formula, so the reward
+// ceiling rises with the ask ceiling for free — no separate pay tiering needed.
+function requestWeight(r){
+  const s = requestSkill(r.item);
+  if(!s) return 0.9;                       // timeless small favours (eggs, shells, salad) — steady, modest
+  const pl = skillLvl(s);
+  // Smooth and self-scaling to any player level: an ask near your mastery pulls ~4× as hard as a trivial
+  // one far below it, with no hardcoded level bands. (r.lvl <= pl here — reachability already filtered.)
+  const frac = Math.min(1, r.lvl / Math.max(10, pl));   // 0 (trivial) → 1 (right at your level)
+  return 0.25 + frac * frac * 2.5;         // squared so the top of your range dominates; range ~0.25–2.75
+}
+
 // Chosen once per day and remembered, so it can't reshuffle when your skills tick up mid-morning.
 function todaysRequest(){
   if(state.flags.reqDay === state.day)
     return state.flags.reqIdx >= 0 ? REQUESTS[state.flags.reqIdx] : null;
-  const pool = [];
-  REQUESTS.forEach((r,i) => { if(requestReachable(r)) pool.push(i); });
+  const pool = [], weights = [];
+  REQUESTS.forEach((r,i) => { if(requestReachable(r)){ pool.push(i); weights.push(requestWeight(r)); } });
   const rng = makeRng(4242 + state.day*31);
-  const idx = pool.length ? pool[Math.floor(rng()*pool.length)] : -1;
+  let idx = -1;
+  if(pool.length){
+    const total = weights.reduce((a,b)=>a+b,0);
+    let roll = rng() * total;
+    for(let k=0;k<pool.length;k++){ roll -= weights[k]; if(roll < 0){ idx = pool[k]; break; } }
+    if(idx < 0) idx = pool[pool.length-1];   // floating-point safety — the loop should always pick one
+  }
   state.flags.reqDay = state.day; state.flags.reqIdx = idx;
   return idx >= 0 ? REQUESTS[idx] : null;
 }
