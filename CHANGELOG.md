@@ -22,6 +22,75 @@
 
 ---
 
+## 2026-07-24 — v4.17.0 "After the Lantern" (code 104, tag `v4.17.0`) — the world reacts to the finale
+
+### Why this release
+
+The v4.14 gap audit's #4: `tenthWingLit` — the flag that marks the entire Act III finale — was read in
+exactly **two** places in ~12,700 lines (a light pool in 06-weather, two Guild lamps in 13-content). Not
+one NPC line, letter, quest, or ceremony reacted to the biggest thing the player does in the game. Worse,
+Rowan *personally says "there were always ten"* in the ch8 cutscene, yet his standing dialogue kept
+insisting "Nine wings, lit" forever after — a flat self-contradiction. V4_PLAN.md's finale spec (festival
+integration + a "One Last Letter" epilogue) was never built. This release is pure data/story — no new
+engine — and it's the emotional payoff the whole v4 arc was walking toward.
+
+### Added — the cast speaks to the finale
+
+- **A `tenthWingLit` branch in `npcStory` for all seven NPCs** (`game/js/13-content.js`), ahead of the
+  `festivalDone` branches (`tenthWingLit` always implies `festivalDone`). Rowan counts all ten windows and
+  thanks you for the one he couldn't; Maya's painted the two wardens and hung it in the Guild; Tom's
+  ordering more lanterns; Pip is scandalised; Bram remembers sitting with Elias by the water; **Nell** and
+  **Elias** — who had no `npcStory` branch at all — get one. Two guards keep existing hooks primary: the
+  Nell line only fires once her **daily order is filled** (so the order still surfaces first — `npcLine`
+  checks it *after* `npcStory`), and the Elias line stands down at the **coastroad** (his ferry-landing
+  location lines stay deliberately primary there).
+- **The Act III epilogue letter** — `LETTER_WARDEN_EPILOGUE` (`game/js/14-story.js`), Elias's own "one last
+  letter" in the register of Grandpa's, fired **once** from `closeWardChapter`'s all-done branch
+  (`game/js/10-ui.js`, gated on `state.flags.wardEpilogueSeen`, ~5.2s after the finale banner clears so it
+  reads as a quiet coda). Closes Orla's thread — "you brought her *name* up, her round walked again" — and
+  hands the craft on.
+- **The annual Lantern Festival gains a third last lantern** (`game/js/14-story.js` anniversary scene).
+  Rowan already lights two lanterns last each year (Rosa, Grandpa); once the tenth wing is lit, Elias lights
+  a third **for Orla**, spoken aloud — so the finale becomes a recurring ceremony the valley *keeps*, not a
+  one-time event. Reuses the scene's existing "lanterns for the lost" motif.
+
+### Fixed — the stale "nine-only" strings
+
+- **Rowan's standing line** no longer says "Nine wings, lit" after he's personally lit the tenth (the key
+  contradiction).
+- **The Journal wing-count header** (`10-ui.js` `journalQuestsHtml`) reads "Guild of **Ten** Crafts —
+  N+1/10 wings lit" with a "◆ The Warden's" entry once lit (the tenth never lived in `WINGS` — it's Act III,
+  driven by the ledger — so the Journal had been under-counting what the player actually did).
+- **The planked-door examine** (`08-actions.js` `objLook`) reads "a lantern burns steady… the air that
+  rises is warm" instead of "cold air rises… the Undercroft, breathing."
+- **The Guild interior sign** (`13-content.js` `genGuild`) updates to "Ten crafts. Ten wings…" — the guild
+  map regenerates daily, so it re-reads the flag each morning.
+
+### Verification (all in a live play state, console clean)
+
+- npcStory: Rowan pre-tenth "Nine wings, lit" → post-tenth "Ten wings, lit…"; all seven NPCs return finale
+  lines; **Nell** returns null while her order is open (order surfaces) and the finale line once filled;
+  **Elias** returns null at the coastroad (location lines win) and the finale line at the Guild.
+- Journal header: "Nine Crafts — 1/9" → "Ten Crafts — 2/10" + the Warden's entry. olddoor examine and the
+  Guild sign both switch on the flag. Anniversary scene builds three lanterns with Orla named and Elias
+  lighting hers. The epilogue letter opens in the parchment overlay (screenshotted).
+
+### Files
+
+- `game/js/13-content.js` — seven `npcStory` finale branches (Nell/Elias new, with guards); Guild sign.
+- `game/js/14-story.js` — `LETTER_WARDEN_EPILOGUE`; the anniversary third-lantern beat.
+- `game/js/10-ui.js` — epilogue-letter fire on ch8 completion; the Journal ten-wings header.
+- `game/js/08-actions.js` — the olddoor `tenthWingLit` examine.
+- `game/js/01-data.js` — VERSION + in-game CHANGELOG.
+- `game/index.html` — cache-buster `?v=124`.
+
+### Still ahead (from the audit)
+
+Touch parity (#3), the Undercroft "run" (a Resolve consumable + depth slope, #6), the economy
+re-measurement v4.9 deferred (#8), and the scaling noticeboard (#9). Tracked in the session roadmap task.
+
+---
+
 ## 2026-07-24 — v4.16.0 "The Warden's Round" (code 103, tag `v4.16.0`) — the post-finale loop + deep-material sinks + Act III made visible
 
 ### Why this release

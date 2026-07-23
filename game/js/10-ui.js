@@ -551,9 +551,14 @@ function renderJournal(){
 function journalQuestsHtml(){
   let html = "";
   const lit = wingsLit();
-  html += `<div class="jq"><h3 style="color:var(--gold-hi)">🏛 Guild of Nine Crafts — ${lit}/9 wings lit</h3><div style="display:flex;flex-wrap:wrap;gap:.25em .6em;font-size:.86em;">`;
+  // v4.17: the tenth wing (the Warden's) never lived in WINGS — it's Act III, driven by the ledger. Once
+  // the finale lights it, the header stops reading a flat "9" and counts the tenth in, so the Journal no
+  // longer under-counts what the player has actually done.
+  const tenth = !!state.flags.tenthWingLit;
+  html += `<div class="jq"><h3 style="color:var(--gold-hi)">🏛 Guild of ${tenth ? "Ten" : "Nine"} Crafts — ${lit + (tenth?1:0)}/${tenth?10:9} wings lit</h3><div style="display:flex;flex-wrap:wrap;gap:.25em .6em;font-size:.86em;">`;
   WINGS.forEach(w => { const on = w.lit();
     html += `<span style="color:${on?"var(--gold-hi)":"var(--ink-soft)"}">${on?"◆":"◇"} ${w.name}</span>`; });
+  if(tenth) html += `<span style="color:var(--gold-hi)">◆ The Warden's</span>`;   // the tenth, lit at last
   html += `</div></div>`;
   // ★ Quest Points (v3.32) — the ledger's one number, right where the story lives
   const qpNow = questPoints(), qpAll = questPointsTotal();
@@ -1410,7 +1415,14 @@ function closeWardChapter(){
     state.wardChapter = (state.wardChapter||0) + 1;
     state.wardBundle = {};
     playSfx("quest"); saveGame(); refreshHUD();
-    if(wardChaptersAllDone()) setTimeout(() => banner("❖ The Warden's Ledger", "Every page kept. The wing is warm the whole way down — and it will stay so, because you tend it."), 1200);
+    if(wardChaptersAllDone()){
+      setTimeout(() => banner("❖ The Warden's Ledger", "Every page kept. The wing is warm the whole way down — and it will stay so, because you tend it."), 1200);
+      // v4.17: the epilogue — Elias's one last letter, a quiet coda after the finale settles. Once only.
+      if(!state.flags.wardEpilogueSeen) setTimeout(() => {
+        state.flags.wardEpilogueSeen = true; saveGame();
+        openLetter("✒ A letter, in a warden's hand", LETTER_WARDEN_EPILOGUE);
+      }, 5200);   // well after the ch8 finale banner (t:4.2) and the "every page kept" card have cleared
+    }
   });
 }
 // The Journal's read-only mirror of the ledger — so Act III's arc is visible in J, like the quests.

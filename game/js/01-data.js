@@ -8,13 +8,19 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.16.0", code: 103, codename: "The Warden's Round", date: "2026-07-24" };
+const VERSION = { name: "4.17.0", code: 104, codename: "After the Lantern", date: "2026-07-24" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.17.0", code:104, date:"2026-07-24", name:"After the Lantern", notes:[
+    { t:"feature", s:"The valley finally reacts to the tenth lantern. Before this, lighting the Warden's wing — the whole point of Act III — changed almost nothing anyone could see. Now the entire cast speaks to it: Rowan walks all ten windows of an evening and thanks you for counting the wing he couldn't; Maya's painted the two wardens in lantern-light and hung it in the Guild; Tom's ordered more festival lanterns and is loudly not complaining; Pip is scandalised the number was ten all along; Nell sees a tired man set something down; and Elias — the last Warden — finally sleeps the night through." },
+    { t:"feature", s:"A letter, in a warden's hand. The morning after the tenth lantern is lit, Elias leaves you one last letter — his own, in the register of Grandpa's — closing the thread of Orla, the warden before him, and handing the craft on for good. It's the quiet coda the long descent was always walking toward." },
+    { t:"feature", s:"The Lantern Festival keeps a third light now. Each year Rowan lights two lanterns last — for Rosa, and for Grandpa. Once the tenth wing is lit, Elias lights a third: for Orla, lost in the deep and brought back into the light at last. Her name is spoken aloud every festival now — the finale made into a thing the valley keeps, not just a thing you did once." },
+    { t:"fix", s:"Rowan no longer contradicts himself. He personally says 'there were always ten' when he lights the wing — but his everyday line still insisted 'nine wings, lit' forever after. That and the other stale nine-only lines (the Guild's sign, the planked door, the Journal's wing count) now read the tenth in once it's lit: ten crafts, ten wings, the Warden's last of all." },
+  ]},
   { v:"4.16.0", code:103, date:"2026-07-24", name:"The Warden's Round", notes:[
     { t:"feature", s:"The tenth door is worth opening forever now. Once you've lit the Tenth Lantern and the Warden's Ledger's every page is kept, the book keeps writing itself — one fresh Round a day: a single thing the wing still needs tended out of it, from re-wicking the first-floor lanterns to lifting deepgnarl from the root-dark. Bring what it asks and walk it at the Ledger for good coin and Warding practice. It's the standing reason to keep descending — the deep never quite stops needing a warden." },
     { t:"feature", s:"Two Warden's monuments for the farm, built from the deep's own spoils. The Settled Cairn stacks grief-dark wood and pale ash into something quiet and kept; the Warden's Round-Lantern burns a gloamstar that never quite goes out. They give everything you settle in the dark — deepgnarl, snarlthread, warden's ash, the star-touched gloamstar — a standing home in the light, the way the star-tier monuments did for the mine's rarest ore." },

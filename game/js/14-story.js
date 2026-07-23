@@ -310,6 +310,18 @@ const LETTER_MEMORIAL =
 "Don't put me on this stone alone. Put her name first. She'd have hated the fuss and she'd have stayed for all of it.\n\n" +
 "Light them every year, kiddo. Even the year you don't feel like it. Especially that one.\n\n— Grandpa";
 
+// v4.17: the Act III epilogue — Elias's "one last letter", in the register of Grandpa's. Left the morning
+// after the tenth lantern is lit, warden to the warden who came after. Fired once from closeWardChapter's
+// all-done branch (state.flags.wardEpilogueSeen gates it). Closes Orla's thread and hands the craft on.
+const LETTER_WARDEN_EPILOGUE =
+"Left on your kitchen table, in a warden's small, careful hand — the same hand as the ledger:\n\n" +
+"So. It's done, and I find I don't know how to be a warden who's finished, having spent thirty years being one who never could be.\n\n" +
+"I'll not make a speech of it — I've watched Rowan try and it's a long business. I'll only tell you the thing Orla told me, the day she handed me the ledger, that I was too young and too frightened to understand:\n\n" +
+"A warden doesn't hold back the dark. Nobody can, and the ones who think they can are the ones the dark keeps. A warden just refuses to let a place be alone in it. That's all. You go down, you light what's gone cold, you sit with what's grieving until it can let go, and you come back up for supper so that somebody knows the way. That is the whole of the craft, and you found it on the first page, and you have never once put it down.\n\n" +
+"I looked for her down there for eleven years without ever going below the fifteenth floor. You brought her up in a season. Not her body — the dark keeps that. Her NAME. Her round, walked again. The floor she died on, warm. I go to sleep now and she isn't cold and alone at the bottom of my own failure any longer; she's counted, and lit, and kept. I didn't know a person could give another person that. You did it without being asked.\n\n" +
+"The ledger's yours. Keep writing the rounds — the wing will always need them, the way a hearth always needs tending, and that's not a burden, it's the good kind of forever. And when your hands are old and there's someone stubborn enough to come and fetch you all home, hand them the book, and tell them about the warden before you, and the one before her, all the way down to a frightened girl named Orla who first wrote 'go gently, mind the bells, come up for supper' inside the front cover.\n\n" +
+"Come up for supper. Maya's cooking. She says you're family now, and she's right, and I'm too tired and too happy to pretend otherwise.\n\n— Elias";
+
 const LETTER_FESTIVAL =
 "My dear grandchild,\n\n" +
 "I'm not there tonight — but I know exactly how it looks, because I saw it a hundred times before I let it go dark. The lanterns doubling on the black water. The Aldermans laughing. Tom giving away more than he sells. Some child eating far too much.\n\n" +
@@ -1022,10 +1034,19 @@ const FESTIVAL_SCENES = {
     else steps.push(
       { type:"say", who:"Maya", portrait:"port_maya", text:"Look at them all. Look at what you started, just by turning up and refusing to leave." });
 
+    // v4.17: once the tenth wing is lit, the anniversary gains a THIRD last lantern — for Orla, the warden
+    // lost in the deep. The ceremony that already lights the lost each year now keeps her too, so the finale
+    // has a recurring beat and Orla's name is spoken aloud every festival. Elias lights it, if he's come down.
+    const tenth = !!state.flags.tenthWingLit;
     steps.push(
       { type:"wait", t:1.0 },
-      { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"Two lanterns go out last. They always will, as long as I'm the one lighting them." },
-      { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"One for Rosa Alderman, who fed this valley. And one for a stubborn old fool who couldn't light them without her — and who left us a grandchild who could." },
+      { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:(tenth?"Three":"Two")+" lanterns go out last. They always will, as long as I'm the one lighting them." },
+      { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"One for Rosa Alderman, who fed this valley. And one for a stubborn old fool who couldn't light them without her — and who left us a grandchild who could." });
+    if(tenth) steps.push(
+      { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"And one more, now — the newest and the oldest. Elias. Will you?" },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"…For Orla. Warden before me, who went down into the dark so the rest of us could keep the light, and stayed there thirty years while I hadn't the courage to bring her up." },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"You're counted now, old teacher. Tenth lantern, tenth wing, tenth craft — and a pair of hands to keep it that never lets the dark have anyone again. Rest. The round is walked." });
+    steps.push(
       { type:"sfx", name:"level" },
       { type:"sparkle", x:23, y:4, color:"#fff6d0", n:26 },
       { type:"wait", t:1.6 },

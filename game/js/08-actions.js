@@ -303,6 +303,8 @@ function objLook(obj){
   if(k==="hearttree")  return { title:"The Heart of the Forest", text:"The oldest tree in the valley. The grove goes no deeper — nothing does." };
   if(k==="ancient"){ const sp=TREES[obj.species]; return { title:"Ancient "+(sp?sp.name:"Tree"),
     text:"An elder of the deep wood, gold threading its leaves. Twice the timber, for an axe that's earned it." }; }
+  if(k==="olddoor" && state.flags.tenthWingLit)   // v4.17: the finale lit the tenth wing for good
+    return { title:"The Tenth Door", text:"A lantern burns steady over the stair now, and the air that rises is warm. The Warden's wing — the tenth craft, lit and counted at last. It still wants walking; a tended place stays tended because someone keeps coming back to it." };
   if(k==="olddoor" && state.flags.tenthDoorOpen)   // v4.0: once Elias took the boards down
     return { title:"The Tenth Door", text:"The boards are down and stacked to one side. Cold air rises from a stair going down into the dark — the Undercroft, breathing. Step in when you're ready." };
   const t = EXAMINE_OBJ[k];

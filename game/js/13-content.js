@@ -97,7 +97,11 @@ function genGuild(m){
   // central carpet
   for(let y=5;y<=7;y++) for(let x=6;x<=10;x++) m.tiles[y*W+x]=T.CARPET;
   put(m,4,7,"crate"); put(m,12,7,"barrel");
-  put(m,1,7,"sign",{text:"Nine crafts. Nine wings. Tend them all, and the valley wakes."});
+  // v4.17: the sign updates once the tenth wing is lit — the guild map regenerates daily, so it re-reads
+  // the flag each morning. Before the finale it's the nine everyone counted; after, the ten there always were.
+  put(m,1,7,"sign",{text: state.flags && state.flags.tenthWingLit
+    ? "Ten crafts. Ten wings. All tended, all lit — the Warden's last of all. The valley is awake."
+    : "Nine crafts. Nine wings. Tend them all, and the valley wakes."});
   wardWorldProps(m);                          // v4.3 the Guild warms as Warden's Ledger chapters close
   exitAt(m,8,"village",20*TILE+8,7*TILE+8);   // just below the Guild door, on its path
 }
@@ -1042,6 +1046,11 @@ function npcStory(id){
   // so appending Act Two (or anything else) can never shift this window out from under the writing.
   const near = state.questIdx >= FINALE_IDX-1 && state.questIdx <= FINALE_IDX && !state.flags.festivalDone;
   if(id==="tom"){
+    // v4.17: once the tenth wing is lit, the whole cast speaks to the finale — ahead of the festival line
+    // (tenthWingLit always implies festivalDone). Tom the shopkeep counts it in lanterns and custom.
+    if(state.flags.tenthWingLit) return pick([
+      "Ten crafts lit now, and a tenth lantern on the water come festival night. I've had to order MORE lanterns. I'm not complaining. I'm absolutely complaining. Bring me your coin.",
+      "That tenth wing you woke — folk come from up the coast just to stand in the Guild and look at it lit. Good for business, good for the soul. Mostly business." ]);
     if(state.flags.festivalDone) return "Best festival in twenty years — and I'm counting the year the cake caught fire.";
     if(near) return "Whole town's whispering 'festival' again. I've ordered lanterns I can't afford. Don't you dare not pull this off.";
     // the slipped name (STORY_OVERHAUL.md hook 3): once, after you've met Rowan, before Act II names it
@@ -1064,6 +1073,9 @@ function npcStory(id){
     if(state.flags.married) return pick([
       "You and Bram, then. …Good. Truly. He's been alone on those rocks long enough.",
       "He smiled at me in the market. Bram. Smiled. Whatever you've done to that man, keep doing it." ]);
+    if(state.flags.tenthWingLit) return pick([
+      "I painted the tenth wing the night it caught — warden and warden in the lantern-light, Papa insufferable, you filthy from the deep. It's the best thing I've ever done, and it hangs in the Guild now. Go and look at yourself lit up. ♥",
+      "The whole hall's burning now — ten windows, all of them. I grew up sure that was just a story Gran told to get me to sleep. You went and made it a place I can paint from life." ]);
     if(state.flags.festivalDone) return "The lanterns are still drifting out past the point somewhere. I hope they never quite land. ♥";
     // the turn-in sets starMetalDelivered *after* questIdx has already advanced into `near`,
     // so give this line the one quest it belongs to, and let the sketchbook line have the last.
@@ -1071,6 +1083,11 @@ function npcStory(id){
       return "You brought the Star Metal up? Gran used to say it caught the festival light better than anything. ...You've got that look. Something's turning.";
     if(near) return "I finished the sketchbook — every lantern, down to the last. It's the first thing I've drawn that I think might actually happen.";
   } else if(id==="rowan"){
+    // v4.17: Rowan SAYS "there were always ten" in the ch8 finale — his standing line must stop insisting
+    // "nine wings" the moment the tenth is lit, or he flatly contradicts himself.
+    if(state.flags.tenthWingLit) return pick([
+      "Ten wings, lit. I spent eleven years calling it nine because I hadn't the heart to count the one I'd sealed. You counted it for me — and lit it. I'll not run out of ways to be grateful, though I'll wear out your patience finding them.",
+      "I walk the whole Guild of an evening now, window to window, all ten. I stop longest at the tenth. …I nailed that door shut with these hands. You opened it with yours. That is the difference between us — and it is the finest difference a man could hope to be on the wrong side of." ]);
     if(state.flags.festivalDone) return "Nine wings, lit. I was certain I'd die in the dark of this hall. Thank you, child — truly.";
   } else if(id==="bram"){
     if(spouseId()==="bram") return pick([
@@ -1081,10 +1098,27 @@ function npcStory(id){
     if(state.flags.married) return pick([
       "Maya's good. She's been good a long while and nobody noticed. You did. …That's the whole of my opinion on it.",
       "Aye, I heard. Congratulations. …That's it. That's the speech." ]);
+    if(state.flags.tenthWingLit) return "...Elias came down to the rocks the night the tenth wing lit. Didn't say much. Neither did I. We watched the water a while. Some things you settle by sitting next to them — he taught me that, though he'd not recall teaching it.";
     if(state.flags.festivalDone) return "...The lanterns looked well on the water. That's all I'll say. That's all.";
     if(near) return "Rowan wants his festival on my coast — where we sent good folk out to sea. ...Talk to Maya. I've said my piece.";
   } else if(id==="pip"){
+    if(state.flags.tenthWingLit) return pick([
+      "You lit the TENTH WING! Rowan says there's TEN crafts now, not nine, which means my whole LIFE the number was WRONG and nobody TOLD me. I'm not upset. I'm a LITTLE upset. Can I hold the warden's stick now? You're basically DONE!",
+      "Mum says the man from the ridge — Mister Elias — SMILES now. He didn't used to. She says it's because of you and the tenth door. I think it's the cheese. I didn't say that to her." ]);
     if(near) return "IS IT FESTIVAL YET. Is it?? Mum's bringing cheese from the dairy. I'm gonna eat ALL of it. Don't tell her.";
+  } else if(id==="nell"){
+    // v4.17: Nell (living dairy keeper, Tom's wife) sees the finale in Elias — not in the wing itself.
+    // Guarded on nellOrderFilled() so her standing daily order still surfaces first when it's open
+    // (npcLine checks the order AFTER npcStory, so returning null here lets the order line through).
+    if(state.flags.tenthWingLit && nellOrderFilled()) return "Elias came by the dairy this week — first time in an age he's walked the coast road just for the walking. Stood at the rail a long while and said the wing was warm, corner to corner. Whatever you did down in that dark, love, it let a tired man set something down at last. Bless you for it.";
+  } else if(id==="elias"){
+    // v4.17: the last Warden, the emotional centre of Act III — peace, and the craft handed on. Orla is
+    // his predecessor/teacher, lost in the deep (see WARD_CHAPTERS ch6/ch7); the tenth wing is now lit.
+    // Guarded off the coastroad, where his location-specific ferry-landing lines are deliberately primary.
+    if(state.flags.tenthWingLit && !(curMap && curMap.id === "coastroad")) return pick([
+      "The wing's lit and counted, and I've slept the night through for the first time since Orla went down. …I keep the ledger open on the kitchen table now, to a blank page. Not because it's owed — because it's yours to write in, and I like seeing your hand next to hers.",
+      "Thirty years I held that wing lit alone and told myself alone was the craft. It isn't. The craft is having someone to hand it to. You gave an old warden the one thing his own teacher never got. …Go gently down there. Come up for supper. That's still the whole of it.",
+      "Orla would have liked you — I'll wear the words out saying so. She settled like she meant it, and so do you, and the wing knows the difference. It leans toward the pair of you now, warm as a kept hearth." ]);
   }
   return null;
 }
