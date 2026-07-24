@@ -537,14 +537,20 @@ function drawObject(ox, oy, o, k){
   if(o.kind==="lantern"){ ctx.drawImage(spr.lantern, bx, by); if(chance(0.05)) pEmber(bx+8, by+6); return; }
   if(o.kind==="stove" || o.kind==="fireplace"){ const s=spr[o.kind]; ctx.drawImage(s, bx, by-(s.height-16)); if(chance(0.12)) pEmber(bx+8, by+ (o.kind==="fireplace"?-2:4)); return; }
   if(o.kind==="stall"){ ctx.drawImage(spr.stall, bx-4, by-8); return; }
+  // v4.22: a way DOWN draws as a shaft cut into the floor; only a way UP gets the upright rungs.
+  if(o.kind==="ladderdown" || o.kind==="wardladderdown"){
+    ctx.drawImage(spr.stairdown, bx, by);
+    queueText(bx+8, by+11, "▼", { color: o.kind==="wardladderdown" ? "#bfe4ff" : "#ffce5a", size:8 });
+    return;
+  }
   if(o.kind==="ladderup" || o.kind==="ladderdown"){
     ctx.drawImage(spr.ladder, bx, by);
     queueText(bx+8, by+9, o.kind==="ladderup"?"▲":"▼", { color:"#ffce5a", size:8 });
     return;
   }
-  if(o.kind==="wardup" || o.kind==="wardladderdown"){   // v4.0 Undercroft stairs — reuse the ladder art, cool marker
+  if(o.kind==="wardup"){   // v4.0 Undercroft steps UP — the rungs are right for a climb (down is drawn above)
     ctx.drawImage(spr.ladder, bx, by);
-    queueText(bx+8, by+9, o.kind==="wardup"?"▲":"▼", { color:"#bfe4ff", size:8 });
+    queueText(bx+8, by+9, "▲", { color:"#bfe4ff", size:8 });
     return;
   }
   if(o.kind==="waystone"){

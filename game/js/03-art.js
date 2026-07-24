@@ -1229,6 +1229,19 @@ function buildMineArt(){
     px(g,1,1,14,7,"#332e3a"); px(g,2,9,12,5,"#2c2833"); px(g,3,2,7,3,"#3d3846"); px(g,0,0,16,1,"#413b4a"); px(g,0,14,16,2,"#1a171e"); });
   mkSpr("ladder", 16, 16, g => { px(g,3,0,2,16,"#a5763f"); px(g,11,0,2,16,"#a5763f");
     for(let y=1;y<16;y+=4) px(g,3,y,10,2,"#8a5f38"); px(g,3,0,2,16,"#a5763f"); });
+  // v4.22 (owner: "the ladder should be going down, not a ladder object that's going up — this goes for
+  // the mine as well"). A descent is a HOLE, not a standing ladder: a black shaft cut into the floor, the
+  // near lip catching the light, and steps receding away — each one narrower and darker than the last, so
+  // the eye reads depth. Used for every way DOWN (mine + Undercroft); the up-ladders keep the rungs.
+  mkSpr("stairdown", 16, 16, g => {
+    px(g,2,2,12,13,"#0a0a0e");                                             // the shaft
+    px(g,2,2,12,1,"#2e2c34"); px(g,2,2,1,13,"#4a4550"); px(g,13,2,1,13,"#4a4550");   // far edge + walls
+    px(g,1,14,14,2,"#8a8378"); px(g,1,14,14,1,"#a9a094");                  // the near lip, lit stone
+    px(g,4,11,8,2,"#7a7266");                                              // first step — widest, brightest
+    px(g,5,8,6,2,"#565048");
+    px(g,6,6,4,1,"#3c3830");
+    px(g,7,4,2,1,"#26241f");                                               // last step, nearly swallowed
+  });
   mkSpr("gemrock", 16, 16, g => { px(g,3,7,10,7,"#4a4550"); px(g,2,9,12,5,"#3d3846"); px(g,5,4,7,4,"#565060");
     px(g,6,8,2,3,"#a877e0"); px(g,9,9,2,2,"#3ec878"); px(g,7,10,1,1,"#e0455a"); px(g,6,8,1,1,"#d8b8f0"); });
   mkSpr("crystal", 16, 16, g => { px(g,6,4,4,10,"#8fd3ff"); px(g,4,8,3,6,"#7fc0f0"); px(g,10,7,3,7,"#a9e0ff");

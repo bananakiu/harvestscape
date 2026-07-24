@@ -22,6 +22,79 @@
 
 ---
 
+## 2026-07-24 — v4.22.0 "The Way Down" (code 109, tag `v4.22.0`) — owner playtest: the Warden, the stair, and the shaft
+
+### Why this release
+
+Direct owner playtest feedback on the Undercroft (recorded verbatim in `DEVLOG.md`). Three notes, all
+about how a run *feels* rather than what it costs.
+
+### Balance — the Hollow Warden's guard now has a rhythm
+
+> "The Hollow Wardens are a little difficult to defeat. Their shields are up for way too long, so it
+> takes too long to kill them."
+
+As shipped, `block:true` meant the guarded front was up **permanently** — it merely re-faced you on a
+0.55s turn-lag. The only answers were out-circling that lag or landing a v4.4 parry: both fiddly, and
+neither gave a *readable moment to attack*. The right fix isn't less HP, it's a **pattern to learn**.
+
+- New `GUARD_HOLD` (2.4s braced) / `GUARD_REST` (1.5s open) cycle ticked in `updateCreatures`
+  (`15-warding.js`). `hitCreature`'s block test now also clears on `cr.gDown`, so a frontal strike lands
+  during the rest beat. Measured: the guard is **open 38% of the time**, versus never before.
+- `WARD_TURN_LAG` 0.55 → **0.75**, so circling to its back is a real option rather than a race you
+  usually lose.
+- The shield arc **is** the tell: bright and wide while braced, dim/narrow with a gold pip while open, so
+  the window is readable at a glance from anywhere on screen. A small sparkle marks the moment it sags.
+- Three honest answers now (wait it out · get behind it · parry it open), and none of them punish the
+  player — this makes the fight fairer, not harsher.
+
+### Added — the stair falls out of the fighting
+
+> "It's not exciting to look for the ladder… have the ladder randomly spawn upon killing a mob. So it's
+> sort of like mining rocks, and then suddenly a ladder will appear."
+
+The owner named the mine's model as the good one, and it is: down there the way down hides under a rock,
+so *the thing you're already doing* reveals it. The Undercroft's equivalent is **settling restless
+things** — so `maybeDropStair(cr)` (`15-warding.js`) now drops the stair where one comes apart.
+
+- Escalating chance (15% → 30% → 45% …, capped 90%) so it turns up fast and never dangles on bad luck:
+  **average 2.9 settles, median 3, 98% within five, worst case six** over 400 simulated floors.
+- Fires **once per floor** (`meta.stairFound`, set by the knot path too), skips boss floors (the Great
+  Knot's stair is the boss's to give), and dissolves the floor's now-moot stair-knot along with it.
+- Calls `unstick()` — the stair lands where the creature stood, which may be where *you* are (the same
+  guard v4.15 added for the boss drop).
+
+### Polish — a way down looks like a way down
+
+> "The ladder should be going down, not a ladder object that's going up. It doesn't make thematic sense.
+> This goes for all of them — this goes for the mine as well."
+
+Both the mine's `ladderdown` and the Undercroft's `wardladderdown` reused the upright `ladder` sprite
+(rails + rungs) with a small ▼ — which reads as *climb up*. New **`stairdown`** sprite (`03-art.js`): a
+black shaft cut into the floor, the near lip catching the light, and four steps receding away, each
+narrower and darker than the last so the eye reads depth. `drawObject` (`07-entities.js`) now routes
+**every** way down to it; `ladderup`/`wardup` keep the rungs, which is correct for a climb.
+
+### Verification (live build, console clean)
+
+- Guard: 38% open over an 8s cycle; a frontal hit is refused while braced (hp 16 → 16) and lands during
+  the rest beat (16 → 11).
+- Stair: 400-floor Monte-Carlo as above; a live floor dropped it on the 2nd settle, removed the knot, set
+  `stairFound`, and twelve further settles produced **no second stair**.
+- Sprite: screenshotted side-by-side in **both** the Undercroft and the mine — shaft + ▼ for down, rungs
+  + ▲ for up.
+
+### Files
+
+- `game/js/15-warding.js` — the guard cycle + constants; `maybeDropStair`; knot path sets `stairFound`; shield arc tell.
+- `game/js/03-art.js` — the `stairdown` sprite.
+- `game/js/07-entities.js` — down-stairs draw as a shaft; up-ladders keep the rungs.
+- `game/js/01-data.js` — VERSION + in-game CHANGELOG.
+- `DEVLOG.md` — the owner's feedback, verbatim, with the interpretation acted on.
+- `game/index.html` — cache-buster `?v=135`.
+
+---
+
 ## 2026-07-24 — v4.21.0 "The Mantle" (code 108, tag `v4.21.0`) — the prestige layer
 
 ### Why this release

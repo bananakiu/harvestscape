@@ -14,6 +14,41 @@
 
 ---
 
+## 2026-07-24 — Undercroft playtest: the Warden is a wall, and the stairs are a chore
+
+**Owner feedback (near-verbatim):**
+
+> The Hollow Wardens are a little difficult to defeat. Their shields are up for way too long, so it
+> takes too long to kill them. So, change up the shield mechanic a little more.
+>
+> And it's not exciting to look for the ladder. So I think — it's for the Undercroft — it's best if we
+> have the ladder randomly spawn upon killing a mob. So it's sort of like mining rocks, and then
+> suddenly a ladder will appear. Something like that.
+>
+> Plus, the ladder should be going down, not a ladder object that's going up. It doesn't make thematic
+> sense. This goes for all of them — this goes for the mine as well.
+
+**Interpretation.** Three separate notes, all about the *feel* of a run rather than its numbers:
+
+1. **The Warden's guard has no rhythm.** As shipped, `block:true` means the guarded front is up
+   *permanently* — it just re-faces you on a 0.55s turn-lag. So the only answers are to circle it
+   faster than it turns, or to parry (v4.4). Both are fiddly, and neither gives the player a *readable
+   moment to attack*. The fix isn't lowering its HP — it's giving the shield a **cycle** you can learn:
+   guard up, then a visible drop, then up again. A pattern to read beats a wall to grind.
+2. **Hunting the stairs-knot is dead time.** The floor's way down is a `knot` object you have to find and
+   break. The owner explicitly points at the mine's model as the good one — there, the way down is hidden
+   under a rock, so *the thing you were already doing* (mining) reveals it. The Undercroft's equivalent of
+   "the thing you were already doing" is **settling restless things**, so the stair should fall out of
+   combat, not out of a search.
+3. **A ladder standing up is the wrong picture for going down.** Both the mine's `ladderdown` and the
+   Undercroft's `wardladderdown` reuse the upright `ladder` sprite (rails + rungs) with a small ▼. That
+   reads as "climb up." A descent should look like a **hole in the floor** with steps receding into the
+   dark. Applies everywhere a down-stair is drawn — the mine included, per the owner.
+
+**Produced:** v4.22.0 "The Way Down" — the Warden's guard cycle, stairs dropped by settling, and a real
+descending-shaft sprite. See `CHANGELOG.md`.
+
+
 ## 2026-07-18 — v4.0.0 "The Tenth Door" SHIPPED — open questions for owner playtest
 
 **Built** the entire v4.0 slice per `V4_BUILD_PLAN.md` §3 (Warding skill, the Undercroft floors

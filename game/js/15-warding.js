@@ -37,6 +37,11 @@ function inCombatMap(){ return !!(curMap && curMap.id === "undercroft"); }      
 // cooldown — no turtling. Costs nothing (energy-free like every Warding action; Resolve is only ever
 // saved, never spent, by guarding). Undercroft-only, gated at the input so it no-ops everywhere else.
 const GUARD_WINDOW = 0.55, GUARD_PARRY = 0.25, GUARD_CD = 0.35;
+// v4.22 (owner playtest: "their shields are up for way too long") — the Hollow Warden's guard now runs a
+// readable cycle instead of standing up forever: GUARD_HOLD braced, then GUARD_REST wide open. The turn-lag
+// also eased (0.55 → 0.75) so circling to its back is a real option rather than a race you usually lose.
+// Three answers to one enemy now: wait out the rest, get behind it, or parry it open. None of them fiddly.
+const GUARD_HOLD = 2.4, GUARD_REST = 1.5, WARD_TURN_LAG = 0.75;
 function startGuard(){
   if(typeof uiBlocking === "function" && uiBlocking()) return;   // v4.4: self-gate on menus/dialogue/cutscene — covers all input paths (Shift already checks this; right-click/touch didn't)
   if(!inCombatMap() || !state.flags.staveEarned) return;   // a combat move, and only once you carry the Stave
@@ -127,7 +132,21 @@ function updateCreatures(dt){
     // your ACTUAL position, so this lag is exactly what makes the "circle it" gimmick both real and beatable.
     if(d.block && dist < 4.5*TILE && cr.state !== "lunge"){
       cr.turnT = (cr.turnT||0) - dt;
-      if(cr.turnT <= 0){ cr.face = Math.abs(pdx) > Math.abs(pdy) ? (pdx<0?"left":"right") : (pdy<0?"up":"down"); cr.turnT = 0.55; }
+      if(cr.turnT <= 0){ cr.face = Math.abs(pdx) > Math.abs(pdy) ? (pdx<0?"left":"right") : (pdy<0?"up":"down"); cr.turnT = WARD_TURN_LAG; }
+    }
+    // v4.22 (owner playtest) — THE GUARD CYCLE. The guarded front used to be up permanently, so the only
+    // answers were to out-circle a 0.55s turn-lag or to parry: fiddly, and with no readable moment to
+    // attack, which is exactly why it "takes too long to kill them." Now the guard breathes — it holds,
+    // then visibly DROPS for a beat, then re-sets. A pattern you can learn beats a wall you grind, and it
+    // costs the player nothing to wait for (the cozy contract: this makes the fight fairer, not harsher).
+    if(d.block){
+      if(cr.gcT == null){ cr.gcT = GUARD_HOLD; cr.gDown = false; }
+      cr.gcT -= dt;
+      if(cr.gcT <= 0){
+        cr.gDown = !cr.gDown;
+        cr.gcT = cr.gDown ? GUARD_REST : GUARD_HOLD;
+        if(cr.gDown){ pSparkle(cr.x, cr.y-4, "#ffd88a", 5); }   // the tell: its guard sags open
+      }
     }
 
     if(cr.state === "stunned"){ if(cr.stateT <= 0) cr.state = "idle"; continue; }
@@ -246,8 +265,17 @@ function drawCreature(cr){
   // v4.1 the Hollow Warden's guarded front — a faint shield arc on the side it faces
   if(cd.block && ((cr.hpBarT||0) > 0 || cr.state !== "idle")){
     const fa = cr.face==="up"?-Math.PI/2 : cr.face==="down"?Math.PI/2 : cr.face==="left"?Math.PI : 0;
-    ctx.strokeStyle = "rgba(180,200,240,0.55)"; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(cr.x, cr.y-2, 9, fa-0.7, fa+0.7); ctx.stroke();
+    // v4.22: the arc IS the tell. Braced = a solid bright shield; resting = a broken, dim stub you can
+    // read at a glance from anywhere on screen, so the opening never has to be guessed at.
+    const open = (cr.guardOpen > 0) || cr.gDown;
+    ctx.strokeStyle = open ? "rgba(255,190,120,0.30)" : "rgba(180,200,240,0.70)";
+    ctx.lineWidth = open ? 1 : 2;
+    const span = open ? 0.28 : 0.7;
+    ctx.beginPath(); ctx.arc(cr.x, cr.y-2, 9, fa-span, fa+span); ctx.stroke();
+    if(open){   // a small gold "now" pip where the guard has sagged away
+      ctx.fillStyle = "rgba(255,216,138,0.85)";
+      ctx.fillRect(Math.round(cr.x + Math.cos(fa)*11) - 1, Math.round(cr.y - 2 + Math.sin(fa)*11) - 1, 2, 2);
+    }
   }
   if(cr.state === "tel_slam"){   // v4.1 boss ground-slam — a filling DANGER ring; step outside before it lands
     const p = clamp(1 - cr.stateT/(cd.tele||0.9), 0, 1), R = 1.8*TILE;
@@ -292,6 +320,7 @@ function staveSwing(tx, ty, power){
     spawnHitsplat(fx, fy-8, dealt, o.hp<=0 ? "settle" : "hit");
     if(o.hp <= 0){
       curMap.objects[key(tx,ty)] = { kind:"wardladderdown" };
+      if(curMap.meta) curMap.meta.stairFound = true;   // v4.22: one stair per floor — stop the mob-drop rolling
       addXP("Warding", 12);   // loosening the knot is itself a settle
       playSfx("settle"); pSparkle(fx, fy, "#bfe0ff", 16);
       toast("The knot loosens and falls away — a stair drops into deeper dark.", "#bfe0ff");
@@ -327,7 +356,7 @@ function hitCreature(cr, power, fx, fy){
   }
   // Hollow Warden — GUARDS the front it faces; a strike from where it's looking clangs off. Circle to its
   // side/back — OR parry its blow (v4.4) to knock its guard open (cr.guardOpen), then a frontal strike lands.
-  if(d.block && frontalHit(cr) && !(cr.guardOpen > 0)){
+  if(d.block && frontalHit(cr) && !(cr.guardOpen > 0) && !cr.gDown){   // v4.22: gDown = the guard's rest beat — strike now
     cr.hpBarT = 2.6; cr.hurtT = 0.05; cam.shake = 1.0; playSfx("staveHit");
     spawnHitsplat(cr.x, cr.y-10, 0, "block"); floatText(cr.x, cr.y-16, "guarded", "#9fb0d0");
     return;
@@ -368,7 +397,29 @@ function settleCreature(cr){
   } else {
     playSfx("settle");
     floatText(cr.x, cr.y-16, d.name + " settled", d.col);
+    maybeDropStair(cr);   // v4.22: the way down falls out of the fighting, not out of a search
   }
+}
+// v4.22 (owner playtest: "it's not exciting to look for the ladder… have the ladder randomly spawn upon
+// killing a mob, sort of like mining rocks"). This is deliberately the MINE'S model, which the owner named
+// as the good one: down there the way down hides under a rock, so the thing you're already doing (mining)
+// reveals it. The Undercroft's equivalent is settling restless things — so now the stair falls out of the
+// floor's own inhabitants. The chance escalates with each settle so it always turns up in a few kills
+// rather than dangling on bad luck, and it only ever fires once per floor.
+function maybeDropStair(cr){
+  if(!curMap || curMap.id !== "undercroft") return;
+  const meta = curMap.meta || (curMap.meta = {});
+  if(meta.bossFloor || meta.stairFound) return;          // a boss floor's stair is the boss's to give
+  meta.settled = (meta.settled || 0) + 1;
+  if(!chance(Math.min(0.9, 0.15 + 0.15 * (meta.settled - 1)))) return;   // 15% → 30% → 45%… found fast, never never
+  meta.stairFound = true;
+  const tx = Math.floor(cr.x / TILE), ty = Math.floor(cr.y / TILE);
+  curMap.objects[key(tx, ty)] = { kind:"wardladderdown" };
+  if(meta.knot) delete curMap.objects[key(meta.knot.x, meta.knot.y)];   // the old stair-knot loosens with it
+  unstick();                                             // the stair lands where the thing stood — you may be on it
+  cam.shake = 2.4; playSfx("upgrade"); pSparkle(cr.x, cr.y-2, "#bfe0ff", 20);
+  toast("Something gives underfoot where it came apart — a stair drops away into the dark.", "#bfe0ff");
+  floatText(cr.x, cr.y-24, "↓ the way down", "#bfe0ff");
 }
 
 // ---------------- Resolve drain + the zero-cost knockout ----------------

@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.21.0", code: 108, codename: "The Mantle", date: "2026-07-24" };
+const VERSION = { name: "4.22.0", code: 109, codename: "The Way Down", date: "2026-07-24" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.22.0", code:109, date:"2026-07-24", name:"The Way Down", notes:[
+    { t:"balance", s:"The Hollow Warden's guard breathes now. It used to hold its shield up permanently — the only way through was to out-circle it or land a parry, which made it a wall to grind rather than a fight to read. Now the guard holds, then visibly sags open for a beat, then re-sets: wait for the drop, get behind it, or parry it open — three honest answers instead of one fiddly one. It also turns to face you more slowly, so circling round the back is a real option again. It's no weaker; it's just readable." },
+    { t:"feature", s:"The way down falls out of the fighting. Hunting the floor for a stair-knot was dead time, so now settling the restless things can shake the stair loose where one comes apart — the same idea as the mine, where the way down hides under a rock and turns up while you're already swinging. It usually takes two or three, and the floor's old knot loosens along with it. Clear as you go and the dark opens up." },
+    { t:"polish", s:"A way down looks like a way DOWN. Every descending stair — in the mine and in the Undercroft both — was drawn as an upright ladder with rungs, which reads as something you climb. It's a shaft cut into the floor now: a lit stone lip at your feet and steps receding away into the black. Ladders still stand upright where you're actually going up." },
+  ]},
   { v:"4.21.0", code:108, date:"2026-07-24", name:"The Mantle", notes:[
     { t:"feature", s:"Reaching 99 gives you something to wear it on your sleeve with. Six mantles — one per craft — hang in Tom's shop from your very first day, locked, so you can see exactly what the long climb is for. Master a craft and yours comes off the peg: the Farmer's green, the Forester's bark-brown, the Delver's ore-flecked slate, the Angler's salt-stiff blue, the Hearthmaster's ember-red, and the Warden's lantern-blue. Purely for the showing off — which is the entire point." },
     { t:"feature", s:"And for the one who masters every craft: the Valley's Crown, gated behind all six at ninety-nine — total level 594, the number the skills panel has been quietly showing you all along with nothing at the end of it. Cross it and the valley says so out loud, Rowan included." },
