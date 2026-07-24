@@ -8,13 +8,19 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.18.0", code: 105, codename: "The Standing Board", date: "2026-07-24" };
+const VERSION = { name: "4.19.0", code: 106, codename: "In Hand", date: "2026-07-24" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.19.0", code:106, date:"2026-07-24", name:"In Hand", notes:[
+    { t:"fix", s:"The game is properly playable by touch at last. Four things could only ever be done with a keyboard: choosing what to plant, eating, giving a gift, and mounting the horse. On a phone that quietly removed most of the game — you could plant turnips and nothing else ever again (so farming stopped dead the moment spring ended), you could never set down a keg or a beehive or a single piece of décor, never eat when you were tired, and never give anyone a gift, which meant no friendships and no wedding. All four have proper controls now." },
+    { t:"feature", s:"Anything you can plant or place can be chosen straight from your backpack — tap a seed packet, sapling, beehive, machine or décor piece and there's a 'select this' button waiting. It's the fix touch play needed, and honestly it's better on a keyboard too: no more tapping R thirty times to find the one thing you meant to put down." },
+    { t:"change", s:"Tapping the seed slot on the hotbar when it's already selected now switches what's in hand — the touch equivalent of pressing R. And Eat, Gift and Ride joined the ☰ menu alongside the Backpack and Journal." },
+    { t:"change", s:"The game stops telling you to press keys you haven't got. Hints now name the control you're actually using — 'press USE' rather than 'press SPACE' on a touchscreen, and the out-of-energy nudge points at the menu instead of a key that isn't there." },
+  ]},
   { v:"4.18.0", code:105, date:"2026-07-24", name:"The Standing Board", notes:[
     { t:"feature", s:"The noticeboard grows up with you. It used to top out early — its hardest ask was a couple of pumpkins — so a seasoned farmer would wander up to the board by Tom's door and get asked for eight logs. Now there are sixteen new higher requests running all the way to the Everbloom and the coelacanth, and the board leans toward asks near your own skill: a master angler gets asked for the deep-water fish, a master miner for cobalt and deepsilver, and the trivial little errands fade to rare. New hands still get the small starter favours they can actually fill — nothing's out of reach, and nothing's beneath notice for long." },
     { t:"change", s:"Because the board asks for finer things now, it pays for them: the reward has always been a share of the item's worth, so a request for a coelacanth or a winter Everbloom is worth a proper day's coin, not pocket change. The daily board is a reason to visit town again, whatever your level." },

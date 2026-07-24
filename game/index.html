@@ -7,7 +7,7 @@
 <title>Harvestscape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=127">
+<link rel="stylesheet" href="css/style.css?v=129">
 </head>
 <body>
 <div id="frame">
@@ -146,11 +146,17 @@
         <button id="btnGuard" class="hidden" aria-label="Guard">🛡</button>
         <button id="btnLook" aria-label="Examine">🔍</button>
       </div>
+      <!-- Panels have no key on touch, so they live here. v4.19: the three world VERBS that were
+           keyboard-only (eat / gift / ride) join them — without these, a touch player could never eat,
+           never give a gift (so no friendship, no marriage), and never mount the horse. -->
       <div id="touchMenu" class="hidden">
         <button data-panel="invPanel">🎒 Backpack</button>
         <button data-panel="questPanel">✒ Journal</button>
         <button data-panel="skillsPanel">★ Skills</button>
         <button data-panel="settingsPanel">⚙ Settings</button>
+        <button data-action="eat">🍎 Eat</button>
+        <button data-action="gift">🎁 Gift</button>
+        <button data-action="ride">🐴 Ride</button>
       </div>
     </div>
   </div>
@@ -160,21 +166,21 @@
   </div>
 </div>
 
-<script src="js/00-core.js?v=127"></script>
-<script src="js/01-data.js?v=127"></script>
-<script src="js/02-audio.js?v=127"></script>
-<script src="js/03-art.js?v=127"></script>
-<script src="js/04-world.js?v=127"></script>
-<script src="js/05-particles.js?v=127"></script>
-<script src="js/06-weather.js?v=127"></script>
-<script src="js/07-entities.js?v=127"></script>
-<script src="js/08-actions.js?v=127"></script>
-<script src="js/09-quests.js?v=127"></script>
-<script src="js/13-content.js?v=127"></script>
-<script src="js/15-warding.js?v=127"></script>
-<script src="js/10-ui.js?v=127"></script>
-<script src="js/11-title.js?v=127"></script>
-<script src="js/14-story.js?v=127"></script>
-<script src="js/12-game.js?v=127"></script>
+<script src="js/00-core.js?v=129"></script>
+<script src="js/01-data.js?v=129"></script>
+<script src="js/02-audio.js?v=129"></script>
+<script src="js/03-art.js?v=129"></script>
+<script src="js/04-world.js?v=129"></script>
+<script src="js/05-particles.js?v=129"></script>
+<script src="js/06-weather.js?v=129"></script>
+<script src="js/07-entities.js?v=129"></script>
+<script src="js/08-actions.js?v=129"></script>
+<script src="js/09-quests.js?v=129"></script>
+<script src="js/13-content.js?v=129"></script>
+<script src="js/15-warding.js?v=129"></script>
+<script src="js/10-ui.js?v=129"></script>
+<script src="js/11-title.js?v=129"></script>
+<script src="js/14-story.js?v=129"></script>
+<script src="js/12-game.js?v=129"></script>
 </body>
 </html>

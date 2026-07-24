@@ -86,19 +86,26 @@ function tutoringTick(){
   const slot = HOTBAR[slotSel]; if(!slot) return;
   const tool = slot.tool;
   const [tx,ty] = facingTile(); const tt = tileAt(tx,ty), obj = objAt(tx,ty);
+  const U = USEKEY();
   if(tool==="Hoe" && curMap.id==="farm" && TILLABLE.has(tt) && !obj && !curMap.crops[key(tx,ty)])
-    tutTip("hint_hoe","This soil is ready — press SPACE to till it.");
+    tutTip("hint_hoe",`This soil is ready — press ${U} to till it.`);
   else if(tool==="Seeds" && (tt===T.TILLED||tt===T.WATERED) && !curMap.crops[key(tx,ty)])
-    tutTip("hint_seed","SPACE plants your seed here. Press R to switch which seed.");
+    tutTip("hint_seed",`${U} plants your seed here. ${IS_TOUCH ? "Tap the seed slot again" : "Press R"} to switch which seed.`);
   else if(tool==="Can" && tt===T.TILLED)
-    tutTip("hint_can","SPACE waters the soil — young crops drink every day.");
+    tutTip("hint_can",`${U} waters the soil — young crops drink every day.`);
   else if(tool==="Axe" && obj && TREES[obj.kind])
-    tutTip("hint_axe","Face the tree and press SPACE to chop — it trains Woodcutting.");
+    tutTip("hint_axe",`Face the tree and press ${U} to chop — it trains Woodcutting.`);
   else if(tool==="Pick" && obj && (ORES[obj.kind]||obj.kind==="gemrock"||obj.kind==="crystal"||obj.kind==="geode"))
-    tutTip("hint_pick","Press SPACE to mine. A better pick breaks the rock faster.");
+    tutTip("hint_pick",`Press ${U} to mine. A better pick breaks the rock faster.`);
   else if(tool==="Rod" && tt===T.WATER)
-    tutTip("hint_rod","Face the water and press SPACE to cast your line.");
+    tutTip("hint_rod",`Face the water and press ${U} to cast your line.`);
 }
+// v4.19 — name the control the player actually HAS. Hints that hard-code "SPACE" / "R" / "(F)" are
+// instructions a touch player simply cannot follow. IS_TOUCH lives in 10-ui.js (a later file); these are
+// read at CALL time, never at load time, so the shared-scope ordering is fine.
+function USEKEY(){ return IS_TOUCH ? "USE" : "SPACE"; }
+function EATHINT(){ return IS_TOUCH ? "eat from the ☰ menu" : "eat (F)"; }
+function GIFTHINT(){ return IS_TOUCH ? "give a gift from the ☰ menu" : "give a gift (G)"; }
 // Everything you can put in the ground: seeds you've levelled into, plus any sapling or hive
 // you're actually carrying. `state.seedSel` is a crop id, "sap:<type>", or "hive".
 function plantables(){
@@ -137,6 +144,29 @@ function cycleSeed(){
   const i = ids.indexOf(state.seedSel);
   state.seedSel = ids[(i+1) % ids.length] || "turnip";
   slotSel = 5; refreshHotbar(); toast("Selected: " + plantableName(state.seedSel), "#8fd06a"); playSfx("menu");
+}
+// v4.19: the REVERSE of plantableName — given a bag item, which plantable selection is it (or null)?
+// Cycling was the only way to change state.seedSel, which meant a touch player (no R key) could never
+// plant anything but the default turnip — no other crop, no sapling, no machine, no décor, ever. It's
+// also poor on desktop once the list runs to thirty-odd entries. This powers a "select this" button in
+// the bag, so anything plantable can be chosen directly on any input.
+function plantableFor(item){
+  if(item === "Beehive") return (state.inv["Beehive"]||0) > 0 ? "hive" : null;
+  for(const k in MACHINES) if(MACHINES[k].name === item) return "mach:" + k;
+  for(const k in DECOR)    if(DECOR[k].name    === item) return "decor:" + k;
+  for(const k in FRUIT_TREES) if(FRUIT_TREES[k].name === item) return "sap:" + k;
+  if(item.endsWith(" Seeds")){
+    const crop = item.slice(0, -6);
+    for(const k in CROPS) if(CROPS[k].name === crop) return skillLvl("Farming") >= CROPS[k].lvl ? k : null;
+  }
+  return null;
+}
+// Select a plantable directly (from the bag). Mirrors cycleSeed's tail so the hotbar + feedback match.
+function selectPlantable(sel){
+  if(!sel || !plantables().includes(sel)) return;
+  state.seedSel = sel;
+  slotSel = 5; refreshHotbar(); toast("Selected: " + plantableName(sel), "#8fd06a"); playSfx("menu");
+  if(typeof renderInv === "function" && typeof openPanels !== "undefined" && openPanels.has("invPanel")) renderInv();
 }
 
 // ---- skills / xp ----
@@ -259,7 +289,7 @@ function take(item, n=1){ if((state.inv[item]||0) < n) return false; state.inv[i
 function bump(stat, n=1){ state.stats[stat] = (state.stats[stat]||0) + n; checkQuests(); }
 function near(x,y,d){ return dist2(state.px, state.py, x, y) < d; }
 function spendEnergy(n){
-  if(state.energy <= 0){ toast("Too tired — eat (F) or sleep.", "#ff8a7a"); playSfx("error"); return false; }
+  if(state.energy <= 0){ toast("Too tired — " + EATHINT() + " or sleep.", "#ff8a7a"); playSfx("error"); return false; }
   state.energy = Math.max(0, state.energy - n); refreshHUD(); return true;
 }
 
@@ -806,7 +836,7 @@ function interact(){
       case "wardup": wardUp(); return;                 // v4.0 Undercroft — up a floor / out to the Guild
       case "wardbell": openBells(); return;            // the Warden's Bell checkpoint panel
       case "wardladderdown": wardDown(); return;       // the settled knot's stair
-      case "knot": toast("A knot of the dark, wound round the stair. Settle it with your Stave (Space).", "#bfe4ff"); return;
+      case "knot": toast("A knot of the dark, wound round the stair. Settle it with your Stave (" + USEKEY() + ").", "#bfe4ff"); return;
       case "westtrail": groveDeeper(); return;
       case "easttrail": groveBack(); return;
       case "deadfall": toast(`A great deadfall seals the trail west. (Axe — Woodcutting ${obj.lvl})`, "#cbb98f"); return;
@@ -1031,7 +1061,7 @@ function eatFood(){
 // ---- gift (G) — nearest NPC ----
 function giveGift(){
   const n = nearestNpc(30);
-  if(!n){ toast("Stand next to someone to give a gift (G)."); return; }
+  if(!n){ toast("Stand next to someone to " + GIFTHINT() + "."); return; }
   giftNpc(n.id);
 }
 

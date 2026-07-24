@@ -322,7 +322,11 @@ function refreshHotbar(){
     if(count !== null){ const cn = document.createElement("span"); cn.className="cnt"; cn.textContent = "×"+count; d.appendChild(cn); }
     if(tierIdx !== null && tierIdx > 0){ const tp = document.createElement("span"); tp.className="tier"; tp.textContent="◆"; tp.style.color = TIER_COL[tierIdx]; d.appendChild(tp); }
     const nm = document.createElement("span"); nm.className="slotName"; nm.textContent = name; d.appendChild(nm);
-    d.onclick = () => selectSlot(i);
+    // v4.19: tapping the Seeds tile when it's ALREADY selected cycles what's in hand — the touch parity
+    // for R (which had no touch path at all). Any other tile, or a first tap, just selects as before.
+    d.onclick = (slot.tool === "Seeds")
+      ? () => { if(i === slotSel) cycleSeed(); else selectSlot(i); }
+      : () => selectSlot(i);
     hb.appendChild(d);
   });
 }
@@ -475,6 +479,16 @@ function invDetailHtml(it){
     h += `<div class="sdLine unlock">✦ ${CHARMS[it].effect}</div>`;
     h += worn ? `<button class="buy" onclick="wearCharm(null)">worn ✓ — take it off</button>`
               : `<button class="buy" onclick="wearCharm('${jsq(it)}')">wear this</button>`;
+  }
+  // v4.19: anything plantable/placeable can be chosen straight from the bag. Cycling (R) used to be the
+  // ONLY way to set state.seedSel — unreachable without a keyboard, so touch play could never plant past
+  // the default turnip or place a single machine or décor piece. Works on every input, and beats cycling
+  // thirty-odd entries on desktop too.
+  const psel = (typeof plantableFor === "function") ? plantableFor(it) : null;
+  if(psel){
+    const cur = state.seedSel === psel;
+    h += cur ? `<button class="buy" disabled>selected ✓ — set it down with USE</button>`
+             : `<button class="buy" onclick="selectPlantable('${jsq(psel)}')">select this to plant / place</button>`;
   }
   return h;
 }
@@ -1813,9 +1827,16 @@ function wireTouch(){
     const m = $("touchMenu"); const opening = m.classList.contains("hidden");
     if(opening && anyPanelOpen()) closeAllPanels();
     m.classList.toggle("hidden"); playSfx(opening ? "menu" : "menuClose"); });
+  // v4.19: the menu now carries world VERBS as well as panels — eat / gift / ride had a key and nothing
+  // else, which silently removed food, the whole friendship layer (and so marriage) and the horse from
+  // touch play. Each verb self-guards, so the uiBlocking check mirrors the keyboard path exactly.
+  const ACTIONS = { eat:() => eatFood(), gift:() => giveGift(), ride:() => rideToggle() };
   $("touchMenu").querySelectorAll("button").forEach(b => {
     b.addEventListener("pointerdown", e => { e.preventDefault(); firstGesture();
-      closeTouchMenu(); const id = b.dataset.panel; togglePanel(id, RENDER[id]); });
+      closeTouchMenu();
+      const act = b.dataset.action;
+      if(act){ if(!uiBlocking()) ACTIONS[act](); return; }
+      const id = b.dataset.panel; togglePanel(id, RENDER[id]); });
   });
 }
 function closeTouchMenu(){ const m = $("touchMenu"); if(m) m.classList.add("hidden"); }

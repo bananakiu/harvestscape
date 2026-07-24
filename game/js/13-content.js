@@ -384,7 +384,7 @@ function enterUndercroft(){
   // v4.0.3: a one-time orienting beat on the very first descent — the settle verb + the Resolve bar.
   if(!state.flags.wardTipSeen){
     state.flags.wardTipSeen = true;
-    setTimeout(() => banner("The Undercroft", "Face a restless thing and swing your Stave (Space) to settle it. Watch the RESOLVE bar — it fills back up on any safe ground, and a knockout costs you nothing."), 1100);
+    setTimeout(() => banner("The Undercroft", "Face a restless thing and swing your Stave (" + USEKEY() + ") to settle it. Watch the RESOLVE bar — it fills back up on any safe ground, and a knockout costs you nothing."), 1100);
   } else if((state.wardBells||[]).length) {
     setTimeout(() => toast("A funded Warden's Bell will ring you down from the surface — or back up here.", "#bfe4ff"), 900);
   }

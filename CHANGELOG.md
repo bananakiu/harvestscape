@@ -22,6 +22,73 @@
 
 ---
 
+## 2026-07-24 — v4.19.0 "In Hand" (code 106, tag `v4.19.0`) — touch parity: the mobile platform blocker
+
+### Why this release
+
+The v4.14 gap audit's #3, and the highest-*severity* item left on the list. The game ships a viewport
+meta tag, a complete `#touchUI` layer (d-pad, USE/ACT/Look/Guard/menu), and a README line advertising
+mobile — but **four world verbs had exactly one call site each, and it was a keyboard key**
+(verified: `cycleSeed` `10-ui.js:1732`, `eatFood` `:1733`, `giveGift` `:1734`, `rideToggle` `:1735`).
+
+The seed one is the platform blocker. `plantables()` funnels **seeds, saplings, hives, machines AND
+décor** through a single `state.seedSel`, `cycleSeed()` was the only way to change it, and
+`normalizeSeedSel()` only ever falls back to `ids[0]` — the always-present `"turnip"`. So a touch player
+was pinned to turnips forever: **farming stops dead on Summer Day 1** (turnip is Spring-only), and no
+sapling, beehive, machine, cellar or décor piece can ever be placed. Add the missing eat/gift/ride and
+that silently removes food, the entire friendship layer (and therefore marriage), and the horse.
+
+This is a broken *advertised* capability, not a scope expansion — and the fix is purely additive input
+plumbing with zero balance risk.
+
+### Fixed — the four verbs
+
+- **Choosing what to plant/place, from the bag** (the real fix). New `plantableFor(item)` +
+  `selectPlantable(sel)` (`game/js/08-actions.js`) — the reverse of `plantableName`: given a bag item,
+  which `state.seedSel` value is it (crop seed → crop id, gated on Farming level; sapling → `sap:k`;
+  Beehive → `hive`; machine → `mach:k`; décor → `decor:k`; anything else → null). `invDetailHtml`
+  (`10-ui.js`) renders a **"select this to plant / place"** button for any plantable you're holding,
+  mirroring the charm `wear this` pattern, with a disabled "selected ✓" state when it's already in hand.
+  **This is a genuine desktop QoL win too** — a maxed save has 30+ plantables, and cycling to the one you
+  want was miserable on a keyboard as well.
+- **Seed cycling on touch:** tapping the Seeds hotbar tile when it is *already* selected now cycles
+  (`refreshHotbar`, `10-ui.js`) — the touch parity for `R`. A first tap, or any other tile, selects as before.
+- **Eat / Gift / Ride:** added to `#touchMenu` (`game/index.html`) as `data-action` buttons, and
+  `wireTouch` (`10-ui.js`) now branches on `dataset.action` → `eatFood()` / `giveGift()` / `rideToggle()`
+  behind the same `uiBlocking()` gate the keyboard path uses. (The menu previously assumed every button
+  was a `data-panel`.)
+
+### Changed — hints name the control you actually have
+
+`USEKEY()` / `EATHINT()` / `GIFTHINT()` (`08-actions.js`), read at call time (so the `IS_TOUCH` const in
+the later-loading `10-ui.js` resolves fine). Applied to the six contextual verb hints, the seed hint
+("Tap the seed slot again" vs "Press R"), the 0-energy toast (which literally instructed a phone player to
+"eat (F)"), the gift-range toast, the stair-knot toast, and the Undercroft intro banner.
+
+### Verification (live build, console clean)
+
+- `plantableFor`: Keg→`mach:keg`, Flower Bed→`decor:flowerbed`, Apple Tree→`sap:apple`, Melon
+  Seeds→`melon`, Beehive→`hive`, Wood→`null`. `selectPlantable` sets `seedSel` + focuses the Seeds slot.
+- The **real rendered buttons** clicked end-to-end: Keg → `mach:keg`; "Flower Bed" (a name with a space,
+  exercising the `jsq` escaping) → `decor:flowerbed`; the already-selected item renders the disabled
+  "selected ✓". The button appears for plantables and **not** for junk (Wood).
+- Seeds tile: first click selects (slotSel 0→5, seed unchanged), subsequent clicks cycle
+  turnip→potato→wheat; a non-seed tile still just selects with no seed side-effect.
+- `#touchMenu` carries `data-action` ∈ {eat,gift,ride}; `wireTouch`'s `ACTIONS` map covers all three; the
+  three verb functions exist. (`IS_TOUCH` is a `const` derived from `matchMedia("(pointer:coarse)")`, so
+  the touch-only branches can't be flipped at runtime in a desktop preview — the DOM/handler/key alignment
+  is verified statically, and the listener attach uses the identical pattern as the working panel buttons.)
+
+### Files
+
+- `game/js/08-actions.js` — `plantableFor` / `selectPlantable`; `USEKEY`/`EATHINT`/`GIFTHINT`; hint strings.
+- `game/js/10-ui.js` — bag "select this" button; Seeds-tile cycle; `wireTouch` action branch.
+- `game/index.html` — `#touchMenu` Eat/Gift/Ride; cache-buster `?v=129`.
+- `game/js/13-content.js` — Undercroft banner hint.
+- `game/js/01-data.js` — VERSION + in-game CHANGELOG.
+
+---
+
 ## 2026-07-24 — v4.18.0 "The Standing Board" (code 105, tag `v4.18.0`) — the noticeboard scales with the player
 
 ### Why this release
