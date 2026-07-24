@@ -57,7 +57,11 @@ function freshState(){
 function discover(name){
   if(!state.discovered) state.discovered = {};
   if(state.discovered[name]) return false;
-  state.discovered[name] = true; return true;
+  state.discovered[name] = true;
+  // v4.21: only a genuinely NEW find can close a shelf, so the check rides the early-return above and
+  // costs nothing on the common path. (This function's return value was read by nothing until now.)
+  if(typeof checkCollection === "function") checkCollection();
+  return true;
 }
 function ensureRel(id){ if(!state.rel[id]) state.rel[id] = { points:0, talkedDay:0, giftedDay:0 }; return state.rel[id]; }
 

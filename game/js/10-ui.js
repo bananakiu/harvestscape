@@ -643,18 +643,52 @@ function renderCollectionHtml(){
   const disc = state.discovered || {};
   let total=0, found=0, body="";
   for(const sec of MUSEUM){
-    let cells = "";
+    let cells = "", sFound = 0, sTotal = 0;
     for(const it of sec.items()){
-      total++;
-      if(disc[it]){ found++;
+      total++; sTotal++;
+      if(disc[it]){ found++; sFound++;
         cells += `<div class="museItem has" data-icon="item_${it}" title="${escapeHtml(EXAMINE[it]||it)}"><canvas></canvas><span>${it}</span></div>`;
       } else {
         cells += `<div class="museItem locked" title="Not yet discovered"><span class="q">?</span><span>· · ·</span></div>`;
       }
     }
-    body += `<div class="museSec">${sec.name}</div><div class="museGrid">${cells}</div>`;
+    // v4.21: per-section progress. A single 147-item number told you nothing about WHICH shelf was
+    // one piece short — the whole point of a collection is knowing what you're hunting.
+    const done = sTotal > 0 && sFound >= sTotal;
+    body += `<div class="museSec">${sec.name} <span class="sub" style="color:${done?'var(--gold-hi)':'var(--ink-soft)'}">${done?'✦ complete':`${sFound}/${sTotal}`}</span></div><div class="museGrid">${cells}</div>`;
   }
   return `<div class="secHead">🗃 The Collection — ${found}/${total} discovered</div>${body}`;
+}
+// v4.21 — the Collection celebrates. It was a silent counter: completing a shelf moved a number and said
+// nothing. Each section now banners once, the moment it closes, on a coll_<name> flag. Existing saves are
+// backfilled SILENTLY on the first run (state.flags.collInit) so a long save never gets a retro storm of
+// fanfares for shelves it filled seasons ago — the same guard shape migrateSave uses.
+function collSectionKey(name){ return "coll_" + name.replace(/[^A-Za-z0-9]/g, ""); }
+function collSectionComplete(sec){
+  const d = state.discovered || {}, items = sec.items();
+  return items.length > 0 && items.every(it => d[it]);
+}
+function checkCollection(){
+  if(!state || !state.flags || typeof MUSEUM === "undefined") return;
+  const silent = !state.flags.collInit;
+  const newly = [];
+  for(const sec of MUSEUM){
+    const k = collSectionKey(sec.name);
+    if(state.flags[k]) continue;
+    if(collSectionComplete(sec)){ state.flags[k] = true; if(!silent) newly.push(sec.name); }
+  }
+  if(silent){ state.flags.collInit = true; return; }   // first run on an existing save: flag, don't fanfare
+  newly.forEach((name, i) => {
+    // The Legends have their own ceremony already (Bram's Hunt Crown) — don't double-celebrate them.
+    if(name === "The Legends") return;
+    setTimeout(() => { banner("🗃 " + name + " — complete", "Every last one of them found, and kept. The shelf is full.");
+      playSfx("quest"); }, 700 + i*900);
+  });
+  if(!state.flags.collAll && MUSEUM.every(s => state.flags[collSectionKey(s.name)])){
+    state.flags.collAll = true;
+    setTimeout(() => { banner("✦ The Curator ✦", "Every shelf in the valley, filled. Not one thing that grows, swims, blooms or glints in Willowbrook has gone unseen by you.");
+      playSfx("legend"); pSparkle(state.px, state.py-16, "#ffd75a", 30); }, 1800 + newly.length*900);
+  }
 }
 
 // ---- The Valley of Willowbrook: a schematic town map (Journal → Map tab) ----
@@ -982,12 +1016,20 @@ function renderShop(){
       // The Storyteller's Banner (v3.32) shows LOCKED, not hidden — a quest cape you can't see
       // isn't worth chasing. The row itself is the advertisement.
       const qpLocked = D.qpGate && !state.flags.qpAllTold;
+      // v4.21 the mantles + the Crown ride the same show-it-locked rule: the row IS the advertisement,
+      // and it names exactly how far off you are, so the 99 climb has a visible prize the whole way.
+      const capeLocked = D.capeSkill && skillLvl(D.capeSkill) < 99;
+      const crownLocked = D.masterGate && !state.flags.valleyMaster;
+      const locked = qpLocked || capeLocked || crownLocked;
       const matsOk = !D.mats || Object.keys(D.mats).every(it => (state.inv[it]||0) >= D.mats[it]);   // v3.29
       const matStr = D.mats ? "<br>" + Object.keys(D.mats).map(it => { const have=state.inv[it]||0, need=D.mats[it];
         return `${need} ${it} <span style="color:${have>=need?'#8fd06a':'#c98a6a'}">(${have})</span>`; }).join(" + ") : "";
-      const blurb = qpLocked ? `“Not for sale — not to you, not yet. Finish every task the valley's book ever asks, and we'll talk.” <span style="color:var(--gold-hi)">✦ ${questPoints()}/${questPointsTotal()} Quest Points</span>` : D.blurb;
-      html += `<div class="row"><span class="lead" data-icon="item_${D.name}"><canvas></canvas><span style="${vanity||D.qpGate?`color:${'#ffd75a'}`:''}">${qpLocked?"🔒 ":""}${D.name}${own?` <span class="sub" style="color:var(--gold-hi)">×${own} in bag</span>`:''} <span class="sub">${blurb}${matStr}</span></span></span>` +
-        `<span><span class="price">${D.cost.toLocaleString()}g</span> <button class="buy" ${state.gold>=D.cost&&matsOk&&!qpLocked?"":"disabled"} onclick="buyDecor('${k}')">${qpLocked?"locked":"buy"}</button></span></div>`;
+      const blurb = qpLocked ? `“Not for sale — not to you, not yet. Finish every task the valley's book ever asks, and we'll talk.” <span style="color:var(--gold-hi)">✦ ${questPoints()}/${questPointsTotal()} Quest Points</span>`
+        : capeLocked ? `“Woven, folded, and waiting. It goes to a master of ${D.capeSkill} — nobody else.” <span style="color:var(--gold-hi)">✦ ${D.capeSkill} ${skillLvl(D.capeSkill)}/99</span>`
+        : crownLocked ? `“There's one of these. I'll not part with it for anything less than every craft in the valley.” <span style="color:var(--gold-hi)">✦ Total level ${totalLevel()}/594</span>`
+        : D.blurb;
+      html += `<div class="row"><span class="lead" data-icon="item_${D.name}"><canvas></canvas><span style="${vanity||D.qpGate||D.capeSkill||D.masterGate?`color:${'#ffd75a'}`:''}">${locked?"🔒 ":""}${D.name}${own?` <span class="sub" style="color:var(--gold-hi)">×${own} in bag</span>`:''} <span class="sub">${blurb}${matStr}</span></span></span>` +
+        `<span><span class="price">${D.cost.toLocaleString()}g</span> <button class="buy" ${state.gold>=D.cost&&matsOk&&!locked?"":"disabled"} onclick="buyDecor('${k}')">${locked?"locked":"buy"}</button></span></div>`;
     }
   } else {
     for(const tool of TOOLS){

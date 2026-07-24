@@ -1508,6 +1508,10 @@ function buyMachine(mk){
 function buyDecor(dk){
   const D = DECOR[dk]; if(!D) return;
   if(D.qpGate && !state.flags.qpAllTold){ toast("Tom keeps that one for whoever finishes the valley's whole book of tasks."); playSfx("error"); return; }   // v3.32: the quest cape
+  // v4.21 the mantles — earned at 99 in their craft, and the Crown at total 594 (flag, so it can never
+  // be bought before the valley has said so aloud). Cosmetic only; nothing is gated BEHIND them.
+  if(D.capeSkill && skillLvl(D.capeSkill) < 99){ toast(`That one is for a master of ${D.capeSkill} — level 99, and not a level sooner.`); playSfx("error"); return; }
+  if(D.masterGate && !state.flags.valleyMaster){ toast("Tom keeps that under the counter, for whoever masters every craft in the valley."); playSfx("error"); return; }
   if(state.gold < D.cost){ toast(`Not enough coin (${D.cost.toLocaleString()}g).`); playSfx("error"); return; }
   if(D.mats && !Object.keys(D.mats).every(it => (state.inv[it]||0) >= D.mats[it])){
     toast("You're short on materials for that one — the deep's finest doesn't come cheap."); playSfx("error"); return; }   // v3.29

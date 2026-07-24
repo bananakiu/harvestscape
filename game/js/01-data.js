@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.20.0", code: 107, codename: "True Ladders", date: "2026-07-24" };
+const VERSION = { name: "4.21.0", code: 108, codename: "The Mantle", date: "2026-07-24" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.21.0", code:108, date:"2026-07-24", name:"The Mantle", notes:[
+    { t:"feature", s:"Reaching 99 gives you something to wear it on your sleeve with. Six mantles — one per craft — hang in Tom's shop from your very first day, locked, so you can see exactly what the long climb is for. Master a craft and yours comes off the peg: the Farmer's green, the Forester's bark-brown, the Delver's ore-flecked slate, the Angler's salt-stiff blue, the Hearthmaster's ember-red, and the Warden's lantern-blue. Purely for the showing off — which is the entire point." },
+    { t:"feature", s:"And for the one who masters every craft: the Valley's Crown, gated behind all six at ninety-nine — total level 594, the number the skills panel has been quietly showing you all along with nothing at the end of it. Cross it and the valley says so out loud, Rowan included." },
+    { t:"feature", s:"The Collection celebrates now instead of counting in silence. Every shelf shows how far along it is, and the moment you complete one — every crop, every fish, every gem — it's announced properly. Fill them all and you're named Curator. (Shelves you'd already finished are simply marked done; no sudden pile of fanfares for old work.)" },
+  ]},
   { v:"4.20.0", code:107, date:"2026-07-24", name:"True Ladders", notes:[
     { t:"fix", s:"Your tool upgrades finally show up on the skill ladder. Every tool tier has always had a hard level requirement — you cannot buy an Iron Hoe below Farming 20 — but none of them appeared in the skill guide or the level-up notice, so the game's most-felt upgrades were invisible progression. They're all listed now, with what each one actually buys you: 'Iron Hoe — tills a 5-tile row' at Farming 20, a faster Rod, a stronger Pick, the Stave tiers for Warding. Four skills that looked like they had long empty stretches turn out to have been quietly handing you things the whole way." },
     { t:"fix", s:"The skill guide no longer padlocks things you've already met. It used to list the restless things of the Undercroft as if they were level unlocks — so the Great Knot sat locked behind 'Warding 40' even though you fight one on the tenth floor long before that. The wing has never cared about your Warding level; it's the depth you walk to that decides what's down there. The guide now says so plainly, listing each family by the floor you first meet it." },
@@ -796,6 +801,22 @@ const DECOR = {
   // The Storyteller's Banner (v3.32) — the quest cape. Tom shows it locked until every quest in
   // the book is done (state.flags.qpAllTold, set in checkQuests); price is the RuneScape nod —
   // you earned it, but the vendor still charges for the cloth.
+  // v4.21 "The Mantle" — the PRESTIGE tier. The bible's §4.6 lists four stand-ins for multiplayer
+  // prestige (villagers comment · a title · a mastery cape shown off · a trophy room); only the first
+  // ever shipped. Crossing 99 granted a passive perk, a banner and one toast — then nothing to SHOW.
+  // These use the proven Storyteller's-Banner pattern: displayed in Tom's shop LOCKED from day one, so
+  // the goal advertises itself for the whole climb. Purely cosmetic (the cozy contract: a cape is a
+  // flex, never a stat), priced as a nod rather than a sink — you earned it, Tom still charges cloth.
+  cape_farming:     { name:"Farmer's Mantle",      cost:990, capeSkill:"Farming",     blurb:"Green as a spring row, hemmed in gold. Ninety-nine levels of soil under one pair of hands." },
+  cape_woodcutting: { name:"Forester's Mantle",    cost:990, capeSkill:"Woodcutting", blurb:"Deep bark-brown, lined with leaf. Every tree in the valley knows the sound of you coming." },
+  cape_mining:      { name:"Delver's Mantle",      cost:990, capeSkill:"Mining",      blurb:"Slate grey shot through with ore-glint. You have been to the bottom and come back up." },
+  cape_fishing:     { name:"Angler's Mantle",      cost:990, capeSkill:"Fishing",     blurb:"Sea-blue, salt-stiff at the hem. Bram will pretend not to look at it. He will look at it." },
+  cape_cooking:     { name:"Hearthmaster's Mantle",cost:990, capeSkill:"Cooking",     blurb:"Warm ember-red, faintly flour-dusted. Nobody in this valley goes hungry near you." },
+  cape_warding:     { name:"Warden's Mantle",      cost:990, capeSkill:"Warding",     blurb:"Lantern-blue, quiet as the deep. Orla's craft, carried to the end of its ladder." },
+  // The capstone: every skill to 99 — total level 594. Gated on the ceremony flag, not the number, so
+  // it can never be bought a moment before the valley has said so out loud.
+  mastercrown:      { name:"The Valley's Crown",   cost:9900, masterGate:true,
+                      blurb:"Nine hundred and ninety-nine mornings, six crafts, one pair of hands. There is nothing left in Willowbrook you have not learned." },
   storybanner: { name:"Storyteller's Banner", cost:500, qpGate:true,
                  blurb:"Every task the valley ever asked — done, and told. It flies for the teller." },
 };

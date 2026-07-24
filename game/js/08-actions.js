@@ -269,8 +269,23 @@ function addXP(skill, amt){
     playSfx("level"); pSparkle(state.px, state.py-14, "#8fd3ff", 14); refreshHotbar();
     // a neighbour notices when you cross a mastery tier — one warm line, in their own voice
     for(const tier of [25,50,75,99]) if(before < tier && after >= tier) masteryPraise(skill, tier);
+    checkValleyMaster();   // v4.21: the 594 capstone can only ever be crossed by a level going up
   }
   checkQuests();
+}
+// v4.21 — the top of every ladder at once. The skills panel has always printed "Total Level N / 594"
+// while the highest totalLevel objective anywhere in QUESTS was 100, so the number the game shows you
+// most had no destination. This is deliberately NOT a QUESTS entry: appending one would make curQuest()
+// non-null again for finished saves and shove the v4.16 Act III / Warden's Round tracker card aside —
+// and this repo has been burned before by keying anything on the quest chain. A latch flag instead.
+function checkValleyMaster(){
+  if(state.flags.valleyMaster || totalLevel() < 594) return;
+  state.flags.valleyMaster = true;
+  setTimeout(() => {
+    banner("✦ Master of the Valley ✦", "Six crafts, every one of them carried to ninety-nine. There is nothing left in Willowbrook you have not learned — Tom has kept something for you.");
+    playSfx("legend"); pSparkle(state.px, state.py-16, "#ffd75a", 34);
+  }, 2000);   // let the Lv 99 banner (and its mastery praise) land first
+  setTimeout(() => toast("Elder Rowan: “Your grandfather mastered two. Two, and we called him a great man. …Go and see Tom, child.”", "#ffe6a0"), 4200);
 }
 // The valley acknowledges a milestone. A toast in the relevant neighbour's voice, a beat after the
 // level banner so they don't collide. Fires once per tier, naturally, as you cross it.

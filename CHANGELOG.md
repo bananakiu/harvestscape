@@ -22,6 +22,66 @@
 
 ---
 
+## 2026-07-24 — v4.21.0 "The Mantle" (code 108, tag `v4.21.0`) — the prestige layer
+
+### Why this release
+
+The v4.14 gap audit's #11. Crossing 99 granted a real passive perk, a banner and one toast — and then
+nothing to *show*. Of the bible's §4.6 four stand-ins for multiplayer prestige ("villagers comment on your
+milestones, a title, a mastery cape/trophy shown off, a trophy room"), only NPC comment had ever shipped.
+Meanwhile the skills panel printed **"Total Level N / 594"** while the highest `totalLevel` objective
+anywhere in `QUESTS` was 100 — the number the game shows you most had no destination. And the Collection
+was a 147-slot silent counter whose payoff for filling a shelf was 146 becoming 147.
+
+### Added
+
+- **Six skill mantles** (`DECOR`, keyed `capeSkill`) — one per craft, gated at level 99, on the proven
+  Storyteller's-Banner pattern: shown in Tom's shop **locked from day one**, so the goal advertises itself
+  for the whole climb, and the locked row names your exact progress ("✦ Farming 62/99"). Purely cosmetic —
+  a cape is a flex, never a stat. Seven sprites generated from one drawing function with per-skill palettes
+  (all art is code, so a seventh cape is one row of data).
+- **The Valley's Crown** (`masterGate`) — every craft at 99, i.e. total level 594. Gated on the *ceremony
+  flag*, not the raw number, so it can never be bought a moment before the valley has said so aloud.
+- **`checkValleyMaster()`** (`08-actions.js`), fired from the level-up path (the capstone can only be
+  crossed by a level going up) and once on `beginPlay` so a save already at 594 gets its ceremony on the
+  way in rather than never. **Deliberately NOT a `QUESTS` entry:** appending one would make `curQuest()`
+  non-null again for finished saves and shove the v4.16 Act III / Warden's Round tracker card aside — and
+  this repo has been burned before by keying anything on the quest chain (`FINALE_IDX` exists for exactly
+  that reason). A latch flag instead.
+- **The Collection celebrates** — per-section `found/total` (or "✦ complete") in every shelf header, and
+  `checkCollection()` banners each shelf the moment it closes, once, on a `coll_<name>` flag, with a final
+  **Curator** ceremony for all of them. Hooked into `discover()` — whose return value was read by *nothing*
+  until now — so the check rides its early-return and costs nothing on the common path.
+
+### The migration trap, handled
+
+A long save has shelves it finished seasons ago. `checkCollection()` therefore **backfills silently on its
+first run** (`state.flags.collInit`): existing completions are flagged with no fanfare, and only genuinely
+new completions banner thereafter. The Legends are excluded from the generic banner — Bram's Hunt Crown
+already ceremonies that shelf, and two celebrations for one act reads as a bug.
+
+### Verification (live build, console clean)
+
+- All six mantles + the Crown exist with both object and inventory sprites.
+- Gating: `buyDecor("cape_farming")` at Farming 1 refuses and takes no gold; at 99 it sells. The Crown
+  refuses without `valleyMaster` and sells after the ceremony. Setting all six skills to 99 gives
+  `totalLevel() === 594` and `checkValleyMaster()` latches the flag.
+- Collection: a pre-completed shelf on an existing save is flagged with **0 banners fired**; a shelf one
+  item short fires nothing; completing it *through `discover()`* flags it. Per-section headers render.
+
+### Files
+
+- `game/js/01-data.js` — six `capeSkill` mantles + `mastercrown`; VERSION + in-game CHANGELOG.
+- `game/js/03-art.js` — the mantle sprite loop (`CAPE_PAL`) + the Crown.
+- `game/js/08-actions.js` — `checkValleyMaster()`, hooked to the level-up path.
+- `game/js/10-ui.js` — locked-row rendering for capes/crown; per-section Collection progress; `checkCollection()`.
+- `game/js/13-content.js` — `buyDecor` cape/crown gates.
+- `game/js/04-world.js` — `discover()` now drives `checkCollection()`.
+- `game/js/11-title.js` — silent backfill + a late 594 ceremony on `beginPlay`.
+- `game/index.html` — cache-buster `?v=133`.
+
+---
+
 ## 2026-07-24 — v4.20.0 "True Ladders" (code 107, tag `v4.20.0`) — the Skill Guide tells the truth
 
 ### Why this release

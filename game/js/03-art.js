@@ -1001,6 +1001,34 @@ function buildInteriors(){
     px(g,9,12,4,2,"#b03a3a"); px(g,9,14,2,1,"#8a2a2a");                               // swallowtail
     px(g,10,5,3,1,"#ffce5a"); px(g,11,4,1,3,"#ffce5a"); px(g,10,8,4,1,"#ffe089"); },  // the gold star + underline
     g => { px(g,7,1,2,13,"#7a5734"); px(g,9,2,5,7,"#b03a3a"); px(g,9,2,5,1,"#d05a4a"); px(g,10,4,3,1,"#ffce5a"); px(g,11,3,1,3,"#ffce5a"); });
+  // v4.21 the MANTLES — the six 99-capes on a stand, one drawing, six palettes (all art is code, so a
+  // seventh cape is one row of data). [cloth, highlight, shadow, emblem] per skill.
+  const CAPE_PAL = {
+    cape_farming:     ["Farmer's Mantle",       "#3f7a2e","#5fa03e","#2a5a1e","#ffd75a"],
+    cape_woodcutting: ["Forester's Mantle",     "#6e4a2a","#8a5f38","#4a3220","#8fd06a"],
+    cape_mining:      ["Delver's Mantle",       "#5a5f68","#7a808a","#3a3f48","#8fd3ff"],
+    cape_fishing:     ["Angler's Mantle",       "#2e5f8a","#4a86bd","#1e4060","#c9ecff"],
+    cape_cooking:     ["Hearthmaster's Mantle", "#a8442c","#c9603c","#7a2c1c","#ffce5a"],
+    cape_warding:     ["Warden's Mantle",       "#3a4a70","#55688f","#26304a","#c8b8ff"],
+  };
+  for(const kind in CAPE_PAL){
+    const [nm, cloth, hi, sh, gem] = CAPE_PAL[kind];
+    mkDecor(kind, nm, 16, 22, g => {
+      px(g,5,19,6,2,"#5e4426"); px(g,7,12,2,7,"#7a5734");                                  // stand: foot + post
+      px(g,4,3,8,10,cloth); px(g,4,3,8,1,hi); px(g,4,13,8,3,cloth);                        // the cloth
+      px(g,4,3,1,13,hi); px(g,11,3,1,13,sh); px(g,5,15,2,2,sh); px(g,9,15,2,2,sh);         // folds + hem
+      px(g,7,2,2,2,"#c9a44a"); px(g,7,5,2,2,gem); px(g,8,4,1,1,"#ffffff"); },              // clasp + emblem
+      g => { px(g,4,1,8,10,cloth); px(g,4,1,8,1,hi); px(g,4,11,8,3,cloth); px(g,11,1,1,13,sh);
+             px(g,7,3,2,2,gem); px(g,7,0,2,1,"#c9a44a"); });
+  }
+  mkDecor("mastercrown", "The Valley's Crown", 16, 20, g => {                          // v4.21: total level 594
+    px(g,4,16,8,3,"#8a8378"); px(g,4,16,8,1,"#a9a094");                                // plinth
+    px(g,3,10,10,5,"#ffd75a"); px(g,3,10,10,1,"#fff0a0"); px(g,3,14,10,1,"#c9922f");   // the band
+    px(g,3,6,2,5,"#ffd75a"); px(g,7,5,2,6,"#ffd75a"); px(g,11,6,2,5,"#ffd75a");        // three points
+    px(g,3,5,2,1,"#fff0a0"); px(g,7,4,2,1,"#fff0a0"); px(g,11,5,2,1,"#fff0a0");
+    px(g,4,12,1,1,"#3f7a2e"); px(g,6,12,1,1,"#4a86bd"); px(g,8,12,1,1,"#a8442c"); px(g,10,12,1,1,"#c8b8ff"); },  // the crafts, set as stones
+    g => { px(g,3,9,10,5,"#ffd75a"); px(g,3,9,10,1,"#fff0a0"); px(g,3,5,2,5,"#ffd75a"); px(g,7,4,2,6,"#ffd75a"); px(g,11,5,2,5,"#ffd75a");
+           px(g,5,11,1,1,"#3f7a2e"); px(g,7,11,1,1,"#4a86bd"); px(g,9,11,1,1,"#c8b8ff"); });
   mkSpr("barrel", 16, 16, g => { px(g,4,3,8,12,"#8a5f38"); px(g,4,3,8,1,"#a5763f"); px(g,3,5,10,2,"#6e4a2a"); px(g,3,11,10,2,"#6e4a2a");
     px(g,5,3,1,12,"#a5763f"); px(g,10,3,1,12,"#6e4a2a"); });
   mkSpr("crate", 16, 16, g => { px(g,3,4,10,10,"#a5763f"); px(g,3,4,10,1,"#c29258"); px(g,3,13,10,1,"#7a5630");

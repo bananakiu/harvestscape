@@ -347,6 +347,8 @@ function beginPlay(){
   if(IS_TOUCH) $("touchUI").classList.remove("hidden");
   setMap("farm", 8*TILE+8, 12*TILE, "down");   // always wake on the farm
   ensureStaveSlot();   // v4.0: restore the Stave hotbar slot for a save that already earned it
+  if(typeof checkCollection === "function") checkCollection();   // v4.21: silent backfill of shelf flags on an existing save, before any new find can fanfare
+  if(typeof checkValleyMaster === "function") checkValleyMaster();   // v4.21: a save already at total 594 gets its ceremony on the way in, not never
   if(typeof applyHud === "function") applyHud();   // v4.0.2: honour the saved HUD dim/hide preference
   refreshHUD(); refreshHotbar(); refreshQuestTracker(); setControlsHint(); clearPickups();
   // recover a stranded finale: reloaded during the handoff, OR the finale's objectives are
