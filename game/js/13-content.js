@@ -354,15 +354,8 @@ function genUndercroft(m){
   // ---- the restless things — kind by depth band, kept OFF the stairs route and away from the entry ----
   m.creatures = [];
   // Bands deepen like oreTable: the shallow families thin out, families 4–5 phase in past floor 15.
-  const bag = depth < 5   ? ["wisp","wisp","wisp"]
-            : depth < 10  ? ["wisp","wisp","shambler"]
-            : depth < 15  ? ["wisp","shambler","shambler","embermite"]
-            : depth < 20  ? ["shambler","embermite","embermite","hollowwarden"]
-            : depth < 25  ? ["embermite","hollowwarden","hollowwarden","gloamtangle"]
-            : depth < 30  ? ["hollowwarden","hollowwarden","gloamtangle","gloamtangle","embermite"]
-            : depth < 35  ? ["gloamtangle","hollowwarden","deepknot","deepknot"]
-            : depth < 40  ? ["deepknot","deepknot","gloamtangle","stargnarl"]
-            :               ["deepknot","stargnarl","stargnarl","gloamtangle"];
+  // v4.20: the table itself now lives in 01-data (WARD_BANDS) so the Skill Guide reads the same source.
+  const bag = wardBandFor(depth);
   const count = 3 + Math.min(5, Math.floor(depth/3));   // 3 shallow → up to 8 deep
   const spots = floors.filter(([x,y]) => !onPath.has(key(x,y)) && !m.objects[key(x,y)]
     && Math.abs(x-ux)+Math.abs(y-uy) > 5);

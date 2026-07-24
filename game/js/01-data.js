@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.19.0", code: 106, codename: "In Hand", date: "2026-07-24" };
+const VERSION = { name: "4.20.0", code: 107, codename: "True Ladders", date: "2026-07-24" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.20.0", code:107, date:"2026-07-24", name:"True Ladders", notes:[
+    { t:"fix", s:"Your tool upgrades finally show up on the skill ladder. Every tool tier has always had a hard level requirement — you cannot buy an Iron Hoe below Farming 20 — but none of them appeared in the skill guide or the level-up notice, so the game's most-felt upgrades were invisible progression. They're all listed now, with what each one actually buys you: 'Iron Hoe — tills a 5-tile row' at Farming 20, a faster Rod, a stronger Pick, the Stave tiers for Warding. Four skills that looked like they had long empty stretches turn out to have been quietly handing you things the whole way." },
+    { t:"fix", s:"The skill guide no longer padlocks things you've already met. It used to list the restless things of the Undercroft as if they were level unlocks — so the Great Knot sat locked behind 'Warding 40' even though you fight one on the tenth floor long before that. The wing has never cared about your Warding level; it's the depth you walk to that decides what's down there. The guide now says so plainly, listing each family by the floor you first meet it." },
+    { t:"change", s:"The grove's deadfalls join the ladder too — each ring's Woodcutting requirement is a real gate you chop through, and now the guide names it, so you can see the seventh ring waiting at 52 instead of wondering why nothing seemed to unlock." },
+  ]},
   { v:"4.19.0", code:106, date:"2026-07-24", name:"In Hand", notes:[
     { t:"fix", s:"The game is properly playable by touch at last. Four things could only ever be done with a keyboard: choosing what to plant, eating, giving a gift, and mounting the horse. On a phone that quietly removed most of the game — you could plant turnips and nothing else ever again (so farming stopped dead the moment spring ended), you could never set down a keg or a beehive or a single piece of décor, never eat when you were tired, and never give anyone a gift, which meant no friendships and no wedding. All four have proper controls now." },
     { t:"feature", s:"Anything you can plant or place can be chosen straight from your backpack — tap a seed packet, sapling, beehive, machine or décor piece and there's a 'select this' button waiting. It's the fix touch play needed, and honestly it's better on a keyboard too: no more tapping R thirty times to find the one thing you meant to put down." },
@@ -496,6 +501,31 @@ const CREATURES = {
   stargnarl: { name:"Star-Gnarl",      lvl:85, hp:18, dmg:18, xp:270, drop:"Gloamstar", n:1, drop2:"Deepgnarl", n2:1,
                tele:0.75, speed:16, col:"#c8b8ff", col2:"#6a5a9a", ranged:true },   // the first RANGED restless thing — lobs a slow star-bolt at where you stand; sidestep it
 };
+
+// v4.20 — the Undercroft's family bands, lifted out of genUndercroft so ONE table drives both the
+// spawner and the Skill Guide. This is the fix for the bug class that made the guide lie: creature
+// families were listed as LEVEL unlocks (CREATURES[k].lvl) when spawns have ALWAYS been keyed on depth,
+// so the guide padlocked the Great Knot at Warding 40 while the player meets it on floor 10 at ~Warding 8.
+// Warding levels gate your Stave and your Resolve, never which restless thing is down there — the wing does.
+const WARD_BANDS = [
+  { below:5,        kinds:["wisp","wisp","wisp"] },
+  { below:10,       kinds:["wisp","wisp","shambler"] },
+  { below:15,       kinds:["wisp","shambler","shambler","embermite"] },
+  { below:20,       kinds:["shambler","embermite","embermite","hollowwarden"] },
+  { below:25,       kinds:["embermite","hollowwarden","hollowwarden","gloamtangle"] },
+  { below:30,       kinds:["hollowwarden","hollowwarden","gloamtangle","gloamtangle","embermite"] },
+  { below:35,       kinds:["gloamtangle","hollowwarden","deepknot","deepknot"] },
+  { below:40,       kinds:["deepknot","deepknot","gloamtangle","stargnarl"] },
+  { below:Infinity, kinds:["deepknot","stargnarl","stargnarl","gloamtangle"] },
+];
+function wardBandFor(depth){ for(const b of WARD_BANDS) if(depth < b.below) return b.kinds; return WARD_BANDS[WARD_BANDS.length-1].kinds; }
+// The shallowest floor a family can appear on — DERIVED from the bands, so adding a band can never
+// leave the guide stale (the exact drift this release exists to kill).
+function wardFirstFloor(kind){
+  let lo = 1;
+  for(const b of WARD_BANDS){ if(b.kinds.includes(kind)) return lo; lo = b.below; }
+  return null;
+}
 
 const SEASONS = ["Spring", "Summer", "Fall", "Winter"];
 const SEASON_DAYS = 28;
@@ -1213,6 +1243,15 @@ const MAX_TIER = TOOL_TIERS.length - 1;   // = 6; used everywhere instead of a h
 // Cobalt 45, Deepsilver 70, Star Metal 85 (v3.38).
 const TOOL_SKILL = { Hoe:"Farming", Can:"Farming", Axe:"Woodcutting", Pick:"Mining", Rod:"Fishing", Stave:"Warding" };
 const TIER_LEVEL = [1, 10, 20, 30, 45, 70, 85];   // v3.38: the unified ladder — each tier's level IS its ore's and its wood's level, in every skill
+// v4.20: what each tier actually BUYS you, indexed by tier. Lifted out of renderShop (where they were
+// local consts) so the shop and the Skill Guide read ONE source — the guide had no way to see them, which
+// is why the game's most-felt Farming upgrade (the 5-tile reach at 20) was invisible on the ladder.
+const TOOL_PERK = {
+  Can: ["", "waters a 3-tile row", "waters a 5-tile row", "waters 3×3", "waters 3×3, next to no energy", "waters 3×3, harder steel", "waters 3×3, the star's own temper"],
+  Hoe: ["", "tills a 3-tile row", "tills a 5-tile row", "tills 3×3", "tills 3×3, next to no energy", "tills 3×3, harder steel", "tills 3×3, the star's own temper"],
+  Rod: ["", "faster bites, steadier reel", "faster bites, steadier reel", "faster bites, steadier reel", "faster bites, steadier reel", "faster bites, steadier reel", "faster bites, steadier reel"],
+};
+const toolPerk = (tool, tier) => (TOOL_PERK[tool] && TOOL_PERK[tool][tier]) || "stronger, less energy";
 // Tool tiers cost wood + ore + gold — and the top tiers a signature gem / the deep materials — so
 // every upgrade needs Mining AND Woodcutting progress (and the Rod's Pearl, the beach). A gold tool
 // is an achievement across skills, not a purchase. (Owner playtest 2026-07-12: "right now it's

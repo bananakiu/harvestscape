@@ -409,8 +409,29 @@ function skillGuideHtml(s){
       `<span style="min-width:3.4em;font-weight:bold;color:${got?'var(--gold-hi)':'var(--ink-soft)'};">${got?'✔':'🔒'} ${L}</span>` +
       `<span style="flex:1;">${u.join(", ")}</span></div>`;
   }
+  // v4.20 — Warding's families used to be listed as LEVEL unlocks, which was simply false: the Undercroft
+  // spawns by DEPTH (WARD_BANDS), so the guide padlocked the Great Knot at "level 40" while you meet it on
+  // floor 10. They're shown here honestly instead — by the floor you first meet them, derived from the same
+  // table the spawner uses, and never padlocked (there is no level to reach; you just go down).
+  let extra = "";
+  if(s === "Warding" && typeof wardFirstFloor === "function"){
+    const fams = Object.keys(CREATURES)
+      .filter(k => k !== "tanglet" && !CREATURES[k].boss && wardFirstFloor(k) != null)
+      .map(k => ({ name:CREATURES[k].name, floor:wardFirstFloor(k) }))
+      .sort((a,b) => a.floor - b.floor);
+    if(fams.length){
+      extra = `<div style="margin-top:.4em;padding-top:.3em;border-top:1px solid rgba(255,255,255,.08);">` +
+        `<div style="color:var(--ink-soft);margin-bottom:.15em;">The wing itself, by depth — not by level:</div>` +
+        fams.map(f => `<div style="display:flex;gap:.5em;padding:1px 4px;${(state.wardBest||0) >= f.floor ? "" : "opacity:.5;"}">` +
+          `<span style="min-width:4.6em;font-weight:bold;color:var(--blue,#bfe4ff);">floor ${f.floor}</span>` +
+          `<span style="flex:1;">${f.name}</span></div>`).join("") +
+        `<div style="display:flex;gap:.5em;padding:1px 4px;${(state.wardBest||0) >= 10 ? "" : "opacity:.5;"}">` +
+        `<span style="min-width:4.6em;font-weight:bold;color:var(--blue,#bfe4ff);">every 10th</span>` +
+        `<span style="flex:1;">${CREATURES.greatknot ? CREATURES.greatknot.name : "The Great Knot"}</span></div></div>`;
+    }
+  }
   return `<details class="skillGuide"><summary style="cursor:pointer;color:var(--gold-hi);margin-top:.5em;font-size:.95em;">📖 Skill guide — everything ${s} unlocks (${count} milestones)</summary>` +
-    `<div style="max-height:210px;overflow-y:auto;margin-top:.3em;font-size:.92em;line-height:1.4;border-top:1px solid rgba(255,255,255,.08);padding-top:.2em;">${rows}</div></details>`;
+    `<div style="max-height:210px;overflow-y:auto;margin-top:.3em;font-size:.92em;line-height:1.4;border-top:1px solid rgba(255,255,255,.08);padding-top:.2em;">${rows}${extra}</div></details>`;
 }
 function skillDetailHtml(s){
   if(!s || !(s in state.skills))
@@ -976,10 +997,7 @@ function renderShop(){
       const c = toolCost(tool, cur+1);
       const need = TIER_LEVEL[cur+1], sk = TOOL_SKILL[tool], haveLvl = skillLvl(sk) >= need;
       const can = haveLvl && state.gold>=c.g && Object.keys(c.mats).every(it => (state.inv[it]||0) >= c.mats[it]);
-      const CAN_PERK = ["", "waters a 3-tile row", "waters a 5-tile row", "waters 3×3", "waters 3×3, next to no energy", "waters 3×3, harder steel", "waters 3×3, the star's own temper"];   // v3.37: +2 rungs
-      const HOE_PERK = ["", "tills a 3-tile row", "tills a 5-tile row", "tills 3×3", "tills 3×3, next to no energy", "tills 3×3, harder steel", "tills 3×3, the star's own temper"];
-      const perk = tool==="Can" ? CAN_PERK[cur+1] : tool==="Hoe" ? HOE_PERK[cur+1]
-                 : tool==="Rod" ? "faster bites, steadier reel" : "stronger, less energy";
+      const perk = toolPerk(tool, cur+1);   // v4.20: from TOOL_PERK in 01-data — shared with the Skill Guide
       const matStr = Object.keys(c.mats).map(it => { const have=state.inv[it]||0, need2=c.mats[it];
         return `${need2} ${it} <span style="color:${have>=need2?'#8fd06a':'#c98a6a'}">(${have})</span>`; }).join(" + ");
       const lvlStr = `<span style="color:${haveLvl?'#8fd06a':'#c98a6a'}">needs ${sk} ${need}</span>`;

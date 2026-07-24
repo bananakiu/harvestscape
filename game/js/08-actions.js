@@ -189,9 +189,26 @@ function nextUnlock(skill){
   if(skill==="Mining")      for(const k in ORES)  add(ORES[k].lvl,  ORES[k].name);
   if(skill==="Fishing"){ FISH.forEach(f=>add(f.lvl, f.name)); LEGENDS.forEach(l=>add(l.lvl, l.name+" (legend)")); }
   if(skill==="Cooking") for(const r of RECIPES) if(!r.flag) add(r.lvl, r.name);   // v4.13: flag-gated (friendship-taught) recipes aren't level unlocks
-  if(skill==="Warding") for(const k in CREATURES){ if(k!=="tanglet") add(CREATURES[k].lvl, CREATURES[k].name); }   // v4.11: the restless-thing families you grow strong enough to settle
+  // v4.20: creature families are NOT level unlocks (spawns are keyed on depth — see WARD_BANDS), so the
+  // old Warding branch here was a phantom. The REAL gates are the tool ladder and the grove's deadfalls.
+  toolGates(skill, add);
+  if(skill==="Woodcutting") for(const r in DEADFALL) add(DEADFALL[r].lvl, "the grove's " + ordinalRing(+r) + " ring");
   return best;
 }
+// The tool ladder is a real, hard-enforced gate (buyTool refuses below TIER_LEVEL[t]) that appeared in no
+// guide and no level-up banner — so the most-felt upgrades in the game (the Hoe/Can reach at 20, a faster
+// Rod, a stronger Pick) were invisible progression. Shared by nextUnlock and unlocksAt.
+function toolGates(skill, add){
+  for(const tool of TOOLS){
+    if(TOOL_SKILL[tool] !== skill) continue;
+    if(tool === "Stave" && !state.flags.staveEarned) continue;   // the shop hides it until Elias gives it
+    for(let t = 1; t <= MAX_TIER; t++){
+      const perk = toolPerk(tool, t);
+      add(TIER_LEVEL[t], TOOL_TIERS[t] + " " + tool + (perk ? " — " + perk : ""));
+    }
+  }
+}
+const ordinalRing = n => ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth"][n] || (n + "th");
 
 function unlocksAt(skill, lvl){
   const u = [];
@@ -200,7 +217,10 @@ function unlocksAt(skill, lvl){
   if(skill==="Mining") for(const k in ORES) if(ORES[k].lvl===lvl) u.push(ORES[k].name);
   if(skill==="Fishing"){ FISH.forEach(f=>{ if(f.lvl===lvl) u.push(f.name); }); LEGENDS.forEach(l=>{ if(l.lvl===lvl) u.push(l.name+" (legend)"); }); }
   if(skill==="Cooking") for(const r of RECIPES) if(!r.flag && r.lvl===lvl) u.push(r.name);   // v4.13: friendship-taught recipes aren't level unlocks
-  if(skill==="Warding") for(const k in CREATURES){ if(k!=="tanglet" && CREATURES[k].lvl===lvl) u.push(CREATURES[k].name); }   // v4.11
+  // v4.20: the tool ladder + the grove's deadfalls — real, enforced gates that the guide never showed.
+  // (The old Warding creature rows are gone: they were depth content, not level unlocks. See WARD_BANDS.)
+  toolGates(skill, (n, label) => { if(n === lvl) u.push(label); });
+  if(skill==="Woodcutting") for(const r in DEADFALL) if(DEADFALL[r].lvl === lvl) u.push("the grove's " + ordinalRing(+r) + " ring");
   if(MASTERY[skill] && MASTERY[skill][lvl]) u.push("★ " + MASTERY[skill][lvl]);
   return u;
 }

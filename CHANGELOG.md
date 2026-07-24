@@ -22,6 +22,67 @@
 
 ---
 
+## 2026-07-24 — v4.20.0 "True Ladders" (code 107, tag `v4.20.0`) — the Skill Guide tells the truth
+
+### Why this release
+
+The v4.14 gap audit's #7. v4.10 shipped an entire release for level-up truthfulness, and v4.12's Skill
+Guide advertises itself as "built straight from `unlocksAt` (so it can never drift from the real gates)."
+It drifted in **both** directions, and the drift had one root cause: `unlocksAt` was a hand-maintained
+list of *some* tables rather than the actual gates.
+
+- **Real gates were invisible.** The tool ladder is hard-enforced — `buyTool` (08-actions.js) and the shop
+  both refuse below `TIER_LEVEL[t]` — yet tool tiers appeared in **no** guide and **no** level-up banner.
+  The audit's "biggest single win hiding here" was Farming 20, the Iron Hoe/Can **5-tile reach**, arguably
+  the most-felt upgrade in the game, listed nowhere. Same for the grove's `DEADFALL` ring gates (real,
+  enforced at `genGrove`, lvl 5/12/20/30/40/52/64/78) — so a Woodcutting-51 player was told "Next: Heartwood
+  at Lv 70" while the seventh ring opened one level later.
+- **Phantom gates were shown, padlocked backwards.** Eight of Warding's twelve rows gated *nothing*:
+  Undercroft spawns are keyed purely on **depth** (verified — `genUndercroft`'s band table is a
+  `depth < N ? … : …` chain; `CREATURES[k].lvl` is read only by the guide and a cosmetic nameplate). And
+  because `skillGuideHtml` padlocks on `lvl >= L`, the Great Knot (`lvl:40`) showed 🔒 **forever** to a
+  player who fights one on floor 10 at roughly Warding 8 — the lock ran backwards against reality.
+
+### Fixed
+
+- **The tool ladder is on the ladder.** New `toolGates(skill, add)` (`08-actions.js`), shared by
+  `nextUnlock` and `unlocksAt`: for each tool whose `TOOL_SKILL` matches, every tier from `TIER_LEVEL`
+  with its perk text — "Iron Hoe — tills a 5-tile row". The Stave is skipped until
+  `state.flags.staveEarned` (the shop hides it too).
+- **`TOOL_PERK` + `toolPerk(tool, tier)` lifted into `01-data.js`.** They were *local consts inside
+  `renderShop`*, which is precisely why the guide could never see them. Shop and guide now read one source.
+- **Grove deadfalls listed** for Woodcutting ("the grove's fourth ring") from the live `DEADFALL` table.
+- **The phantom Warding creature rows are gone** from the level-indexed guide, replaced with something
+  honest: a **depth** section listing each family by the floor you first meet it, never padlocked by level.
+- **`WARD_BANDS` extracted to `01-data.js`** (with `wardBandFor(depth)` / `wardFirstFloor(kind)`), out of
+  the `genUndercroft` literal. `genUndercroft` now reads it, and so does the guide — **one source of truth**,
+  which kills the drift class that caused this bug in the first place. `wardFirstFloor` is *derived*, so a
+  future band can't leave the guide stale.
+
+### Verification (live build, console clean)
+
+- Band extraction is faithful: `wardBandFor` matches the old inline table at depths 1 / 17 / 44.
+  `wardFirstFloor` derives wisp 1, shambler 5, embermite 10, hollowwarden 15, gloamtangle 20, deepknot 30,
+  stargnarl 35.
+- **Farming 20** → "Iron Hoe — tills a 5-tile row", "Iron Can — waters a 5-tile row" (was empty).
+  **Woodcutting 20** → Maple + Iron Axe + "the grove's fourth ring". **Mining 45** → Cobalt Vein + Cobalt
+  Pick. **Fishing 30** → Whitefin (legend) + Gold Rod. **Warding 10** → Copper Stave (a real gate).
+- Sweeping L=1…99, **no creature row survives** in the Warding guide (`phantomCreatureRow: null`).
+- No shop regression: `toolPerk("Hoe",2)` = "tills a 5-tile row"; the Tools tab still renders the Hoe/Can
+  reach perks, the Rod line and the default "stronger, less energy".
+- Screenshotted: the Warding skill card now names "Cobalt Stave" and Woodcutting names "the grove's
+  se[cond] ring" — real, enforced gates where phantoms and blanks used to be.
+
+### Files
+
+- `game/js/01-data.js` — `TOOL_PERK`/`toolPerk`; `WARD_BANDS`/`wardBandFor`/`wardFirstFloor`; VERSION + in-game CHANGELOG.
+- `game/js/08-actions.js` — `toolGates` + `ordinalRing`; `nextUnlock`/`unlocksAt` rewired (creature branch removed).
+- `game/js/10-ui.js` — `renderShop` reads `toolPerk`; `skillGuideHtml` gains the Warding depth section.
+- `game/js/13-content.js` — `genUndercroft` reads `wardBandFor(depth)`.
+- `game/index.html` — cache-buster `?v=131`.
+
+---
+
 ## 2026-07-24 — v4.19.0 "In Hand" (code 106, tag `v4.19.0`) — touch parity: the mobile platform blocker
 
 ### Why this release
