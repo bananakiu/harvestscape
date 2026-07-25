@@ -1373,9 +1373,16 @@ function nearestAnimal(range){
 }
 function petChicken(a){
   const c = a.ref, nm = c.name || "the hen";
+  // v4.24: the produce press IS the pet. Collecting and petting were two separate presses on the same
+  // animal, and the second was dead at steady state anyway — friend caps at 250 and every mature flock
+  // is long since maxed. Folding them grants the same +11 a diligent two-press player already got
+  // (8 for the produce + 3 for the fuss), so nobody is worse off; it just stops asking twice.
   if(c.eggDay !== state.day){ c.eggDay = state.day; const large = c.friend>=180 && chance(0.5);
-    give(large?"Large Egg":"Egg", 1); c.friend = Math.min(250, c.friend+8);
+    give(large?"Large Egg":"Egg", 1);
+    const petToo = c.petDay !== state.day; if(petToo) c.petDay = state.day;
+    c.friend = Math.min(250, c.friend + 8 + (petToo ? 3 : 0));
     playSfx("get"); pSparkle(a.x, a.y-8, "#fff6d0", 6); floatText(a.x, a.y-14, "+egg", "#ffe08a");
+    if(petToo) toast(`An egg from ${nm}, and a fuss besides. ${flockHearts(c)}`, "#ffe08a");
     maybeFirstLarge(large); }
   else if(c.petDay !== state.day){ c.petDay = state.day; c.friend = Math.min(250, c.friend+3);
     toast(`You pet ${nm}. ${flockHearts(c)}`, "#ff7d9c"); playSfx("heart"); pSparkle(a.x, a.y-8, "#ff9ab0", 4); }
@@ -1408,8 +1415,10 @@ function petCow(a){
     c.milkDay = state.day;
     const large = c.friend >= 180 && chance(0.5);
     give(large ? "Large Milk" : "Milk", 1);
-    c.friend = Math.min(250, c.friend + 8);
+    const petToo = c.petDay !== state.day; if(petToo) c.petDay = state.day;   // v4.24: milking IS the fuss
+    c.friend = Math.min(250, c.friend + 8 + (petToo ? 3 : 0));
     playSfx("get"); pSparkle(a.x, a.y-10, "#eaf4fb", 7); floatText(a.x, a.y-16, large?"+big milk":"+milk", "#dfeaf2");
+    if(petToo) toast(`${nm} leans into your hand while you work. ${flockHearts(c)}`, "#dfeaf2");
     maybeFirstLarge(large);
   } else if(c.petDay !== state.day){
     c.petDay = state.day; c.friend = Math.min(250, c.friend + 3);
@@ -1441,9 +1450,11 @@ function shearSheep(a){
     c.woolDay = state.day;
     const prize = c.friend >= 180 && chance(0.5);
     give(prize ? "Prize Fleece" : "Wool", 1);
-    c.friend = Math.min(250, c.friend + 8);
+    const petToo = c.petDay !== state.day; if(petToo) c.petDay = state.day;   // v4.24: shearing IS the fuss
+    c.friend = Math.min(250, c.friend + 8 + (petToo ? 3 : 0));
     playSfx("get"); pSparkle(a.x, a.y-10, "#f6f6fa", prize?10:7);
     floatText(a.x, a.y-16, prize?"+prize fleece":"+wool", prize?"#ffe6a0":"#e8e8ee");
+    if(petToo) toast(`${nm} stands patient for the shears. ${flockHearts(c)}`, "#e8e8ee");
     maybeFirstLarge(prize);
     return;
   }

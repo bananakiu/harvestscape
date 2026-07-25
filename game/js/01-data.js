@@ -8,13 +8,19 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.23.0", code: 110, codename: "The Even Hand", date: "2026-07-25" };
+const VERSION = { name: "4.24.0", code: 111, codename: "The Morning Round", date: "2026-07-25" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.24.0", code:111, date:"2026-07-25", name:"The Morning Round", notes:[
+    { t:"change", s:"Sowing a field is one press per swathe now, not one press per furrow. Your seeds go into the same patch your can waters and your harvest gathers — so tilling, watering, planting and picking all cover the same ground. Short on seeds? It plants what you're holding, starting with the tile you're actually pointing at, and stops. Planting was the last field verb still charging you by the furrow." },
+    { t:"feature", s:"You can see what a tool is about to touch. The hoe and can have watered and tilled whole swathes for a long time without ever showing you where — you aimed at one tile and four more quietly happened. Now the full footprint is outlined faintly with the tile you're facing picked out bright, so a mis-aimed sweep never buries a handful of expensive seed in soil you meant to leave alone." },
+    { t:"change", s:"An orchard is gathered by the cluster, hives by the apiary, and a row of ready kegs in one go — anything of the same kind within reach comes in together. The walk between them is untouched, because the walk was never the tedious part. Loading a machine is deliberately still one at a time: choosing what goes into which keg is a real decision, and a sweep there would empty your whole bag into the nearest six jars." },
+    { t:"change", s:"Collecting from an animal is now the same gesture as making a fuss of it. You used to press once for the egg and again to pet the hen; the second press was doing nothing at all for any animal that already adored you. One press now gives the produce and the affection together — exactly what the two presses gave — so your morning rounds are half as many button-taps and the flock is no less loved." },
+  ]},
   { v:"4.23.0", code:110, date:"2026-07-25", name:"The Even Hand", notes:[
     { t:"balance", s:"Woodcutting no longer costs half again as much as Mining for the same 99. Trees were simply tougher than rocks for what they paid — the same climb took 94 days of energy against the pick's 81 — so the axe always felt like the chore of the six. Pine, maple and elderwood now come down in fewer swings (the deep woods are untouched; they were already fair). The experience per tree is exactly what it was, and so is the number of trees — the climb just stopped charging you a toll for choosing the axe." },
     { t:"balance", s:"The kitchen ladder is worth climbing now. Every dish from level 20 up was paying so little that the whole 32-recipe ladder cost nearly 4,000 cooked plates — while simply frying a fish, which needs no ingredients, no energy and no level at all, was more than twice as fast. Your best dish paid HALF what a plain fried fish did. Dishes now pay on a proper curve, roughly twenty to a level all the way up: the Grand Feast goes 285 → 913, and Nell's Butterbrook Reserve — a friendship secret — 150 → 330. Nothing pays less than it did yesterday, and frying a fish is still there for a quiet evening." },

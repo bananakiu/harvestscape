@@ -478,6 +478,20 @@ function examineItem(name){ showExamine(name, EXAMINE[name] || "Just what it loo
 // ============================== USE TOOL (Space) ==============================
 // Watering can coverage by tier: 0 = one tile, 1 = a 3-tile row, 2 = a 5-tile row, 3 = a 3x3 block.
 // The row is perpendicular to your facing, so you sweep along a bed rather than poking at it.
+// v4.24: the tiles in a fixed 3×3 around (tx,ty) holding a READY object of the same kind, faced tile
+// FIRST so a partial sweep always does what you aimed at before anything else. Radius is deliberately
+// fixed at 1 and NOT the can tier — an orchard has nothing to do with your watering can, and a tier-3
+// footprint would reach trees you can't see the point of. Callers pass the readiness predicate, which
+// is what keeps machine LOADS per-object while their collections sweep.
+function nearbyKind(tx, ty, kind, ready){
+  const out = [];
+  for(let dy=-1; dy<=1; dy++) for(let dx=-1; dx<=1; dx++){
+    const x = tx+dx, y = ty+dy, o = curMap.objects[key(x,y)];
+    if(o && o.kind === kind && (!ready || ready(o))) out.push([x,y]);
+  }
+  return out.sort((a,b) => ((a[0]===tx&&a[1]===ty)?-1:0) - ((b[0]===tx&&b[1]===ty)?-1:0));
+}
+
 function canTiles(tx, ty, tier, face){
   if(tier >= 3){ const out=[]; for(let oy=-1;oy<=1;oy++) for(let ox=-1;ox<=1;ox++) out.push([tx+ox, ty+oy]); return out; }
   const span = tier === 2 ? 2 : tier === 1 ? 1 : 0;
@@ -554,10 +568,32 @@ function useTool(){
     if(!c.seasons.includes(curSeason())){ toast(`${c.name} only grows in ${c.seasons.join(" & ")}.`, "#ff8a7a"); playSfx("error"); return; }
     if(tt!==T.TILLED && tt!==T.WATERED){ toast("Till the soil first (Hoe)."); return; }
     if(curMap.crops[key(tx,ty)]){ toast("Something's already growing."); return; }
-    if(!take(c.name+" Seeds")){ toast("No "+c.name+" seeds — buy some at Tom's.", "#ff8a7a"); playSfx("error"); return; }
-    curMap.crops[key(tx,ty)] = { type:state.seedSel, days:0 };
-    addXP("Farming",4); bump("planted"); playSfx("plant");
-    pSparkle(tx*TILE+8, ty*TILE+10, "#8fd06a", 6); refreshHotbar();
+    // v4.24: planting sweeps the same footprint the can waters and the harvest gathers — it was the last
+    // core field verb still charging a per-tile tax (v4.11's changelog claimed harvest was the last; it
+    // was wrong, and planting a 40-tile field was ~40 presses on top of tilling and watering it).
+    //
+    // Two things this must get right:
+    //  1. ORDER. canTiles at tier>=3 iterates oy:-1..1 then ox:-1..1, so its index 0 is the DIAGONAL
+    //     up-left neighbour, NOT the tile you aimed at. Hoe and Can don't care (they treat the set as a
+    //     set), but seeds are finite — with one 900g Everbloom seed left, an unsorted sweep would plant it
+    //     one tile up-left of where you were pointing. Sorting the faced tile to the front makes the
+    //     low-seed case degrade to exactly today's single-tile behaviour.
+    //  2. PARTIAL is fine. Short on seeds, plant what you can hold and stop — never refuse the sweep, the
+    //     same way the Hoe tills what it can reach.
+    const foot = canTiles(tx, ty, state.tools.Can||0, state.face)
+      .filter(([x,y]) => { const t2 = tileAt(x,y);
+        return (t2===T.TILLED || t2===T.WATERED) && !curMap.crops[key(x,y)] && !curMap.objects[key(x,y)]; })
+      .sort((a,b) => ((a[0]===tx&&a[1]===ty)?-1:0) - ((b[0]===tx&&b[1]===ty)?-1:0));   // faced tile first
+    let planted = 0;
+    for(const [x,y] of foot){
+      if(!take(c.name+" Seeds")) break;                 // out of seeds — keep what we planted
+      curMap.crops[key(x,y)] = { type:state.seedSel, days:0 };
+      addXP("Farming",4); bump("planted");              // per-tile, NOT batched: the variety spark counts
+      pSparkle(x*TILE+8, y*TILE+10, "#8fd06a", 6);      // addXP CALLS, so one big grant would inflate it
+      planted++;
+    }
+    if(!planted){ toast("No "+c.name+" seeds — buy some at Tom's.", "#ff8a7a"); playSfx("error"); return; }
+    playSfx("plant"); refreshHotbar();                  // refreshHotbar is a full DOM rebuild — once, after
   }
   else if(tool === "Axe"){
     // an orchard tree or a hive can be dug up and carried off — so a misplacement is never forever
@@ -776,27 +812,52 @@ function interact(){
         if(!obj.fruit){
           toast(curSeason() === t.season ? "Nothing ripe today. Tomorrow." : `A ${t.name} bears in ${t.season}.`);
           return; }
-        const n = obj.fruit; obj.fruit = 0;
-        give(t.fruit, n); addXP("Farming", 14*n); bump("harvested", n);
-        playSfx("harvest"); pSparkle(tx*TILE+8, ty*TILE, t.pal[2], 6*n);
+        // v4.24: gather the whole cluster you're standing in. An in-season orchard was ~10 separate
+        // presses walked tree to tree; the WALK is the pleasant part (v3.35 made the yard a stroll on
+        // purpose) so it is untouched — only the mashing goes. Yield, XP and the per-day fruit cap are
+        // per-tree exactly as before; this just stops asking you to press E once per trunk.
+        let n = 0, trees = 0;
+        for(const [x,y] of nearbyKind(tx, ty, "fruittree", o => (o.age||0) >= TREE_MATURE_DAYS && o.fruit > 0)){
+          const o = curMap.objects[key(x,y)], ft = FRUIT_TREES[o.type]; if(!ft) continue;
+          give(ft.fruit, o.fruit); addXP("Farming", 14*o.fruit); bump("harvested", o.fruit);
+          pSparkle(x*TILE+8, y*TILE, ft.pal[2], 6*o.fruit);
+          n += o.fruit; o.fruit = 0; trees++;
+        }
+        playSfx("harvest");
+        if(trees > 1) toast(`Gathered ${n} from ${trees} trees.`, "#8fd06a");
         return;
       }
       case "beehive": {
         if(!obj.honey){
           toast(curSeason()==="Winter" ? "The bees are wintering. Nothing until spring."
                                        : "The comb is still filling."); return; }
-        const n = obj.honey; obj.honey = 0;
-        give("Honey", n); addXP("Farming", 12*n); bump("harvested", n);
-        playSfx("get"); pSparkle(tx*TILE+8, ty*TILE, "#e8a83a", 6*n);
+        let n = 0, hives = 0;   // v4.24: the apiary is capped at 4 and they sit together — one press
+        for(const [x,y] of nearbyKind(tx, ty, "beehive", o => o.honey > 0)){
+          const o = curMap.objects[key(x,y)];
+          give("Honey", o.honey); addXP("Farming", 12*o.honey); bump("harvested", o.honey);
+          pSparkle(x*TILE+8, y*TILE, "#e8a83a", 6*o.honey);
+          n += o.honey; o.honey = 0; hives++;
+        }
+        playSfx("get");
+        if(hives > 1) toast(`${n} honey from ${hives} hives.`, "#e8a83a");
         return;
       }
       case "keg": case "jar": case "press": {
         const M = MACHINES[obj.kind];
         if(obj.ready){                                        // collect the finished product
-          const prod = M.product(obj.item);
-          give(prod, 1); addXP("Farming", 14); bump("harvested");
-          delete obj.item; delete obj.days; delete obj.ready;
-          playSfx("get"); pSparkle(tx*TILE+8, ty*TILE, "#ffd98a", 10);
+          // v4.24: collect READY neighbours too — but ONLY ready ones. Loading stays strictly
+          // per-object below: openMachineChooser is the one genuine economic decision in the morning
+          // routine (which crop into a keg at ×2.2 over three nights vs a jar at ×1.6 over two), and a
+          // sweep there would silently dump the whole bag into six jars.
+          let got = 0;
+          for(const [x,y] of nearbyKind(tx, ty, obj.kind, o => !!o.ready)){
+            const o = curMap.objects[key(x,y)];
+            give(MACHINES[o.kind].product(o.item), 1); addXP("Farming", 14); bump("harvested");
+            delete o.item; delete o.days; delete o.ready;
+            pSparkle(x*TILE+8, y*TILE, "#ffd98a", 10); got++;
+          }
+          playSfx("get");
+          if(got > 1) toast(`Emptied ${got} ${obj.kind}s.`, "#ffd98a");
           return;
         }
         if(obj.item){                                         // still working

@@ -285,6 +285,24 @@ function renderWorld(){
   // facing cursor + prompts
   if(!uiBlocking() && fishing.state==="idle" && gameMode==="play" && !isCutscene()){
     const [fx,fy] = facingTile();
+    // v4.24: the FOOTPRINT preview. The Hoe and Can have swept a whole row / 3×3 since v2.0 and the
+    // sweep was never drawn — you aimed at one tile and four more were affected off-screen-of-mind.
+    // Now that planting sweeps too this stops being cosmetic: seeds are finite and there is no un-plant
+    // verb anywhere, so a mis-aimed sweep could bury six Everbloom seeds in soil you meant to leave.
+    // Faced tile stays bright; the rest of the footprint gets a dim outline. Farm-only (that is the
+    // only map these tools sweep on) and skipped at tier 0, where the footprint IS the faced tile.
+    {
+      const slot = HOTBAR[slotSel];
+      const sweeps = slot && (slot.tool === "Hoe" || slot.tool === "Can" || slot.tool === "Seeds");
+      const tier = slot ? (slot.tool === "Hoe" ? (state.tools.Hoe||0) : (state.tools.Can||0)) : 0;
+      if(sweeps && tier > 0 && curMap.id === "farm" && typeof canTiles === "function"){
+        ctx.strokeStyle = "rgba(150,255,150,0.22)";
+        for(const [sx,sy] of canTiles(fx, fy, tier, state.face)){
+          if(sx === fx && sy === fy) continue;
+          ctx.strokeRect(sx*TILE+0.5, sy*TILE+0.5, TILE-1, TILE-1);
+        }
+      }
+    }
     ctx.strokeStyle = toolActValid(fx,fy) ? "rgba(150,255,150,0.7)" : "rgba(255,255,255,0.28)";
     ctx.lineWidth = 1; ctx.strokeRect(fx*TILE+0.5, fy*TILE+0.5, TILE-1, TILE-1);
     if(facingInteractable(fx,fy)) drawPrompt(fx*TILE+8, fy*TILE-6);

@@ -22,6 +22,92 @@
 
 ---
 
+## 2026-07-25 — v4.24.0 "The Morning Round" (code 111, tag `v4.24.0`) — the mature farm stops being 44 undifferentiated presses
+
+### Why this release
+
+Release #2 from the fun-and-pacing audit. A mature farm's morning was measured at **~44 key-presses**
+before the day's actual decisions began, of which only ~21% carried any choice. The audit's framing is
+the right one and I held every change to it: **remove TEDIUM, never GAMEPLAY** — the yardstick the v4.11
+comment already set ("harvest has no timing or skill element, so this removes friction, not challenge").
+
+### Changed — planting sweeps the footprint
+
+Planting was the last core field verb still charging a per-tile tax. (v4.11's changelog claimed harvest
+was the last; it was wrong — footnoting that here rather than leaving it to rot.)
+
+- The Seeds branch (`08-actions.js`) now iterates `canTiles(tx, ty, state.tools.Can||0, state.face)`,
+  filtered to tiles that are TILLED/WATERED with no crop and no object — so plant/water/harvest all share
+  one footprint.
+- **The ordering trap, fixed.** `canTiles` at tier ≥ 3 iterates `oy:-1..1` then `ox:-1..1`, so its index 0
+  is the **diagonal up-left neighbour, not the tile you aimed at**. Hoe and Can don't care (they treat the
+  set as a set) — but seeds are finite, so with one 900g Everbloom seed left an unsorted sweep would have
+  planted it one tile up-left of where you pointed. The list is sorted faced-tile-first, which makes the
+  low-seed case degrade to exactly today's single-tile behaviour. **Verified in-game: one seed at tier 3
+  plants (10,10), the faced tile.**
+- **Partial sweeps are fine** — plant what you can hold and stop, never refuse the whole sweep, the same
+  way the Hoe tills what it can reach.
+- **XP is deliberately NOT batched.** The variety spark counts `addXP` *calls*, not XP, so one batched
+  `addXP("Farming", 4*n)` would have quietly cut planting's daily spark contribution by ~5×. Per-tile
+  grant retained; `refreshHotbar()` (a full DOM rebuild) called **once** after the loop.
+
+### Added — the footprint preview (shipped in the same change, deliberately)
+
+There is **no un-plant verb anywhere** — `delete curMap.crops` happens only in the ripe-harvest sweep, and
+the Hoe explicitly refuses tiles holding a crop. A mis-aimed sweep could therefore bury six Everbloom
+seeds and lock those tiles for nine days. So the preview is a requirement of the sweep, not polish.
+
+- In the facing-cursor block (`07-entities.js`), when the held tool is Hoe/Can/Seeds and its tier > 0 on
+  the farm, every footprint tile gets a dim outline and the faced tile keeps its bright one.
+- This also **retro-fixes the already-shipped invisible Hoe/Can swathe** — those have swept since v2.0
+  without ever showing you where.
+
+### Changed — same-kind collect sweeps
+
+New `nearbyKind(tx, ty, kind, readyPredicate)` helper (`08-actions.js`): the same-kind objects in a fixed
+3×3, faced tile first. Radius is **fixed at 1 and deliberately not the can tier** — an orchard has nothing
+to do with your watering can.
+
+- **Fruit trees, hives and READY machines** now collect as a cluster. Yield, XP and every per-day cap are
+  per-object exactly as before; only the mashing goes. The **walk between them is untouched** — v3.35 made
+  the yard a stroll on purpose, and it is the pleasant part.
+- **Machine LOADS stay strictly per-object.** The sweep is guarded on `o.ready` only. `openMachineChooser`
+  is the one genuine economic decision in the routine (which crop into a keg at ×2.2 over three nights vs
+  a jar at ×1.6 over two), and a sweep there would silently dump the whole bag into six jars. **Verified:
+  loading a keg with three empty kegs adjacent loads exactly one and spends exactly one turnip.**
+- I also **rejected** the audit's own suggestion of a bin-side "collect everything" round: it voids
+  `TREE_FRUIT_CAP`'s stated intent, deletes the reason you bought the horse, and makes the charming play
+  strictly dominated.
+
+### Changed — the produce press is the pet
+
+Animals took two presses: one for the produce, one to pet. The second was **dead at steady state** —
+`friend` caps at 250 and every mature flock is long since maxed.
+
+- `petChicken` / `petCow` / `shearSheep` (`13-content.js`) now stamp `petDay` and grant the pet's +3
+  alongside the produce's +8 — **exactly the +11 a diligent two-press player already got**, so nobody is
+  worse off — and append `flockHearts()` to the toast.
+- Verified: one press = produce + 11 friendship + `petDay` stamped; a second press the same day grants 0;
+  an animal **already** petted today correctly gets only +8, never a double-dip.
+
+### Verification (live build, console clean)
+
+Plant sweep: tier 3 with plenty of seeds plants 9; **one seed plants the faced tile**; 4 seeds plant 4
+including the faced tile; occupied tiles keep their existing crop untouched; untilled tiles are skipped;
+9 tiles produce **9 spark-counting `addXP` calls**. Collect: 4 ready fruit trees + 1 unripe → gathers 10
+fruit and leaves the unripe alone; 2 hives → 5 honey; ready kegs empty while a still-working neighbour is
+untouched. Animals: all three species +11 on one press, no double-dip. Footprint preview screenshotted.
+
+### Files
+
+- `game/js/08-actions.js` — plant sweep + faced-tile sort; `nearbyKind()`; fruit/hive/machine collect sweeps.
+- `game/js/07-entities.js` — the footprint preview.
+- `game/js/13-content.js` — produce-press-is-the-pet in all three animal functions.
+- `game/js/01-data.js` — VERSION + in-game CHANGELOG.
+- `game/index.html` — cache-buster `?v=140`.
+
+---
+
 ## 2026-07-25 — v4.23.0 "The Even Hand" (code 110, tag `v4.23.0`) — the grind stops being lopsided and under-rewarded
 
 ### Why this release
