@@ -350,6 +350,7 @@ function migrateSave(s){
 function beginPlay(){
   gameMode = "play"; paused = false; sleeping = false;
   cutscene = null; $("stage").classList.remove("cine");   // never boot into a stale scene's input lock
+  $("stage").classList.remove("talking");   // v4.28: nor into a stale dialogue that hides the hotbar
   clearMapCache();
   $("title").classList.add("hidden"); $("intro").classList.add("hidden");
   $("hud").classList.remove("hidden"); $("hotbar").classList.remove("hidden");

@@ -311,7 +311,14 @@ function renderWorld(){
         }
       }
     }
-    ctx.strokeStyle = toolActValid(fx,fy) ? "rgba(150,255,150,0.7)" : "rgba(255,255,255,0.28)";
+    // v4.27.1: the cursor must tell the truth about what USE will do. It tested only the HELD tool, so
+    // with the Can in hand facing a tree it drew WHITE ("nothing will happen here") and then USE chopped
+    // the tree anyway — the cursor contradicting the game. Now it previews smart-use too, and tints gold
+    // when the swing will reach for a different tool, so the substitution is visible before you commit.
+    const smi = (typeof smartTool === "function" && !state.flags.noSmartTool) ? smartTool(fx,fy) : -1;
+    ctx.strokeStyle = toolActValid(fx,fy) ? "rgba(150,255,150,0.7)"
+                    : smi >= 0            ? "rgba(255,216,138,0.7)"
+                                          : "rgba(255,255,255,0.28)";
     ctx.lineWidth = 1; ctx.strokeRect(fx*TILE+0.5, fy*TILE+0.5, TILE-1, TILE-1);
     if(facingInteractable(fx,fy)) drawPrompt(fx*TILE+8, fy*TILE-6);
     // v3.35: interact() answers ANY crop on the facing tile (unripe → status toast) before it ever

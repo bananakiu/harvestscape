@@ -87,6 +87,7 @@ function drawPortrait(name){
 function showDialog(who, txt, portraitName){
   playSfx("menu");
   const d = $("dialog"); d.classList.remove("hidden");
+  $("stage").classList.add("talking");   // v4.28: the hotbar steps aside instead of being covered
   d.querySelector(".who").textContent = who;
   drawPortrait(portraitName || "port_valley");
   dlg.open = true; dlg.full = txt; dlg.i = 0; dlg.done = false;
@@ -104,7 +105,7 @@ function advanceDialog(){
     $("dialog").querySelector(".txt").textContent = dlg.full; dlg.done = true; return true; }
   closeDialog(); return true;
 }
-function closeDialog(){ $("dialog").classList.add("hidden"); dlg.open = false; clearInterval(dlg.timer); playSfx("menuClose"); }
+function closeDialog(){ $("dialog").classList.add("hidden"); dlg.open = false; clearInterval(dlg.timer); $("stage").classList.remove("talking"); playSfx("menuClose"); }
 
 // ---- HUD ----
 // The gold counter eases toward its true value each frame (via a tween on goldUI.shown) and the
@@ -422,7 +423,7 @@ function openPanel(id, render){
   playSfx("menu");
 }
 function closePanel(id){ if(openPanels.has(id)){ openPanels.delete(id); $(id).classList.add("hidden"); playSfx("menuClose"); } }
-function closeAllPanels(silent){ for(const id of Array.from(openPanels)){ openPanels.delete(id); $(id).classList.add("hidden"); } if(!silent && dlg.open) closeDialog(); }
+function closeAllPanels(silent){ for(const id of Array.from(openPanels)){ openPanels.delete(id); $(id).classList.add("hidden"); } if(!silent && dlg.open) closeDialog(); if(!dlg.open) $("stage").classList.remove("talking"); }   // v4.28: never leave the belt hidden
 function togglePanel(id, render){ if(openPanels.has(id)) closePanel(id); else openPanel(id, render); }
 
 // A shared tab-strip component. Panels that page their .body (Shop, Journal) render their tab row
@@ -1923,15 +1924,25 @@ document.addEventListener("keydown", e => {
   else if(k === "u"){ if(!uiBlocking()) toggleHud(); }   // v4.0.2: dim/hide the HUD off the map's edges & corners
   else if(k === "shift"){ if(!uiBlocking()) startGuard(); }   // v4.4: raise the Warden's Guard (also right-click in the Undercroft / the touch 🛡)
   else if(k === "escape"){ if(dlg.open) closeDialog(); else closeAllPanels(); }
-  else if(k === "tab"){ e.preventDefault(); cycleSlot(e.shiftKey ? -1 : 1); }   // v4.27: cycle tools without leaving WASD
+  // v4.27.1: guard BEFORE preventDefault — swallowing Tab unconditionally kills keyboard focus
+  // navigation (the settings sliders, the quantity boxes) whenever a panel is open.
+  else if(k === "tab"){ if(inputBusy()) return; e.preventDefault(); cycleSlot(e.shiftKey ? -1 : 1); }
   else if("1234567".includes(k)) selectSlot(+k-1);   // v4.0: 7th slot is the Stave (only present once earned)
 });
 document.addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
 // v4.27: THE MOUSE WHEEL. Stardew's most-used input by a mile — you scroll to change tools without ever
 // looking away — and this game had no wheel handler at all, so the only ways to switch were the number
 // row (which pulls your hand off WASD) or clicking the tile. Wheel and Tab both cycle; Shift+Tab goes back.
+// v4.27.1: uiBlocking() is dlg.open || anyPanelOpen() || _panoClose — it does NOT cover the letter
+// overlay (#intro), which openLetter uses mid-game for every letter, journal page and epilogue. So the
+// wheel was stealing scroll from exactly the long documents you most need to scroll, and Tab could cycle
+// tools underneath one. This is the predicate every free-roam input should gate on.
+function inputBusy(){
+  return uiBlocking() || paused || (typeof isCutscene === "function" && isCutscene())
+      || !$("intro").classList.contains("hidden");
+}
 function cycleSlot(dir){
-  if(gameMode !== "play" || uiBlocking()) return;
+  if(gameMode !== "play" || inputBusy()) return;
   const n = HOTBAR.length;
   selectSlot(((slotSel + dir) % n + n) % n);
 }
@@ -1943,7 +1954,7 @@ function cycleSlot(dir){
 let _wheelAcc = 0, _wheelLast = 0;
 const WHEEL_NOTCH = 50, WHEEL_GAP = 250;
 window.addEventListener("wheel", e => {
-  if(gameMode !== "play" || uiBlocking()) return;             // let panels scroll normally
+  if(gameMode !== "play" || inputBusy()) return;              // panels, letters and cutscenes scroll normally
   if(!e.deltaY) return;
   e.preventDefault();
   const now = performance.now();

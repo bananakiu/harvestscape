@@ -14,6 +14,10 @@
   --shadow:0 6px 0 rgba(0,0,0,.35), 0 12px 26px rgba(0,0,0,.5);
   --font:'VT323', 'Courier New', monospace;
   --font-pixel:'Press Start 2P', monospace;
+  /* v4.28: the reserved bottom belt — the hotbar tiles (3.1em) plus the .slotName label under them.
+     Every bottom-anchored readout offsets from this instead of guessing a percentage, which is how the
+     dialogue box and the examine bar ended up drawn on top of the tool tiles. */
+  --belt-h:4.2em;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{margin:0;height:100%;}
@@ -194,10 +198,17 @@ body{
 .qt-obj.done{ color:var(--green); text-decoration:line-through; opacity:.65; }
 .qt-obj .chk{ color:var(--green); }
 
+/* v4.28: the single message lane — toasts on top, the pickup log beneath, one column that can never
+   collide with itself. The lane is anchored once; the two children are plain flow content inside it. */
+#msgLane{
+  position:absolute; top:19%; left:2.2%; width:44%;
+  display:flex; flex-direction:column; gap:.32em; align-items:flex-start;
+  pointer-events:none; z-index:6;
+  max-height:62%; overflow:hidden;
+}
 /* toasts */
 #toasts{
-  position:absolute; top:19%; left:2.2%;
-  display:flex; flex-direction:column; gap:.12em;
+  display:flex; flex-direction:column; gap:.12em; align-items:flex-start;
 }
 .toast{
   align-self:flex-start;
@@ -215,9 +226,8 @@ body{
 
 /* ---------- item pickup log ---------- */
 #pickups{
-  position:absolute; left:2.2%; top:32%;
   display:flex; flex-direction:column; gap:.32em;
-  pointer-events:none; z-index:6; align-items:flex-start;
+  pointer-events:none; align-items:flex-start;
 }
 .pickup{
   display:flex; align-items:center; gap:.35em;
@@ -248,6 +258,7 @@ body{
 #hotbar{
   position:absolute; bottom:2.6%; left:50%; transform:translateX(-50%);
   display:flex; gap:.4em; z-index:6;
+  transition:opacity .18s ease, transform .18s ease;   /* v4.28: steps aside while talking */
 }
 .slot{
   position:relative; width:3.1em; height:3.1em;
@@ -311,8 +322,12 @@ body{
 #banner .small{ color:#e9dcc0; font-size:.95em; margin-top:.25em; }
 
 /* ---- Examine readout (press X to look) ---- */
+/* v4.28: both bottom readouts now sit ABOVE a reserved belt (--belt-h = the hotbar tiles plus the
+   .slotName label under them). Measured before: the dialogue box overlapped the hotbar by 24.6px and,
+   at z-index 9 vs 6, buried every key-number badge and the tool name; the examine bar landed exactly on
+   .slotName, so pressing Q hid the name of the tool you were holding, every time. */
 #examineBar{
-  position:absolute; bottom:15%; left:50%; transform:translate(-50%,1em);
+  position:absolute; bottom:calc(2.6% + var(--belt-h)); left:50%; transform:translate(-50%,1em);
   max-width:74%; padding:.5em 1.1em; z-index:8; pointer-events:none;
   background:rgba(28,20,12,.92); border:.13em solid var(--wood-hi); border-radius:.5em;
   box-shadow:0 .5em 1.4em #000a; text-align:center; opacity:0;
@@ -328,7 +343,7 @@ body{
 
 /* ---------- dialogue ---------- */
 #dialog{
-  position:absolute; left:50%; bottom:11%; transform:translateX(-50%);
+  position:absolute; left:50%; bottom:calc(2.6% + var(--belt-h)); transform:translateX(-50%);
   width:82%; max-width:44em; z-index:9;
   display:flex; gap:.6em; align-items:flex-end;
   background:linear-gradient(var(--panel),rgba(28,20,14,.98));
@@ -698,7 +713,12 @@ body{
 #cinebars .cbar.bot{ bottom:0; transform-origin:bottom; }
 #stage.cine #cinebars .cbar{ transform:scaleY(1); }
 #stage.cine #hud, #stage.cine #hotbar{ opacity:0; transition:opacity .3s; pointer-events:none; }
-#stage.cine #dialog{ bottom:13%; }
+#stage.cine #dialog{ bottom:13%; }   /* cutscenes hide the hotbar entirely, so the box may sit lower */
+/* v4.28: with the dialogue box now seated ABOVE the belt, the overlap is gone by construction and the
+   hotbar no longer needs to hide — measured 0px against a live conversation. The .talking class is kept
+   because the examine bar still wants the lower slot while a dialogue owns the upper one; deliberately
+   NOT fading the belt, since with nothing overlapping it that would be motion for its own sake. */
+#stage.talking #examineBar{ bottom:2.6%; }
 
 /* gift picker rows */
 #giftPanel .row .pref{ font-size:.8em; }

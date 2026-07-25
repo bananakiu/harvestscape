@@ -512,21 +512,25 @@ function canTiles(tx, ty, tier, face){
 // genuine choice, so smart-use deliberately stands down and leaves it to you. Trees/ore/water each have
 // one answer, so those switch. It also never overrides a deliberate pick: it only fires when the tool in
 // your hand would have done nothing at all.
+// SEEDS ARE DELIBERATELY ABSENT. On watered soil Seeds is the only valid tool, so any rule that resolves
+// "the one right answer" would resolve to PLANTING — and a press meant as an axe swing would silently
+// spend seed, up to NINE tiles at Can tier 3 via the v4.24 sweep, with no un-plant verb anywhere and an
+// endgame seed at 900g. Planting only ever happens because you asked for it.
+const SMART_ORDER = ["Axe","Pick","Rod","Hoe","Can"];
 function smartTool(tx, ty){
   const held = HOTBAR[slotSel] && HOTBAR[slotSel].tool;
   if(!held || toolValidFor(held, tx, ty)) return -1;          // holding something that works — never interfere
-  let found = -1;
-  for(let i = 0; i < HOTBAR.length; i++){
-    // SEEDS ARE NEVER INFERRED. On watered soil Seeds is the ONLY valid tool, so without this the rule
-    // would resolve "uniquely" to planting — and a press meant as an axe swing would silently spend seed,
-    // up to NINE tiles at Can tier 3 (the v4.24 sweep), with no un-plant verb anywhere in the game. Seeds
-    // are finite, irreversible and can be 900g each; they only ever go in the ground because you said so.
-    if(HOTBAR[i].tool === "Seeds") continue;
-    if(!toolValidFor(HOTBAR[i].tool, tx, ty)) continue;
-    if(found >= 0) return -1;                                 // two answers = a real choice; stay out of it
-    found = i;
+  // A fixed preference order rather than "exactly one valid tool". The count rule read well but failed on
+  // the single most-touched tile in the game: empty tilled soil is valid for BOTH the Can and Seeds, so it
+  // stood down on the till→water→plant loop — most of the presses in a farming game — which is exactly the
+  // tedium it was written to remove. Order resolves that to the Can: free, reversible, and what you almost
+  // always want on bare soil. Watered soil still stands down, because only Seeds matches there.
+  for(const t of SMART_ORDER){
+    if(!toolValidFor(t, tx, ty)) continue;
+    const i = HOTBAR.findIndex(s => s.tool === t);
+    if(i >= 0) return i;
   }
-  return found;
+  return -1;
 }
 
 // v4.27 HOLD TO REPEAT — the deepest tedium in the game, and the plainest reading of "way too tedious".

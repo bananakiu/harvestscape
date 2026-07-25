@@ -22,6 +22,90 @@
 
 ---
 
+## 2026-07-26 — v4.28.0 "Two Anchors" (code 115, tag `v4.28.0`) — the UI stops overlapping itself, and the cursor stops lying
+
+### Why this release
+
+The second half of the owner's UI brief — *"it's all over the place. It's not nice."* v4.27 fixed the
+controls; this fixes the **layout defects the audit could measure**, plus three corrections to v4.27
+itself that the audit found by reading my uncommitted working tree.
+
+### Fixed — two notification columns collided, and the newer one lost
+
+`#toasts` (top:19%, **no z-index**) and `#pickups` (top:32%, **z-index:6**) were separately-positioned
+columns on the same left edge, both growing downward. Measured at 1040×676: a 5-toast stack ran
+y=128→274 while a 4-row pickup log ran y=216→432 — **57px of overlap** — and because pickups declared a
+z-index and toasts didn't, **the newer, more urgent message painted underneath the older one.** With 191
+`toast()` call sites and `notePickup()` firing on every item gained, a normal harvest run turned the left
+third of the screen into a churning double column.
+
+- Both now live inside one `#msgLane` flex column. Overlap is **structurally impossible** rather than a
+  matter of tuned offsets — the fix that survives the next element someone adds. Verified 0px.
+
+### Fixed — the dialogue box and examine bar were drawn on top of the hotbar
+
+Measured: the dialogue box occupied y=474→615 against a hotbar at y=590→658 — **24.6px of overlap** at
+z-index 9 vs 6, so **every conversation buried the top of every tool tile, all six key-number badges and
+the tool-name label.** The examine bar was worse: it sat exactly on `.slotName`, so pressing Q to look at
+something hid the name of the thing in your hand.
+
+- New `--belt-h` token (4.2em = the tiles plus their name label). `#dialog` and `#examineBar` now offset
+  from `calc(2.6% + var(--belt-h))` instead of guessing a percentage. Verified **0px** against both.
+- I deliberately did **not** take the audit's suggestion to fade the hotbar out during dialogue. Once the
+  box is seated above the belt the overlap is gone by construction, so fading would be motion for its own
+  sake. The `.talking` class is kept only because the examine bar still wants the lower slot while a
+  dialogue owns the upper one — and it is cleared in `closeDialog`, `closeAllPanels` and `beginPlay` so it
+  can never strand the belt.
+
+### Fixed — three defects in v4.27, caught by the audit reading the working tree
+
+1. **The facing cursor lied.** It called `toolActValid`, which tests only the *held* tool — so with the
+   Can in hand facing a tree it drew white ("nothing will happen here") and then smart-use chopped the
+   tree anyway. It now previews smart-use and tints **gold** when the swing will reach for another tool.
+2. **The wheel stole scrolling from letters.** `uiBlocking()` is `dlg.open || anyPanelOpen() ||
+   _panoClose` — it does **not** cover the `#intro` overlay, which `openLetter` uses for every letter,
+   journal page and epilogue. So the longest documents in the game were the hardest to scroll. New shared
+   `inputBusy()` covers panels, dialogue, cutscenes **and** the letter overlay; the wheel and Tab both
+   gate on it. Tab also now guards **before** `preventDefault`, which was killing keyboard focus
+   navigation inside panels.
+3. **Smart-use stood down exactly where it was needed most.** The "exactly one valid tool" rule bailed on
+   empty tilled soil, because both the Can and Seeds match there — and that tile is the till → water →
+   plant loop, i.e. most of the presses in a farming game. Replaced with a fixed preference order
+   `["Axe","Pick","Rod","Hoe","Can"]`. Bare tilled soil now reaches for the **Can** (free, reversible,
+   almost always what you want); **Seeds remain absent from the order entirely**, so watered soil — where
+   Seeds is the only match — still stands down and planting is never inferred.
+
+### Verification (live build, console clean)
+
+Measured with `getBoundingClientRect` the same way the audit found the defects: toasts vs pickups **0px**,
+dialogue vs hotbar **0px**, examine vs hotbar **0px**; `.talking` sets and clears correctly. Smart tool:
+tree→Axe, ore→Pick, water→Rod, bare tilled→Can, **watered soil spends 0 seeds and plants 0 crops**;
+explicit planting still works; opt-out respected. Screenshotted a live conversation with a full hotbar —
+every slot number and the tool name stay legible.
+
+### Files
+
+- `game/index.html` — `#msgLane` wrapper.
+- `game/css/style.css` — `--belt-h`; `#msgLane`; `#toasts`/`#pickups` de-positioned; `#dialog`/`#examineBar` offsets.
+- `game/js/07-entities.js` — the honest, smart-use-previewing facing cursor.
+- `game/js/08-actions.js` — `SMART_ORDER` preference-order `smartTool`.
+- `game/js/10-ui.js` — `inputBusy()`; wheel/Tab gating; `.talking` on show/close dialogue; `closeAllPanels` guard.
+- `game/js/11-title.js` — `beginPlay` clears a stale `.talking`.
+- `game/js/01-data.js` — VERSION + in-game CHANGELOG.
+- `game/index.html` — cache-buster `?v=153`.
+
+### Still queued from the UI audit
+
+**"One Menu"** — 13 separate top-level panels on four different keys, where Stardew has one tabbed menu;
+`panelTabs()` already exists and the Journal/Shop use it, so the merge is mostly routing. **"The Pack"** —
+the inventory rework: 52 plantables behind one hotbar slot cycled by R (up to 52 keypresses to plant a
+given crop), `renderInv` resetting scroll on every click, no hover tooltips despite `invDetailHtml`
+already assembling exactly Stardew's tooltip body, and the loss-proof carry cap (cap distinct KINDS, never
+stacks; `give()` never refuses and never destroys; overflow goes to a farmhouse shelf). **Design tokens** —
+16 border-radius values, 12 border widths and 19 ad-hoc card fills across the stylesheet.
+
+---
+
 ## 2026-07-26 — v4.27.0 "In Reach" (code 114, tag `v4.27.0`) — the controls stop fighting you
 
 ### Why this release

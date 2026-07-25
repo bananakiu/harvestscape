@@ -7,7 +7,7 @@
 <title>Harvestscape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=150">
+<link rel="stylesheet" href="css/style.css?v=153">
 </head>
 <body>
 <div id="frame">
@@ -42,8 +42,15 @@
            last gain. Orbs are created on demand by showXpOrb (10-ui.js). -->
       <div id="xpOrbs"></div>
       <div id="questTracker"></div>
-      <div id="toasts"></div>
-      <div id="pickups"></div>   <!-- fading item-collection log -->
+      <!-- v4.28: ONE message lane. These were two separately-positioned columns on the same left edge
+           (toasts at top:19%, pickups at top:32%) that grew downward into each other — measured 57px of
+           overlap on a busy harvest — and because #pickups declared z-index:6 while #toasts had none,
+           the NEWER, more urgent message painted UNDERNEATH the older one. Stacking them in a single
+           flex column makes overlap structurally impossible rather than a matter of tuned offsets. -->
+      <div id="msgLane">
+        <div id="toasts"></div>
+        <div id="pickups"></div>   <!-- fading item-collection log -->
+      </div>
     </div>
 
     <!-- Always-visible restore affordance: shown ONLY while the HUD is hidden, so pressing U (or a
@@ -166,21 +173,21 @@
   </div>
 </div>
 
-<script src="js/00-core.js?v=150"></script>
-<script src="js/01-data.js?v=150"></script>
-<script src="js/02-audio.js?v=150"></script>
-<script src="js/03-art.js?v=150"></script>
-<script src="js/04-world.js?v=150"></script>
-<script src="js/05-particles.js?v=150"></script>
-<script src="js/06-weather.js?v=150"></script>
-<script src="js/07-entities.js?v=150"></script>
-<script src="js/08-actions.js?v=150"></script>
-<script src="js/09-quests.js?v=150"></script>
-<script src="js/13-content.js?v=150"></script>
-<script src="js/15-warding.js?v=150"></script>
-<script src="js/10-ui.js?v=150"></script>
-<script src="js/11-title.js?v=150"></script>
-<script src="js/14-story.js?v=150"></script>
-<script src="js/12-game.js?v=150"></script>
+<script src="js/00-core.js?v=153"></script>
+<script src="js/01-data.js?v=153"></script>
+<script src="js/02-audio.js?v=153"></script>
+<script src="js/03-art.js?v=153"></script>
+<script src="js/04-world.js?v=153"></script>
+<script src="js/05-particles.js?v=153"></script>
+<script src="js/06-weather.js?v=153"></script>
+<script src="js/07-entities.js?v=153"></script>
+<script src="js/08-actions.js?v=153"></script>
+<script src="js/09-quests.js?v=153"></script>
+<script src="js/13-content.js?v=153"></script>
+<script src="js/15-warding.js?v=153"></script>
+<script src="js/10-ui.js?v=153"></script>
+<script src="js/11-title.js?v=153"></script>
+<script src="js/14-story.js?v=153"></script>
+<script src="js/12-game.js?v=153"></script>
 </body>
 </html>

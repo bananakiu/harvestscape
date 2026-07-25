@@ -8,13 +8,20 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.27.0", code: 114, codename: "In Reach", date: "2026-07-26" };
+const VERSION = { name: "4.28.0", code: 115, codename: "Two Anchors", date: "2026-07-26" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.28.0", code:115, date:"2026-07-26", name:"Two Anchors", notes:[
+    { t:"fix", s:"Your messages stop stacking on top of each other. Notifications and the item-pickup log were two separate columns pinned to the same edge, growing down into one another — and the newer, more useful message was the one drawn underneath. They share one lane now, so they simply queue instead of fighting." },
+    { t:"fix", s:"Talking to someone no longer covers your tools. The dialogue box sat over the top of the hotbar, burying every slot number and the name of whatever you were holding; the examine readout landed squarely on the tool name too, so pressing Q hid the very thing you'd asked about. Both now sit above the belt, and the belt keeps its whole height." },
+    { t:"change", s:"The tile outline tells the truth about what a swing will do. Holding the watering can while facing a tree used to draw a blank white square — 'nothing happens here' — and then chop the tree anyway. It now lights up gold when the swing will reach for a different tool, so you can see the substitution before you commit." },
+    { t:"fix", s:"Scrolling a letter scrolls the letter. The new tool-wheel was reading your scroll while a letter, journal page or epilogue was open, so the longest things to read were the hardest to scroll. Tab no longer steals keyboard navigation inside menus either." },
+    { t:"change", s:"Facing bare tilled soil with the wrong tool in hand now reaches for the watering can. Before, it stood aside whenever two tools could apply — which meant it helped least on the till, water, plant loop you do most. Planting is still never guessed at; seeds only go in the ground when you choose them." },
+  ]},
   { v:"4.27.0", code:114, date:"2026-07-26", name:"In Reach", notes:[
     { t:"feature", s:"Hold to keep working. Every swing used to be its own keypress — felling a heartwood with a starter axe meant twenty-four of them, and a Great Knot meant forty-two taps mid-fight. Now you just hold USE and the swings keep coming, at exactly the pace a perfect masher managed. It's the same speed; it's only your wrist that's better off." },
     { t:"feature", s:"The mouse wheel changes tools. Scroll to move along the hotbar without ever taking a hand off the movement keys — the way you'd expect — and Tab does the same from the keyboard (hold Shift to go back). Tuned so a mouse notch is exactly one step and a trackpad flick is one step too, rather than spinning through the whole bar." },
