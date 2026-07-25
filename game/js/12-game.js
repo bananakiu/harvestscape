@@ -25,6 +25,7 @@ function loop(ts){
         updateAnimals(dt);
         updateCreatures(dt);            // v4.0 — Undercroft AI; a no-op on every map without creatures
         updateFishing(dt);
+        updateUseHold(dt);                // v4.27: hold USE to keep swinging (paced to the swing animation)
         updateWeather(dt);
         maybeSeasonalFestival();        // a festival window can open while you stand on the sand
         maybeLanternTest();             // the midpoint beat fires the first time you enter the village at 5 wings

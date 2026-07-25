@@ -22,6 +22,113 @@
 
 ---
 
+## 2026-07-26 — v4.27.0 "In Reach" (code 114, tag `v4.27.0`) — the controls stop fighting you
+
+### Why this release
+
+Owner playtest, near-verbatim: *"It's not the most comfortable UI, especially the controls… this is just
+way too tedious. I have to click on tools… It's all over the place."* They asked for a Stardew-benchmarked
+rework, and explicitly invited an inventory overhaul with limits and bag upgrades.
+
+I ran a 5-lens UI audit against Stardew (controls / layout / inventory / panels / benchmark) — its full
+findings are the roadmap below. **This release is the controls only**, because that is what the owner
+named first and it is felt every few seconds. The layout consolidation and the inventory rework are
+sequenced after it.
+
+### Added — hold to repeat (the deepest tedium)
+
+The audit's sharpest catch, and it is not a UI problem at all — it is an *input* problem hiding as one.
+`10-ui.js` swallows OS auto-repeat (`if(e.repeat){ keys[k]=true; return; }`) and `useTool` has no
+cooldown, so **every swing was a discrete press and mashing was optimal**. With `TIER_POWER` starting at 1,
+a starter Axe on a Heartwood (hp 24) is **24 presses**, a Gold Vein is 12, and **The Great Knot (hp 42) is
+42 mashes of Space mid-fight.** v4.24 swept the *field* verbs and left woodcutting, mining and all of
+Warding as pure mashing.
+
+- New `updateUseHold(dt)` (`08-actions.js`), called from the main loop (`12-game.js`): holding USE
+  (keyboard Space, mouse, or the touch USE button) repeats the swing every `USE_REPEAT = 0.28s`.
+- **Paced to the swing animation (0.26s), deliberately not faster** — holding is exactly as fast as
+  flawless mashing and never faster, so this removes the wrist-ache without moving a single rate the
+  balance work of v4.23-v4.26 depends on.
+- **Fishing is excluded outright**: it already reads held Space as "reel", and that *is* a skill input.
+  Verified a held Space during a reel changes nothing.
+
+### Added — the mouse wheel (and Tab)
+
+Stardew's single most-used input, and this game **had no wheel handler anywhere** — verified by grep; the
+only `deltaY` in the repo was art code. The only ways to switch were the number row (which pulls your hand
+off WASD) or clicking the tile, which is exactly the "I have to click on tools" complaint.
+
+- `cycleSlot(dir)` + a `wheel` listener; `Tab` / `Shift+Tab` do the same from the keyboard.
+- **Delta-accumulated, one step per event maximum.** This mattered: my first cut stepped per raw event,
+  which the audit caught — a macOS trackpad emits a burst of small deltas per flick, so one gesture would
+  have spun through the whole hotbar with dozens of overlapping `select` oscillators and dozens of full
+  hotbar DOM rebuilds. Now a mouse notch (deltaY ~100) is exactly **one** step, a 20-event trackpad flick
+  is **one** step, and the accumulator resets on a direction change and after a 250ms pause so a stale
+  remainder can never make the next gesture step early.
+
+### Added — smart tool select
+
+Choosing a tool has no timing and no skill element — you always already know a tree wants the axe. By the
+repo's own yardstick (v4.11: *"harvest has no timing/skill element, so this removes friction, not
+challenge"*) that makes manual switching pure friction.
+
+- `smartTool(tx, ty)` (`08-actions.js`): if what you're facing has **exactly one** valid tool and the tool
+  in your hand would do **nothing**, USE picks it up and swings.
+- `toolActValid` generalized to `toolValidFor(tool, fx, fy)` (`07-entities.js`) as the shared oracle.
+- **It never overrides a deliberate choice** — it only fires when the held tool has no action at all.
+- **Ambiguity means hands off.** Bare tilled soil is valid for both the Can and Seeds; watering vs planting
+  is a genuine decision, so smart-use stands down and leaves it to you.
+- **Opt-out in Settings** ("Pick tools for me"), stored as `state.flags.noSmartTool` so the default needs
+  no migration.
+
+**A defect the audit caught in my own first cut, worth recording:** on `T.WATERED` soil, *only* Seeds is
+valid — so the "exactly one" rule resolved uniquely to **planting**, and a press meant as an axe swing
+would silently spend seed and, at Can tier 3, sow **nine tiles** via the v4.24 sweep. There is no un-plant
+verb anywhere in the game, and an endgame seed is 900g. Seeds are now excluded from inference entirely:
+they only ever go in the ground because you said so. My own first test had asserted that behaviour as
+*correct*, which is precisely why the adversarial pass exists.
+
+**A second, quieter fix it forced:** `toolValidFor` for the Can and Seeds tested the *tile* alone, so a
+tree standing on tilled soil reported the watering can as valid. Harmless when it only tinted the cursor —
+but smart-use reads this oracle to count valid tools, and a phantom second answer made it stand down
+exactly when it should help. Both now also require the tile to be clear.
+
+### Verification (live build, console clean)
+
+Smart tool: tree-with-Can → Axe, ore-with-Axe → Pick, water-with-Hoe → Rod, grass-with-Pick → Hoe;
+bare tilled soil with the Axe held stays **Axe** (ambiguous); a deliberate valid pick is never overridden;
+**watered soil with the Axe held spends 0 seeds and plants 0 crops**; explicit planting still works; the
+Settings opt-out is respected. Wheel: 1 notch = 1 step, 3 notches = 3, a 20-event trackpad flick = 1 step,
+reverse answers immediately. Hold: a Basic axe fells a 24-HP Heartwood in ~6.8 simulated seconds at the
+0.28s cadence; a held Space during a fishing reel changes nothing.
+
+### Files
+
+- `game/js/08-actions.js` — `smartTool()`, `updateUseHold()`, the `useTool` smart-select hook.
+- `game/js/07-entities.js` — `toolValidFor()` generalized; Can/Seeds now require a clear tile.
+- `game/js/10-ui.js` — wheel handler with accumulation, `cycleSlot()`, Tab binding, Settings toggle.
+- `game/js/12-game.js` — `updateUseHold(dt)` in the loop.
+- `game/js/01-data.js` — VERSION + in-game CHANGELOG.
+- `game/index.html` — cache-buster `?v=150`.
+
+### The rest of the UI roadmap (from the same audit)
+
+- **"Two Anchors"** — the HUD has **six** anchors where Stardew has two, and three of them overlap in
+  normal play (measured at 1040×676: a 5-toast stack collides with the pickup log for 57px, and `#toasts`
+  has no z-index while `#pickups` has 6, so *newer* messages paint *under* older ones; the dialogue box
+  covers the top 24.6px of the hotbar including every key badge; the examine bar sits exactly on the tool
+  name; in the Undercroft the first toast lands on the Resolve bar). Plus 16 border-radius values, 12
+  border widths and 19 ad-hoc rgba fills — no single design language.
+- **"One Menu"** — 13 separate top-level panels on their own keys, where Stardew has one tabbed menu.
+- **"The Pack"** — the inventory rework. The audit's verdict on limits, which I endorse: **cap the number
+  of distinct KINDS carried, never stacks**; `give()` must **never refuse and never destroy** (76 call
+  sites include shop purchases with gold already deducted, quest rewards, story parcels and boss drops);
+  a new kind arriving at a full pack goes to the farmhouse trunk with a toast naming it. Also: 52
+  plantables sit behind one hotbar slot cycled by R — up to 52 keypresses to plant a specific crop — and
+  `renderInv` resets scroll position on every click.
+
+---
+
 ## 2026-07-25 — v4.26.0 "The Patron" (code 113, tag `v4.26.0`) — gold reacquires a referent, and the runaway faucet comes back to the pack
 
 ### Why this release

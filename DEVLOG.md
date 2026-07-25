@@ -14,6 +14,46 @@
 
 ---
 
+## 2026-07-26 — "The UI is all over the place": a controls-first rework
+
+**Owner feedback (near-verbatim):**
+
+> Now, go ahead and do a re-haul of the UI. It's not the most comfortable UI, especially the controls...
+> So, do a very thorough review of the UI and then make changes on it. Look through Stardew Valley, look
+> through Harvest Moon. I guess Stardew Valley is better because it's a more modern UI. So let's go with
+> that. Because this is just way too tedious. Yeah, I have to click on tools...
+>
+> I won't give too much opinion. I would tell you to just do it. Just study the UI and change it. It's all
+> over the place. It's not nice. Feel free to have some sort of better inventory system, maybe having the
+> limits on inventory system as well and bag upgrades, things like that. Just go ahead and go ham. While
+> of course making the game experience good.
+
+**Interpretation.** Three complaints of decreasing specificity, and they want handling in that order:
+
+1. **"I have to click on tools" / "way too tedious"** — the CONTROLS. This is the loudest and most
+   concrete, and a 5-lens audit against Stardew found the cause is not one missing feature but three:
+   there was **no mouse-wheel handler anywhere in the codebase** (Stardew's most-used input); tool
+   selection lived only on the number row or a mouse click, both of which pull the hand off WASD; and —
+   the deepest one, which the owner felt as "tedious" without naming it — **there is no hold-to-repeat**,
+   so a starter axe on a heartwood is 24 discrete presses and a Great Knot is 42 mashes of Space.
+2. **"It's all over the place. It's not nice."** — the LAYOUT. Measured: six HUD anchors where Stardew has
+   two, with three pairs actually overlapping in normal play, and no single design language (16
+   border-radius values, 12 border widths, 19 ad-hoc card fills).
+3. **"Feel free to have... limits... and bag upgrades"** — the INVENTORY. Phrased as permission rather
+   than a demand ("feel free", "maybe"), so it is latitude, not a requirement — but it is a real
+   progression hook and 52 plantables currently sit behind one hotbar slot cycled by R.
+
+**Direction call.** Ship the controls first and alone (v4.27 "In Reach"), because it is what was named
+first and it is felt every few seconds; layout and inventory follow as their own releases. **A literal
+Stardew inventory cap is unshippable here** — Stardew's full bag drops loot on the floor where it
+despawns, which is real permanent loss, and `give()` has 76 call sites including purchases where gold is
+already deducted. The loss-proof form: cap distinct KINDS, never stacks; `give()` never refuses and never
+destroys; a new kind at a full pack goes to the farmhouse trunk with a toast naming it.
+
+**Produced:** v4.27.0 "In Reach" (hold-to-repeat, mouse wheel + Tab, smart tool select). Layout
+("Two Anchors"), the merged menu ("One Menu") and the inventory ("The Pack") remain queued. See
+`CHANGELOG.md`.
+
 ## 2026-07-24 — Undercroft playtest: the Warden is a wall, and the stairs are a chore
 
 **Owner feedback (near-verbatim):**

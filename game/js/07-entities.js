@@ -139,16 +139,24 @@ function facingInteractable(fx, fy){
   const o = objAt(fx,fy);
   return !!(o && INTERACT_KINDS.has(o.kind));
 }
-function toolActValid(fx, fy){
-  const tool = HOTBAR[slotSel] && HOTBAR[slotSel].tool;
+// v4.27: generalized so ANY tool can be tested against a tile, not just the held one. This is the oracle
+// smart-use reads to answer "is there exactly one right tool for what I'm facing?".
+function toolValidFor(tool, fx, fy){
   const tt = tileAt(fx,fy), o = objAt(fx,fy), k = key(fx,fy);
   if(tool==="Hoe")   return !o && TILLABLE.has(tt);
-  if(tool==="Can")   return tt===T.TILLED;
-  if(tool==="Seeds") return (tt===T.TILLED||tt===T.WATERED) && !curMap.crops[k];
+  // v4.27: Can and Seeds now also require the tile to be CLEAR. They used to test the tile alone, so a
+  // tree standing on tilled soil reported the watering can as "valid" — harmless when it only tinted the
+  // cursor, but smart-use reads this oracle to decide whether there's exactly one right tool, and a
+  // phantom second answer would make it stand down exactly when it should help.
+  if(tool==="Can")   return !o && tt===T.TILLED;
+  if(tool==="Seeds") return !o && (tt===T.TILLED||tt===T.WATERED) && !curMap.crops[k];
   if(tool==="Axe")   return !!(o && (TREES[o.kind] || o.kind==="deadfall" || o.kind==="ancient"));
   if(tool==="Pick")  return !!(o && (ORES[o.kind] || o.kind==="gemrock" || o.kind==="crystal"));
   if(tool==="Rod")   return tt===T.WATER;
-  return false;
+  return false;   // the Stave is deliberately absent: combat is aimed at creatures, never at a tile
+}
+function toolActValid(fx, fy){
+  return toolValidFor(HOTBAR[slotSel] && HOTBAR[slotSel].tool, fx, fy);
 }
 function drawHeldTool(x, y, face){
   if(swingT <= 0) return;

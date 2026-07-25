@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.26.0", code: 113, codename: "The Patron", date: "2026-07-25" };
+const VERSION = { name: "4.27.0", code: 114, codename: "In Reach", date: "2026-07-26" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.27.0", code:114, date:"2026-07-26", name:"In Reach", notes:[
+    { t:"feature", s:"Hold to keep working. Every swing used to be its own keypress — felling a heartwood with a starter axe meant twenty-four of them, and a Great Knot meant forty-two taps mid-fight. Now you just hold USE and the swings keep coming, at exactly the pace a perfect masher managed. It's the same speed; it's only your wrist that's better off." },
+    { t:"feature", s:"The mouse wheel changes tools. Scroll to move along the hotbar without ever taking a hand off the movement keys — the way you'd expect — and Tab does the same from the keyboard (hold Shift to go back). Tuned so a mouse notch is exactly one step and a trackpad flick is one step too, rather than spinning through the whole bar." },
+    { t:"feature", s:"The right tool comes to hand. Face a tree holding the watering can and pressing USE now reaches for the axe instead of doing nothing; face a rock, you take the pick; face water, the rod. It only ever steps in when there's exactly ONE right answer and what you're holding would have done nothing — so bare tilled soil, where you might water OR plant, stays entirely your call. Planting is never guessed at either: seeds only go in the ground because you said so. You can turn the whole thing off in Settings." },
+  ]},
   { v:"4.26.0", code:113, date:"2026-07-25", name:"The Patron", notes:[
     { t:"feature", s:"Rowan keeps a list now, and it never runs out. Once the Guild is properly awake he starts naming things the valley could use — the plaza lanterns, the market planters, the square's stone benches — and each one you fund is built, for good, where you can walk past it. They're paid the way the waystones and the bells are: set down what you can carry, come back with the rest, and the ledger remembers. Coin finally has somewhere to go for the whole back half of the game instead of running out of things to buy around your second season." },
     { t:"balance", s:"The deep-water fish have come back to the pack. Landing a coelacanth was worth more than a season's best crop for eight seconds of work, which quietly made every other way of earning a living pointless. The deepest five now sell for less, and the grilling premium is lower — but part of it is earned back at the stove, so a master cook's fish is worth noticeably more than a novice's. Everything up to the Golden Koi is untouched, so the early and middle game are exactly as they were. Fishing is still the finest living in the valley; it just isn't the only one worth having." },

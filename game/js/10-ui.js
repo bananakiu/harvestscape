@@ -1703,6 +1703,12 @@ function renderSettings(){
       `<input type="range" id="setHud" min="20" max="100" value="${Math.round(HUDPREF.opacity*100)}">` +
       `<span class="val">${Math.round(HUDPREF.opacity*100)}</span></div>` +
     `<div class="setRow"><span></span><span style="color:var(--ink-soft);font-size:.8em;">Dim or hide the on-screen display so it doesn't cover the map. Toggle any time with <b>U</b>.</span></div>` +
+    // v4.27: smart tool is ON by default (it is the fix to "I have to click on tools"), but a player who
+    // wants to pick every swing themselves should never have it imposed. Stored as an OPT-OUT flag so the
+    // default needs no migration and an existing save gets the comfort without touching anything.
+    `<div class="setRow"><span>Pick tools for me</span>` +
+      `<button class="dangerBtn" id="setSmartTool" style="min-width:3em;background:${!state.flags.noSmartTool?"#3d5a2e":"#332e2b"};border-color:${!state.flags.noSmartTool?"#6a8f52":"#544d48"};color:${!state.flags.noSmartTool?"#eaffd8":"#a89f98"};">${!state.flags.noSmartTool?"On":"Off"}</button></div>` +
+    `<div class="setRow"><span></span><span style="color:var(--ink-soft);font-size:.8em;">Facing a tree with the watering can? USE reaches for the axe instead. Only when there's exactly one right tool — watering vs planting on bare soil stays your call.</span></div>` +
     `<div class="setRow"><span>How to play</span><button class="dangerBtn" id="setHelp" style="background:#3a4a30;border-color:#6a8f52;color:#eaffd8;">Read the guide</button></div>` +
     `<div class="setRow"><span>Save</span><span style="color:var(--ink-soft);font-size:.85em;">auto-saves each night</span></div>` +
     `<div class="setRow"><span>Version</span><button class="dangerBtn" id="setNews" style="background:#3a3550;border-color:#6a648f;color:#e6e0ff;">v${VERSION.name} — What's New</button></div>` +
@@ -1717,6 +1723,7 @@ function renderSettings(){
   const hud = $("setHud");
   hud.oninput = () => { setHudOpacity(hud.value/100); hud.nextElementSibling.textContent = hud.value; };
   $("setHudOn").onclick = () => { setHudOn(!HUDPREF.on); playSfx("select"); renderSettings(); };
+  $("setSmartTool").onclick = () => { state.flags.noSmartTool = !state.flags.noSmartTool; playSfx("select"); saveGame(); renderSettings(); };
   $("setHelp").onclick = () => { closeAllPanels(); openLetter("❔ How to Play", HOWTO_TEXT); };
   $("setNews").onclick = () => openPanel("newsPanel", renderNews);
   $("setWipe").onclick = () => { if(confirm("Delete your save and restart from the title?")){ wipeSave(); location.reload(); } };
@@ -1916,9 +1923,44 @@ document.addEventListener("keydown", e => {
   else if(k === "u"){ if(!uiBlocking()) toggleHud(); }   // v4.0.2: dim/hide the HUD off the map's edges & corners
   else if(k === "shift"){ if(!uiBlocking()) startGuard(); }   // v4.4: raise the Warden's Guard (also right-click in the Undercroft / the touch 🛡)
   else if(k === "escape"){ if(dlg.open) closeDialog(); else closeAllPanels(); }
+  else if(k === "tab"){ e.preventDefault(); cycleSlot(e.shiftKey ? -1 : 1); }   // v4.27: cycle tools without leaving WASD
   else if("1234567".includes(k)) selectSlot(+k-1);   // v4.0: 7th slot is the Stave (only present once earned)
 });
 document.addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
+// v4.27: THE MOUSE WHEEL. Stardew's most-used input by a mile — you scroll to change tools without ever
+// looking away — and this game had no wheel handler at all, so the only ways to switch were the number
+// row (which pulls your hand off WASD) or clicking the tile. Wheel and Tab both cycle; Shift+Tab goes back.
+function cycleSlot(dir){
+  if(gameMode !== "play" || uiBlocking()) return;
+  const n = HOTBAR.length;
+  selectSlot(((slotSel + dir) % n + n) % n);
+}
+// A trackpad emits a burst of small deltas per flick (a mouse notch is ~100; a macOS two-finger swipe is
+// dozens of events of 1-4). Stepping per EVENT would spin through the whole hotbar, stack dozens of
+// overlapping "select" oscillators and rebuild the hotbar DOM dozens of times on a single gesture. So
+// accumulate and step per WHEEL_NOTCH, and reset the accumulator on a direction change so a flick back
+// answers immediately instead of first paying off the leftover in the other direction.
+let _wheelAcc = 0, _wheelLast = 0;
+const WHEEL_NOTCH = 50, WHEEL_GAP = 250;
+window.addEventListener("wheel", e => {
+  if(gameMode !== "play" || uiBlocking()) return;             // let panels scroll normally
+  if(!e.deltaY) return;
+  e.preventDefault();
+  const now = performance.now();
+  // a fresh gesture starts from zero: a leftover remainder from a flick a minute ago must never make the
+  // next one step early (or late). Reset on a pause, and on a direction change.
+  if(now - _wheelLast > WHEEL_GAP) _wheelAcc = 0;
+  _wheelLast = now;
+  if(_wheelAcc && Math.sign(e.deltaY) !== Math.sign(_wheelAcc)) _wheelAcc = 0;
+  _wheelAcc += e.deltaY;
+  // ONE step per event, maximum. A discrete mouse notch arrives as a single deltaY of ~100, which under a
+  // while-loop would step twice; a trackpad arrives as a burst of small deltas, which the accumulator
+  // turns into one step per threshold crossing. Capping at one keeps both honest.
+  if(Math.abs(_wheelAcc) >= WHEEL_NOTCH){
+    cycleSlot(_wheelAcc > 0 ? 1 : -1);
+    _wheelAcc = 0;
+  }
+}, { passive:false });
 window.addEventListener("blur", () => { for(const kk in keys) keys[kk] = false; fishHold = false; });
 
 // the quest tracker sits where the reel bar draws, so fade it out while you fight a fish

@@ -501,9 +501,61 @@ function canTiles(tx, ty, tier, face){
   return out;
 }
 
+// v4.27 SMART USE — the owner's loudest complaint was "I have to click on tools… way too tedious."
+// Choosing a tool has no timing and no skill element: you always already know that a tree wants the axe.
+// By the repo's own yardstick (v4.11: "harvest has no timing/skill element, so this removes friction, not
+// challenge") that makes manual switching pure friction. So: if what you're facing has EXACTLY ONE right
+// tool and you aren't holding it, USE picks it up for you and swings.
+//
+// "Exactly one" is doing the real work here, and the overlaps are why it's the rule rather than a
+// preference order. Empty tilled soil is valid for BOTH the Can and Seeds — water it or plant it is a
+// genuine choice, so smart-use deliberately stands down and leaves it to you. Trees/ore/water each have
+// one answer, so those switch. It also never overrides a deliberate pick: it only fires when the tool in
+// your hand would have done nothing at all.
+function smartTool(tx, ty){
+  const held = HOTBAR[slotSel] && HOTBAR[slotSel].tool;
+  if(!held || toolValidFor(held, tx, ty)) return -1;          // holding something that works — never interfere
+  let found = -1;
+  for(let i = 0; i < HOTBAR.length; i++){
+    // SEEDS ARE NEVER INFERRED. On watered soil Seeds is the ONLY valid tool, so without this the rule
+    // would resolve "uniquely" to planting — and a press meant as an axe swing would silently spend seed,
+    // up to NINE tiles at Can tier 3 (the v4.24 sweep), with no un-plant verb anywhere in the game. Seeds
+    // are finite, irreversible and can be 900g each; they only ever go in the ground because you said so.
+    if(HOTBAR[i].tool === "Seeds") continue;
+    if(!toolValidFor(HOTBAR[i].tool, tx, ty)) continue;
+    if(found >= 0) return -1;                                 // two answers = a real choice; stay out of it
+    found = i;
+  }
+  return found;
+}
+
+// v4.27 HOLD TO REPEAT — the deepest tedium in the game, and the plainest reading of "way too tedious".
+// The keydown handler swallows OS auto-repeat (`if(e.repeat) return`) and useTool has no cooldown, so
+// every swing was a discrete press AND mashing was optimal: a starter Axe on a Heartwood is 24 presses,
+// a Great Knot is 42 mashes of Space mid-fight. Holding USE now repeats at the swing's own cadence.
+//
+// Deliberately paced to the ANIMATION (0.26s) rather than faster: holding is exactly as fast as perfect
+// mashing, never faster, so this removes the wrist-ache without changing any rate the balance depends on.
+// Fishing is excluded outright — it already reads a held Space as "reel", and that IS a skill input.
+let useHoldT = 0;
+const USE_REPEAT = 0.28;
+function updateUseHold(dt){
+  if(gameMode !== "play" || paused || uiBlocking() || isCutscene()){ useHoldT = 0; return; }
+  if(fishing.state !== "idle"){ useHoldT = 0; return; }      // the reel owns held Space
+  const held = keys[" "] || fishHold;                         // keyboard or the mouse/touch USE button
+  if(!held){ useHoldT = 0; return; }
+  useHoldT += dt;
+  if(useHoldT >= USE_REPEAT){ useHoldT = 0; useTool(); }
+}
+
 function useTool(){
   if(gameMode!=="play" || paused || uiBlocking()) return;
   if(state.mounted){ toast("Hop down first — press H to dismount.", "#cbb98f"); return; }   // v3.22: no working from the saddle
+  if(!state.flags.noSmartTool){                                // opt-out lives in Settings for purists
+    const [sx,sy] = facingTile();
+    const pick = smartTool(sx, sy);
+    if(pick >= 0){ slotSel = pick; refreshHotbar(); playSfx("select"); }
+  }
   const tool = HOTBAR[slotSel].tool;
   const [tx,ty] = facingTile();
   const tt = tileAt(tx,ty), obj = objAt(tx,ty);
