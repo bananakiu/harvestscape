@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.29.0", code: 116, codename: "What to Plant", date: "2026-07-26" };
+const VERSION = { name: "4.30.0", code: 117, codename: "The Pack", date: "2026-07-26" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.30.0", code:117, date:"2026-07-26", name:"The Pack", notes:[
+    { t:"feature", s:"Hover anything to see what it is. Item name, how many you're carrying, what it sells for, what it restores, what a charm does, and its little line of flavour — on the backpack, in shops, at the machines, everywhere. You used to have to click an item and wait for the whole bag to redraw just to learn a price." },
+    { t:"fix", s:"Your backpack keeps its place. Clicking any item rebuilt the entire bag and snapped you back to the top, so checking something halfway down meant scrolling back down to it afterwards." },
+    { t:"fix", s:"Items stop moving around. Tiles were laid out in the order things first entered your bag, so spending the last of something and picking it up again sent its tile to the bottom of the section. Each section is sorted by name now, and stays put." },
+  ]},
   { v:"4.29.0", code:116, date:"2026-07-26", name:"What to Plant", notes:[
     { t:"feature", s:"Choosing what to plant is a menu now, not a guessing game. The sixth slot used to funnel every seed, sapling, hive, machine and décor piece through one blind ring you had to tap R through — often thirty-odd presses to reach the crop you wanted. Tap the slot (or press Shift+R) and you get a proper board instead: seeds, orchard, workshop and décor in their own sections, with how many you're carrying on each." },
     { t:"feature", s:"Seeds tell you their season. In-season ones say so plainly; the rest are dimmed and labelled with the season they belong to — so you'll never again cycle onto something the ground won't take. You can still pick a dimmed one on purpose if you're getting ready for next season." },

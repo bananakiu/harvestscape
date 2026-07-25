@@ -58,6 +58,7 @@ function boot(){
   ctx.imageSmoothingEnabled = false;
   initTitle();
   wireTouch();
+  wireTooltips();   // v4.30: one delegated hover tip for every data-icon surface
   setControlsHint();
   requestAnimationFrame(loop);
 }

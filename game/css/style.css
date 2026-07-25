@@ -826,3 +826,18 @@ input.qty{ -moz-appearance:textfield; appearance:textfield; }
 .seedCell .scName{ font-size:.82em; color:var(--parch); text-align:center; line-height:1.05; }
 .seedCell .scSub{ font-size:.72em; color:var(--parch-sh); text-align:center; line-height:1; }
 .seedCell .scCnt{ position:absolute; top:.14em; right:.28em; font-size:.74em; color:var(--gold-hi); }
+
+/* ---------- v4.30 hover tooltip ---------- */
+/* Stardew shows an item's worth on hover; here it took a click AND a full innerHTML rebuild of the bag
+   to read a sell price. The body is invDetailHtml's, minus its buttons. */
+#tip{
+  position:absolute; z-index:20; pointer-events:none; max-width:16em;
+  background:linear-gradient(180deg, rgba(44,32,22,.99), rgba(30,22,15,.99));
+  border:.16em solid var(--wood-hi); border-radius:.5em; padding:.3em .5em;
+  box-shadow:var(--shadow); font-size:.9em; line-height:1.25;
+  opacity:0; transition:opacity .1s ease;
+}
+#tip.show{ opacity:1; }
+#tip .tName{ color:var(--gold-hi); }
+#tip .tVal{ color:var(--gold); font-size:.9em; }
+#tip .tEx{ color:var(--parch-sh); font-style:italic; font-size:.85em; }

@@ -641,6 +641,10 @@ function renderInv(){
   const SEC = {}; MUSEUM.forEach(s => s.items().forEach(n => SEC[n] = s.name));
   const groups = {};
   for(const it of items){ const g = SEC[it] || "Satchel"; (groups[g] = groups[g] || []).push(it); }
+  // v4.30: sort each section by NAME. Tiles were laid out in Object.keys insertion order and take()
+  // deletes a key at zero, so spending an item and re-earning it moved its tile to the end of its
+  // section — the exact opposite of the fixed-slot muscle memory a bag is supposed to build.
+  for(const g in groups) groups[g].sort((a,bb) => a.localeCompare(bb));
   const secOrder = MUSEUM.map(s => s.name).filter(n => groups[n]);
   if(groups["Satchel"]) secOrder.push("Satchel");
   let html = "";
@@ -654,7 +658,12 @@ function renderInv(){
     html += `</div>`;
   }
   html += `<div id="invDetail">${invDetailHtml(invSel)}</div>`;
+  // v4.30: keep the scroll position. renderInv rewrites the whole body, and selectInvItem calls it on
+  // EVERY tile click — so clicking anything in a scrolled bag snapped you back to the top, and you had to
+  // scroll down and find your place again just to read what you'd tapped.
+  const keepScroll = b.scrollTop;
   b.innerHTML = html;
+  b.scrollTop = keepScroll;
   hydrateIcons(b);
 }
 function wearCharm(name){
@@ -1715,6 +1724,49 @@ function renderCooking(){
   });
   b.innerHTML = html; hydrateIcons(b);
 }
+// ---- v4.30 hover tooltips ----
+// Every item surface in the game already carries data-icon (bag tiles, shop rows, machine rows, gift
+// rows, collection tiles), and invDetailHtml already assembles precisely Stardew's tooltip body. It was
+// simply gated behind a click plus a full innerHTML rebuild. One delegated listener on #stage covers all
+// of them, present and future. Desktop only — touch keeps tap-to-select, which is the right verb there.
+function tipBodyFor(item){
+  if(!item) return "";
+  let h = `<div class="tName">${escapeHtml(item)}${state.inv[item] ? ` ×${state.inv[item]}` : ""}</div>`;
+  const bits = [];
+  if(ITEM_SELL[item]) bits.push(`${ITEM_SELL[item]}g`);
+  if(EDIBLE[item])    bits.push(`+${EDIBLE[item]} energy`);
+  if(CHARMS[item])    bits.push(CHARMS[item].effect);
+  if(bits.length) h += `<div class="tVal">${bits.join(" · ")}</div>`;
+  if(EXAMINE[item])   h += `<div class="tEx">${escapeHtml(EXAMINE[item])}</div>`;
+  return h;
+}
+function wireTooltips(){
+  if(IS_TOUCH) return;                       // tap-to-select is the touch verb; a hover tip would never show
+  const tip = $("tip"), stage = $("stage");
+  if(!tip || !stage) return;
+  const hide = () => { tip.classList.remove("show"); tip.classList.add("hidden"); };
+  stage.addEventListener("mouseover", e => {
+    const el = e.target.closest && e.target.closest("[data-icon]");
+    if(!el){ hide(); return; }
+    const icon = el.dataset.icon || "";
+    if(icon.indexOf("item_") !== 0){ hide(); return; }   // skill/tool icons aren't items
+    const body = tipBodyFor(icon.slice(5));
+    if(!body){ hide(); return; }
+    tip.innerHTML = body; tip.classList.remove("hidden");
+    // measure, then clamp inside the stage so a tile near an edge never pushes the tip off-screen
+    const sr = stage.getBoundingClientRect(), er = el.getBoundingClientRect(), tr = tip.getBoundingClientRect();
+    let x = er.left - sr.left + er.width/2 - tr.width/2;
+    let y = er.top  - sr.top  - tr.height - 6;
+    if(y < 4) y = er.bottom - sr.top + 6;                // no room above → flip below
+    x = Math.max(4, Math.min(x, sr.width - tr.width - 4));
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+    tip.classList.add("show");
+  });
+  stage.addEventListener("mouseout", e => { if(!e.relatedTarget || !e.relatedTarget.closest || !e.relatedTarget.closest("[data-icon]")) hide(); });
+  // a panel closing under the cursor must not leave a tip stranded
+  stage.addEventListener("mousedown", hide);
+}
+
 function hydrateIcons(root){
   root.querySelectorAll("[data-icon]").forEach(el => {
     const c = el.querySelector("canvas"); if(!c) return;

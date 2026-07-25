@@ -7,7 +7,7 @@
 <title>Harvestscape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=156">
+<link rel="stylesheet" href="css/style.css?v=158">
 </head>
 <body>
 <div id="frame">
@@ -98,6 +98,11 @@
     <div class="panel hidden" id="wardLedgerPanel"><div class="phead"><h2>THE WARDEN'S LEDGER</h2><button class="pclose">✕</button></div><div class="body"></div></div>
     <div class="panel hidden" id="bellPanel"><div class="phead"><h2>THE WARDEN'S BELL</h2><button class="pclose">✕</button></div><div class="body"></div></div>
 
+    <!-- v4.30: one shared hover tooltip. Every item surface already carries data-icon, and invDetailHtml
+         already assembles exactly Stardew's tooltip body (name, count, value, energy, flavour) — it was
+         just gated behind a click and a full panel rebuild. Desktop only; touch keeps tap-to-select. -->
+    <div id="tip" class="hidden"></div>
+
     <!-- ============ CINEMATIC LETTERBOX ============ -->
     <div id="cinebars"><div class="cbar top"></div><div class="cbar bot"></div></div>
 
@@ -178,21 +183,21 @@
   </div>
 </div>
 
-<script src="js/00-core.js?v=156"></script>
-<script src="js/01-data.js?v=156"></script>
-<script src="js/02-audio.js?v=156"></script>
-<script src="js/03-art.js?v=156"></script>
-<script src="js/04-world.js?v=156"></script>
-<script src="js/05-particles.js?v=156"></script>
-<script src="js/06-weather.js?v=156"></script>
-<script src="js/07-entities.js?v=156"></script>
-<script src="js/08-actions.js?v=156"></script>
-<script src="js/09-quests.js?v=156"></script>
-<script src="js/13-content.js?v=156"></script>
-<script src="js/15-warding.js?v=156"></script>
-<script src="js/10-ui.js?v=156"></script>
-<script src="js/11-title.js?v=156"></script>
-<script src="js/14-story.js?v=156"></script>
-<script src="js/12-game.js?v=156"></script>
+<script src="js/00-core.js?v=158"></script>
+<script src="js/01-data.js?v=158"></script>
+<script src="js/02-audio.js?v=158"></script>
+<script src="js/03-art.js?v=158"></script>
+<script src="js/04-world.js?v=158"></script>
+<script src="js/05-particles.js?v=158"></script>
+<script src="js/06-weather.js?v=158"></script>
+<script src="js/07-entities.js?v=158"></script>
+<script src="js/08-actions.js?v=158"></script>
+<script src="js/09-quests.js?v=158"></script>
+<script src="js/13-content.js?v=158"></script>
+<script src="js/15-warding.js?v=158"></script>
+<script src="js/10-ui.js?v=158"></script>
+<script src="js/11-title.js?v=158"></script>
+<script src="js/14-story.js?v=158"></script>
+<script src="js/12-game.js?v=158"></script>
 </body>
 </html>

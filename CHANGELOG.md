@@ -22,6 +22,70 @@
 
 ---
 
+## 2026-07-26 — v4.30.0 "The Pack" (code 117, tag `v4.30.0`) — the backpack stops fighting you
+
+### Why this release
+
+The backpack half of the owner's inventory brief. v4.29 fixed the *placeable* slot; this fixes the bag
+itself. All three defects were measured by the UI audit and are felt on ordinary use.
+
+### Added — hover tooltips
+
+`invDetailHtml` **already assembled precisely Stardew's tooltip body** — name, ×count, `Ng each`,
+`+N energy`, the charm effect, the italic `EXAMINE` flavour line — and gated the whole thing behind a
+click plus a full `innerHTML` rebuild of the bag. Meanwhile every item surface in the game already carries
+`data-icon`: bag tiles, shop rows, machine rows, gift rows, collection tiles.
+
+- One `#tip` div, one **delegated** `mouseover` on `#stage`, keyed off `data-icon` starting `item_` — so it
+  covers every one of those surfaces, present and future, without touching their render functions. Skill
+  and tool icons are excluded (they aren't items).
+- Positioned above the hovered tile and **clamped inside the stage**, flipping below when there's no room —
+  a tile near an edge can never push the tip off-screen.
+- Hidden on `mousedown` so a panel closing under the cursor can't strand it.
+- `IS_TOUCH` returns early: tap-to-select is the right verb on touch, and a hover tip would never show.
+
+### Fixed — the bag lost your scroll position on every click
+
+`selectInvItem` calls `renderInv`, which rewrites the whole body — so clicking any tile in a scrolled bag
+snapped you to the top, and you had to scroll back down to read what you'd just tapped. Scroll position is
+now captured and restored across the rebuild.
+
+### Fixed — tiles jumped around
+
+Tiles were laid out in `Object.keys(state.inv)` **insertion order**, and `take()` deletes a key at zero —
+so spending the last of something and re-earning it moved its tile to the *end* of its section. That is
+the exact opposite of the fixed-slot muscle memory a bag exists to build. Each section is now sorted by
+name.
+
+### Verification (live build, console clean)
+
+Spending Turnip to zero and re-earning it leaves the tile order **byte-identical**. `scrollTop` 40 survives
+a tile click. Tooltip bodies assemble correctly for a fish (`Salmon ×3 · 240g · flavour`) and a charm
+(`Wren Feather Charm ×1 · 120g · +5% Woodcutting XP while worn · flavour`); screenshotted rendering above
+the tile with the position clamped inside the stage.
+
+### Files
+
+- `game/js/10-ui.js` — `tipBodyFor()` / `wireTooltips()`; `renderInv` scroll preservation + per-section sort.
+- `game/js/12-game.js` — `wireTooltips()` at boot.
+- `game/index.html` — `#tip`.
+- `game/css/style.css` — `#tip` styling.
+- `game/js/01-data.js` — VERSION + in-game CHANGELOG.
+- `game/index.html` — cache-buster `?v=158`.
+
+### Still queued — the carry cap
+
+The one part of the owner's inventory ask still unbuilt, and deliberately so: it is the riskiest change in
+the UI programme and wants its own session. The design is settled (audit-endorsed, contract-checked):
+**cap distinct KINDS, never stacks** — there is no stack model and inventing one would break
+`give`/`take`/`ITEM_SELL`/`bundlePrice`/`pledgeRemaining` arithmetic everywhere; **`give()` must never
+refuse and never destroy** across its 76 call sites, several of which are shop purchases with gold already
+deducted, plus quest rewards, story parcels and boss drops; a new kind arriving at a full pack goes to a
+**farmhouse shelf** with a toast naming it, and tools, the worn charm and story keepsakes are exempt.
+Bag upgrades then become the early-to-mid gold sink: 24 kinds at start, 2,500g → 36, 12,000g → 48.
+
+---
+
 ## 2026-07-26 — v4.29.0 "What to Plant" (code 116, tag `v4.29.0`) — the miscellaneous slot stops being a soup
 
 ### Why this release
