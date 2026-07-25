@@ -332,6 +332,52 @@ function refreshHotbar(){
 }
 
 // ---- quest tracker ----
+// v4.26 "The Long Sight" — the standing goals card. Past the story (and the Warden's Round), trackerData()
+// returns null and #questTracker rendered a LITERALLY EMPTY box for the rest of the save — hundreds of
+// hours with nothing on screen naming what you are building toward. This is read-only projection of
+// numbers already stored: no XP, no gold, no items, no rate change, nothing to accelerate.
+//
+// MEMOIZED, and it has to be: refreshQuestTracker is called from checkQuests, which runs unconditionally
+// at the end of EVERY addXP — 50-200×/day beside a 60fps canvas loop. The shelf line alone would otherwise
+// re-invoke all 13 MUSEUM items() closures (re-mapping CROPS, FISH, RECIPES, CHARMS and flat-mapping
+// CREATURES) on every single swing. Invalidated on a day change and whenever a new item is discovered.
+let _goalCache = null, _goalStamp = "";
+function invalidateGoals(){ _goalCache = null; }
+function standingGoalsHtml(){
+  if(gameMode !== "play" || !state || !state.skills) return "";
+  const stamp = state.day + ":" + (state.discovered ? Object.keys(state.discovered).length : 0);
+  if(_goalCache !== null && _goalStamp === stamp) return _goalCache;
+  _goalStamp = stamp;
+  const rows = [];
+  // 1) the closest craft to 99 — rotate DAILY through the unfinished ones (never `day % 6`, which lands
+  //    on an already-99 skill and prints "Farming 99 → 99"), and prefer one with sparks left today so the
+  //    line reinforces v4.23's rhythm rather than parking you in whichever craft is deepest in the desert.
+  const unfinished = Object.keys(state.skills).filter(s => skillLvl(s) < 99);
+  if(unfinished.length){
+    const sparky = unfinished.filter(s => sparkCap() - ((state.dailyXpActs && state.dailyXpActs[s]) || 0) > 0);
+    const pool = sparky.length ? sparky : unfinished;
+    const s = pool[state.day % pool.length];
+    rows.push(`<div class="qt-obj">✦ ${s} ${skillLvl(s)} <span class="sub">→ 99</span></div>`);
+  }
+  // 2) the shelf closest to done — a concrete, findable errand
+  if(typeof MUSEUM !== "undefined"){
+    let best = null;
+    for(const sec of MUSEUM){
+      const c = collSectionCount(sec); const left = c.total - c.found;
+      if(left > 0 && (!best || left < best.left)) best = { name:sec.name, left, ...c };
+    }
+    if(best) rows.push(`<div class="qt-obj">🗃 ${best.name} <span class="sub">${best.found}/${best.total}</span></div>`);
+  }
+  // 3) the crown, counted in LEVELS — never raw XP; "3,488,124 XP remaining" fights the curve's own stated
+  //    intent that the climb is paced to be savoured.
+  if(!state.flags.valleyMaster && typeof totalLevel === "function")
+    rows.push(`<div class="qt-obj">♛ Total ${totalLevel()} <span class="sub">/ ${99*Object.keys(state.skills).length} · the Valley's Crown</span></div>`);
+  _goalCache = rows.length
+    ? `<div class="qt-card" style="opacity:.9"><div class="qt-title" style="color:#cbb98f">✦ The long sight</div>${rows.join("")}</div>`
+    : "";
+  return _goalCache;
+}
+
 function refreshQuestTracker(){
   const box = $("questTracker"); if(!box) return;
   const q = trackerData();
@@ -346,6 +392,11 @@ function refreshQuestTracker(){
     html += `</div>`;
   }
   html += boardTrackerHtml();
+  // v4.26: ONLY when there is no live quest/ledger card. Never append it faintly alongside one — the
+  // v3.x event-pill lesson (tightened because "*something* was almost always inside the window, so it read
+  // as permanent top-of-screen chrome") applies exactly here: #questTracker is ~36% of a 320×208 stage, and
+  // a ledger card + a board card + a 3-line standing card is ten lines of overlay in a third of the screen.
+  if(!q) html += standingGoalsHtml();
   box.innerHTML = html;
 }
 // a faint second card for today's noticeboard request — the small, skippable goal of the day
@@ -666,6 +717,13 @@ function renderCollectionHtml(){
 // backfilled SILENTLY on the first run (state.flags.collInit) so a long save never gets a retro storm of
 // fanfares for shelves it filled seasons ago — the same guard shape migrateSave uses.
 function collSectionKey(name){ return "coll_" + name.replace(/[^A-Za-z0-9]/g, ""); }
+// v4.26: one source for a shelf's progress. renderCollectionHtml computed found/total inline, so the
+// Journal page and anything else showing the same number could silently drift apart.
+function collSectionCount(sec){
+  const d = state.discovered || {}, items = sec.items();
+  let found = 0; for(const it of items) if(d[it]) found++;
+  return { found, total: items.length };
+}
 function collSectionComplete(sec){
   const d = state.discovered || {}, items = sec.items();
   return items.length > 0 && items.every(it => d[it]);
@@ -1725,11 +1783,38 @@ function showSleepCard(s){
     const t = trackerData();
     if(t) lines.push(t.reportTo ? `✒ ${t.reportTo} ${t.ledger ? "waits to be closed" : "is waiting to hear from you"}` : `✒ The story waits: ${t.title}`);
   }
-  lines.push("☕ Energy restored");
-  lines.push("💾 Progress saved");
-  lines.forEach((t,i) => { const li = document.createElement("li"); li.textContent = t; li.style.animationDelay = (i*0.28+0.3)+"s"; list.appendChild(li); });
+  // v4.26: ONE line naming what the valley is asking for today, so the morning offers the day's small
+  // goals without four separate rows. Each of these rolls from its own seeded per-day RNG stream, so
+  // reading them here is roll-identical to reading them later (todaysRequest additionally filters on live
+  // skill levels, which only makes an early call MORE stable — exactly what its own comment asks for).
+  {
+    const asks = [];
+    if(typeof todaysRequest === "function" && !requestFilled()){ const r = todaysRequest(); if(r) asks.push(NPCDEF[r.who] ? NPCDEF[r.who].name + "'s request" : "the board"); }
+    if(typeof todaysNellOrder === "function" && !nellOrderFilled() && todaysNellOrder()) asks.push("Nell's order");
+    if(typeof todaysWardRound === "function" && !wardRoundFilled() && todaysWardRound()) asks.push("the Round");
+    if(asks.length) lines.push(`📋 Today: ${asks.join(" · ")}`);
+  }
+  // v4.26: "Energy restored / Progress saved" fired identically every morning for 250 days — pure chrome.
+  // They move into the hint footer, which frees two rows for things that actually differ day to day.
+  // THE STAGGER BUG (fixed here): the CSS animation is .5s and the card hides at 2700ms, so with a flat
+  // 0.28s step line index 9 started at 2.82s — AFTER the card was gone — and line 8 reached ~32% opacity.
+  // On a busy morning (married + orchard + hives + workshop + a season turn) the buried lines were the
+  // FORECAST, the CALENDAR nudge and the v4.16 STORY line, so "the morning names the mission" was silently
+  // broken on exactly the mornings that mattered. Capping the total ramp at 1.7s fixes every line count and
+  // is pixel-identical on today's quiet 7-line morning (6 × 0.28 = 1.68 < 1.7, so the step stays 0.28).
+  const step = Math.min(0.28, 1.7 / Math.max(1, lines.length - 1));
+  lines.forEach((t,i) => { const li = document.createElement("li"); li.textContent = t; li.style.animationDelay = (i*step+0.3)+"s"; list.appendChild(li); });
+  const hint = card.querySelector(".scHint");
+  if(hint) hint.textContent = "☕ energy restored · 💾 saved — click to rise";
   playSfx("wake");
-  setTimeout(() => {
+  // v4.26: the card is skippable. It must latch, because the global keydown has no `sleeping` branch and
+  // dispatches "e" to interact(), whose `case "bed"` guards only on `sleeping` — which the dismissal just
+  // set false. Without the latch one E press would skip the card AND immediately burn the next day.
+  let done = false;
+  const finish = () => {
+    if(done) return; done = true;
+    clearTimeout(timer);
+    card.onclick = null; document.removeEventListener("keydown", onKey, true);
     card.classList.add("hidden");
     sleeping = false;
     // never unpause into an active cutscene/festival (belt-and-suspenders with doSleep's guard)
@@ -1738,7 +1823,16 @@ function showSleepCard(s){
     if(s.rain) queuePage(6, 800);                              // "On Rain"
     catchUpPages();                                            // re-offer any page that never landed
     setTimeout(maybeLastPage, 1400);                           // the letter under the door
-  }, 2700);
+  };
+  const onKey = (e) => {
+    const k = (e.key||"").toLowerCase();
+    if(k !== " " && k !== "enter" && k !== "e") return;
+    e.preventDefault(); e.stopPropagation();                   // never let this same press reach interact()
+    finish();
+  };
+  card.onclick = finish;
+  document.addEventListener("keydown", onKey, true);            // capture, so it runs before the global handler
+  const timer = setTimeout(finish, 3000);                       // the stagger needs the room; the skip buys it back
 }
 
 // ---- controls hint ----

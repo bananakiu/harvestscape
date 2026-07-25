@@ -8,13 +8,19 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.24.0", code: 111, codename: "The Morning Round", date: "2026-07-25" };
+const VERSION = { name: "4.25.0", code: 112, codename: "The Long Sight", date: "2026-07-25" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.25.0", code:112, date:"2026-07-25", name:"The Long Sight", notes:[
+    { t:"fix", s:"Your morning card was hiding its most important lines. Everything after the eighth item simply never appeared — and on a busy morning (married, an orchard bearing, hives full, a workshop batch done, a season turning) the ones that fell off the end were exactly the ones worth reading: tomorrow's weather, the festival or birthday coming up, and what the story is waiting on. The card now paces itself to fit however much it has to say." },
+    { t:"feature", s:"You can skip the morning card. Click it, or press Space, and you're up — no more waiting out the same three seconds every single day. 'Energy restored' and 'progress saved' have moved down into the footer, since they were true every morning for two hundred days and never told you anything." },
+    { t:"feature", s:"The morning names what the valley is asking for today — the board request, Nell's order, the Warden's Round — on one line, so you know the day's small errands before you've walked anywhere." },
+    { t:"feature", s:"The corner tracker no longer goes blank when the story is done. Once there's nothing pressing, it quietly shows the long view instead: the craft you're closest to mastering, the Collection shelf nearest completion, and how far off the Valley's Crown is. It only ever appears when nothing else needs that corner — it never crowds a live task." },
+  ]},
   { v:"4.24.0", code:111, date:"2026-07-25", name:"The Morning Round", notes:[
     { t:"change", s:"Sowing a field is one press per swathe now, not one press per furrow. Your seeds go into the same patch your can waters and your harvest gathers — so tilling, watering, planting and picking all cover the same ground. Short on seeds? It plants what you're holding, starting with the tile you're actually pointing at, and stops. Planting was the last field verb still charging you by the furrow." },
     { t:"feature", s:"You can see what a tool is about to touch. The hoe and can have watered and tilled whole swathes for a long time without ever showing you where — you aimed at one tile and four more quietly happened. Now the full footprint is outlined faintly with the tile you're facing picked out bright, so a mis-aimed sweep never buries a handful of expensive seed in soil you meant to leave alone." },

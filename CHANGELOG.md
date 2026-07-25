@@ -22,6 +22,97 @@
 
 ---
 
+## 2026-07-25 — v4.25.0 "The Long Sight" (code 112, tag `v4.25.0`) — the day gets a shape at both ends
+
+### Why this release
+
+Release #4 from the fun-and-pacing audit, taken ahead of "The Patron" because it is cheap, wholly
+additive, and **contains a live defect that has been silently degrading the game's own signposting**.
+
+### Fixed — the wake card was hiding its most important lines
+
+The `#scList li` CSS animation is `.5s`, the card hid at **2700ms**, and lines were staggered at a flat
+`i*0.28 + 0.3`. So line index *i* finished at `i*0.28 + 0.8`:
+
+| lines | last line finishes | card hid at | result |
+|---|---|---|---|
+| 7 (quiet morning) | 2.48s | 2.7s | fine |
+| 10 | **3.32s** | 2.7s | never shown |
+| 12 (busy morning) | **3.88s** | 2.7s | never shown |
+
+Index 9 and beyond **never started animating at all** (they sat at `opacity:0`), and index 8 reached only
+~32%. Because the list is built in a fixed order, the lines that fell off the end were always the last
+ones pushed: **the forecast, the calendar nudge, and the v4.16 story-tracker line.** "The morning names
+the mission" was broken on exactly the mornings that had the most to say.
+
+- Fix: `const step = Math.min(0.28, 1.7 / Math.max(1, lines.length - 1))` — caps the whole ramp at 1.7s,
+  so the last line always finishes by ~2.5s for **any** line count. **Pixel-identical on today's quiet
+  7-line morning** (6 × 0.28 = 1.68 < 1.7, so the step stays 0.28). Verified at 7/10/12/15/20 lines.
+
+### Added — the card is skippable, and says something new
+
+- Click, Space, Enter or E dismisses it. This **must** latch, and does: the global keydown has no
+  `sleeping` branch and dispatches `"e"` to `interact()`, whose `case "bed"` guards only on `sleeping` —
+  which the dismissal has just set false. Without the latch (plus `preventDefault`/`stopPropagation` on a
+  **capture**-phase listener) one E press would skip the card *and instantly burn the next day*.
+- Auto-dismiss raised 2700 → **3000ms** — the stagger fix needs the room, and the skip buys it back.
+- **"☕ Energy restored" and "💾 Progress saved" moved into the footer hint.** They fired identically every
+  morning for 250 days; that is chrome, not information. Two rows freed for things that actually differ.
+- **One new line naming the day's unfilled asks** — `📋 Today: Pip's request · Nell's order · the Round`.
+  One line, not four: `.scInner` has no max-height and no overflow, and four ask rows would clip on a
+  mobile landscape viewport, regressing v4.19's touch-parity work. Safe to read at wake: each of those
+  rolls from its own seeded `makeRng(seed + day*k)` stream and never touches `Math.random()`, so calling
+  them early is roll-identical (and `todaysRequest` filters on live skill levels, so an early call is
+  *more* stable, exactly as its own comment asks).
+
+### Added — the standing-goals card, so the tracker stops rendering an empty box
+
+Past the story and the daily Round, `trackerData()` returns null and `#questTracker` rendered a **literally
+empty box** for the rest of the save. New `standingGoalsHtml()` shows the long view:
+
+- **The craft closest to 99**, rotated daily through the *unfinished* ones. Deliberately not `day % 6`,
+  which lands on an already-99 skill and prints "Farming 99 → 99"; and biased toward a craft with sparks
+  left today, so the line **reinforces v4.23's rhythm** instead of parking you in whichever craft is
+  deepest in the 86-98 desert. Verified: with Farming and Mining at 99, twelve consecutive days rotate
+  only across the four unfinished crafts.
+- **The Collection shelf closest to done**, via a new `collSectionCount(sec)` — one source of truth, so the
+  HUD line and the Journal page can never drift.
+- **The Crown**, counted in **levels** (`Total 521 / 594`), never raw XP: "3,488,124 XP remaining" fights
+  the curve's own stated intent that the climb is paced to be savoured. Hidden once `valleyMaster` latches.
+- **Only when `trackerData()` is null.** Never appended faintly beside a live card — `#questTracker` is
+  ~36% of a 320×208 stage, and the v3.x event-pill lesson (tightened because "*something* was almost always
+  inside the window, so it read as permanent chrome") applies precisely here.
+- **Memoized, and it had to be.** `refreshQuestTracker` is called from `checkQuests`, which runs
+  unconditionally at the end of **every `addXP`** — 50-200×/day beside a 60fps canvas loop. The shelf line
+  alone would otherwise re-invoke all 13 `MUSEUM` `items()` closures (re-mapping CROPS/FISH/RECIPES/CHARMS
+  and flat-mapping CREATURES) on every swing. Cached on a `day:discoveredCount` stamp and explicitly
+  invalidated from `discover()`.
+
+**This adds no XP, no gold, no items and no rate change** — it is a read-only projection of numbers already
+stored, so there is no loop to accelerate.
+
+### Verification (live build, console clean)
+
+Stagger fits inside the dismiss at 7/10/12/15/20 lines and is unchanged on a quiet morning. Standing card
+renders only when the tracker is null, rotates only across unfinished crafts, and memoizes. Screenshotted
+in a real day-137 post-finale save: *"✦ The long sight · Fishing 95 → 99 · The Orchard 2/3 · Total 521 / 594
+· the Valley's Crown"* — in the corner that was empty before.
+
+### Files
+
+- `game/js/10-ui.js` — stagger fix, skip latch, footer/asks lines, `standingGoalsHtml()`, `collSectionCount()`.
+- `game/js/04-world.js` — `discover()` invalidates the goal cache.
+- `game/js/01-data.js` — VERSION + in-game CHANGELOG.
+- `game/index.html` — cache-buster `?v=142`.
+
+### Note on naming
+
+The audit called this v4.26 behind "The Patron" (its v4.25). I shipped it first — it is S-effort, contains
+a real defect, and The Patron's faucet cut should follow the v4.23 Cooking retune once ★ Renowned's +25%
+dish premium is measurable. The Patron keeps its place as the next release, under whatever number is free.
+
+---
+
 ## 2026-07-25 — v4.24.0 "The Morning Round" (code 111, tag `v4.24.0`) — the mature farm stops being 44 undifferentiated presses
 
 ### Why this release

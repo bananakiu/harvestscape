@@ -61,6 +61,7 @@ function discover(name){
   // v4.21: only a genuinely NEW find can close a shelf, so the check rides the early-return above and
   // costs nothing on the common path. (This function's return value was read by nothing until now.)
   if(typeof checkCollection === "function") checkCollection();
+  if(typeof invalidateGoals === "function") invalidateGoals();   // v4.26: a new find can change the closest shelf
   return true;
 }
 function ensureRel(id){ if(!state.rel[id]) state.rel[id] = { points:0, talkedDay:0, giftedDay:0 }; return state.rel[id]; }
