@@ -733,6 +733,41 @@ function genVillage(m){
   if(state.flags && state.flags.lanternTest){
     putIf(true, 18,11, { kind:"lantern" }); putIf(true, 22,11, { kind:"lantern" });
   }
+  // --- v4.26 THE PATRON'S COMMISSIONS — the repeatable gold sink, made visible ---
+  // Gold's problem was never the amount, it was the absence of a REFERENT: every sink was one-time and
+  // finite. These never run out, and each funded rung leaves a real mark on the square, so the coin you
+  // spend is a thing you can walk past. Stamped at GENERATION time gated on state.patronTier — the
+  // village regenerates daily from mapCache, so a fixture placed at runtime would silently vanish
+  // overnight (the same rule applyProjects and the wing dressing above already follow).
+  //
+  // LIGHT BUDGET, deliberate: lanterns feed collectLights into drawLighting's ADDITIVE pass, and the
+  // square can already hold up to a dozen (mining 2 + hearth 4 + lantern-test 2 + boardwalk 4). Only two
+  // of the ten rungs add light, and they yield entirely once the square is already bright — a commission
+  // never makes the village glare.
+  {
+    const tier = (state && state.patronTier) || 0;
+    const lightsNow = Object.values(m.objects).filter(o => o && (o.kind === "lantern" || o.kind === "lamp")).length;
+    const lightOk = lightsNow < 10;
+    const PATRON_FIXTURES = [
+      [[15,10,"lantern"],[25,10,"lantern"]],          // 1 the plaza lanterns      (light)
+      [[13,12,"plantpot"],[27,12,"plantpot"]],        // 2 the market planters
+      [[15,17,"bench"],[25,17,"bench"]],              // 3 the square's benches
+      [[18,8,"beam"],[22,8,"beam"]],                  // 4 the guild-steps rail
+      [[19,21,"lantern"],[21,21,"lantern"]],          // 5 the south lane's lamps  (light)
+      [[12,16,"barrel"],[13,16,"crate"]],             // 6 the old well's winch
+      [[23,13,"campfire"]],                           // 7 the plaza cook-fire
+      [[4,15,"berrybush"],[35,15,"berrybush"]],       // 8 the lane hedges
+      [[8,12,"anvil"]],                               // 9 the smith's second anvil
+      [[10,11,"stall"]],                              // 10 the market's long stall
+    ];
+    for(let i = 0; i < Math.min(tier, PATRON_FIXTURES.length); i++){
+      for(const [fx, fy, kind] of PATRON_FIXTURES[i]){
+        if((kind === "lantern" || kind === "lamp") && !lightOk) continue;
+        if(!m.objects[key(fx,fy)] && m.tiles[fy*W+fx] !== T.DOOR) m.objects[key(fx,fy)] = { kind };
+      }
+    }
+  }
+
   // …and until three wings are lit, the shuttered years still show
   const lit = wingsLit();
   if(lit < 3){

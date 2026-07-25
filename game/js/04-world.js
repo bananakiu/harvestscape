@@ -38,6 +38,7 @@ function freshState(){
     iFrame:0,                              // v4.0 post-hit invulnerability timer — MUST be a number before combat (undefined<=0 is false, which would silently disable all damage)
     guardT:0, guardCd:0,                    // v4.4 the Warden's Guard: brace window remaining / cooldown after (both seconds; transient, reset on map change)
     wardBells:[],                          // v4.0 funded Warden's Bells (floor numbers 5/10/15) — permanent, like liftStops
+    patronTier:0,                          // v4.26 how many of the valley's standing commissions are funded (the repeatable gold sink)
     pledges:{},                            // the Pledge Ledger: id → { gPaid, mats:{item:n} } (see 01-data.js)
     waystones:[],                          // awakened waystone ids ("way3"…) — permanent, like liftStops
     charm:null,                            // the one canopy charm worn (its item must also be in inv)

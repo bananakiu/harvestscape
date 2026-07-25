@@ -22,6 +22,106 @@
 
 ---
 
+## 2026-07-25 — v4.26.0 "The Patron" (code 113, tag `v4.26.0`) — gold reacquires a referent, and the runaway faucet comes back to the pack
+
+### Why this release
+
+The deepest economic finding of the fun-and-pacing audit, and the one I deliberately held until after
+v4.23 so ★ Renowned's newly-reachable +25% dish premium was on the table before retuning income.
+
+**Every gold sink in the game was one-time and finite** (~426k of gold-only content) while **one faucet was
+uncapped**. I measured the faucet myself rather than trusting the audit: simulating `hookFish`'s actual
+index-weighted pick over the live coast pool at Fishing 85 gives ~915g raw per cast (~988 at night), so a
+40-cast day — the clock, not energy, is the real limit — cleared **~64,000 g/day cooked** against a
+60-tile Everbloom field's 4,000. Gold stopped meaning anything around **day 45-60**, with ~200 days of
+intended play left.
+
+**The structure of this release is the point: the sink lands in the same release as the cut.** A faucet
+trim on its own is felt as "slower" and gets reverted; a trim next to somewhere new to spend is felt as
+the economy finally having a shape.
+
+### Added — the Patron's Commissions (the first uncapped repeatable gold sink)
+
+A **fourth prefix on the pledge system**, deliberately not a `PROJECTS` entry: `fundProject` is atomic (no
+partial deposits), its done-ness is a permanent boolean, `PROJECT_BY_ID` is built once at load so a
+runtime-appended entry would be dead on click, and an endless PROJECTS tier would permanently delete the
+"every page of the ledger is struck through" completion beat. As a pledge it inherits partial deposits,
+the Journal's Restorations UI and the no-wasted-trip rule for free.
+
+- **`patronCost(n)` = 30,000 + 12,000(n−1) + 400(n−1)²** — linear-plus-mild-quadratic, the shape the owner
+  already signed off on for the lift. n=1: 30,000 · n=5: 84,400 · n=10: 170,400 · n=20: 402,400 · n=40:
+  1,106,400. **An exponential curve is explicitly rejected**: DEVLOG records the owner near-verbatim —
+  *"the restorations get so insane… it's just too expensive, coins-wise"* — and the shipped fix was linear.
+- **Flat material ask, rotating on `n % 6`** (20 Elder Wood · 12 Heartwood Beam · 8 Silverwood Beam ·
+  10 Deepgnarl · 6 Gloamstar · 2 Starstone). Never escalating: an escalating ask makes the MATERIAL the
+  binding constraint, which is exactly the defect that makes the tool ladder useless as a coin sink.
+- **`pledgeDone` = `patronTier >= n`; `pledgeDiscovered` = `patronTier >= n−1`** — derived, so **zero
+  migration**, and the ledger shows exactly **one open commission at a time** rather than an infinite list.
+  Appears once three wings are lit (or the tier is already above zero).
+- **Ten named civic works, then a generated tail** — authoring stops at ten, the sink does not.
+
+**The two implementation traps, both handled:**
+1. **Only `state.farm` persists** — village/coast regenerate daily from `mapCache`, so a fixture placed at
+   runtime would silently vanish overnight. Fixtures are stamped at **map-generation time gated on
+   `state.patronTier`**, the same rule `applyProjects` and the wing dressing already follow. Funding also
+   calls `clearMapCache()` so the change shows *now*, not tomorrow.
+2. **Lanterns are light sources** feeding `collectLights` into `drawLighting`'s additive pass, and the
+   square can already hold up to a dozen (mining 2 + hearth 4 + lantern-test 2 + boardwalk 4). Only two of
+   the ten rungs add light, and both **yield entirely once the square is already bright** — verified: at
+   full tier the village holds 8 lights, under the budget. All fixtures reuse **existing sprites**; a
+   commission tier should not need new pixels.
+
+**No stat reward, deliberately** — v4.21 drew that line in code ("a cape is a flex, never a stat"). The
+fixture, the name and the visibly warmer square are the reward.
+
+### Balance — the deep-water faucet
+
+- **Deep fish re-seated** (sell only): Moonperch 780→620, Glassperch 1000→760, Silvergill 1080→800, Gulf
+  Sturgeon 1300→980, Coelacanth 1800→1200. **Nothing at or below the Golden Koi (620) moves**, so the
+  entire early and middle loop is untouched. Anchor: the top fish must not out-value the top crop
+  (Everbloom 1500, a nine-day cycle) for an eight-second action.
+- **The grilled premium 1.75 → 1.40 base, plus an EARNED Cooking band** (`cookedMult()`, guarded on the
+  `"Cooked "` prefix so raw fish and the legend trophies are untouched, and dishes can't double-dip with
+  ★ Renowned): ×1.00/1.05/1.10/1.18 at Cooking 1/40/70/99 → net **1.40 / 1.47 / 1.54 / 1.65**. Every rung
+  sits under the old flat 1.75, so this is a genuine trim *and* Cooking 99 becomes a visible reward.
+- **Measured result: ~64,000 → ~38,700 g/day** at Cooking 1, rising to ~46,000 at Cooking 99. Fishing is
+  still the best living in the game (~10× the farm rather than ~16×), which is the right answer for a
+  skill you deliberately specialise into.
+- **I did NOT charge energy on the cast**, which the audit also flagged as a hazard rather than a fix: the
+  binding constraint has always been the clock (~40 casts) not energy (100 casts), so it is inert below
+  Fishing 85 — and worse, `spendEnergy` returns false at 0 while `landFish` sets `caught_<id>` *before*
+  `give()`, so a legend could be consumed forever with no item. That is the exact bug class v4.15 shipped
+  a fix for. Recorded here so it is not re-proposed.
+
+### Polish
+
+- `goldUI` now renders with thousands separators — a seven-figure purse was an unreadable run of digits.
+
+### Verification (live build, console clean)
+
+Cost curve and rotating asks correct at n=1/2/5/10/20/40. Commissions hidden before three wings, exactly
+one open at a time, `patronTier` advancing on completion (30,000g + 20 Elder Wood taken, tier 0→1), done/
+discovered derived correctly. Village gains 17 objects at tier 10 with lights capped at 8; screenshotted
+the commissioned square. `cookedMult` returns 1.00/1.05/1.10/1.18 at 1/40/70/99; low-tier fish unmoved;
+40-cast day simulated at 38,733 / 42,785 / 45,954 g by Cooking level. Gold pill reads "1,500,000".
+
+### Files
+
+- `game/js/01-data.js` — `patronCost`/`PATRON_MATS`/`PATRON_WORKS`/`patronName`, the four pledge hooks, `ledgerPledges`, fish re-seat, `GRILL_MULT`; VERSION + in-game CHANGELOG.
+- `game/js/13-content.js` — the village fixture stamping + light budget.
+- `game/js/10-ui.js` — `completePledge` patron branch; gold separators.
+- `game/js/08-actions.js` — `cookedMult()` + its use in `baseUnitPrice`.
+- `game/js/04-world.js` — `patronTier` in `freshState`.
+- `game/index.html` — cache-buster `?v=144`.
+
+### Follow-up owed
+
+`GAME_BALANCE_PRINCIPLES.md` §2.5 still documents Tom's Demand as a live saturation brake; it was retired
+in v4.9 and `demandMult` is now a hard `return 1`. Every faucet figure in that doc understates current
+income. It should be re-anchored to measured numbers before anyone tunes against it again.
+
+---
+
 ## 2026-07-25 — v4.25.0 "The Long Sight" (code 112, tag `v4.25.0`) — the day gets a shape at both ends
 
 ### Why this release

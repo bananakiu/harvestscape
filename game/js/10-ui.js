@@ -120,7 +120,9 @@ function syncGold(){
     const pill = $("goldPill");
     if(pill){ pill.classList.remove("earn","spend"); void pill.offsetWidth; pill.classList.add(up ? "earn" : "spend"); }
   }
-  el.textContent = Math.round(goldUI.shown);
+  // v4.26: thousands separators. Once the commissions give coin somewhere to go, a purse runs to seven
+  // figures, and "1500000" is a run of digits nobody can read at a glance.
+  el.textContent = Math.round(goldUI.shown).toLocaleString();
 }
 function refreshHUD(){
   if(!state) return;
@@ -1400,6 +1402,12 @@ function completePledge(id){
     if(!state.waystones) state.waystones = [];
     if(!state.waystones.includes(id)) state.waystones.push(id);
     banner("❖ Waystone awakened", cap(pledgeName(id)) + " hums with green light. Step between the stones — free, forever.");
+  } else if(id.startsWith("patron")){   // v4.26 a standing commission — the village visibly warms
+    const n = parseInt(id.slice(6), 10);
+    state.patronTier = Math.max(state.patronTier||0, n);
+    clearMapCache();                    // village/coast regenerate from patronTier — show it NOW, not tomorrow
+    banner("❖ " + cap(patronName(n)), "Rowan strikes it off the list. The valley is a little warmer for it — and he has already thought of the next thing.");
+    playSfx("upgrade"); pSparkle(state.px, state.py-12, "#ffd75a", 20); saveGame(); return;
   } else if(id.startsWith("bell")){   // v4.0 Warden's Bell
     const n = parseInt(id.slice(4), 10);
     if(!state.wardBells) state.wardBells = [];

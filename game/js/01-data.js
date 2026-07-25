@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.25.0", code: 112, codename: "The Long Sight", date: "2026-07-25" };
+const VERSION = { name: "4.26.0", code: 113, codename: "The Patron", date: "2026-07-25" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.26.0", code:113, date:"2026-07-25", name:"The Patron", notes:[
+    { t:"feature", s:"Rowan keeps a list now, and it never runs out. Once the Guild is properly awake he starts naming things the valley could use — the plaza lanterns, the market planters, the square's stone benches — and each one you fund is built, for good, where you can walk past it. They're paid the way the waystones and the bells are: set down what you can carry, come back with the rest, and the ledger remembers. Coin finally has somewhere to go for the whole back half of the game instead of running out of things to buy around your second season." },
+    { t:"balance", s:"The deep-water fish have come back to the pack. Landing a coelacanth was worth more than a season's best crop for eight seconds of work, which quietly made every other way of earning a living pointless. The deepest five now sell for less, and the grilling premium is lower — but part of it is earned back at the stove, so a master cook's fish is worth noticeably more than a novice's. Everything up to the Golden Koi is untouched, so the early and middle game are exactly as they were. Fishing is still the finest living in the valley; it just isn't the only one worth having." },
+    { t:"polish", s:"Your gold has commas. A seven-figure purse used to be an unreadable run of digits." },
+  ]},
   { v:"4.25.0", code:112, date:"2026-07-25", name:"The Long Sight", notes:[
     { t:"fix", s:"Your morning card was hiding its most important lines. Everything after the eighth item simply never appeared — and on a busy morning (married, an orchard bearing, hives full, a workshop batch done, a season turning) the ones that fell off the end were exactly the ones worth reading: tomorrow's weather, the festival or birthday coming up, and what the story is waiting on. The card now paces itself to fit however much it has to say." },
     { t:"feature", s:"You can skip the morning card. Click it, or press Space, and you're up — no more waiting out the same three seconds every single day. 'Energy restored' and 'progress saved' have moved down into the footer, since they were true every morning for two hundred days and never told you anything." },
@@ -690,10 +695,10 @@ const FISH = [
   // scorecard) flagged as the game's longest desert. Each is its own item, so it auto-inherits the
   // Cooked variant, EDIBLE, the Almanac list, Tom's per-name demand, gifting, and the Collection;
   // the `f.lvl <= level` filter in hookFish holds each back until you've grown into it.
-  { name:"Moonperch",     lvl:40, xp:220, sell:780,  pal:["#7a8ac0","#d0d8f0"] },
-  { name:"Silvergill",    lvl:55, xp:300, sell:1080, pal:["#a8b0bc","#e8ecf2"] },
-  { name:"Gulf Sturgeon", lvl:70, xp:420, sell:1300, pal:["#5a6a5a","#9ab090"] },
-  { name:"Coelacanth",    lvl:85, xp:620, sell:1800, pal:["#2f4a6a","#5a7a9a"] },   // a living fossil — the deep's trophy (trimmed from 2200 so fishing doesn't out-earn the farm base)
+  { name:"Moonperch",     lvl:40, xp:220, sell:620,  pal:["#7a8ac0","#d0d8f0"] },
+  { name:"Silvergill",    lvl:55, xp:300, sell:800, pal:["#a8b0bc","#e8ecf2"] },
+  { name:"Gulf Sturgeon", lvl:70, xp:420, sell:980, pal:["#5a6a5a","#9ab090"] },
+  { name:"Coelacanth",    lvl:85, xp:620, sell:1200, pal:["#2f4a6a","#5a7a9a"] },   // a living fossil — the deep's trophy (trimmed from 2200 so fishing doesn't out-earn the farm base)
   // ---- Winter ice fishing (v3.31) ----
   // Winter is the one crop-less season: farming, orchards and the apiary all suspend, leaving no
   // *renewable* reason unique to the cold. (There's a winter LEGEND — Frostjaw — but a legend is a
@@ -702,7 +707,7 @@ const FISH = [
   // window; each still auto-inherits its Cooked variant, EDIBLE, the Almanac, Tom's demand,
   // gifting, and the Collection, exactly like every other fish.
   { name:"Frostfin",      lvl:15, xp:80,  sell:300,  pal:["#8fc0d8","#e0f2fa"], season:"Winter" },   // early-mid; pond + coast
-  { name:"Glassperch",    lvl:48, xp:300, sell:1000, pal:["#a8c4d8","#eef6fb"], season:"Winter" },   // late trophy; coast only — sits between Moonperch (780) and Silvergill (1080)
+  { name:"Glassperch",    lvl:48, xp:300, sell:760, pal:["#a8c4d8","#eef6fb"], season:"Winter" },   // late trophy; coast only — sits between Moonperch (780) and Silvergill (1080)
   // ---- The Coast Road (v3.36) — the Gullwater's fish ----
   // The river finally exists (WORLD_EXPANSION.md), so the river fish do too. Chub is the friendly
   // early catch; Grayling the river's pride (between Koi 620 and Moonperch 780 — on-curve, no new
@@ -921,7 +926,13 @@ const ITEM_SELL = { "Wood":4, "Pine Wood":9, "Maple Wood":17, "Willow Wood":11, 
   // v4.2 deepest drops — still under same-band gather (deepsilver ore 370 · star metal shard 450);
   // Gloamstar is the star-touched warding material, its real value the ultimate charm.
   "Deepgnarl":55, "Gloamstar":85 };
-FISH.forEach(f => { ITEM_SELL[f.name] = f.sell; ITEM_SELL["Cooked "+f.name] = Math.floor(f.sell*1.75); });
+// v4.26: the grilled premium drops 1.75 → 1.40 as the base, and the rest is EARNED — see cookedMult()
+// in 08-actions.js, which adds a Cooking band on top (×1.00/1.05/1.10/1.18 at 1/40/70/99, i.e. a net
+// 1.40/1.47/1.54/1.65). Every rung sits under today's flat 1.75, so this is a genuine trim of the
+// runaway loop AND Cooking 99 becomes a visible reward instead of a number. ITEM_SELL keeps the base;
+// the band is applied at price time so it tracks your level without a table rebuild.
+const GRILL_MULT = 1.40;
+FISH.forEach(f => { ITEM_SELL[f.name] = f.sell; ITEM_SELL["Cooked "+f.name] = Math.floor(f.sell*GRILL_MULT); });
 LEGENDS.forEach(l => { ITEM_SELL[l.name] = l.sell; });   // trophies. You don't cook a Stormrider.
 for(const k in CROPS) ITEM_SELL[CROPS[k].name] = CROPS[k].sell;
 
@@ -1443,10 +1454,48 @@ function bellCost(n){
 // same system). state.pledges[id] = { gPaid, mats:{item:nPaid} }; the record is created on
 // discovery/first deposit and deleted on completion — done-ness lives in state.waystones /
 // state.liftStops, so all pre-ledger code keeps working unchanged.
+// v4.26 "The Patron" — the valley's standing commissions, the game's first UNCAPPED repeatable gold sink.
+// Everything gold could buy was one-time and finite (~426k of gold-only content), while the fishing loop
+// clears ~64,000 g/day at Fishing 85 — so coin stopped meaning anything around day 45-60, with ~200 days
+// of intended play left. Rowan keeps a list of things the valley could use; it never runs out.
+//
+// A FOURTH PREFIX on the pledge system, deliberately NOT a PROJECTS entry: fundProject is atomic (no
+// partial deposits), its done-ness is a permanent boolean, PROJECT_BY_ID is built once at load so a
+// runtime-appended entry would be dead on click, and an endless PROJECTS tier would permanently delete
+// the "every page of the ledger is struck through" completion beat. As a pledge it inherits partial
+// deposits, the Journal's Restorations UI and the no-wasted-trip rule for free.
+//
+// COST CURVE — linear-plus-mild-quadratic, the shape the owner already signed off on for the lift
+// (DEVLOG: "the restorations get so insane… it's just too expensive, coins-wise", and the fix was to go
+// linear). n=1: 30,000 · n=5: 84,400 · n=10: 170,400 · n=20: 402,400. Every rung stays a few days of
+// income even deep in the series; an exponential would re-create the exact complaint that was fixed.
+function patronCost(n){
+  return { g: 30000 + 12000*(n-1) + 400*(n-1)*(n-1), mats: PATRON_MATS[(n-1) % PATRON_MATS.length] };
+}
+// FLAT material ask, rotating — never escalating. An escalating ask would make the MATERIAL the binding
+// constraint instead of the gold, which is precisely the defect that makes the tool ladder useless as a
+// coin sink. Each of these is roughly one expedition's worth.
+const PATRON_MATS = [
+  { "Elder Wood":20 }, { "Heartwood Beam":12 }, { "Silverwood Beam":8 },
+  { "Deepgnarl":10 },  { "Gloamstar":6 },       { "Starstone":2 },
+];
+// The first ten are named civic fixtures that visibly warm the village; past that Rowan keeps finding
+// more to do. Authoring stops at ten and the tail generates, which bounds the writing without bounding
+// the sink.
+// Each named work maps to a real fixture stamped into the village at generation time (13-content.js).
+// All reuse EXISTING sprites — the art is procedural and a commission tier shouldn't need new pixels.
+const PATRON_WORKS = [
+  "the plaza lanterns", "the market planters", "the square's stone benches", "the guild-steps rail",
+  "the south lane's lamps", "the old well's winch", "the plaza cook-fire", "the lane hedges",
+  "the smith's second anvil", "the market's long stall",
+];
+function patronName(n){ return PATRON_WORKS[n-1] || ("the valley's " + ordinalRing(n) + " commission"); }
+
 function pledgeCost(id){
   if(id.startsWith("way"))  return waystoneCost(id);
   if(id.startsWith("lift")) return liftStopCost(parseInt(id.slice(4), 10));
   if(id.startsWith("bell")) return bellCost(parseInt(id.slice(4), 10));   // v4.0 Warden's Bells
+  if(id.startsWith("patron")) return patronCost(parseInt(id.slice(6), 10));   // v4.26 the standing commissions
   return null;
 }
 function pledgeName(id){
@@ -1455,6 +1504,7 @@ function pledgeName(id){
   if(id === "way9") return "the Heart Waystone";
   if(id.startsWith("lift")) return "the floor-" + id.slice(4) + " lift stop";
   if(id.startsWith("bell")) return "the floor-" + id.slice(4) + " Warden's Bell";   // v4.0
+  if(id.startsWith("patron")) return patronName(parseInt(id.slice(6), 10));         // v4.26
   return id;
 }
 function pledgePaid(id){ return (state.pledges && state.pledges[id]) || { gPaid:0, mats:{} }; }
@@ -1470,6 +1520,7 @@ function pledgeDone(id){
   if(id.startsWith("way"))  return id === "way1" || (state.waystones||[]).includes(id);
   if(id.startsWith("lift")) return (state.liftStops||[]).includes(parseInt(id.slice(4), 10));
   if(id.startsWith("bell")) return (state.wardBells||[]).includes(parseInt(id.slice(4), 10));   // v4.0
+  if(id.startsWith("patron")) return (state.patronTier||0) >= parseInt(id.slice(6), 10);        // v4.26
   return false;
 }
 function pledgeDiscovered(id){
@@ -1477,6 +1528,9 @@ function pledgeDiscovered(id){
   if(id.startsWith("way"))  return !!(state.pledges && state.pledges[id]);   // touched the stone once
   if(id.startsWith("lift")) return (state.mineBest||0) >= parseInt(id.slice(4), 10);  // reached the floor once
   if(id.startsWith("bell")) return (state.wardBest||0) >= parseInt(id.slice(4), 10);  // reached the Undercroft floor once
+  // v4.26: only the NEXT commission is ever visible — DERIVED from patronTier, so there is nothing to
+  // migrate and the ledger never renders an infinite list.
+  if(id.startsWith("patron")) return (state.patronTier||0) >= parseInt(id.slice(6), 10) - 1;
   return false;
 }
 // Everything the Journal's Restorations section should list, in display order.
@@ -1488,6 +1542,9 @@ function ledgerPledges(){
   for(const id of ["way3","way6","way9"]) if(pledgeDiscovered(id)) out.push(id);
   for(let n = 5; n <= (state.mineBest||0); n += 5) out.push("lift"+n);
   for(let n = 5; n <= Math.min(45, state.wardBest||0); n += 5) out.push("bell"+n);   // v4.2 Warden's Bells (floors 1–45)
+  // v4.26: the standing commissions — only ever ONE open at a time, so the ledger stays a list of real
+  // work rather than an infinite scroll. Rowan starts keeping the list once the Guild is properly awake.
+  if((state.wingsLit||0) >= 3 || (state.patronTier||0) > 0) out.push("patron" + ((state.patronTier||0) + 1));
   return out;
 }
 

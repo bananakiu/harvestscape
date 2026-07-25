@@ -1659,7 +1659,19 @@ function baseUnitPrice(item){
   if(curSeason()==="Winter" && FISH_NAMES.has(item)) p *= 1.25;
   // ★ Renowned (Cooking 99) — your name on a dish is worth something
   if(hasMastery("Cooking",99) && RECIPE_NAMES.has(item)) p *= 1.25;
+  // v4.26: the grilled premium is now 1.40 base + an EARNED Cooking band, so a fry is worth more in a
+  // master's hands. Guarded on the "Cooked " prefix so raw fish and the legend trophies are untouched,
+  // and RECIPE_NAMES can't overlap it (dishes are named things like "Fried Egg"), so ★ Renowned above
+  // cannot double-dip. Net multipliers vs the old flat 1.75: 1.40 / 1.47 / 1.54 / 1.65 — every rung is a
+  // real trim of the endgame loop, and the top of the ladder is still the best gold in the game.
+  if(item.indexOf("Cooked ") === 0) p *= cookedMult();
   return p;
+}
+// The earned half of the grilled premium. Deliberately gentle and monotone: a fisher who never touches
+// a stove is unaffected, and one who masters the kitchen gets a visible reason to have done it.
+function cookedMult(){
+  const lv = skillLvl("Cooking");
+  return lv >= 99 ? 1.18 : lv >= 70 ? 1.10 : lv >= 40 ? 1.05 : 1.00;
 }
 function soldToday(item){ return (state.market && state.market[item]) || 0; }
 // the price Tom will pay for the very next one
