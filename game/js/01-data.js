@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.22.0", code: 109, codename: "The Way Down", date: "2026-07-24" };
+const VERSION = { name: "4.23.0", code: 110, codename: "The Even Hand", date: "2026-07-25" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.23.0", code:110, date:"2026-07-25", name:"The Even Hand", notes:[
+    { t:"balance", s:"Woodcutting no longer costs half again as much as Mining for the same 99. Trees were simply tougher than rocks for what they paid — the same climb took 94 days of energy against the pick's 81 — so the axe always felt like the chore of the six. Pine, maple and elderwood now come down in fewer swings (the deep woods are untouched; they were already fair). The experience per tree is exactly what it was, and so is the number of trees — the climb just stopped charging you a toll for choosing the axe." },
+    { t:"balance", s:"The kitchen ladder is worth climbing now. Every dish from level 20 up was paying so little that the whole 32-recipe ladder cost nearly 4,000 cooked plates — while simply frying a fish, which needs no ingredients, no energy and no level at all, was more than twice as fast. Your best dish paid HALF what a plain fried fish did. Dishes now pay on a proper curve, roughly twenty to a level all the way up: the Grand Feast goes 285 → 913, and Nell's Butterbrook Reserve — a friendship secret — 150 → 330. Nothing pays less than it did yesterday, and frying a fish is still there for a quiet evening." },
+    { t:"feature", s:"The variety spark now keeps a rhythm. It always gave the first ten actions in a craft bonus experience, but rotating was only ever advice. Now every different craft you take up in a day adds five more sparked actions to all of them — touch five and you're working on thirty apiece instead of ten. Focus on one craft and you get exactly what you always got; nobody is worse off. Warding counts, but the bonus tops out before it needs to, so the Undercroft is never homework." },
+  ]},
   { v:"4.22.0", code:109, date:"2026-07-24", name:"The Way Down", notes:[
     { t:"balance", s:"The Hollow Warden's guard breathes now. It used to hold its shield up permanently — the only way through was to out-circle it or land a parry, which made it a wall to grind rather than a fight to read. Now the guard holds, then visibly sags open for a beat, then re-sets: wait for the drop, get behind it, or parry it open — three honest answers instead of one fiddly one. It also turns to face you more slowly, so circling round the back is a real option again. It's no weaker; it's just readable." },
     { t:"feature", s:"The way down falls out of the fighting. Hunting the floor for a stair-knot was dead time, so now settling the restless things can shake the stair loose where one comes apart — the same idea as the mine, where the way down hides under a rock and turns up while you're already swinging. It usually takes two or three, and the floor's old knot loosens along with it. Clear as you go and the dark opens up." },
@@ -611,11 +616,21 @@ const CROPS = {
 // meet elderwood/heartwood/silverwood on their side. Rung for rung, oak↔stone, pine↔copper,
 // maple↔iron, willow↔gold, elderwood↔cobalt, heartwood↔deepsilver, silverwood↔star metal.
 const TREES = {
+  // v4.23 "The Even Hand" — HP ONLY (xp untouched). Woodcutting cost 1.17× Mining's energy for the
+  // same "99" on the same panel: 94.5 in-game days against 81.1, because a tree's HP-to-XP ratio was
+  // 2-3× worse than a rock's at the middle rungs. Measured fix: pine 6→4, maple 11→8, elderwood 16→14
+  // lands Woodcutting at 81.0 days — parity to within a rounding error — while the NODE count barely
+  // moves (2,084 → 1,992), so the flat ~20-30 actions/level shape the curve was built around is intact.
+  // Heartwood and silverwood are deliberately UNCHANGED: at the tool powers you actually hold when they
+  // unlock they were already at parity with deepsilver/star metal (silverwood 3 swings = star metal 3).
+  // Checked with a reachability-aware sweep (compare only trees you can chop at the power you'd have at
+  // that level): this introduces ZERO new ordering inversions; the two pre-existing ones (maple<pine at
+  // the Basic axe, elder<willow at high power) are untouched, neither better nor worse.
   oak:       { name:"Oak",       lvl:1,  hp:3,  xp:25,  drop:"Wood",        n:2, pal:["#3f8a3f","#57ad57","#2f6a2f"] },
-  pine:      { name:"Pine",      lvl:10, hp:6,  xp:60,  drop:"Pine Wood",   n:2, pal:["#2f6a52","#3f8f6a","#204a3a"] },
-  maple:     { name:"Maple",     lvl:20, hp:11, xp:115, drop:"Maple Wood",  n:2, pal:["#b8683a","#d68a52","#8a4a28"] },
+  pine:      { name:"Pine",      lvl:10, hp:4,  xp:60,  drop:"Pine Wood",   n:2, pal:["#2f6a52","#3f8f6a","#204a3a"] },
+  maple:     { name:"Maple",     lvl:20, hp:8,  xp:115, drop:"Maple Wood",  n:2, pal:["#b8683a","#d68a52","#8a4a28"] },
   willow:    { name:"Willow",    lvl:30, hp:8,  xp:150, drop:"Willow Wood", n:2, pal:["#4a8a4a","#6ab86a","#3a6a3a"] },
-  elderwood: { name:"Elderwood", lvl:45, hp:16, xp:260, drop:"Elder Wood",  n:2, pal:["#2c5a6a","#3f7a8a","#1e4250"] },
+  elderwood: { name:"Elderwood", lvl:45, hp:14, xp:260, drop:"Elder Wood",  n:2, pal:["#2c5a6a","#3f7a8a","#1e4250"] },
   heartwood: { name:"Heartwood", lvl:70, hp:24, xp:520, drop:"Heartwood",   n:2, pal:["#5a9a7a","#7ac8a0","#3f7a5c"] },
   // The Long Climb (v3.10): the deepest-ring wood, so the axe has a live target past Heartwood (L70)
   // — the last 30 levels were pure grind with the skills panel showing "nothing left to unlock".
@@ -1012,48 +1027,60 @@ const RECIPES = [
   { name:"Garden Salad",      lvl:5,  ing:{"Field Salad":1, Carrot:1},   energy:55,  sell:160, xp:28, col:"#7fbe55" },
   { name:"Berry Jam",         lvl:8,  ing:{Strawberry:2},                energy:50,  sell:440, xp:32, col:"#e0455a" },
   { name:"Corn Bread",        lvl:12, ing:{Corn:1, Wheat:1},             energy:72,  sell:400, xp:36, col:"#ffd94a" },
-  { name:"Tomato Soup",       lvl:15, ing:{Tomato:2},                    energy:66,  sell:470, xp:34, col:"#e0452a" },
+  { name:"Tomato Soup",       lvl:15, ing:{Tomato:2},                    energy:66,  sell:470, xp:38, col:"#e0452a" },
   { name:"Blueberry Tart",    lvl:18, ing:{Blueberry:2, Wheat:1},        energy:80,  sell:470, xp:42, col:"#5a6ad0" },
   { name:"Farmer's Omelette", lvl:22, ing:{Egg:2, Milk:1},               energy:100, sell:360, xp:50, col:"#ffe08a" },
-  { name:"Pumpkin Soup",      lvl:28, ing:{Pumpkin:1, Milk:1},           energy:95,  sell:680, xp:52, col:"#ff8a2a" },
-  { name:"Fish Stew",         lvl:32, ing:{Salmon:1, Carrot:1, Tomato:1},energy:88,  sell:680, xp:48, col:"#d76a4a" },
-  { name:"Cranberry Sauce",   lvl:36, ing:{Cranberry:2},                 energy:60,  sell:730, xp:40, col:"#c02a3a" },
-  { name:"Frostbloom Tea",    lvl:40, ing:{Frostbloom:1, Milk:1},        energy:70,  sell:590, xp:44, col:"#a8d8f0" },
+  { name:"Pumpkin Soup",      lvl:28, ing:{Pumpkin:1, Milk:1},           energy:95,  sell:680, xp:75, col:"#ff8a2a" },
+  { name:"Fish Stew",         lvl:32, ing:{Salmon:1, Carrot:1, Tomato:1},energy:88,  sell:680, xp:99, col:"#d76a4a" },
+  { name:"Cranberry Sauce",   lvl:36, ing:{Cranberry:2},                 energy:60,  sell:730, xp:127, col:"#c02a3a" },
+  { name:"Frostbloom Tea",    lvl:40, ing:{Frostbloom:1, Milk:1},        energy:70,  sell:590, xp:159, col:"#a8d8f0" },
   // Second Helpings (v3.11): eight late dishes so Cooking keeps unlocking recipes to L90, not just
   // perks — and they eat The Long Climb's new crops & fish, closing that loop. Each sells at the
   // series' ~1.4x-over-ingredients profit line (Tom's per-dish demand still caps the daily take),
   // and auto-inherits its plate sprite (from col), sell, EDIBLE, the Kitchen collection, and the
   // skills-panel next-unlock. The crown, Grand Feast, needs mastery in Farming, Fishing AND Cooking.
-  { name:"Rhubarb Pie",       lvl:44, ing:{Rhubarb:1, Wheat:2},              energy:85,  sell:820,  xp:92,  col:"#d0454a" },
-  { name:"Melon Sorbet",      lvl:48, ing:{Melon:1, Milk:1},                 energy:90,  sell:1050, xp:100, col:"#8fd06a" },
-  { name:"Stuffed Artichoke", lvl:54, ing:{Artichoke:1, Egg:1, Wheat:1},     energy:96,  sell:1280, xp:115, col:"#a8b87a" },
-  { name:"Grape Tart",        lvl:60, ing:{Grape:1, Wheat:1},                energy:92,  sell:1400, xp:130, col:"#7a4a9a" },
-  { name:"Harvest Roast",     lvl:68, ing:{Yam:1, Carrot:2},                 energy:100, sell:2050, xp:155, col:"#c06a3a" },
-  { name:"Fisherman's Pie",   lvl:74, ing:{Salmon:1, Yam:1, Milk:1},         energy:100, sell:2250, xp:178, col:"#d0a060" },
-  { name:"Everbloom Cordial", lvl:82, ing:{Everbloom:1, Honey:1},            energy:90,  sell:2400, xp:215, col:"#c8b0f0" },
-  { name:"Grand Feast",       lvl:90, ing:{"Gulf Sturgeon":1, Yam:1, Everbloom:1}, energy:100, sell:5400, xp:285, col:"#e0c070" },
+  { name:"Rhubarb Pie",       lvl:44, ing:{Rhubarb:1, Wheat:2},              energy:85,  sell:820,  xp:194,  col:"#d0454a" },
+  { name:"Melon Sorbet",      lvl:48, ing:{Melon:1, Milk:1},                 energy:90,  sell:1050, xp:234, col:"#8fd06a" },
+  { name:"Stuffed Artichoke", lvl:54, ing:{Artichoke:1, Egg:1, Wheat:1},     energy:96,  sell:1280, xp:302, col:"#a8b87a" },
+  { name:"Grape Tart",        lvl:60, ing:{Grape:1, Wheat:1},                energy:92,  sell:1400, xp:379, col:"#7a4a9a" },
+  { name:"Harvest Roast",     lvl:68, ing:{Yam:1, Carrot:2},                 energy:100, sell:2050, xp:497, col:"#c06a3a" },
+  { name:"Fisherman's Pie",   lvl:74, ing:{Salmon:1, Yam:1, Milk:1},         energy:100, sell:2250, xp:597, col:"#d0a060" },
+  { name:"Everbloom Cordial", lvl:82, ing:{Everbloom:1, Honey:1},            energy:90,  sell:2400, xp:746, col:"#c8b0f0" },
+  { name:"Grand Feast",       lvl:90, ing:{"Gulf Sturgeon":1, Yam:1, Everbloom:1}, energy:100, sell:5400, xp:913, col:"#e0c070" },
   // v4.8 "the kitchen catches up" — every produced good should feed a downstream loop (GBP §3.5,
   // reward-is-an-input), but several premium goods dead-ended at the counter: the Cheese Press's own
   // Cheese/Fine Cheese, the orchard's Apple/Cherry/Plum, Starfruit, and v4.7's five new crops all had
   // NO recipe. Ten dishes close those loops, priced ~1.4–1.5× their ingredient cost (so cooking always
   // beats selling the raw good) and slotted into the Cooking unlock ladder's gaps (L20–84). Sell tracks
   // the ingredients (a Starfruit dish is dear, a Plum dish humble), not strictly the level.
-  { name:"Apple Crumble",       lvl:20, ing:{Apple:3, Wheat:1},               energy:80,  sell:420,  xp:32,  col:"#d0403a" },   // orchard: Apple
-  { name:"Cheese Toastie",      lvl:26, ing:{Cheese:2, Wheat:1},              energy:76,  sell:500,  xp:40,  col:"#e8c85a" },   // dairy: Cheese
-  { name:"Cherry Tart",         lvl:34, ing:{Cherry:3, Egg:1, Wheat:1},       energy:82,  sell:580,  xp:50,  col:"#c02a3a" },   // orchard: Cherry
-  { name:"Starfruit Sorbet",    lvl:38, ing:{Starfruit:1, Milk:1},            energy:88,  sell:1480, xp:56,  col:"#ffe25a" },   // Starfruit (premium)
-  { name:"Asparagus Quiche",    lvl:46, ing:{Asparagus:1, Egg:2, Cheese:1},   energy:92,  sell:1400, xp:98,  col:"#7a9a4a" },   // v4.7 crop + Cheese
-  { name:"Plum Pudding",        lvl:52, ing:{Plum:3, "Large Milk":1},         energy:90,  sell:720,  xp:110, col:"#7a4a9a" },   // orchard: Plum
-  { name:"Cloudberry Preserve", lvl:58, ing:{Cloudberry:2, Honey:1},          energy:70,  sell:1700, xp:125, col:"#e8b45a" },   // v4.7 crop
-  { name:"Frostmelon Ice",      lvl:64, ing:{Frostmelon:1, "Large Milk":1},   energy:90,  sell:1500, xp:142, col:"#8fb8d8" },   // v4.7 crop
-  { name:"Peony Cordial",       lvl:78, ing:{Peony:1, Honey:1},               energy:88,  sell:1820, xp:192, col:"#e06a9a" },   // v4.7 crop
-  { name:"Dragonfruit Parfait", lvl:84, ing:{Dragonfruit:1, "Fine Cheese":1}, energy:94,  sell:2300, xp:228, col:"#d0407a" },   // v4.7 crop + Fine Cheese
+  { name:"Apple Crumble",       lvl:20, ing:{Apple:3, Wheat:1},               energy:80,  sell:420,  xp:44,  col:"#d0403a" },   // orchard: Apple
+  { name:"Cheese Toastie",      lvl:26, ing:{Cheese:2, Wheat:1},              energy:76,  sell:500,  xp:64,  col:"#e8c85a" },   // dairy: Cheese
+  { name:"Cherry Tart",         lvl:34, ing:{Cherry:3, Egg:1, Wheat:1},       energy:82,  sell:580,  xp:112,  col:"#c02a3a" },   // orchard: Cherry
+  { name:"Starfruit Sorbet",    lvl:38, ing:{Starfruit:1, Milk:1},            energy:88,  sell:1480, xp:142,  col:"#ffe25a" },   // Starfruit (premium)
+  { name:"Asparagus Quiche",    lvl:46, ing:{Asparagus:1, Egg:2, Cheese:1},   energy:92,  sell:1400, xp:214,  col:"#7a9a4a" },   // v4.7 crop + Cheese
+  { name:"Plum Pudding",        lvl:52, ing:{Plum:3, "Large Milk":1},         energy:90,  sell:720,  xp:278, col:"#7a4a9a" },   // orchard: Plum
+  { name:"Cloudberry Preserve", lvl:58, ing:{Cloudberry:2, Honey:1},          energy:70,  sell:1700, xp:352, col:"#e8b45a" },   // v4.7 crop
+  { name:"Frostmelon Ice",      lvl:64, ing:{Frostmelon:1, "Large Milk":1},   energy:90,  sell:1500, xp:436, col:"#8fb8d8" },   // v4.7 crop
+  { name:"Peony Cordial",       lvl:78, ing:{Peony:1, Honey:1},               energy:88,  sell:1820, xp:670, col:"#e06a9a" },   // v4.7 crop
+  { name:"Dragonfruit Parfait", lvl:84, ing:{Dragonfruit:1, "Fine Cheese":1}, energy:94,  sell:2300, xp:786, col:"#d0407a" },   // v4.7 crop + Fine Cheese
   // v4.13 (owner update 2) — Nell's secret. NOT learned by Cooking level: it's flag-gated on `nellRecipe`,
   // which only her 6♥ heart event sets — a true friendship payoff. Uses the finest dairy + a Butterbrook
   // Sea Aster, so it ties her Larder, the coast forage and a well-loved cow together into one prize dish.
-  { name:"Butterbrook Reserve", lvl:0, flag:"nellRecipe", ing:{"Fine Cheese":1, "Large Milk":1, "Sea Aster":2}, energy:95, sell:1100, xp:150, col:"#f0e0a8" },
+  { name:"Butterbrook Reserve", lvl:0, flag:"nellRecipe", ing:{"Fine Cheese":1, "Large Milk":1, "Sea Aster":2}, energy:95, sell:1100, xp:330, col:"#f0e0a8" },
 ];
 RECIPES.sort((a,b) => a.lvl - b.lvl);   // v4.8: keep the Kitchen list level-ordered so appended recipes slot in (nothing indexes RECIPES by position)
+// v4.23: the ladder must never regress — a higher-level dish that pays LESS XP than one you already knew
+// is a level-up that hands you a downgrade, and the Kitchen shipped five of those. This is the guard, not
+// a comment: it runs at load, costs one pass, and console.warns rather than throwing so a bad number can
+// never black-screen the game. (lvl:0 dishes are friendship-taught — outside the level ladder, skipped.)
+(function auditRecipeLadder(){
+  let prev = 0, prevName = "";
+  for(const r of RECIPES){
+    if(r.lvl <= 0) continue;
+    if(r.xp < prev) console.warn(`[recipe ladder] ${r.name} (Lv${r.lvl}) pays ${r.xp} XP — less than ${prevName}'s ${prev}. A later dish must never pay less.`);
+    if(r.xp > prev){ prev = r.xp; prevName = r.name; }
+  }
+})();
 RECIPES.forEach(r => { ITEM_SELL[r.name] = r.sell; EDIBLE[r.name] = r.energy; });
 
 // ---- ROWAN'S RESTORATION PROJECTS ----

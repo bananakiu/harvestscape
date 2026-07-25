@@ -457,14 +457,16 @@ function renderSkills(){
   // v4.0: the cap is derived from the live skill count (594 with Warding), so it never drifts again.
   let html = `<div class="skillTotal">Total Level <b>${total}</b> / ${99*Object.keys(state.skills).length}</div>`;
   // v4.0 variety spark — a quiet nudge to rotate: the first few actions in each skill each day earn +50% XP.
-  html += `<div class="sparkNote">✦ <b>Variety spark</b> — the first ${SPARK_CAP} actions in each skill each day earn +50% XP. Rotate to make the most of it.</div>`;
+  // v4.23: show the spark COUNT the day's rhythm has actually bought, not a static promise — the number
+  // climbs live as you touch a new craft, which is the whole point of the rhythm term.
+  html += `<div class="sparkNote">✦ <b>Variety spark</b> — the first <b>${sparkCap()}</b> actions in each craft today earn +50% XP, and every craft you take up today adds 5 more to all of them.</div>`;
   html += `<div class="skillGrid">`;
   for(const s in state.skills){
     const xp = state.skills[s], lvl = levelFor(xp);
     const cur = XP_TABLE[lvl], next = lvl>=99?cur:XP_TABLE[lvl+1];
     const pct = lvl>=99 ? 100 : Math.floor(inv(xp,cur,next)*100);
     const un = nextUnlock(s), nx = nextMastery(s);
-    const spk = SPARK_CAP - ((state.dailyXpActs && state.dailyXpActs[s]) || 0);   // sparks left today
+    const spk = Math.max(0, sparkCap() - ((state.dailyXpActs && state.dailyXpActs[s]) || 0));   // sparks left today (v4.23: clamp — the cap can rise mid-day, never let this read negative)
     const goal = un ? `<span class="sgoal unlock">▸ ${un.label} · ${un.at}</span>`
                : nx ? `<span class="sgoal mast">☆ Lv ${nx.at}: ${MASTERY[s][nx.at].split(" — ")[0]}</span>`
                :      `<span class="sgoal done">★ mastered</span>`;

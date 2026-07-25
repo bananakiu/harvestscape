@@ -22,6 +22,131 @@
 
 ---
 
+## 2026-07-25 — v4.23.0 "The Even Hand" (code 110, tag `v4.23.0`) — the grind stops being lopsided and under-rewarded
+
+### Why this release
+
+The owner asked for a step-back evaluation: *"is this a fun, long-lasting gameplay loop with the right
+amount of grind?"* I ran an 8-lens fun-and-pacing audit (57 agents, every proposal adversarially
+stress-tested against the live code and the cozy contract; 48 proposals, 40 survived, 8 rejected as
+contract-breaking or wrong-diagnosis) and modelled the curve independently myself.
+
+**The answer: yes for 60-80 days, and the raw pacing is genuinely well-built.** I verified the headline
+property and it holds — `inc = 62 + (L-1)^2.18` against node XP jumping 25/60/115/150/260/520/760 on the
+unified 1/10/20/30/45/70/85 ladder keeps **actions-per-level flat at ~20-30 from L40 to L90.** That is the
+hardest thing in this genre to get right and it is right. **The curve was not touched and must not be.**
+
+**The real defect is that reward density collapses while action density stays flat.** The player keeps
+paying ~25 actions per level while the number of *reasons* per level falls toward zero. This release
+takes the three cheapest, highest-frequency instances of that — all data-table changes, on disjoint
+tables, each independently revertible.
+
+### Balance — Woodcutting cost 1.17× Mining for the same "99"
+
+Measured end-to-end (my own model, cross-checked against the audit's): taking Woodcutting 1→99 cost
+**9,449 energy / 94.5 in-game days**, against Mining's **8,108 / 81.1** — for an identical number on the
+same panel. The cause was never the XP curve; it was that a tree's HP-to-XP ratio was worse than a rock's
+at the middle rungs.
+
+- **`TREES` hp only, xp untouched: pine 6→4, maple 11→8, elderwood 16→14.** Result: **8,097 energy / 81.0
+  days — parity with Mining to within a rounding error (ratio 1.17 → 1.00).** Node count barely moves
+  (2,084 → 1,992), so the flat actions-per-level shape survives intact.
+- **Oak, willow, heartwood and silverwood are deliberately UNCHANGED.** At the tool powers you actually
+  hold when they unlock, the deep woods were *already* at parity (silverwood 3 swings vs star metal 3).
+  The imbalance was entirely in the middle, and that is the only place this touches.
+- I rejected the audit's proposed set (oak 3→2, pine→4, maple→8, elder→14, heart 24→18, silver 30→22).
+  My model says it **overcorrects to ratio 0.82** — making Woodcutting the *cheapest* skill, which just
+  moves the imbalance — and a reachability-aware sweep found it introduces a **new `silver<heart`
+  inversion at power 9**, a regression at the top of the ladder. Three numbers do the job cleanly.
+- **Verified no new ordering inversions.** A naive all-pairs check is wrong because it compares trees at
+  tool powers you cannot hold when they unlock; the reachability-aware sweep (compare only trees choppable
+  at the level where you would have that power) reports the same two pre-existing inversions before and
+  after (`maple<pine` at the Basic axe, `elder<willow` at high power) — neither introduced nor worsened.
+- **`migrateSave` clamp** (`11-title.js`): farm trees persist as `{kind,hp}` (04-world.js:256), so an
+  existing save would keep standing pines/maples/elders at the old, higher HP forever. `Math.min` — never
+  assignment — so a half-chopped tree keeps its damage and this can only ever make a tree *easier*.
+  (Grove and ancient trees regenerate daily from `TREES` and need nothing.)
+
+### Balance — the Cooking ladder was strictly dominated by spamming the fry button
+
+The full 32-recipe ladder cost **3,923 cooked dishes** to reach 99, each needing farmed or fished
+ingredients and a stove trip — while `cookFish` on a Coelacanth costs **1,402 presses** with no
+ingredients, no energy and no level gate. **The Lv90 crown dish paid 285 XP against a plain fry's 558.**
+An optimising player never touched the ladder, which is the *only* consumer of Farming's late output.
+
+- **`RECIPES` xp retuned for lvl ≥ 20 on a ~20-dishes-per-level curve**, every value **floored at its
+  current one** so no dish ever pays less than it did yesterday (the contract applies to recalibrations
+  too — GBP §5.4). Grand Feast 285→913; Dragonfruit Parfait 228→786; Rhubarb Pie 92→194; and so on down.
+  Farmer's Omelette held at 50 because the curve target (45) would have been a nerf.
+- **Butterbrook Reserve 150→330.** It is `lvl:0` and flag-gated on Nell's 6-heart event, so a
+  levels-only pass would have silently demoted a friendship prize below a mid-ladder pie.
+- **Ladder now fully monotonic** — the shipped table had five inversions where a *higher*-level dish paid
+  less than one you already knew (Apple Crumble L20 = 32 under Blueberry Tart L18 = 42; Cranberry Sauce
+  L36 = 40 under Cherry Tart L34 = 50). Also nudged Tomato Soup 34→38 and Apple Crumble 32→44 to close
+  the last two.
+- **A load-time `auditRecipeLadder()` guard** (01-data.js, after the sort) `console.warn`s if a future
+  recipe ever regresses. It warns rather than throws — a bad number must never black-screen the game.
+- **Result: 3,923 → 1,918 dishes, ~20 per level at every rung, and the crown dish (913) now beats the
+  fry (558).** `cookFish` is deliberately NOT nerfed: it stays the cheap, low-effort path for a quiet
+  evening; what the ladder buys is far fewer presses and a reason for Farming's late output to exist.
+
+### Feature — the variety spark keeps a rhythm
+
+The spark is the best-calibrated system in the build (I checked: it pays a steady **21-25% of a level per
+skill per day at every band** from L10 to L90 — do not touch `SPARK_MULT`). But nothing rewarded actually
+*rotating*: with food making energy effectively free, a focused player could simply spark all six anyway,
+so "rotate to make the most of it" was advice, not a choice.
+
+- **`sparkCap()`** (`08-actions.js`): `SPARK_CAP + 5 × min(4, breadth − 1)`, where breadth is the number
+  of distinct crafts touched today. **Breadth 1 = 10 sparks — byte-identical to today, so nobody is ever
+  worse off.** Breadth 2 = 15, breadth 5+ = 30.
+- **Capped at 4 extra crafts**, so Warding is always a free *substitute* and never a sixth requirement —
+  the Undercroft must never become a prerequisite for a full-value day.
+- **Re-evaluated per grant**, so taking up a new craft at noon *reopens* budget in crafts you already
+  spent. No ordering trap, no back-pay bookkeeping, no new save field (`dailyXpActs` already exists and
+  resets at dawn), no migration.
+- The skills panel now shows the **live** spark count the day's rhythm has bought, not a static promise.
+
+### Verification (live build, console clean)
+
+- **Swings per tree, measured in-game by actually chopping** with the hotbar Axe selected and mastery
+  randomness excluded — Basic axe: oak 3, pine 4, maple 8, willow 8, elderwood 14, heartwood 24,
+  silverwood 30 (= HP exactly). Star axe: 1/1/1/1/2/3/3. Every count matches the model.
+- **Migration:** an existing save with pre-rebalance HP clamps to pine 4 / maple 8 / elder 14; a
+  half-chopped maple at hp 3 **keeps its 3**; heartwood at 24 is untouched.
+- **Cooking:** ladder monotonic, Grand Feast 913 > fry 558, Butterbrook Reserve 330.
+- **Spark through `addXP`:** 12 grants × 100 XP — focused player gains 1,700 (10 sparked, identical to
+  today), breadth-5 player gains 1,800 (all 12 sparked). Cap reads 10/10/15/30/30 at breadth 0/1/2/5/6.
+
+### Known second-order effects (logged deliberately, not fixed here)
+
+- Wood gold-per-energy rises (~33% on pine/maple/elder). It does **not** make wood dominant — a star-metal
+  day still far out-earns it — so it ships as-is. If it ever reads hot, the lever is `ITEM_SELL`, **never**
+  tree HP, which would undo the parity this release exists to create.
+- Every wood *sink* (tool tiers, lift stops, waystones, bells, board timber asks) gets correspondingly
+  cheaper in energy. **Do not raise those asks to compensate** — the buff would net to zero and the
+  changelog would contradict itself.
+- Cooking 99 becomes genuinely reachable, which turns on ★ Renowned's permanent +25% dish sell. That is a
+  real gold faucet switching on, and it should inform the economy pass rather than be silently absorbed.
+
+### Still ahead (from the same audit, ranked)
+
+`v4.24 "The Morning Round"` (the mature farm is ~44 undifferentiated presses before the day starts) ·
+`v4.25 "The Patron"` (an uncapped repeatable gold sink + trimming the fishing faucet — gold stops
+mattering around day 45-60) · `v4.26 "The Long Sight"` (the tracker renders literally empty past day 120) ·
+`v4.27 "The Keen Edge"` (per-swing method choice — the first real *decision* in a gathering session) ·
+`v4.28 "The Long Round"` (the ~3.7M XP between the Tenth Lantern and the first Mantle is silent).
+
+### Files
+
+- `game/js/01-data.js` — `TREES` hp ×3; `RECIPES` xp retune + `auditRecipeLadder()`; VERSION + in-game CHANGELOG.
+- `game/js/08-actions.js` — `sparkCap()` + its use in `addXP`.
+- `game/js/10-ui.js` — skills-panel spark note and per-skill sparks-left now read `sparkCap()`.
+- `game/js/11-title.js` — `migrateSave` tree-HP clamp.
+- `game/index.html` — cache-buster `?v=137`.
+
+---
+
 ## 2026-07-24 — v4.22.0 "The Way Down" (code 109, tag `v4.22.0`) — owner playtest: the Warden, the stair, and the shaft
 
 ### Why this release

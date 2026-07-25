@@ -171,6 +171,19 @@ function selectPlantable(sel){
 
 // ---- skills / xp ----
 const skillLvl = s => levelFor(state.skills[s]);
+// v4.23 "The Even Hand" — the variety spark gains a RHYTHM term. The spark already paid ~21-25% of a
+// level per skill per day at every band (genuinely well-calibrated; don't touch SPARK_MULT), but nothing
+// rewarded actually rotating: with food making energy effectively free, a focused player could simply
+// spark all six anyway, so "rotate" was advice rather than a choice. Now every DISTINCT craft you touch
+// today adds 5 sparks to ALL of them — breadth 1 is byte-identical to today (10 sparks, nobody is worse
+// off, which is the contract), breadth 5+ earns 30. Capped at 4 extra crafts so Warding is always a free
+// SUBSTITUTE and never a sixth requirement — the Undercroft must not become a prerequisite for a full day.
+// Re-evaluated per grant, so touching a new craft at noon REOPENS budget in crafts you already spent:
+// no ordering trap, no back-pay bookkeeping, no new save field (dailyXpActs already exists and resets at dawn).
+function sparkCap(){
+  const breadth = Object.keys(state.dailyXpActs || {}).length;
+  return SPARK_CAP + 5 * Math.min(4, Math.max(0, breadth - 1));
+}
 // a mastery is simply "you are at least this level" — no state, nothing to maintain
 const hasMastery = (skill, n) => skillLvl(skill) >= n;
 // the next milestone you're working toward, for the skills panel
@@ -240,7 +253,7 @@ function addXP(skill, amt){
   // Reward-shaped and never a tax: rotating skills is visibly optimal; single-skill focus is still free.
   // addXP is the single choke point for ALL skill XP (Farming through Warding), so this covers combat too.
   if(!state.dailyXpActs) state.dailyXpActs = {};
-  if((state.dailyXpActs[skill] || 0) < SPARK_CAP){
+  if((state.dailyXpActs[skill] || 0) < sparkCap()){
     const firstToday = !state.dailyXpActs[skill];
     state.dailyXpActs[skill] = (state.dailyXpActs[skill] || 0) + 1;
     amt = Math.round(amt * SPARK_MULT);

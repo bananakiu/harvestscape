@@ -192,6 +192,15 @@ function migrateSave(s){
   const f = freshState();
   for(const k in f){ if(s[k] === undefined) s[k] = f[k]; }
   s.mounted = false;   // v3.22: never load mid-ride (a stale saddle would strand the speed/sprite)
+  // v4.23 "The Even Hand": farm trees persist as {kind,hp} (04-world.js:256), so a save made before the
+  // tree-HP rebalance keeps standing pines/maples/elders at their OLD, higher HP forever — the buff would
+  // silently skip every tree already on the farm. Clamp DOWN to the new table. Math.min, never assignment:
+  // a mid-chop tree keeps its remaining damage, and this can only ever make a tree easier, never restore
+  // HP the player already knocked off. (Grove/ancient trees regenerate daily from TREES, so they're free.)
+  if(s.farm && s.farm.objects) for(const k in s.farm.objects){
+    const o = s.farm.objects[k];
+    if(o && TREES[o.kind] && typeof o.hp === "number") o.hp = Math.min(o.hp, TREES[o.kind].hp);
+  }
   if(s.farm && s.farm.crops) for(const k in s.farm.crops) delete s.farm.crops[k].wt;   // v3.25: wt is a session-relative water-pop stamp; never carry it across loads (phantom pop)
   // v3.30: on a save whose stable was built before the v3.28 ore-respawn exclusion, a ridge rock may sit
   // on the stable footprint, drawing over its back wall. Clear any ore object there — the wall tile stays.
