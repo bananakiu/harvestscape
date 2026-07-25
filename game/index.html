@@ -7,7 +7,7 @@
 <title>Harvestscape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=153">
+<link rel="stylesheet" href="css/style.css?v=156">
 </head>
 <body>
 <div id="frame">
@@ -86,6 +86,11 @@
     <div class="panel wide hidden" id="cookPanel"><div class="phead"><h2>KITCHEN</h2><button class="pclose">✕</button></div><div class="body"></div></div>
     <div class="panel hidden" id="giftPanel"><div class="phead"><h2 id="giftHead">A GIFT</h2><button class="pclose">✕</button></div><div class="body"></div></div>
     <div class="panel hidden" id="machPanel"><div class="phead"><h2 id="machHead">LOAD</h2><button class="pclose">✕</button></div><div class="body"></div></div>
+    <!-- v4.29: the seed/placeable PICKER. The sixth hotbar slot funnels seeds, saplings, hives, machines
+         and décor through one blind cycle ring — owner: "I just have to cycle through a thousand options…
+         it doesn't seem natural." This is the grid that replaces the ring: grouped by kind, season shown
+         on every seed, one click to choose. -->
+    <div class="panel wide hidden" id="seedPanel"><div class="phead"><h2>WHAT TO PLANT</h2><button class="pclose">✕</button></div><div class="body"></div></div>
     <div class="panel hidden" id="settingsPanel"><div class="phead"><h2>SETTINGS</h2><button class="pclose">✕</button></div><div class="body"></div></div>
     <div class="panel wide hidden" id="newsPanel"><div class="phead"><h2>WHAT'S NEW</h2><button class="pclose">✕</button></div><div class="body"></div></div>
     <div class="panel hidden" id="liftPanel"><div class="phead"><h2>THE OLD LIFT</h2><button class="pclose">✕</button></div><div class="body"></div></div>
@@ -173,21 +178,21 @@
   </div>
 </div>
 
-<script src="js/00-core.js?v=153"></script>
-<script src="js/01-data.js?v=153"></script>
-<script src="js/02-audio.js?v=153"></script>
-<script src="js/03-art.js?v=153"></script>
-<script src="js/04-world.js?v=153"></script>
-<script src="js/05-particles.js?v=153"></script>
-<script src="js/06-weather.js?v=153"></script>
-<script src="js/07-entities.js?v=153"></script>
-<script src="js/08-actions.js?v=153"></script>
-<script src="js/09-quests.js?v=153"></script>
-<script src="js/13-content.js?v=153"></script>
-<script src="js/15-warding.js?v=153"></script>
-<script src="js/10-ui.js?v=153"></script>
-<script src="js/11-title.js?v=153"></script>
-<script src="js/14-story.js?v=153"></script>
-<script src="js/12-game.js?v=153"></script>
+<script src="js/00-core.js?v=156"></script>
+<script src="js/01-data.js?v=156"></script>
+<script src="js/02-audio.js?v=156"></script>
+<script src="js/03-art.js?v=156"></script>
+<script src="js/04-world.js?v=156"></script>
+<script src="js/05-particles.js?v=156"></script>
+<script src="js/06-weather.js?v=156"></script>
+<script src="js/07-entities.js?v=156"></script>
+<script src="js/08-actions.js?v=156"></script>
+<script src="js/09-quests.js?v=156"></script>
+<script src="js/13-content.js?v=156"></script>
+<script src="js/15-warding.js?v=156"></script>
+<script src="js/10-ui.js?v=156"></script>
+<script src="js/11-title.js?v=156"></script>
+<script src="js/14-story.js?v=156"></script>
+<script src="js/12-game.js?v=156"></script>
 </body>
 </html>

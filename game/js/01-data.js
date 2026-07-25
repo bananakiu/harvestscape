@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.28.0", code: 115, codename: "Two Anchors", date: "2026-07-26" };
+const VERSION = { name: "4.29.0", code: 116, codename: "What to Plant", date: "2026-07-26" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.29.0", code:116, date:"2026-07-26", name:"What to Plant", notes:[
+    { t:"feature", s:"Choosing what to plant is a menu now, not a guessing game. The sixth slot used to funnel every seed, sapling, hive, machine and décor piece through one blind ring you had to tap R through — often thirty-odd presses to reach the crop you wanted. Tap the slot (or press Shift+R) and you get a proper board instead: seeds, orchard, workshop and décor in their own sections, with how many you're carrying on each." },
+    { t:"feature", s:"Seeds tell you their season. In-season ones say so plainly; the rest are dimmed and labelled with the season they belong to — so you'll never again cycle onto something the ground won't take. You can still pick a dimmed one on purpose if you're getting ready for next season." },
+    { t:"change", s:"The R key stops walking you past things you can't use. It now cycles only what's actually in season AND in your bag — usually a handful — instead of every crop your Farming level has ever unlocked, most of which you own none of." },
+  ]},
   { v:"4.28.0", code:115, date:"2026-07-26", name:"Two Anchors", notes:[
     { t:"fix", s:"Your messages stop stacking on top of each other. Notifications and the item-pickup log were two separate columns pinned to the same edge, growing down into one another — and the newer, more useful message was the one drawn underneath. They share one lane now, so they simply queue instead of fighting." },
     { t:"fix", s:"Talking to someone no longer covers your tools. The dialogue box sat over the top of the hotbar, burying every slot number and the name of whatever you were holding; the examine readout landed squarely on the tool name too, so pressing Q hid the very thing you'd asked about. Both now sit above the belt, and the belt keeps its whole height." },

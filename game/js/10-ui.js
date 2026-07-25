@@ -327,11 +327,75 @@ function refreshHotbar(){
     const nm = document.createElement("span"); nm.className="slotName"; nm.textContent = name; d.appendChild(nm);
     // v4.19: tapping the Seeds tile when it's ALREADY selected cycles what's in hand — the touch parity
     // for R (which had no touch path at all). Any other tile, or a first tap, just selects as before.
+    // v4.29: a second tap on the Seeds tile now opens the PICKER rather than advancing a blind ring.
+    // Cycling still exists on R (and it is short now — in-season, in-stock only), but choosing what to
+    // plant should be a choice you make by looking, not by pressing until the right thing comes round.
     d.onclick = (slot.tool === "Seeds")
-      ? () => { if(i === slotSel) cycleSeed(); else selectSlot(i); }
+      ? () => { if(i === slotSel) openSeedPicker(); else selectSlot(i); }
       : () => selectSlot(i);
     hb.appendChild(d);
   });
+}
+
+// ---- v4.29 the seed / placeable picker ----
+// Owner playtest: "there's an inventory slot for every tool, but the miscellaneous slot — I just have to
+// cycle through a thousand options. Different seeds that I don't even know if it's in season… all the
+// trees are there, all the seeds, all of the miscellaneous items you can place down. It doesn't seem
+// natural." Right on every count: `plantables()` returned one flat ring mixing four different KINDS of
+// thing, and the only way through it was pressing R until the right one came round.
+//
+// So: a grid, grouped by kind, with the season stated on every seed and the out-of-season ones dimmed
+// rather than hidden — you can still deliberately pick one (buying ahead for next season is a real thing
+// to want), you just can't stumble onto it by cycling, because the CYCLE is now in-season + in-stock only.
+function openSeedPicker(){ openPanel("seedPanel", renderSeedPicker); }
+function renderSeedPicker(){
+  const b = $("seedPanel").querySelector(".body");
+  const seas = curSeason(), lvl = skillLvl("Farming");
+  const cell = (sel, icon, label, sub, dim, count) =>
+    `<div class="seedCell${dim?" dim":""}${state.seedSel===sel?" sel":""}" data-icon="${icon}" onclick="pickPlantable('${jsq(sel)}')">` +
+      `<canvas></canvas><span class="scName">${label}</span>` +
+      (count != null ? `<span class="scCnt">×${count}</span>` : "") +
+      `<span class="scSub">${sub}</span></div>`;
+  let h = "", any = false;
+
+  // --- seeds, in season first ---
+  const crops = Object.keys(CROPS).filter(id => lvl >= CROPS[id].lvl && (state.inv[CROPS[id].name+" Seeds"]||0) > 0);
+  if(crops.length){
+    any = true;
+    crops.sort((a,bb) => (CROPS[bb].seasons.includes(seas)?1:0) - (CROPS[a].seasons.includes(seas)?1:0));
+    h += `<div class="secHead">🌱 Seeds</div><div class="seedGrid">` + crops.map(id => {
+      const c = CROPS[id], inSeason = c.seasons.includes(seas);
+      return cell(id, "item_"+c.name+" Seeds", c.name, inSeason ? "in season" : c.seasons.join(" & "),
+                  !inSeason, state.inv[c.name+" Seeds"]||0);
+    }).join("") + `</div>`;
+  }
+  // --- saplings & hives ---
+  const perm = [];
+  for(const k in FRUIT_TREES) if((state.inv[FRUIT_TREES[k].name]||0) > 0)
+    perm.push(cell("sap:"+k, "item_"+FRUIT_TREES[k].name, FRUIT_TREES[k].name, FRUIT_TREES[k].season + " fruit", false, state.inv[FRUIT_TREES[k].name]));
+  if((state.inv["Beehive"]||0) > 0) perm.push(cell("hive", "beehive", "Beehive", "needs flowers near", false, state.inv["Beehive"]));
+  if(perm.length){ any = true; h += `<div class="secHead">🌳 Orchard & Apiary</div><div class="seedGrid">${perm.join("")}</div>`; }
+  // --- machines ---
+  const mach = [];
+  for(const k in MACHINES) if((state.inv[MACHINES[k].name]||0) > 0)
+    mach.push(cell("mach:"+k, "item_"+MACHINES[k].name, MACHINES[k].name, "workshop", false, state.inv[MACHINES[k].name]));
+  if(mach.length){ any = true; h += `<div class="secHead">⚙ Workshop</div><div class="seedGrid">${mach.join("")}</div>`; }
+  // --- décor ---
+  const dec = [];
+  for(const k in DECOR) if((state.inv[DECOR[k].name]||0) > 0)
+    dec.push(cell("decor:"+k, "item_"+DECOR[k].name, DECOR[k].name, "décor", false, state.inv[DECOR[k].name]));
+  if(dec.length){ any = true; h += `<div class="secHead">✿ Décor</div><div class="seedGrid">${dec.join("")}</div>`; }
+
+  if(!any) h = `<div class="locked">Nothing to plant or place just yet — buy a few seeds at Tom's.</div>`;
+  else h += `<div class="desc" style="margin-top:.4em;color:var(--ink-soft);">Dimmed seeds are out of season — you can still choose one to sow when its season comes round.</div>`;
+  b.innerHTML = h;
+  hydrateIcons(b);
+}
+function pickPlantable(sel){
+  state.seedSel = sel; slotSel = 5;
+  refreshHotbar(); playSfx("select");
+  closePanel("seedPanel");
+  toast("Selected: " + plantableName(sel), "#8fd06a");
 }
 
 // ---- quest tracker ----
@@ -1915,7 +1979,10 @@ document.addEventListener("keydown", e => {
   else if(k === "i") togglePanel("invPanel", renderInv);
   else if(k === "j") togglePanel("questPanel", renderJournal);
   else if(k === "p" || k === "o") togglePanel("settingsPanel", renderSettings);
-  else if(k === "r"){ if(!uiBlocking()) cycleSeed(); }
+  // v4.29: R still cycles (the ring is short now — in-season, in-stock only), but Shift+R opens the
+  // picker, and R opens it too when there is genuinely nothing to cycle TO.
+  else if(k === "r"){ if(inputBusy()) return;
+    if(e.shiftKey || plantables().length <= 1) openSeedPicker(); else cycleSeed(); }
   else if(k === "f"){ if(!uiBlocking()) eatFood(); }
   else if(k === "g"){ if(!uiBlocking()) giveGift(); }
   else if(k === "h"){ if(!uiBlocking()) rideToggle(); }   // v3.22: mount/dismount the horse

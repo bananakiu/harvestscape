@@ -108,13 +108,28 @@ function EATHINT(){ return IS_TOUCH ? "eat from the ☰ menu" : "eat (F)"; }
 function GIFTHINT(){ return IS_TOUCH ? "give a gift from the ☰ menu" : "give a gift (G)"; }
 // Everything you can put in the ground: seeds you've levelled into, plus any sapling or hive
 // you're actually carrying. `state.seedSel` is a crop id, "sap:<type>", or "hive".
-function plantables(){
-  const list = Object.keys(CROPS).filter(id => skillLvl("Farming") >= CROPS[id].lvl);
+// v4.29: crops were listed by LEVEL alone, with no stock check — every sapling, hive, machine and décor
+// piece already required you to be carrying one, but seeds did not. At Farming 99 that put all 23 crops
+// in the cycle ring alongside up to 22 décor pieces, so R walked a ~50-entry list, most of it things you
+// own none of, each step firing a toast and a menu sound. Getting from Turnip to Everbloom was thirty-odd
+// presses. Now the ring holds only what you can actually put in the ground right now.
+//
+// `all` returns the UNFILTERED list: the bag's "select this to plant" button validates against it, so
+// picking a seed you just bought still works on the same frame, and it is the fallback that guarantees
+// the ring is never empty (a player with no seeds at all still sees turnip and can select it).
+// Out-of-season crops are filtered too (owner playtest: "different seeds that I don't even know if it's
+// in season"). They CANNOT be planted — useTool refuses with "only grows in X" — so leaving them in the
+// ring is pure wasted motion: you cycle onto something the game will not let you use. In Spring the ring
+// is Spring seeds you own, and nothing else.
+function plantables(all){
+  const seas = curSeason();
+  const list = Object.keys(CROPS).filter(id => skillLvl("Farming") >= CROPS[id].lvl &&
+    (all || ((state.inv[CROPS[id].name + " Seeds"]||0) > 0 && CROPS[id].seasons.includes(seas))));
   for(const k in FRUIT_TREES) if((state.inv[FRUIT_TREES[k].name]||0) > 0) list.push("sap:"+k);
   if((state.inv["Beehive"]||0) > 0) list.push("hive");
   for(const k in MACHINES) if((state.inv[MACHINES[k].name]||0) > 0) list.push("mach:"+k);
   for(const k in DECOR) if((state.inv[DECOR[k].name]||0) > 0) list.push("decor:"+k);
-  return list;
+  return list.length ? list : plantables(true);
 }
 const isSapSel   = s => typeof s === "string" && s.startsWith("sap:");
 const isHiveSel  = s => s === "hive";
@@ -136,8 +151,13 @@ function plantableIcon(sel){
 }
 // if you plant your last sapling, fall back to something you still have
 function normalizeSeedSel(){
-  const ids = plantables();
-  if(!ids.includes(state.seedSel)) state.seedSel = ids[0] || "turnip";
+  // v4.29: validate against the FULL list, not the filtered ring. This function exists to rescue a
+  // DANGLING selection (you planted your last sapling, so the id no longer resolves) — not to enforce
+  // season or stock. Checking the filtered ring would silently revert a deliberate off-season pick from
+  // the picker the instant the hotbar redrew, which is the "buy ahead for next season" case the picker
+  // explicitly offers. Season is enforced at plant time, with a message that says which season.
+  const ids = plantables(true);
+  if(!ids.includes(state.seedSel)) state.seedSel = plantables()[0] || ids[0] || "turnip";
 }
 function cycleSeed(){
   const ids = plantables();
@@ -163,7 +183,7 @@ function plantableFor(item){
 }
 // Select a plantable directly (from the bag). Mirrors cycleSeed's tail so the hotbar + feedback match.
 function selectPlantable(sel){
-  if(!sel || !plantables().includes(sel)) return;
+  if(!sel || !plantables(true).includes(sel)) return;   // validate against the FULL list — a bag pick of a just-bought or off-season seed is still a deliberate choice
   state.seedSel = sel;
   slotSel = 5; refreshHotbar(); toast("Selected: " + plantableName(sel), "#8fd06a"); playSfx("menu");
   if(typeof renderInv === "function" && typeof openPanels !== "undefined" && openPanels.has("invPanel")) renderInv();

@@ -803,3 +803,26 @@ input.qty{
 }
 input.qty::-webkit-outer-spin-button, input.qty::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
 input.qty{ -moz-appearance:textfield; appearance:textfield; }
+
+/* ---------- v4.29 the seed / placeable picker ---------- */
+/* The sixth hotbar slot used to funnel seeds, saplings, hives, machines and décor through one blind
+   cycle ring. This is the grid that replaces it: grouped by kind, season stated, one click to choose. */
+#seedPanel .secHead{ color:var(--gold-hi); margin:.5em 0 .25em; font-size:.95em; }
+.seedGrid{ display:flex; flex-wrap:wrap; gap:.4em; }
+.seedCell{
+  position:relative; width:5.6em; padding:.32em .3em .28em;
+  display:flex; flex-direction:column; align-items:center; gap:.1em;
+  background:linear-gradient(var(--wood-l), var(--wood));
+  border:.13em solid var(--wood-d); border-radius:.5em; cursor:pointer;
+  box-shadow:0 .18em 0 rgba(0,0,0,.35), inset 0 .1em 0 rgba(255,255,255,.06);
+  transition:transform .1s ease, border-color .1s ease;
+}
+.seedCell:hover{ transform:translateY(-.1em); border-color:var(--wood-hi); }
+.seedCell:active{ transform:translateY(.06em); }
+.seedCell.sel{ border-color:var(--gold); box-shadow:0 .18em 0 rgba(0,0,0,.35), 0 0 .5em var(--gold-d); }
+/* out of season: still choosable (buying ahead is a real thing to want), just visibly not for today */
+.seedCell.dim{ opacity:.5; filter:saturate(.5); }
+.seedCell canvas{ width:2.1em; height:2.1em; image-rendering:pixelated; }
+.seedCell .scName{ font-size:.82em; color:var(--parch); text-align:center; line-height:1.05; }
+.seedCell .scSub{ font-size:.72em; color:var(--parch-sh); text-align:center; line-height:1; }
+.seedCell .scCnt{ position:absolute; top:.14em; right:.28em; font-size:.74em; color:var(--gold-hi); }

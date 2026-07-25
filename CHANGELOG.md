@@ -22,6 +22,80 @@
 
 ---
 
+## 2026-07-26 — v4.29.0 "What to Plant" (code 116, tag `v4.29.0`) — the miscellaneous slot stops being a soup
+
+### Why this release
+
+Direct owner playtest during the UI rework (verbatim in `DEVLOG.md`): *"there's an inventory slot for
+every tool, but the miscellaneous slot — I just have to cycle through a thousand options. Different seeds
+that I don't even know if it's in season… all the trees are there, all the seeds are there, all of the
+miscellaneous items you can place down are there. It doesn't seem natural."*
+
+Three correct observations, and the diagnosis in the last line is right: **one slot is doing four jobs.**
+Every other hotbar slot holds one tool; the sixth held a category soup of seeds, saplings, hives, machines
+and décor, reachable only by pressing R until the right thing came round.
+
+### Fixed — the ring was padded with things you cannot use
+
+Measured: `plantables()` filtered crops by **level only, with no stock check** — while saplings, machines
+and décor all required you to be carrying one. At Farming 99 the ring therefore held **all 23 crops**
+regardless of whether you owned a single seed, plus up to 22 décor pieces. Turnip → Everbloom was thirty-odd
+presses, each firing a toast and a menu sound.
+
+- Crops are now filtered by **stock AND season**. Out-of-season crops can't be planted at all (`useTool`
+  refuses with "only grows in X"), so leaving them in the ring meant cycling onto a selection the game
+  would never accept. **Measured: a realistic Spring bag takes the ring from 23 entries to 6.**
+- `plantables(true)` returns the unfiltered list, used for validation and as the never-empty fallback.
+
+### Added — the picker board
+
+Cycling is the wrong primary verb for a fifty-item list; a list you pick *from* should be looked at.
+
+- New `#seedPanel` / `renderSeedPicker()`: a grid grouped into **🌱 Seeds · 🌳 Orchard & Apiary · ⚙ Workshop
+  · ✿ Décor**, each cell showing the icon, the name, how many you carry, and — for seeds — either
+  **"in season"** or the season it actually belongs to.
+- In-season seeds sort first. Out-of-season ones are **dimmed but still choosable**: buying ahead for next
+  season is a real thing to want, and the picker is a deliberate act where the ring was an accidental one.
+- Opened by tapping the Seeds slot when it's already selected, or **Shift+R**; plain **R** still cycles
+  (now a short, useful ring) and opens the picker when there's nothing to cycle to.
+
+### Fixed — a deliberate off-season pick was silently reverted
+
+`normalizeSeedSel()` validated against the *filtered* ring, so choosing a dimmed Starfruit in Spring got
+clobbered back to Turnip the instant the hotbar redrew. That function exists to rescue a **dangling**
+selection (you planted your last sapling, so the id no longer resolves) — not to enforce season or stock.
+It now validates against `plantables(true)`. Season stays enforced at plant time, where the refusal names
+the season.
+
+### Verification (live build, console clean)
+
+Ring 23 → **6** on a realistic Spring bag (turnip, potato, rhubarb, sap:apple, mach:keg, decor:flowerbed).
+Picker renders all four groups with icons painted, 2 of 8 cells dimmed for season, and "in season" shown.
+Picking sets the selection, focuses the slot and closes. **An off-season pick survives a hotbar redraw**,
+still refuses to plant, and spends no seed; a **dangling** selection is still rescued (last Apple Tree
+planted → falls back to turnip). Screenshotted the board.
+
+### Files
+
+- `game/js/08-actions.js` — `plantables(all)` stock+season filter; `normalizeSeedSel` validates against the full list; `selectPlantable` likewise.
+- `game/js/10-ui.js` — `openSeedPicker` / `renderSeedPicker` / `pickPlantable`; Seeds-tile click; R and Shift+R.
+- `game/index.html` — `#seedPanel`.
+- `game/css/style.css` — `.seedGrid` / `.seedCell` (+ `.dim`, `.sel`).
+- `game/js/01-data.js` — VERSION + in-game CHANGELOG.
+- `game/index.html` — cache-buster `?v=156`.
+
+### Still queued — "The Pack"
+
+The owner asked for a full inventory overhaul; this release fixes the *placeable* half. Remaining: the
+backpack itself (item positions derive from `Object.keys` insertion order, so a re-earned item jumps to
+the end of its section, and `renderInv` resets scroll on every click), hover tooltips (`invDetailHtml`
+already assembles exactly Stardew's tooltip body but gates it behind a click and a full innerHTML
+rebuild), and the loss-proof carry cap with bag upgrades — cap distinct **kinds**, never stacks; `give()`
+must never refuse and never destroy across its 76 call sites, several of which are purchases with gold
+already deducted; overflow goes to a farmhouse shelf.
+
+---
+
 ## 2026-07-26 — v4.28.0 "Two Anchors" (code 115, tag `v4.28.0`) — the UI stops overlapping itself, and the cursor stops lying
 
 ### Why this release

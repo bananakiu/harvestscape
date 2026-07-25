@@ -14,6 +14,41 @@
 
 ---
 
+## 2026-07-26 — "It doesn't seem natural": the miscellaneous slot
+
+**Owner feedback (near-verbatim), during the UI rework:**
+
+> I think one of the major usability issues... is when it's hard to pick the seeds. It seems like there's
+> an inventory slot for every tool. But when it comes to the sort of miscellaneous slot — I think it's
+> slot six or seven — I just have to cycle through a thousand options, right? Different seeds that I don't
+> even know if it's in season, so it would be good to have an indicator for those seeds if they're in
+> season on the actual icon. Maybe [filter] them out if they're not in season. I have no idea. But it's
+> just too tedious. All the trees are there, all the seeds are there, all of the miscellaneous items that
+> you can place down are there. It doesn't seem natural. I feel like there needs to be an overhaul of the
+> inventory system.
+
+**Interpretation.** Three precise, correct observations, and the diagnosis in the last line is right:
+
+1. **One slot is doing four jobs.** `plantables()` returned a single flat ring mixing seeds, saplings,
+   hives, machines and décor. Every other hotbar slot holds ONE tool; the sixth holds a category soup.
+   That is the "doesn't seem natural" — the slot has no consistent identity.
+2. **The ring was padded with things you cannot use.** Crops were listed by LEVEL with no stock check
+   (saplings/machines/décor all required you to be carrying one; seeds did not), so at Farming 99 the ring
+   held all 23 crops — measured — most of which you own no seeds of. Turnip → Everbloom was thirty-odd
+   presses.
+3. **Season was invisible.** Out-of-season crops sat in the ring even though `useTool` refuses them
+   outright, so you could cycle onto a selection the game would never let you use, with nothing on screen
+   to say why.
+
+**Direction call.** Cycling is the wrong primary verb for a fifty-item list — a list you pick FROM should
+be looked at. So: a grouped picker board (the ring stays on R for quick swaps, but short), season stated
+on every seed, and the ring filtered to in-season + in-stock. Deliberately kept out-of-season seeds
+*choosable but dimmed* rather than hidden — buying ahead for next season is a real thing to want, and the
+picker is a deliberate act where the ring was an accidental one.
+
+**Produced:** v4.29.0 "What to Plant". The deeper inventory work the owner asks for — the backpack itself,
+hover tooltips, and the loss-proof carry cap with bag upgrades — remains queued as "The Pack".
+
 ## 2026-07-26 — "The UI is all over the place": a controls-first rework
 
 **Owner feedback (near-verbatim):**
