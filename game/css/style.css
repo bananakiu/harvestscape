@@ -6,7 +6,13 @@
   --bg:#100d0b;
   --wood-d:#2f2218;   --wood:#4a3626;   --wood-l:#6b4e37;   --wood-hi:#8a6647;
   --parch:#f2e4c2;    --parch-d:#e3cf9f; --parch-sh:#c9ad78;
-  --ink:#3a2c1c;      --ink-soft:#6b573f;
+  --ink:#3a2c1c;
+  /* v4.37: secondary text. The old #6b573f measured 2.34:1 on the panel gradient and 1.10:1 on
+     the wood one — the second is not "dim", it is invisible. It carries .row .sub, i.e. the
+     ingredient list, energy and sell price of every recipe in the game. Two tokens are required,
+     not one: nothing dark enough to read as "muted" on the panel can also clear 4.5:1 on wood.
+     Measured: --ink-soft 4.84:1 on panel; --ink-soft-wood 4.65:1 on --wood-l. */
+  --ink-soft:#a08a68;  --ink-soft-wood:#dac8b0;
   --gold:#ffce5a;     --gold-hi:#ffe6a0; --gold-d:#c9922f;
   --green:#8fd06a;    --green-d:#4f8a34;
   --blue:#8fd3ff;     --rose:#ff7d9c;    --danger:#ff8a7a;
@@ -238,7 +244,10 @@ body{
 
 /* ---------- item pickup log ---------- */
 #pickups{
-  display:flex; flex-direction:column; gap:.32em;
+  /* v4.37: column-REVERSE. #msgLane clips at max-height:62%, notePickup appends at the bottom, so
+     the overflow always ate the NEWEST row — the one that just happened and the only one you were
+     waiting to read. Reversing puts new rows at the top, so the clip falls on the oldest instead. */
+  display:flex; flex-direction:column-reverse; gap:.32em;
   pointer-events:none; align-items:flex-start;
 }
 .pickup{
@@ -312,7 +321,13 @@ body{
   position:absolute; top:30%; left:50%; transform:translate(-50%,-50%) scale(.8);
   background:var(--panel); border:.2em solid var(--gold);
   border-radius:.7em; padding:.7em 1.3em; text-align:center;
-  box-shadow:0 0 2em #000c, 0 0 1.4em var(--gold-d); z-index:8;
+  /* v4.37: was z-index:8, under .panel's 12 — and #stage creates no stacking context, so the
+     banner genuinely painted BEHIND any open panel. Both addXP("Cooking", …) call sites are
+     reachable only from buttons inside the open cookPanel, and neither closes it, so the Cooking
+     level-up banner was invisible for an ENTIRE playthrough — one of six 1-99 skills never got
+     its celebration. 13 clears .panel (12) and stays under .screen (20) / #newsPanel (22) /
+     #fade (30) / #sleepCard (31). */
+  box-shadow:0 0 2em #000c, 0 0 1.4em var(--gold-d); z-index:13;
   opacity:0; pointer-events:none;
 }
 #banner.show{ animation:bannerpop 3.2s ease forwards; }
@@ -373,7 +388,10 @@ body{
 #dialog .dwrap{ flex:1 1 auto; min-width:0; }
 #dialog .who{ color:var(--gold-hi); font-size:1.05em; margin-bottom:.15em; letter-spacing:.03em; }
 #dialog .txt{ color:#f0e6cf; font-size:1.02em; line-height:1.22; min-height:2.4em; }
-#dialog .hint{ color:var(--ink-soft); font-size:.8em; margin-top:.3em; text-align:right; opacity:.75; animation:blink 1.2s steps(2) infinite; }
+/* v4.37: was --ink-soft at opacity .75 AND a blink that halves it again — ~1.2:1 for half of every
+   cycle, on the one line that tells you how to advance dialogue. Opacity dropped; the blink stays,
+   since it is the affordance. */
+#dialog .hint{ color:var(--ink-soft); font-size:.8em; margin-top:.3em; text-align:right; animation:blink 1.2s steps(2) infinite; }
 @keyframes blink{50%{opacity:.25}}
 
 /* ---------- panels ---------- */
@@ -461,7 +479,7 @@ body{
 .skillCell .xpbarWrap{ flex:0 0 auto; width:100%; height:.72em; }
 .sgoal{ font-size:.7em; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .sgoal.unlock{ color:var(--blue); }
-.sgoal.mast{ color:var(--ink-soft); }
+.sgoal.mast{ color:var(--ink-soft-wood); }   /* v4.37: on --wood-l; --ink-soft is 1.10:1 here */
 .sgoal.done{ color:var(--gold-hi); }
 .sgoal.spark{ color:#9fe0ff; }   /* v4.0 variety spark */
 .sparkNote{ font-size:.74em; color:#9fe0ff; background:rgba(120,190,255,.10); border:1px solid rgba(120,190,255,.25);
@@ -568,7 +586,7 @@ body{
   box-shadow:0 .16em 0 rgba(0,0,0,.35), inset 0 .1em 0 rgba(255,255,255,.06);
 }
 .wmName{ color:var(--gold-hi); font-size:.9em; line-height:1.05; overflow-wrap:anywhere; }
-.wmSub{ color:var(--ink-soft); font-size:.72em; line-height:1.05; }
+.wmSub{ color:var(--ink-soft-wood); font-size:.72em; line-height:1.05; }   /* v4.37: on --wood-l */
 .wmYou{ color:var(--gold); font-size:.72em; margin-top:.05em; }
 .wmNpcs{ display:flex; flex-wrap:wrap; gap:.2em; margin-top:.2em; }
 .wmNpc canvas{ width:1.4em; height:1.4em; image-rendering:pixelated;
@@ -730,7 +748,10 @@ body{
    hotbar no longer needs to hide — measured 0px against a live conversation. The .talking class is kept
    because the examine bar still wants the lower slot while a dialogue owns the upper one; deliberately
    NOT fading the belt, since with nothing overlapping it that would be motion for its own sake. */
-#stage.talking #examineBar{ bottom:2.6%; }
+/* v4.37: deleted. This moved the examine readout to bottom:2.6% — the exact offset of #hotbar, at a
+   higher z-index, so it painted over the belt. It guarded a state that cannot legally occur:
+   examine() early-returns on uiBlocking() (08-actions.js), so the readout can never be raised while
+   a dialogue is open. showDialog now clears it instead. */
 
 /* gift picker rows */
 #giftPanel .row .pref{ font-size:.8em; }

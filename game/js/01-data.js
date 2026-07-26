@@ -8,13 +8,20 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.36.0", code: 123, codename: "True Pixels", date: "2026-07-26" };
+const VERSION = { name: "4.37.0", code: 124, codename: "The Honest Panel", date: "2026-07-26" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.37.0", code:124, date:"2026-07-26", name:"The Honest Panel", notes:[
+    { t:"fix", s:"Cooking finally gets its level-up moment. Every way of cooking is a button inside the Kitchen, and the level-up banner was painted UNDERNEATH open panels \u2014 so for the whole game, one of your six crafts levelled in complete silence while five others got a card and a chime." },
+    { t:"fix", s:"Item prices were wrong wherever you looked at them. Hovering a Cooked Salmon in winter as a good cook read 336g while Tom's counter paid 462g \u2014 the bonuses you'd earned were exactly the ones being hidden. Every price readout now shows what the counter will actually pay, and names why when it's more." },
+    { t:"fix", s:"Small print you couldn't read. The muted text carrying every recipe's ingredients, energy and price sat at about a third of the contrast it needed; on the wood panels it was effectively invisible. Both are readable now, and the blinking \"press E\" hint no longer fades to nothing on every blink." },
+    { t:"fix", s:"The newest pickup no longer gets cut off. When several things arrived at once the list overflowed downward and clipped the most recent line \u2014 the one you were waiting to read. It clips the oldest now." },
+    { t:"fix", s:"Examining something then talking to someone no longer buries your tool belt under the readout." },
+  ]},
   { v:"4.36.0", code:123, date:"2026-07-26", name:"True Pixels", notes:[
     { t:"fix", s:"The game is drawn at the shape it was actually painted in, on every window size. On any window that wasn't tall enough, the whole valley was being stretched sideways \u2014 sprites wider than they should be, tiles no longer square." },
     { t:"fix", s:"That stretch was hiding text, too. Name tags over people's heads, the +XP and +gold numbers, the HOLD prompts \u2014 all of them were placed using the sideways stretch as though it applied downward as well, so anything low on the screen drifted down and off the bottom. Fixed at the root: the picture can no longer be stretched, so the text can no longer be misplaced." },

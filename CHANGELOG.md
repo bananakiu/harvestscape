@@ -22,6 +22,95 @@
 
 ---
 
+## 2026-07-26 — v4.37.0 "The Honest Panel" (code 124, tag `v4.37.0`) — nothing hidden, nothing unreadable, no wrong numbers
+
+### Why this release
+
+Release 2 of the UX audit's train. Five defects, all in the same family: the game had the right
+information and put it somewhere the player couldn't get at it — under something else, too dim to
+read, or simply wrong.
+
+### Fixed — the Cooking level-up banner was invisible for an entire playthrough
+
+`#banner` was `z-index:8`; `.panel` is `z-index:12`. Both are children of `#stage`, and `#stage`
+creates **no stacking context** (verified: no `z-index`, no `transform`, no `filter`, `opacity:1`),
+so the banner genuinely painted *behind* any open panel.
+
+For five of the six skills that is an occasional near-miss. For Cooking it is total: `addXP("Cooking", …)`
+exists at exactly two sites, `08-actions.js:1289` and `:1304`, and **both are reachable only from
+buttons inside the open `cookPanel`, neither of which closes it.** So every Cooking level in the game
+happened in silence — no card, no "Unlocked: …", while the other five crafts each got their moment.
+
+`z-index:13` clears `.panel` (12) and stays under `.screen` (20), `#newsPanel` (22), `#fade` (30) and
+`#sleepCard` (31). Verified live: cooked to Cooking 3 with the Kitchen open; the banner reads
+"⬆ Cooking Lv 3! Unlocked: Bread" above the panel.
+
+### Fixed — every price readout understated what Tom actually pays
+
+`invDetailHtml` and — worse — v4.30's hover tooltip `tipBodyFor`, which is delegated over **every**
+`data-icon="item_*"` surface in the game, both printed the raw `ITEM_SELL` figure. The counter pays
+`baseUnitPrice()`, which layers Winter ×1.25 on fish, ★Renowned ×1.25 on dishes, and `cookedMult()`
+up to ×1.18.
+
+Measured, Winter at Cooking 70:
+
+| item | tooltip said | counter paid |
+| --- | --- | --- |
+| Cooked Salmon | 336g | **462g** (+37%) |
+| Salmon | 240g | 300g |
+| Turnip | 35g | 35g |
+
+The understatement fell precisely on the bonuses the player had **earned** — `baseUnitPrice`'s own
+comment says the earned band exists to give "a visible reason to have done it", and the
+highest-traffic surface in the game was the one hiding it.
+
+Both surfaces now route through `sellPriceNow()`, and `sellPriceTag()` names the reason
+("· winter · your cooking") so a number that moved has a stated cause rather than reading as a bug.
+The tag's conditions **mirror `baseUnitPrice` exactly** — same three tests, same tables
+(`FISH_NAMES`, `RECIPE_NAMES`, the `"Cooked "` prefix) — so it can never claim a premium the price
+didn't apply. Verified: all three sample items now match the counter to the gold.
+
+### Fixed — secondary text below readable contrast, and one case at 1.10:1
+
+`--ink-soft:#6b573f` measured **2.34:1** on the panel gradient against WCAG AA's 4.5:1. It carries
+`.row .sub` — literally the ingredient list, energy value and sell price of every recipe — plus
+`.exline`, `.locked`, `.muted`, `.skillHelp`, `.newsDate`.
+
+**One token could not fix this.** `.sgoal.mast` and `.wmSub` sit on the `--wood-l` (`#6b4e37`)
+gradient, where `#6b573f` is **1.10:1** — not dim, invisible. Solved by ramp search: nothing dark
+enough to still read as "muted" on the panel clears 4.5:1 on wood. So two tokens:
+
+- `--ink-soft:#a08a68` — **4.84:1** on the panel
+- `--ink-soft-wood:#dac8b0` — **4.65:1** on `--wood-l`, for the two wood-gradient users
+
+`#dialog .hint` also stacked `opacity:.75` *and* a `blink` keyframe on top of the worst colour,
+dropping to ~1.2:1 for half of every cycle — on the one line that tells you how to advance dialogue.
+Opacity dropped; the blink stays, since the blink *is* the affordance.
+
+### Fixed — the message lane clipped the newest row
+
+`#msgLane` clips at `max-height:62%`, and `notePickup` appends at the bottom — so the overflow always
+ate the **most recent** line, the one that just happened and the only one being waited on.
+`flex-direction:column-reverse` on `#pickups` puts new rows at the top, so the clip falls on the
+oldest instead. (The audit's alternative, raising `max-height` to 72%, was rejected: it puts the lane
+bottom at 91% and collides with the hotbar at 87%.)
+
+### Fixed — the examine readout covered the tool belt
+
+`#stage.talking #examineBar{ bottom:2.6% }` is the exact offset of `#hotbar`, at a higher z-index.
+Deleted rather than re-tuned, because it guarded a state that cannot legally occur: `examine()`
+early-returns on `uiBlocking()`, so a readout can never be raised while a dialogue is open.
+`showDialog` now clears the bar instead.
+
+### Verified
+
+Banner z 13 > panel 12 and < news 22, with a real Cooking level-up rendered above the open Kitchen.
+All three price samples match `baseUnitPrice` to the gold, with correct premium tags. Both contrast
+tokens confirmed applied and recomputed against their real backgrounds. `#pickups` computes to
+`column-reverse`. The examine bar is hidden by `showDialog`. All 16 files parse; console clean.
+
+---
+
 ## 2026-07-26 — v4.36.0 "True Pixels" (code 123, tag `v4.36.0`) — the stage stops lying about its shape
 
 ### Why this release

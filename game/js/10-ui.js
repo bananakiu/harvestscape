@@ -88,6 +88,12 @@ function showDialog(who, txt, portraitName){
   playSfx("menu");
   const d = $("dialog"); d.classList.remove("hidden");
   $("stage").classList.add("talking");   // v4.28: the hotbar steps aside instead of being covered
+  // v4.37: retire the examine readout when a conversation starts. This used to be a CSS rule that
+  // MOVED it to bottom:2.6% — the exact offset of #hotbar, at a higher z-index, so it covered the
+  // belt. Clearing it is right instead of relocating it: examine() early-returns on uiBlocking()
+  // (08-actions.js), so a readout can never legally be raised while a dialogue is open — the rule
+  // was guarding an impossible state and paying for it with the tool tiles.
+  const ex = $("examineBar"); if(ex) ex.classList.add("hidden");
   d.querySelector(".who").textContent = who;
   drawPortrait(portraitName || "port_valley");
   dlg.open = true; dlg.full = txt; dlg.i = 0; dlg.done = false;
@@ -637,7 +643,7 @@ function invDetailHtml(it){
   if(!it || !state.inv[it]) return "";   // empty → the sticky detail bar collapses (see #invDetail:not(:empty))
   let h = `<div class="sdHead"><span class="sdName">${it}</span><span class="sdLvl">×${state.inv[it]}</span></div>`;
   const bits = [];
-  if(ITEM_SELL[it]) bits.push(`${ITEM_SELL[it]}g each`);
+  if(ITEM_SELL[it]) bits.push(`${sellPriceNow(it)}g each${sellPriceTag(it)}`);
   if(EDIBLE[it])    bits.push(`+${EDIBLE[it]} energy`);
   if(bits.length) h += `<div class="sdXp">${bits.join(" · ")}</div>`;
   if(EXAMINE[it]) h += `<div class="sdLine muted" style="font-style:italic">${escapeHtml(EXAMINE[it])}</div>`;
@@ -1365,6 +1371,32 @@ function qtyCtl(qid, max){
     `<button onclick="stepQty('${qid}',1)">+</button>`;
 }
 // The machine chooser — the gift panel's pattern for the cellar. interact() opens it whenever a
+// ============================== WHAT IT ACTUALLY SELLS FOR (v4.37) ==============================
+// Both item readouts — the click-through detail (invDetailHtml) and v4.30's hover tooltip
+// (tipBodyFor, delegated over EVERY `data-icon="item_*"` surface in the game) — printed the raw
+// `ITEM_SELL` figure, while Tom's counter pays `baseUnitPrice()`. Those differ by up to 37%:
+// baseUnitPrice layers the Winter ×1.25 on fish, the ★Renowned ×1.25 on dishes, and cookedMult()
+// to ×1.18. A Cooked Salmon in Winter at Cooking 70 read 336g in the bag and paid 462g at the till.
+//
+// The understatement was worst exactly where it mattered most — the bonuses you EARNED were the
+// ones being hidden, on the highest-traffic surface in the game. baseUnitPrice's own comment says
+// the earned band exists to give "a visible reason to have done it"; this is that reason, restored.
+function sellPriceNow(item){
+  return (typeof baseUnitPrice === "function") ? Math.round(baseUnitPrice(item)) : (ITEM_SELL[item] || 0);
+}
+// Name the premium when there is one, so a number that moved has a stated cause rather than reading
+// as a bug. The conditions MIRROR baseUnitPrice (08-actions.js) exactly — same three tests, same
+// order, same tables — so the label can never claim a bonus the price didn't actually apply.
+function sellPriceTag(item){
+  const raw = ITEM_SELL[item] || 0;
+  if(!raw || sellPriceNow(item) <= raw) return "";
+  const bits = [];
+  if(curSeason() === "Winter" && FISH_NAMES.has(item)) bits.push("winter");
+  if(hasMastery("Cooking", 99) && RECIPE_NAMES.has(item)) bits.push("★ Renowned");
+  if(item.indexOf("Cooked ") === 0 && cookedMult() > 1) bits.push("your cooking");
+  return bits.length ? ` <span style="color:var(--gold-hi)">· ${bits.join(" · ")}</span>` : "";
+}
+
 // ============================== MATERIAL LISTS (v4.33) ==============================
 // Four byte-identical copies of this renderer existed — machines, décor, tool upgrades and recipes
 // each built `N Item (have)` with their own inline map, green when you had enough and clay-red when
@@ -1935,7 +1967,7 @@ function tipBodyFor(item){
   if(!item) return "";
   let h = `<div class="tName">${escapeHtml(item)}${state.inv[item] ? ` ×${state.inv[item]}` : ""}</div>`;
   const bits = [];
-  if(ITEM_SELL[item]) bits.push(`${ITEM_SELL[item]}g`);
+  if(ITEM_SELL[item]) bits.push(`${sellPriceNow(item)}g${sellPriceTag(item)}`);
   if(EDIBLE[item])    bits.push(`+${EDIBLE[item]} energy`);
   if(CHARMS[item])    bits.push(CHARMS[item].effect);
   if(bits.length) h += `<div class="tVal">${bits.join(" · ")}</div>`;
