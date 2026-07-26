@@ -8,13 +8,19 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.32.0", code: 119, codename: "The Card", date: "2026-07-26" };
+const VERSION = { name: "4.33.0", code: 120, codename: "In the Chest", date: "2026-07-26" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.33.0", code:120, date:"2026-07-26", name:"In the Chest", notes:[
+    { t:"fix", s:"The cottage chest can no longer look like a loss. Since the pack arrived, anything it sent home was missing from every materials list in the game — you'd open Tom's shop to buy a Keg, read \"4 Iron Ore (0)\" in red, and reasonably conclude the ore you just mined was gone. Every one of those lists now says how many are waiting in the chest, right where you're deciding." },
+    { t:"fix", s:"Shop rows, tool upgrades, décor, recipes, the Warden's bench and the Ledger's bundles all carry the note. So do the refusals: try to cook, craft or set something down without enough, and the message tells you if the rest is at home." },
+    { t:"fix", s:"\"Missing ingredients.\" now says which ones and how many more you need — it used to name the problem and leave you to work out the rest by hand." },
+    { t:"fix", s:"The planting board tells you when a hive, keg or ornament is sitting in the chest. It lists only what you're carrying, so a stored one used to vanish from it completely, with nothing to explain why." },
+  ]},
   { v:"4.32.0", code:119, date:"2026-07-26", name:"The Card", notes:[
     { t:"feature", s:"There's a Controls card now — press ? for it, or open ☰ and tap ❔. Every control in the game, grouped, with the touch instruction beside each one if you're playing on a phone. Until now the only control reference was the strip under the screen, which is hidden on small screens — so phone players had no way to learn that ☰ holds Eat, Gift and Ride at all." },
     { t:"change", s:"That strip under the screen is one line now instead of twenty-odd bindings in two. It kept only what you need in the first ten seconds; everything else moved to the card, and the game got the space back." },

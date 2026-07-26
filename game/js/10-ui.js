@@ -348,6 +348,18 @@ function refreshHotbar(){
 // rather than hidden — you can still deliberately pick one (buying ahead for next season is a real thing
 // to want), you just can't stumble onto it by cycling, because the CYCLE is now in-season + in-stock only.
 function openSeedPicker(){ openPanel("seedPanel", renderSeedPicker); }
+// Is this item NAME something you set down on the farm? Built once, lazily, from the same four
+// tables plantables() walks — so it can never drift out of step with what the board can list.
+let _placeableNames = null;
+function isPlaceableName(name){
+  if(!_placeableNames){
+    _placeableNames = new Set(["Beehive"]);
+    for(const k in FRUIT_TREES) _placeableNames.add(FRUIT_TREES[k].name);
+    for(const k in MACHINES)    _placeableNames.add(MACHINES[k].name);
+    for(const k in DECOR)       _placeableNames.add(DECOR[k].name);
+  }
+  return _placeableNames.has(name);
+}
 function renderSeedPicker(){
   const b = $("seedPanel").querySelector(".body");
   const seas = curSeason(), lvl = skillLvl("Farming");
@@ -388,6 +400,18 @@ function renderSeedPicker(){
 
   if(!any) h = `<div class="locked">Nothing to plant or place just yet — buy a few seeds at Tom's.</div>`;
   else h += `<div class="desc" style="margin-top:.4em;color:var(--ink-soft);">Dimmed seeds are out of season — you can still choose one to sow when its season comes round.</div>`;
+  // v4.33: placeables are listed from state.inv ONLY (plantables(), 08-actions.js:128-131), so a hive
+  // or a keg sitting in the cottage chest is not dimmed here — it is absent entirely, with nothing to
+  // say why. Buying one can't put it there (all four purchase paths pass quiet, so they bypass the
+  // pack cap), but STORING one can, and a board that silently omits something you own is the same
+  // "where did it go?" the chest must never cause.
+  {
+    const stored = Object.keys(state.shelf || {}).filter(it => isPlaceableName(it));
+    if(stored.length)
+      h += `<div class="desc" style="margin-top:.4em;color:var(--ink-soft);">` +
+           `<span style="color:var(--gold-hi)">${stored.join(", ")}</span> ` +
+           `${stored.length===1?"is":"are"} in your cottage chest — fetch ${stored.length===1?"it":"them"} to set ${stored.length===1?"it":"them"} down.</div>`;
+  }
   b.innerHTML = h;
   hydrateIcons(b);
 }
@@ -1150,8 +1174,7 @@ function renderShop(){
       // v3.33: the press only reaches the shelf AFTER the dairy's gift — "your first press is a
       // gift; more are on his shelf after that" must be true, not just printed (§3.4).
       if(mk === "press" && !state.flags.ack_tom_press) continue;
-      const matStr = Object.keys(M.cost.mats).map(it => { const have=state.inv[it]||0, need=M.cost.mats[it];
-        return `${need} ${it} <span style="color:${have>=need?'#8fd06a':'#c98a6a'}">(${have})</span>`; }).join(" + ");
+      const matStr = matList(M.cost.mats);
       const can = state.gold >= M.cost.g && Object.keys(M.cost.mats).every(it => (state.inv[it]||0) >= M.cost.mats[it]);
       html += `<div class="row"><span class="lead" data-icon="item_${M.name}"><canvas></canvas><span>${M.name} <span class="sub">×${state.inv[M.name]||0}</span> ` +
         `<span class="sub">${M.blurb}<br>${M.cost.g}g + ${matStr}</span></span></span>` +
@@ -1196,8 +1219,7 @@ function renderShop(){
       const crownLocked = D.masterGate && !state.flags.valleyMaster;
       const locked = qpLocked || capeLocked || crownLocked;
       const matsOk = !D.mats || Object.keys(D.mats).every(it => (state.inv[it]||0) >= D.mats[it]);   // v3.29
-      const matStr = D.mats ? "<br>" + Object.keys(D.mats).map(it => { const have=state.inv[it]||0, need=D.mats[it];
-        return `${need} ${it} <span style="color:${have>=need?'#8fd06a':'#c98a6a'}">(${have})</span>`; }).join(" + ") : "";
+      const matStr = D.mats ? "<br>" + matList(D.mats) : "";
       const blurb = qpLocked ? `“Not for sale — not to you, not yet. Finish every task the valley's book ever asks, and we'll talk.” <span style="color:var(--gold-hi)">✦ ${questPoints()}/${questPointsTotal()} Quest Points</span>`
         : capeLocked ? `“Woven, folded, and waiting. It goes to a master of ${D.capeSkill} — nobody else.” <span style="color:var(--gold-hi)">✦ ${D.capeSkill} ${skillLvl(D.capeSkill)}/99</span>`
         : crownLocked ? `“There's one of these. I'll not part with it for anything less than every craft in the valley.” <span style="color:var(--gold-hi)">✦ Total level ${totalLevel()}/594</span>`
@@ -1214,8 +1236,7 @@ function renderShop(){
       const need = TIER_LEVEL[cur+1], sk = TOOL_SKILL[tool], haveLvl = skillLvl(sk) >= need;
       const can = haveLvl && state.gold>=c.g && Object.keys(c.mats).every(it => (state.inv[it]||0) >= c.mats[it]);
       const perk = toolPerk(tool, cur+1);   // v4.20: from TOOL_PERK in 01-data — shared with the Skill Guide
-      const matStr = Object.keys(c.mats).map(it => { const have=state.inv[it]||0, need2=c.mats[it];
-        return `${need2} ${it} <span style="color:${have>=need2?'#8fd06a':'#c98a6a'}">(${have})</span>`; }).join(" + ");
+      const matStr = matList(c.mats);
       const lvlStr = `<span style="color:${haveLvl?'#8fd06a':'#c98a6a'}">needs ${sk} ${need}</span>`;
       html += `<div class="row"><span class="lead" data-icon="tool_${TOOL_ICON[tool]}"><canvas></canvas><span style="color:${TIER_COL[cur+1]}">${TOOL_TIERS[cur+1]} ${tool}</span> ` +
         `<span class="sub">${lvlStr} · ${c.g}g + ${matStr}<br>${perk}</span></span>` +
@@ -1335,6 +1356,35 @@ function qtyCtl(qid, max){
     `<button onclick="stepQty('${qid}',1)">+</button>`;
 }
 // The machine chooser — the gift panel's pattern for the cellar. interact() opens it whenever a
+// ============================== MATERIAL LISTS (v4.33) ==============================
+// Four byte-identical copies of this renderer existed — machines, décor, tool upgrades and recipes
+// each built `N Item (have)` with their own inline map, green when you had enough and clay-red when
+// you didn't. One helper now, for two reasons.
+//
+// The first is that they were drifting: three used `N Item` and one `N× Item`, and the tool row named
+// its loop variable `need2` to dodge a shadow — the usual signs of copy-paste rot.
+//
+// The second is the one that matters. Since v4.31 a full pack sends new finds to the cottage chest,
+// so `state.inv` is no longer the whole answer to "do I have this?". A player who mined fourteen Iron
+// Ore with a full pack, then opened Tom's shop to buy a Keg, would read `4 Iron Ore (0)` in red and
+// reasonably conclude the ore was gone. The chest must never be able to look like a loss — so the
+// count says where the rest of it is, at the moment the player is deciding, not after a failed click.
+function chestQty(item){ return (state.shelf && state.shelf[item]) || 0; }
+// The clause appended to a failure message. Empty when the chest has none, so it costs nothing.
+function chestNote(item){
+  const n = chestQty(item);
+  return n ? ` (${n} ${n === 1 ? "is" : "are"} in your cottage chest.)` : "";
+}
+// mats: {item: qty}. sep defaults to " + "; `mul` renders "N× Item" for recipes.
+function matList(mats, sep, mul){
+  return Object.keys(mats).map(it => {
+    const need = mats[it], have = state.inv[it] || 0, stored = chestQty(it);
+    const col = have >= need ? "#8fd06a" : "#c98a6a";
+    return `${need}${mul ? "×" : ""} ${it} <span style="color:${col}">(${have})</span>` +
+      (stored ? ` <span class="sub" style="color:var(--gold-hi)">+${stored} in chest</span>` : ``);
+  }).join(sep || " + ");
+}
+
 // ============================== THE CONTROLS CARD (v4.32) ==============================
 // Renders the one CONTROLS table (01-data.js) for THIS device. Touch players get the touch column,
 // keyboard players get the key column — never both, because a doubled table is exactly the wall of
@@ -1704,8 +1754,9 @@ function renderWardLedger(){
   } else {
     for(const it in def.bundle){
       const need = def.bundle[it], paid = (state.wardBundle||{})[it]||0, have = state.inv[it]||0, got = paid >= need;
+      const stored = chestQty(it);   // v4.33: deep materials are exactly what a full pack sends home
       h += `<div class="obj ${got?"done":""}">${got?"✔":"•"} ${it} ${Math.min(paid,need)}/${need}` +
-           (got ? "" : ` <span class="sub">(carrying ${have})</span>`) + `</div>`;
+           (got ? "" : ` <span class="sub">(carrying ${have}${stored?`, ${stored} in your cottage chest`:``})</span>`) + `</div>`;
     }
     const canAny = Object.keys(wardBundleRemaining()).some(it => (state.inv[it]||0) > 0);
     h += `<div class="row"><span class="lead"><span class="sub">Set down what you carry — the ledger keeps the tally.</span></span>` +
@@ -1857,8 +1908,7 @@ function renderCooking(){
       return;
     }
     const can = Object.keys(r.ing).every(it => (state.inv[it]||0) >= r.ing[it]);
-    const ingStr = Object.keys(r.ing).map(it => { const have=state.inv[it]||0, need=r.ing[it];
-      return `${need}× ${it} <span style="color:${have>=need?'#8fd06a':'#c98a6a'}">(${have})</span>`; }).join(", ");
+    const ingStr = matList(r.ing, ", ", true);
     html += `<div class="row ${can?'':'locked'}"><span class="lead" data-icon="item_${r.name}"><canvas></canvas>` +
       `<span>${r.name} <span class="sub">${ingStr} · +${r.energy}e · sells ${r.sell}g</span></span></span>` +
       `<button ${can?'':'disabled'} onclick="cookRecipe(${i})">cook</button></div>`;

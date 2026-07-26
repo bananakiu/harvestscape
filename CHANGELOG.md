@@ -22,6 +22,79 @@
 
 ---
 
+## 2026-07-26 — v4.33.0 "In the Chest" (code 120, tag `v4.33.0`) — the chest stops looking like a loss
+
+### Why this release
+
+v4.31 promised that a full pack never costs you anything — the overflow goes to the cottage chest and
+a toast names it. That promise holds at the moment of pickup. It did **not** hold five minutes later,
+because every "do I have the materials?" surface in the game reads `state.inv` and nothing else.
+
+The concrete failure: mine fourteen Iron Ore with a full pack, walk to Tom's, open the shop to buy a
+Keg, and read **`4 Iron Ore (0)`** in refusal-red. The ore is not gone. The game simply never mentions
+where it is. That is the exact "where did it go?" the carry cap was designed never to cause, arriving
+by a different door.
+
+`state.inv` stopped being the whole answer to "do I have this?" in v4.31, and this release finishes
+making the rest of the game agree.
+
+### Changed — one material-list renderer instead of five
+
+Five near-identical copies of `N Item (have)` existed: machines, décor and tool upgrades in
+`renderShop`, recipes in `renderCooking`, and the charm bench in `renderBells` (`15-warding.js`). They
+were already drifting — three rendered `N Item`, one `N× Item`, and the tool row had renamed its loop
+variable to `need2` to dodge a shadow, the usual copy-paste tells.
+
+`matList(mats, sep, mul)` replaces all five, and is where the chest annotation lives, so no surface can
+be forgotten. Verified byte-identical to the old output when the chest is empty — the annotation is
+purely additive, never a restyle of the existing count.
+
+`chestQty(item)` and `chestNote(item)` are the two primitives; `chestNote` returns `""` when the chest
+holds none, so appending it costs nothing on the common path.
+
+### Changed — refusals say where the rest is
+
+Every message that tells you that you lack something now checks the chest: the Warden's bench
+(`craftWardCharm`), and all three "You don't have one." placements — machine, décor, sapling/hive.
+The Ledger's chapter bundle rows likewise, since deep materials are exactly what a full pack sends home.
+
+### Fixed — "Missing ingredients."
+
+`cookRecipe` refused with those two words and nothing else: the problem named, the fix withheld, and
+the player left to cross-reference the recipe row by hand. It now names what's short and by how much
+("You need 1 more Field Salad and 1 more Carrot.") plus the chest clause. Confirmed the failure path
+still consumes nothing — the check runs ahead of every `take`.
+
+### Fixed — the planting board's silent omission
+
+`plantables()` lists saplings, hives, machines and décor from `state.inv` only, so a stored one is not
+dimmed on the board — it is **absent**, with nothing to explain the absence. Buying one cannot cause
+this (all four purchase paths pass `quiet` and so bypass the cap — checked, not assumed), but storing
+one can. The board now names chest-held placeables. `isPlaceableName` builds its set lazily from the
+same four tables `plantables()` walks, so it cannot drift out of step with what the board can list.
+
+### Verified
+
+- `matList` output **byte-identical** to the five old renderers with an empty chest; the chest clause
+  appears only when the chest actually holds some.
+- Chest annotations render in the live shop (buy tab, tools tab) and the kitchen — counted in the
+  produced HTML, not eyeballed.
+- The cooking refusal names the shortfall and the chest, and **consumes nothing**.
+- Placement refusals gain the note when the chest holds one, and read exactly as before when it doesn't.
+- The planting board names `Beehive` and `Keg` from the chest while correctly **excluding** 400 Wood
+  sitting beside them — `isPlaceableName` spot-checked across all four tables plus two negatives.
+- No copies of the old renderer remain (grep for its colour ternary returns zero).
+- All 16 files parse; console clean.
+
+### Noted, not fixed
+
+`normalizeSeedSel` silently re-points the belt's last slot when you run out of the selected placeable —
+set down your last hive and the slot becomes a crop with no message. Harmless, but it is a state change
+the player didn't ask for and isn't told about. Left for the UX audit's ranked pass rather than folded
+in here.
+
+---
+
 ## 2026-07-26 — v4.32.0 "The Card" (code 119, tag `v4.32.0`) — the game explains itself again
 
 ### Why this release

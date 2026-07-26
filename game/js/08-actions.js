@@ -1270,7 +1270,20 @@ function cookRecipe(i){
   const r = RECIPES[i]; if(!r) return;
   if(r.flag && !state.flags[r.flag]){ toast(`You haven't been taught ${r.name} yet.`, "#ff8a7a"); playSfx("error"); return; }   // v4.13 friendship-taught recipes
   if(skillLvl("Cooking") < r.lvl){ toast(`Need Cooking ${r.lvl} to make ${r.name}.`, "#ff8a7a"); playSfx("error"); return; }
-  if(!Object.keys(r.ing).every(it => (state.inv[it]||0) >= r.ing[it])){ toast("Missing ingredients."); playSfx("error"); return; }
+  // v4.33: this said only "Missing ingredients." — a failure that names the problem but not the fix,
+  // leaving you to cross-reference the recipe row by hand. Name what's short, by how much, and say if
+  // the rest is sitting in the cottage chest (which a full pack may well have put it in).
+  {
+    const short = Object.keys(r.ing).filter(it => (state.inv[it]||0) < r.ing[it]);
+    if(short.length){
+      const bits = short.map(it => `${r.ing[it] - (state.inv[it]||0)} more ${it}`);
+      const chest = short.filter(it => chestQty(it) > 0);
+      toast("You need " + bits.join(" and ") + "." +
+        (chest.length ? ` (${chest.join(" and ")} ${chest.length===1?"is":"are"} in your cottage chest.)` : ""),
+        "#ff8a7a");
+      playSfx("error"); return;
+    }
+  }
   for(const it in r.ing) take(it, r.ing[it]);
   const n = 1 + (hasMastery("Cooking",25) && chance(0.15) ? 1 : 0);   // ★ Second Helping
   give(r.name, n, true); addXP("Cooking", r.xp); bump("cooked");
@@ -1620,7 +1633,7 @@ function plantPermanent(tx, ty){
     if(Object.values(curMap.objects).filter(o => o.kind === mach).length >= M.max){
       const plural = M.name.toLowerCase() + (M.name.endsWith("s") ? "es" : "s");   // v3.33: "presses", not "presss"
       toast(`${M.max} ${plural} is plenty for one cellar.`); playSfx("error"); return; }
-    if((state.inv[M.name]||0) < 1){ toast("You don't have one."); playSfx("error"); return; }
+    if((state.inv[M.name]||0) < 1){ toast("You don't have one." + chestNote(M.name)); playSfx("error"); return; }
     if(!spendEnergy(2)) return;
     take(M.name);
     curMap.objects[key(tx,ty)] = { kind:mach };   // empty until you load it (interact with its input in your bag)
@@ -1636,7 +1649,7 @@ function plantPermanent(tx, ty){
     const D = DECOR[dec];
     if(Object.values(curMap.objects).filter(o => DECOR[o.kind]).length >= DECOR_MAX){
       toast(`Your homestead is beautifully full (${DECOR_MAX} pieces).`); playSfx("error"); return; }
-    if((state.inv[D.name]||0) < 1){ toast("You don't have one."); playSfx("error"); return; }
+    if((state.inv[D.name]||0) < 1){ toast("You don't have one." + chestNote(D.name)); playSfx("error"); return; }
     if(!spendEnergy(2)) return;
     take(D.name);
     curMap.objects[key(tx,ty)] = { kind:dec };   // kind is the DECOR key; spr[kind] draws it
@@ -1651,7 +1664,7 @@ function plantPermanent(tx, ty){
   if(!hive && !sap){ toast("Nothing to plant."); playSfx("error"); return; }
   if(sap && Object.values(curMap.objects).filter(o => o.kind === "fruittree").length >= ORCHARD_MAX){   // v4.9 orchard cap (grandfathered; refuse BEFORE spending energy, like the hive/machine caps)
     toast(`${ORCHARD_MAX} fruit trees is a full orchard.`); playSfx("error"); return; }
-  if((state.inv[hive ? "Beehive" : sap.name] || 0) < 1){ toast("You don't have one."); playSfx("error"); return; }
+  if((state.inv[hive ? "Beehive" : sap.name] || 0) < 1){ const wnt = hive ? "Beehive" : sap.name; toast("You don't have one." + chestNote(wnt)); playSfx("error"); return; }
   if(!spendEnergy(2)) return;
 
   if(hive){

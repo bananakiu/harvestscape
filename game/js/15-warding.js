@@ -534,8 +534,9 @@ function renderBells(){
     `<b style="color:var(--gold-hi)">✦ The Warden's workbench.</b> <span style="color:var(--ink-soft)">Bind what you've settled into a charm — worn one at a time, like the grove's.</span></div>`;
   for(const r of WARD_RECIPES){
     const have = (state.inv[r.out]||0);
-    const matStr = Object.keys(r.mats).map(it => { const h=state.inv[it]||0, n=r.mats[it];
-      return `${n} ${it} <span style="color:${h>=n?'#8fd06a':'#c98a6a'}">(${h})</span>`; }).join(" + ");
+    // v4.33: the fifth copy of this renderer, now shared with the shop/kitchen (matList lives in
+    // 10-ui.js — it loads after this file, but renderBells runs long after boot, so it resolves).
+    const matStr = matList(r.mats);
     const can = Object.keys(r.mats).every(it => (state.inv[it]||0) >= r.mats[it]);
     html += `<div class="row"><span class="lead" data-icon="item_${r.out}"><canvas></canvas><span>${r.out}${have?` <span class="sub" style="color:var(--gold-hi)">×${have}</span>`:''} ` +
       `<span class="sub">${r.blurb}<br>${matStr}</span></span></span>` +
@@ -546,7 +547,7 @@ function renderBells(){
 }
 function craftWardCharm(out){
   const r = WARD_RECIPES.find(x => x.out === out); if(!r) return;
-  for(const it in r.mats) if((state.inv[it]||0) < r.mats[it]){ toast("Not enough " + it + ".", "#ff8a7a"); playSfx("error"); return; }
+  for(const it in r.mats) if((state.inv[it]||0) < r.mats[it]){ toast("Not enough " + it + "." + chestNote(it), "#ff8a7a"); playSfx("error"); return; }
   for(const it in r.mats) take(it, r.mats[it]);
   give(out, 1); addXP("Warding", 20);
   playSfx("upgrade"); pSparkle(state.px, state.py-12, "#bfe0ff", 16);
