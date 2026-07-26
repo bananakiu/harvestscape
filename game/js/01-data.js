@@ -8,13 +8,21 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.30.0", code: 117, codename: "The Pack", date: "2026-07-26" };
+const VERSION = { name: "4.31.0", code: 118, codename: "The Shelf", date: "2026-07-26" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.31.0", code:118, date:"2026-07-26", name:"The Shelf", notes:[
+    { t:"feature", s:"Your pack now holds a set number of DIFFERENT things — 24 to begin with. Not amounts: you can still carry nine hundred wood in one pocket. It's the number of separate names that counts, which is the thing that actually made the bag hard to read." },
+    { t:"feature", s:"Nothing is ever lost to it. If your pack is full and you find something new out in the world, it goes to the chest in your cottage and a note tells you what and where. It is never destroyed, never refused, and never left behind — only set down at home." },
+    { t:"feature", s:"The cottage chest opens properly now. What's in the chest on top, what's in your pack below, one click to move a whole stack either way — so you choose what rides along with you." },
+    { t:"feature", s:"Tom sells bigger packs: 2,500g for 36 kinds, 12,000g for 48. Somewhere for early money to go, at exactly the point the bag starts to feel tight." },
+    { t:"note", s:"Tools, the charm you're wearing and Grandpa's keepsakes don't take up any room, and can never be sent home. Neither can anything you were handed on purpose — a shop purchase, a quest reward, a gift in a cutscene — even if your pack is over its limit at the time." },
+    { t:"note", s:"If you were already carrying more than 24 kinds, you keep every one of them, plus room to spare. A rule added today never costs you anything you already had." },
+  ]},
   { v:"4.30.0", code:117, date:"2026-07-26", name:"The Pack", notes:[
     { t:"feature", s:"Hover anything to see what it is. Item name, how many you're carrying, what it sells for, what it restores, what a charm does, and its little line of flavour — on the backpack, in shops, at the machines, everywhere. You used to have to click an item and wait for the whole bag to redraw just to learn a price." },
     { t:"fix", s:"Your backpack keeps its place. Clicking any item rebuilt the entire bag and snapped you back to the top, so checking something halfway down meant scrolling back down to it afterwards." },

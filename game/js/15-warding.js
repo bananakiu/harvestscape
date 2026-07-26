@@ -587,7 +587,10 @@ function buySalvage(){
   const o = todaysSalvage(); if(!o) return;
   if(state.flags.salvageDone === state.day){ toast("Tom's already parted with today's salvage.", "#cbb98f"); return; }
   if(state.gold < o.price){ toast("Not enough coin for that.", "#ff8a7a"); playSfx("error"); return; }
-  state.gold -= o.price; give(o.item, o.qty); state.flags.salvageDone = state.day;
+  // v4.31: quiet, i.e. cap-exempt. The gold is already gone by this line, and a purchase that
+  // charged you and then posted the goods to your cottage would be the worst version of the pack
+  // limit. You bought it; it goes in your hands.
+  state.gold -= o.price; give(o.item, o.qty, true); state.flags.salvageDone = state.day;
   playSfx("coin"); pSparkle(state.px, state.py-12, "#ffce5a", 10);
   toast("Bought " + o.qty + "× " + o.item + " — " + o.price + "g.", "#ffce5a");
   refreshHUD(); if(typeof renderShop === "function") renderShop();

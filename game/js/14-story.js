@@ -1192,7 +1192,7 @@ const HEART_EVENTS = {
     { hearts:2, flag:"he_pip_2", steps:[
       { type:"say", who:"Pip", portrait:"port_pip", text:"You're my BEST friend now, okay? I decided. You don't get a vote." },
       { type:"say", who:"Pip", portrait:"port_pip", text:"Best friends share treasure. So — here. My SHINIEST one. I found it myself! Rowan says it's an amethyst but I call him 'Gary.'" },
-      { type:"run", fn:()=>{ give("Amethyst",1); } },
+      { type:"run", fn:()=>{ give("Amethyst",1,true); } },   // v4.31: quiet = cap-exempt. Pip puts it in your hand; it does not go to a chest.
       { type:"say", who:"Pip", portrait:"port_pip", text:"Take good care of Gary. If you ever sell him… I'll KNOW." },
     ]},
     { hearts:4, flag:"he_pip_4", steps:[
@@ -1201,7 +1201,7 @@ const HEART_EVENTS = {
       { type:"say", who:"Pip", portrait:"port_pip", text:"…Do you think I'll get to see one? A real one? With the lanterns and everything?" },
       { type:"say", who:"You", portrait:"port_player", text:"I'm working on it." },
       { type:"say", who:"Pip", portrait:"port_pip", text:"THAT'S WHAT I TOLD MUM YOU'D SAY. Here, take a shell. It's for luck. It's very lucky. Probably." },
-      { type:"run", fn:()=>{ give("Shell",1); } },
+      { type:"run", fn:()=>{ give("Shell",1,true); } },   // v4.31: quiet = cap-exempt (see Pip's amethyst above)
     ]},
   ],
   // v4.6 Elias, the last Warden — the man behind the Ledger. His HEART arc is the DOMESTIC story (the

@@ -636,7 +636,15 @@ function invDetailHtml(it){
 function renderInv(){
   const b = $("invPanel").querySelector(".body");
   const items = Object.keys(state.inv);
-  if(!items.length){ invSel = null; b.innerHTML = `<div class="locked">Empty. The valley provides — go get it!</div>`; return; }
+  // v4.31: an empty bag with a loaded chest must still point at the chest, or storing everything
+  // reads as having lost it — the one impression this whole feature exists to prevent.
+  if(!items.length){
+    invSel = null;
+    const n = Object.keys(state.shelf||{}).length;
+    b.innerHTML = n ? `<div class="locked">Empty — but <span style="color:var(--gold-hi)">${n}</span> ${n===1?"thing is":"things are"} in your cottage chest, waiting for you.</div>`
+                    : `<div class="locked">Empty. The valley provides — go get it!</div>`;
+    return;
+  }
   // bucket items into the same sections the Collection uses, so the bag reads sorted like Stardew's
   const SEC = {}; MUSEUM.forEach(s => s.items().forEach(n => SEC[n] = s.name));
   const groups = {};
@@ -647,7 +655,22 @@ function renderInv(){
   for(const g in groups) groups[g].sort((a,bb) => a.localeCompare(bb));
   const secOrder = MUSEUM.map(s => s.name).filter(n => groups[n]);
   if(groups["Satchel"]) secOrder.push("Satchel");
-  let html = "";
+  // v4.31: the pack meter. A carry limit the player can't see is just an ambush, so the number is
+  // stated wherever the bag is — and it names the two ways out (a bigger pack, or the chest) rather
+  // than only reporting the problem.
+  const kinds = bagKinds(), cap = bagCap(), shelved = Object.keys(state.shelf||{}).length;
+  // The chest clause is written once and reads correctly in both positions — mid-sentence after a
+  // "·", or sentence-initial when the pack is full. Starting the shelved form with the NUMBER means
+  // no capitalisation is needed either way.
+  const chest = shelved
+    ? `<span style="color:var(--gold-hi)">${shelved}</span> ${shelved===1?"thing waits":"things wait"} in your cottage chest`
+    : `New finds will wait in your cottage chest`;
+  let html = `<div class="desc" style="margin-bottom:.5em;color:var(--ink-soft);">` +
+    `Pack <span style="color:${kinds>=cap?"#e8a06a":"var(--gold-hi)"}">${kinds}/${cap}</span> kinds` +
+    (kinds >= cap ? ` — full. ${chest}; Tom sells a roomier pack.`
+     : shelved    ? ` · ${chest.replace("New finds","new finds")}.`
+     :              `.`) +
+    `</div>`;
   for(const g of secOrder){
     html += `<div class="museSec">${g}</div><div class="museGrid">`;
     for(const it of groups[g]){
@@ -1143,6 +1166,21 @@ function renderShop(){
     const sheep = (state.animals.sheep||[]).length;
     html += `<div class="row"><span class="lead" data-icon="item_Wool"><canvas></canvas><span>Sheep <span class="sub">shear a full coat every few days · shares the barn · ${sheep}/${SHEEP_MAX} sheep</span></span></span><span><span class="price">${SHEEP_COST}g</span> <button class="buy" ${state.gold>=SHEEP_COST&&sheep<SHEEP_MAX?"":"disabled"} onclick="buySheep()">buy</button></span></div>`;
     html += `<div class="row"><span class="lead" data-icon="item_Shears"><canvas></canvas><span>Shears <span class="sub">${state.flags.hasShears?"you own a pair — shear any sheep with E":"gather wool from your sheep · one and done"}</span></span></span><span><span class="price">${SHEARS_COST}g</span> <button class="buy" ${!state.flags.hasShears&&state.gold>=SHEARS_COST?"":"disabled"} onclick="buyShears()">${state.flags.hasShears?"owned":"buy"}</button></span></div>`;
+    // v4.31: the pack. Sits on Tom's shelf rather than in the Tools tab because it isn't a tool
+    // upgrade — no skill gate, no materials, pure coin. That makes it the early-to-mid gold sink
+    // the economy has been missing: 2,500g is a real ask at the point the bag first feels tight,
+    // and 12,000g lands right where crop income outruns anything else to spend it on.
+    { const tier = state.bagTier || 0;
+      html += `<h2 style="font-size:1em;color:var(--gold-hi);margin:.4em 0 .2em;">THE PACK</h2>`;
+      if(tier >= BAG_UPGRADES.length){
+        html += `<div class="row"><span class="lead" data-icon="item_Wood"><canvas></canvas><span>Wayfarer's Pack ★ <span class="sub">${bagCap()} kinds — the biggest Tom has ever stitched</span></span></span></div>`;
+      } else {
+        const u = BAG_UPGRADES[tier], to = BAG_CAPS[u.to] + (state.bagBonus||0);
+        html += `<div class="row"><span class="lead" data-icon="item_Wood"><canvas></canvas><span>${tier===0?"Roomier Pack":"Wayfarer's Pack"} ` +
+          `<span class="sub">carry ${bagCap()} → ${to} different things · what won't fit waits in your cottage chest</span></span></span>` +
+          `<span><span class="price">${u.cost.toLocaleString()}g</span> <button class="buy" ${state.gold>=u.cost?"":"disabled"} onclick="buyBag()">buy</button></span></div>`;
+      }
+    }
     }   // end Tom's buy list (v4.9 vendor split)
   } else if(shopTab === "decor"){
     const placed = (state.farm ? Object.values(state.farm.objects) : []).filter(o => DECOR[o.kind]).length;
@@ -1297,6 +1335,82 @@ function qtyCtl(qid, max){
     `<button onclick="stepQty('${qid}',1)">+</button>`;
 }
 // The machine chooser — the gift panel's pattern for the cellar. interact() opens it whenever a
+// ============================== THE COTTAGE CHEST (v4.31) ==============================
+// The other half of the pack. A carry limit is only fair if the player has somewhere to put the
+// overflow AND a way to choose what rides along — so this is a real two-sided chest screen, laid
+// out like Stardew's: what's in the chest on top, what's in your pack below, one click either way.
+//
+// Whole stacks move, never partial amounts. A pocket is the unit the cap counts, and moving 3 of
+// your 40 Wood frees nothing — a half-move would just be a click that appears to do nothing.
+function openShelf(){
+  openPanel("shelfPanel", renderShelf);
+}
+function renderShelf(){
+  const b = $("shelfPanel").querySelector(".body");
+  if(!state.shelf) state.shelf = {};
+  const shelved = Object.keys(state.shelf).filter(i => state.shelf[i] > 0).sort((a,c) => a.localeCompare(c));
+  const carried = Object.keys(state.inv).filter(i => !bagExempt(i)).sort((a,c) => a.localeCompare(c));
+  const kinds = bagKinds(), cap = bagCap(), room = cap - kinds;
+  let html = `<div class="desc" style="margin-bottom:.5em;color:var(--ink-soft);">` +
+    `Your pack holds <span style="color:${room>0?"var(--gold-hi)":"#e8a06a"}">${kinds}/${cap}</span> kinds. ` +
+    `Anything that wouldn't fit came here — it was never lost, only set down. ` +
+    `Tom sells bigger packs.</div>`;
+
+  html += `<h2 style="font-size:1em;color:var(--gold-hi);margin:.4em 0 .2em;">IN THE CHEST</h2>`;
+  if(!shelved.length) html += `<div class="locked">Empty — everything you own is on your back.</div>`;
+  for(const it of shelved){
+    // You can always retrieve something you're ALREADY carrying: it merges into a pocket you've
+    // opened, so it costs no room. A genuinely new kind needs a free pocket.
+    const free = (state.inv[it] !== undefined) || bagExempt(it) || room > 0;
+    html += `<div class="row"><span class="lead" data-icon="item_${it}"><canvas></canvas>` +
+      `<span>${it} <span class="sub">×${state.shelf[it]}</span>${free?"":` <span class="sub" style="color:#c98a6a">pack full</span>`}</span></span>` +
+      `<span><button class="buy" ${free?"":"disabled"} onclick="shelfTake('${jsq(it)}')">take</button></span></div>`;
+  }
+  if(shelved.length > 1 && room > 0)
+    html += `<div class="row"><span class="lead"><span style="color:var(--gold-hi)">Take everything that fits</span></span>` +
+      `<span><button class="buy" onclick="shelfTakeAll()">take all</button></span></div>`;
+
+  html += `<h2 style="font-size:1em;color:var(--gold-hi);margin:.7em 0 .2em;">IN YOUR PACK</h2>`;
+  if(!carried.length) html += `<div class="locked">Nothing to set down.</div>`;
+  for(const it of carried){
+    html += `<div class="row"><span class="lead" data-icon="item_${it}"><canvas></canvas>` +
+      `<span>${it} <span class="sub">×${state.inv[it]}</span></span></span>` +
+      `<span><button onclick="shelfStore('${jsq(it)}')">store</button></span></div>`;
+  }
+  b.innerHTML = html;
+  hydrateIcons(b);
+}
+// Both directions are a MOVE, never a copy and never a discard: the count is added to the
+// destination before it is removed from the source, so no throw between the two can vanish it.
+function shelfTake(item){
+  const n = state.shelf[item] || 0; if(n <= 0) return;
+  if(state.inv[item] === undefined && !bagExempt(item) && bagFull()){
+    toast("No room — set something down first.", "#e8a06a"); playSfx("error"); return;
+  }
+  state.inv[item] = (state.inv[item] || 0) + n;
+  delete state.shelf[item];
+  playSfx("select"); invalidateGoals(); renderShelf();
+}
+function shelfTakeAll(){
+  let moved = 0;
+  for(const it of Object.keys(state.shelf).sort((a,c) => a.localeCompare(c))){
+    if(state.inv[it] === undefined && !bagExempt(it) && bagFull()) continue;   // re-checked each pass — the pack fills as we go
+    state.inv[it] = (state.inv[it] || 0) + state.shelf[it];
+    delete state.shelf[it]; moved++;
+  }
+  if(moved){ playSfx("coin"); toast(`Packed ${moved} ${moved===1?"thing":"things"} away.`, "#cfe8a0"); }
+  else { toast("No room for any of it.", "#e8a06a"); playSfx("error"); }
+  invalidateGoals(); renderShelf();
+}
+function shelfStore(item){
+  const n = state.inv[item] || 0; if(n <= 0) return;
+  if(!state.shelf) state.shelf = {};
+  state.shelf[item] = (state.shelf[item] || 0) + n;
+  delete state.inv[item];
+  if(state.charm === item) state.charm = null;   // can't wear what you've set down (exempt items aren't listed, but belt-and-braces)
+  playSfx("select"); invalidateGoals(); renderShelf();
+}
+
 // machine is empty and you carry MORE than one thing it accepts; one acceptable thing still loads
 // instantly (the old one-button reflex kept where a menu would be pure friction).
 function openMachineChooser(kind, tx, ty){

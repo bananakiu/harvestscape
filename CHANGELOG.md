@@ -22,6 +22,150 @@
 
 ---
 
+## 2026-07-26 — v4.31.0 "The Shelf" (code 118, tag `v4.31.0`) — a carry limit that cannot cost you anything
+
+### Why this release
+
+The last unbuilt piece of the owner's UI brief: *"Feel free to have some sort of better inventory system,
+maybe having the limits on inventory system as well and bag upgrades, things like that."* It was
+deliberately deferred out of v4.30 and named as deferred, because it is the single most dangerous change
+in the whole programme: `give()` has **76 call sites**, several of which are shop purchases that have
+already deducted the gold by the time they call it, plus quest rewards, story parcels and boss drops. A
+carry cap implemented carelessly is a machine for violating the one inviolable rule — *nothing is ever
+taken from the player*.
+
+So the design question was never "how do we limit the bag". It was **"what limit is provably incapable of
+costing anything?"**
+
+### Design — two decisions that make it safe
+
+**1. It caps distinct KINDS, never stack sizes.**
+
+The decisive reason is structural: *there is no stack model in this game.* `state.inv` is a flat
+`item → count` map, and `give`/`take`/`ITEM_SELL`/`bundlePrice`/`pledgeRemaining`/`sellAllProduce` all do
+plain arithmetic on that count. Introducing stacks would mean rewriting every one of those, plus a
+migration for every save that ever stored a number — enormous risk for a mechanic the game doesn't need.
+
+The supporting reason is that kinds are *what the owner actually felt*. A bag reads as clutter at forty
+different names; it does not read as clutter at 900 Wood. Capping kinds targets the real complaint. So the
+fiction is a pack with a limited number of pockets, each holding as much of one thing as you can carry.
+
+**2. `give()` never refuses and never destroys — there is no failure branch to reach.**
+
+This is the entire safety argument, and it is why the change did not require auditing all 76 call sites
+individually. When a full pack meets a genuinely new kind out in the world, that kind goes to the **cottage
+chest** and a toast names it. It is never dropped, never refused, never silently eaten. It is simply *at
+home*. No caller can hit a "you can't have this" path, because none exists.
+
+On top of that, the cap only applies to **world pickups** — the non-`quiet` grants (a swing, a cast, a
+harvest). Every deliberate hands-on grant already passes `quiet`: shop purchases, quest rewards, story
+parcels, festival prizes. Those land in your hands **even when the pack is over its limit**, because being
+charged for a thing and then told to walk home for it is a worse failure than a pack that sits one kind
+oversized for an afternoon. Being over cap is legal; it just means you can't pick up new kinds in the field
+until you're back under.
+
+Exempt from the count entirely: **tools, the charm you're wearing, and Grandpa's keepsakes**. Equipment is
+not cargo, and a charm sitting in a chest while you're on floor 40 is exactly the kind of quiet punishment
+this game does not do. All five craftable Warden charms are in `CHARMS`, so they were covered for free —
+verified rather than assumed.
+
+### Added — the pack
+
+- `BAG_CAPS = [24, 36, 48]`, `bagCap()`, `bagExempt()`, `bagKindsIn()`, `bagKinds()`, `bagFull()` in
+  `08-actions.js`, immediately above `give` so the rule sits next to the function it constrains.
+- `state.bagTier` (upgrades bought) and `state.shelf` (`item → qty` at the cottage) in `freshState`.
+- **One toast per kind per day** (`shelfNote`). Without it, standing in a full pack and picking five
+  Mushrooms fires five identical toasts — a shelved kind never enters `state.inv`, so every subsequent
+  pickup takes the overflow path again. Self-resetting on the day number, so it needs no dawn hook.
+
+### Added — the cottage chest, given a second job
+
+Rather than adding a new object the player must be taught about, the **existing** cottage chest — the one
+that held Grandpa's second letter — becomes the shelf once that letter is out of it. A cozy piece of
+furniture that had exactly one moment in the whole game now has a permanent reason to be opened.
+
+The panel is two-sided, laid out like Stardew's: **what's in the chest** above, **what's in your pack**
+below, one click to move a whole stack either way. Whole stacks only — a pocket is the unit the cap counts,
+so moving 3 of your 40 Wood frees nothing and would read as a click that did nothing.
+
+This is not decoration. A carry limit is only *fair* if the player can choose what rides along; without the
+"store" side, a pack full of unsellable materials would be a soft lock on the chest.
+
+**A shelf with anything on it always opens**, even mid-prologue, ahead of the quest gate. A pack that fills
+early can never be locked behind a story beat the player hasn't reached.
+
+### Added — bag upgrades, and the gold sink the economy was missing
+
+Tom sells **2,500g → 36 kinds** and **12,000g → 48 kinds**. Placed on his general shelf rather than in the
+Tools tab, because it is not a tool upgrade: no skill gate, no materials, pure coin. That is precisely what
+makes it useful as an **early-to-mid gold sink** — 2,500g is a real ask at the moment the bag first feels
+tight, and 12,000g lands where crop income starts outrunning anything else to spend it on. The tier is
+stored, not the capacity, so a future rebalance of `BAG_CAPS` can never shrink a save.
+
+### Changed — two call sites corrected
+
+The audit of non-`quiet` `give()` calls turned up two that were mislabelled:
+
+- **`buySalvage` (`15-warding.js`)** — `state.gold -= o.price; give(o.item, o.qty)`. The gold was already
+  gone by that line. A purchase that charged you and then posted the goods to your cottage is the worst
+  possible version of this feature. Now `quiet`.
+- **Pip's amethyst and shell (`14-story.js`)** — gifts pressed into your hand in a cutscene. Now `quiet`;
+  a child handing you her shiniest treasure does not put it in a chest across the valley.
+
+`craftWardCharm` was checked and left alone: all five outputs are in `CHARMS`, hence already exempt.
+
+### Changed — the limit is always visible
+
+A carry limit the player cannot see is an ambush. The backpack now opens with
+`Pack 17/24 kinds`, turning amber and naming **both** ways out when full — a roomier pack, or the chest —
+rather than only reporting the problem. An emptied bag whose chest is loaded says so explicitly, because
+"Empty. The valley provides" after storing everything reads as *having lost it*, which is the one
+impression this entire feature exists to prevent.
+
+### Compatibility — grandfathering, and why it runs where it does
+
+A player eighty days in may carry far more kinds than the new starting pack holds, and the contract is
+absolute: **a rule added today may never cost them anything they already have.** So `state.bagBonus` is set
+**once**, at migration, to however much their current load exceeds the cap by, **plus four pockets of
+headroom** so an old save doesn't start shelving its very next mushroom. It rides on top of `BAG_CAPS`
+permanently.
+
+It must run **before** `migrateSave`'s generic backfill, or `freshState`'s `bagBonus: 0` lands first and the
+whole clause becomes dead code — the identical trap already documented twice in that function (the v2.6.1
+Collection-seeding bug and the v2.7 XP-curve conversion). Guarded on `=== undefined`, so it is granted once
+and never re-inflated on subsequent loads; a recomputing bonus would grow every time a player filled their
+bag and quietly make the cap meaningless.
+
+### Verified
+
+Measured in-browser, not reasoned about:
+
+- **Conservation under 5,000 randomized operations** — 85 distinct items, mixed quiet/non-quiet gives,
+  random takes, stores, take-alls and bag upgrades interleaved. **Zero units lost, zero duplicated, zero
+  orphan keys.** This is the proof that `give()` cannot destroy.
+- The six contract cases: non-quiet new kind → chest; quiet new kind → hand, over cap; non-quiet *existing*
+  kind → merges; exempt items never shelved; a shelved kind keeps accumulating; the Collection still
+  records shelved finds.
+- **Grandfathering at 5 / 24 / 25 / 40 / 70 kinds** — every save keeps every kind, always with exactly 4
+  pockets to spare; exempt gear correctly not counted; `bagBonus` not re-inflated across a save/load
+  round-trip.
+- The real in-world path: full pack, mine an actual rock with the actual `useTool` — Stone lands in the
+  chest, the toast names it, the Collection records it, the pack stays at 24. Free a pocket, and the next
+  Stone lands in the bag.
+- Toast dedupe: one per item per day, resetting each dawn.
+- All four `openChest` branches (prologue-gated, prologue-with-overflow, letter-pending, post-letter).
+- Shop: correct prices, no charge at max tier, no charge when broke.
+- Chest round-trip: take → store → take-all, lossless; take-all at a full pack moves only what fits and
+  conserves the total.
+- All 16 files parse; console clean.
+
+### Still queued from the UI brief
+
+"One Menu" (merging the four panels behind tabs), the design-token pass, and `#belowbar`'s wall of
+keybindings — which is `display:none` on phones, leaving touch players with no control reference at all.
+
+---
+
 ## 2026-07-26 — v4.30.0 "The Pack" (code 117, tag `v4.30.0`) — the backpack stops fighting you
 
 ### Why this release

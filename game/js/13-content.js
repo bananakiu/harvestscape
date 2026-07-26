@@ -1522,6 +1522,19 @@ function buyShears(){
   toast("A fine pair of shears. Now the wool is yours for the gathering.", "#8fd06a");
   playSfx("coin"); refreshHUD(); renderShop();
 }
+// v4.31: a bigger pack. Bought strictly in order, so the price ladder can't be skipped, and the
+// tier is stored rather than the capacity — bagBonus (a grandfathered save's extra room) then rides
+// on top of whatever the table says, so a later rebalance of BAG_CAPS can never shrink a save.
+function buyBag(){
+  const tier = state.bagTier || 0;
+  const u = BAG_UPGRADES[tier];
+  if(!u){ toast("Tom has nothing bigger."); return; }
+  if(state.gold < u.cost){ toast(`Not enough coin (${u.cost.toLocaleString()}g).`); playSfx("error"); return; }
+  state.gold -= u.cost; state.bagTier = u.to;
+  toast(`A roomier pack — ${bagCap()} kinds now.`, "#8fd06a");
+  banner("A Roomier Pack", `Tom sizes it against your shoulders. Room for ${bagCap()} different things.`);
+  playSfx("coin"); refreshHUD(); renderShop();
+}
 function buySapling(k, n){
   const t = FRUIT_TREES[k]; if(!t) return;
   if(state.gold < t.cost){ toast(`Not enough coin (${t.cost}g).`); playSfx("error"); return; }

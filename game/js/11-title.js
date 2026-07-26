@@ -189,6 +189,18 @@ function migrateSave(s){
     try { s.wingsLit = wingsLit(); } catch(e){ s.wingsLit = 0; }
     state = keep;
   }
+  // v4.31 "The Shelf": grandfather every save that predates the carry cap. A player who has been
+  // hoarding for eighty days may carry far more kinds than the new starting pack holds, and the
+  // contract is absolute — a rule added today may never cost them anything they already have. So
+  // bagBonus is set ONCE, here, to whatever their current load exceeds the cap by, plus four
+  // pockets of headroom so an old save doesn't start shelving its very next mushroom. It rides on
+  // top of BAG_CAPS forever, which also means a future rebalance of that table can't shrink them.
+  // MUST run before the generic backfill below, or freshState's bagBonus:0 lands first and this
+  // becomes dead code (the same trap documented twice above).
+  if(s.bagBonus === undefined){
+    const kinds = bagKindsIn(s.inv || {});
+    s.bagBonus = Math.max(0, kinds + 4 - BAG_CAPS[Math.min(BAG_CAPS.length - 1, s.bagTier || 0)]);
+  }
   const f = freshState();
   for(const k in f){ if(s[k] === undefined) s[k] = f[k]; }
   s.mounted = false;   // v3.22: never load mid-ride (a stale saddle would strand the speed/sprite)

@@ -14,6 +14,42 @@
 
 ---
 
+## 2026-07-26 — Closing out the inventory brief: the one ask that needed a safety proof
+
+**Owner feedback (near-verbatim), from the UI rework brief:**
+
+> Feel free to have some sort of better inventory system, maybe having the limits on inventory
+> system as well and bag upgrades, things like that. Just go ahead and go ham. while ofc Making
+> the game experience good.
+
+**Interpretation.** Three asks in one sentence, and the middle one is the dangerous one. "Limits on
+the inventory" is, on its face, a request to *take capacity away from the player* — in a game whose
+design bible opens with **nothing is ever taken from the player**. The trailing clause ("while ofc
+making the game experience good") is the owner pre-emptively fencing exactly that risk.
+
+So this was not read as permission to add loss. It was read as: *the bag is unmanageable, give it
+structure and give me something to spend gold on.* Both of those are achievable without a single unit
+of anything ever going missing.
+
+**Why it was deferred a release.** It was explicitly held back out of v4.30 and named as held back,
+rather than bolted on at the end of a long session: `give()` has 76 call sites, several of which
+deduct gold *before* calling it. A full bag that refuses a quest reward or eats a purchase would break
+the contract in the most damaging way possible — silently, and only for players deep enough in to have
+filled a bag.
+
+**The resolution (v4.31.0 "The Shelf").** Cap distinct *kinds*, never stacks — there is no stack model
+to build on, and kinds are what actually made the bag unreadable. Then make the limit structurally
+incapable of costing anything: `give()` has **no refusal branch at all**. A full pack meets a new kind,
+that kind goes to the cottage chest and a toast names it. Deliberate grants (purchases, quest rewards,
+story gifts) bypass the cap entirely and may exceed it. Long saves are grandfathered with headroom.
+
+Proven, not argued: 5,000 randomized give/take/store operations across 85 items, **zero lost, zero
+duplicated**.
+
+**Produced:** `CHANGELOG.md` → v4.31.0 "The Shelf".
+
+---
+
 ## 2026-07-26 — "It doesn't seem natural": the miscellaneous slot
 
 **Owner feedback (near-verbatim), during the UI rework:**

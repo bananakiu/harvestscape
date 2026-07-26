@@ -330,7 +330,62 @@ function masteryPraise(skill, tier){
 }
 
 // ---- inventory ----
+// ============================== THE PACK (v4.31) ==============================
+// A carry limit that cannot cost you anything — the owner asked for "limits on inventory system
+// and bag upgrades", and this is the only shape of that which survives the cozy contract.
+//
+// It caps distinct KINDS, never stack sizes. Two reasons, and the first is decisive: there IS no
+// stack model here. state.inv is a flat item→count map, and give/take/ITEM_SELL/bundlePrice/
+// pledgeRemaining/sellAllProduce all do plain arithmetic on that count — inventing stacks would
+// mean rewriting every one of them and every save that ever held a number. The second is that
+// kinds are what the owner actually felt: a bag reads as clutter at forty different NAMES, not
+// at 900 Wood. So the fiction is a pack with a limited number of pockets, and each pocket holds
+// as much of one thing as you can carry.
+//
+// THE RULE, and it is the entire feature: give() NEVER refuses and NEVER destroys. When a full
+// pack meets a genuinely new kind out in the world, that kind goes to the cottage chest and a
+// toast names it. Nothing is lost, nothing is blocked — it is simply at home. That is what makes
+// this safe to bolt onto 76 existing give() call sites without auditing each one: there is no
+// "you can't have this" branch for any of them to reach.
+const BAG_CAPS = [24, 36, 48];
+const BAG_UPGRADES = [ { cost:2500, to:1 }, { cost:12000, to:2 } ];   // index = tier you're buying FROM
+function bagCap(){ return BAG_CAPS[Math.min(BAG_CAPS.length - 1, state.bagTier || 0)] + (state.bagBonus || 0); }
+
+// Equipment is not cargo. Tools you carry, the charms you wear, and the keepsakes you were GIVEN
+// are exempt — they never fill a pocket and can never be sent home, because a charm sitting in a
+// chest while you're on floor 40 is exactly the sort of quiet punishment this game doesn't do.
+const BAG_FREE = new Set(["Stave", "Shears", "Grandpa's Guild Pin", "Grandpa's Pocketwatch", "Bram's Oilskin"]);
+function bagExempt(item){ return BAG_FREE.has(item) || !!CHARMS[item]; }
+function bagKindsIn(inv){ let n = 0; for(const k in inv) if(!bagExempt(k)) n++; return n; }   // shared with migrateSave's grandfather clause
+function bagKinds(){ return bagKindsIn(state.inv); }
+function bagFull(){ return bagKinds() >= bagCap(); }
+
+// One nudge per kind per day. Without this, standing in a full pack and picking five Mushrooms
+// fires five identical toasts — the shelved kind never enters state.inv, so every pickup of it
+// takes the overflow path again. Self-resetting on the day number, so it needs no dawn hook.
+let _shelfDay = -1, _shelfSaid = {};
+function shelfNote(item){
+  if(_shelfDay !== state.day){ _shelfDay = state.day; _shelfSaid = {}; }
+  if(_shelfSaid[item]) return;
+  _shelfSaid[item] = 1;
+  toast("Pack full — " + item + " is waiting in the cottage chest.", "#e8c887");
+}
+
 function give(item, n=1, quiet){
+  // The pack only ever redirects a NEW kind arriving from the world — a swing, a cast, a harvest,
+  // the non-quiet grants. Deliberate hands-on grants (a shop purchase, a quest reward, a story
+  // parcel, a boss drop) pass `quiet` and always land in hand, even over cap: you paid for it or
+  // earned it, and being told to walk home for it would be a worse failure than a pack that sits
+  // one kind over for an afternoon.
+  if(!quiet && state.inv[item] === undefined && !bagExempt(item) && bagFull()){
+    if(!state.shelf) state.shelf = {};
+    state.shelf[item] = (state.shelf[item] || 0) + n;
+    discover(item);            // you held it long enough to name it — the Collection still counts it
+    shelfNote(item);
+    pledgeHint(item);
+    if(typeof invalidateGoals === "function") invalidateGoals();
+    return;
+  }
   state.inv[item] = (state.inv[item]||0) + n;
   discover(item);   // the Collection remembers everything you've ever held
   // the sprite still pops off the player for juice, but the "+N Item" text now lives in the corner
@@ -1168,7 +1223,12 @@ function maybeNest(tx, ty, guaranteed){
 }
 
 function openChest(){
-  if(state.flags.letter2){ showDialog("The Chest", "Grandpa's pin rested here once. Now it's yours to carry.", "port_valley"); return; }
+  // v4.31: once Grandpa's letter is out of it, the chest takes a second job — it's the pack's
+  // overflow shelf. Reusing the furniture the cottage already has beats adding a second box the
+  // player has to be taught about, and it gives the chest a reason to be opened twice. A shelf
+  // with anything on it ALWAYS opens, even mid-prologue, so a pack that fills early can never be
+  // locked behind a quest gate the player hasn't reached yet.
+  if(state.flags.letter2 || Object.keys(state.shelf||{}).length){ openShelf(); return; }
   if(state.questIdx < 4){ showDialog("The Chest", "The lid is stuck fast — Grandpa's doing, no doubt. Maybe once you've truly found your feet here.", "port_valley"); return; }
   state.flags.letter2 = true;
   give("Grandpa's Guild Pin", 1, true);

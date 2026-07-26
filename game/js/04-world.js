@@ -21,6 +21,9 @@ function freshState(){
     map:"farm", farm:null,
     gold:500, energy:100, day:1, time:6*60,
     inv:{ "Turnip Seeds":6, "Berry Bun":2 },
+    bagTier:0,                             // v4.31 the pack: how many upgrades bought (see BAG_CAPS in 08-actions)
+    bagBonus:0,                            // v4.31 extra kinds granted ONCE at migration to grandfather a long save (never shrinks)
+    shelf:{},                              // v4.31 the cottage chest: kinds a full pack sent home {item:qty}. Nothing is ever lost — only relocated.
     market:{},                            // how much of each item Tom has taken today; cleared at dawn
     dailyXpActs:{},                        // v4.0 variety spark: {skill: sparked-grants-today}; reset each dawn
     seedSel:"turnip",
