@@ -22,6 +22,52 @@
 
 ---
 
+## 2026-07-26 — v4.34.0 "Said Aloud" (code 121, tag `v4.34.0`) — two things the game changed without mentioning
+
+### Why this release
+
+Both of these were found while verifying v4.33, and both are the same species of bug: the game knows
+something the player needs, and doesn't say it.
+
+### Fixed — the belt's sixth slot changed itself in silence
+
+`normalizeSeedSel` (`08-actions.js`) exists to rescue a *dangling* selection: you set down your last
+beehive, so `"hive"` no longer resolves in `plantables()`, and the slot has to become something valid.
+Correct behaviour — but it happened without a word.
+
+The failure that produces: place your last hive, press USE again on the next patch of open ground, and
+you plant a **turnip** where you meant to place another hive. The belt is the one part of the UI the
+player treats as fixed — a slot is a slot — and this is the only slot whose contents can change without
+being touched. That makes it the one that has to announce itself.
+
+One toast, and the guards matter as much as the message:
+
+- **`gameMode === "play"`** — `beginPlay` and save-loading both normalize before the world is on screen,
+  so without this a fresh game would toast at the title.
+- **`was !== state.seedSel`** — a no-op call stays silent. `normalizeSeedSel` runs from `refreshHotbar`
+  and from `useTool`, so it is called constantly.
+- Fires **once** by construction: the selection is valid after the first call, so every later call takes
+  the early return.
+
+The message names what the slot holds *now* rather than what ran out, because that is the actionable half.
+
+### Fixed — the noticeboard's chest blindness
+
+v4.33 taught every materials list to mention the cottage chest; the noticeboard tracker card was still
+reading `state.inv` alone. Carry 2 of 3 Field Salad with 9 more in the chest and it read a flat `(2/3)`
+— a request that looks out of reach while the goods sit at home. It now adds `▸ 9 in your cottage chest`,
+and **only when you're short**: once you have enough the line would be pure noise, so it's suppressed.
+
+### Verified
+
+- Silent on boot, silent on a no-op call, silent while the selection is still valid; announces exactly
+  once on a genuine run-out, and the slot resolves to a real plantable afterwards.
+- Board card checked in all three states — short with a stocked chest, short with an empty one
+  (byte-identical to before), and ready (no chest line).
+- All 16 files parse; console clean.
+
+---
+
 ## 2026-07-26 — v4.33.0 "In the Chest" (code 120, tag `v4.33.0`) — the chest stops looking like a loss
 
 ### Why this release

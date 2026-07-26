@@ -496,9 +496,11 @@ function boardTrackerHtml(){
   if(requestFilled()) return "";
   const r = todaysRequest(); if(!r) return "";
   const have = state.inv[r.item] || 0, ready = have >= r.qty;
+  const stored = chestQty(r.item);   // v4.33's rule, applied to the board: never let the chest read as a loss
   return `<div class="qt-card" style="opacity:.82"><div class="qt-title" style="color:#cbb98f">📌 Noticeboard</div>` +
     `<div class="qt-obj ${ready?"done":""}">${ready?'<span class="chk">✔</span> ':"• "}${r.qty} × ${r.item} — ${NPCDEF[r.who].name}` +
     (ready ? "" : ` (${have}/${r.qty})`) + `</div>` +
+    (!ready && stored ? `<div class="qt-obj" style="color:var(--gold-hi)">▸ ${stored} in your cottage chest</div>` : "") +
     (ready ? `<div class="qt-obj" style="color:var(--gold-hi)">▸ Take them to ${NPCDEF[r.who].name}</div>` : "") +
     `</div>`;
 }

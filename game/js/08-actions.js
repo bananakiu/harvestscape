@@ -157,7 +157,17 @@ function normalizeSeedSel(){
   // the picker the instant the hotbar redrew, which is the "buy ahead for next season" case the picker
   // explicitly offers. Season is enforced at plant time, with a message that says which season.
   const ids = plantables(true);
-  if(!ids.includes(state.seedSel)) state.seedSel = plantables()[0] || ids[0] || "turnip";
+  if(ids.includes(state.seedSel)) return;
+  const was = state.seedSel;
+  state.seedSel = plantables()[0] || ids[0] || "turnip";
+  // v4.34: and SAY so. This rescue used to happen in silence, so setting down your last hive quietly
+  // turned the belt's sixth slot into a crop between one swing and the next — and the next USE planted
+  // a turnip where you meant to place a keg. The slot is the one piece of the belt whose contents can
+  // change without you touching it, so it's the one that has to announce itself. Guarded on play mode
+  // because beginPlay and load both normalize before the world is on screen, and on an actual change
+  // so a no-op call stays silent. Fires once: the selection is valid afterwards, so callers return early.
+  if(gameMode === "play" && was && was !== state.seedSel && typeof toast === "function")
+    toast(`That was the last one — the slot holds ${plantableName(state.seedSel)} now.`, "#cbb98f");
 }
 function cycleSeed(){
   const ids = plantables();

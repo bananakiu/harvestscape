@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.33.0", code: 120, codename: "In the Chest", date: "2026-07-26" };
+const VERSION = { name: "4.34.0", code: 121, codename: "Said Aloud", date: "2026-07-26" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.34.0", code:121, date:"2026-07-26", name:"Said Aloud", notes:[
+    { t:"fix", s:"The last slot on your belt used to change without telling you. Set down your last beehive and it quietly became a crop \u2014 so the next time you pressed USE you planted a turnip where you meant to place a keg. It now says what the slot holds instead." },
+    { t:"fix", s:"The noticeboard card says when what's being asked for is sitting in your cottage chest, so a request never looks impossible when it isn't." },
+  ]},
   { v:"4.33.0", code:120, date:"2026-07-26", name:"In the Chest", notes:[
     { t:"fix", s:"The cottage chest can no longer look like a loss. Since the pack arrived, anything it sent home was missing from every materials list in the game — you'd open Tom's shop to buy a Keg, read \"4 Iron Ore (0)\" in red, and reasonably conclude the ore you just mined was gone. Every one of those lists now says how many are waiting in the chest, right where you're deciding." },
     { t:"fix", s:"Shop rows, tool upgrades, décor, recipes, the Warden's bench and the Ledger's bundles all carry the note. So do the refusals: try to cook, craft or set something down without enough, and the message tells you if the rest is at home." },
