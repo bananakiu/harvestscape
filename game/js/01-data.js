@@ -8,13 +8,19 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.31.0", code: 118, codename: "The Shelf", date: "2026-07-26" };
+const VERSION = { name: "4.32.0", code: 119, codename: "The Card", date: "2026-07-26" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.32.0", code:119, date:"2026-07-26", name:"The Card", notes:[
+    { t:"feature", s:"There's a Controls card now — press ? for it, or open ☰ and tap ❔. Every control in the game, grouped, with the touch instruction beside each one if you're playing on a phone. Until now the only control reference was the strip under the screen, which is hidden on small screens — so phone players had no way to learn that ☰ holds Eat, Gift and Ride at all." },
+    { t:"change", s:"That strip under the screen is one line now instead of twenty-odd bindings in two. It kept only what you need in the first ten seconds; everything else moved to the card, and the game got the space back." },
+    { t:"fix", s:"How to Play was teaching a rule that no longer exists. It told you Tom's prices slide if you sell too much of one thing and to bring him variety — that was retired long ago, and every unit has fetched full price ever since. You were being asked to spread your sales for nothing. It now explains what selling actually rewards: cooking is worth about half again its ingredients, a keg more than doubles a crop, and the noticeboard pays better than the counter." },
+    { t:"fix", s:"How to Play never once mentioned the Undercroft, Warding, Resolve or the Guard — a whole skill, forty-five floors and the entire back half of the story, missing from the game's own guide. Nor the pack and the cottage chest. Both are in there now." },
+  ]},
   { v:"4.31.0", code:118, date:"2026-07-26", name:"The Shelf", notes:[
     { t:"feature", s:"Your pack now holds a set number of DIFFERENT things — 24 to begin with. Not amounts: you can still carry nine hundred wood in one pocket. It's the number of separate names that counts, which is the thing that actually made the bag hard to read." },
     { t:"feature", s:"Nothing is ever lost to it. If your pack is full and you find something new out in the world, it goes to the chest in your cottage and a note tells you what and where. It is never destroyed, never refused, and never left behind — only set down at home." },
@@ -1764,6 +1770,44 @@ const ACT3_IDX = QUESTS.findIndex(q => q.act3);   // v4.0 — first Act III ques
 // ---- HOW TO PLAY ----
 // One source of truth for the reference text, shown on the title screen (showHowto) AND inside
 // the in-game Journal (so a playing player can actually consult it — the NPX moved it in-world).
+// ---- THE CONTROLS CARD (v4.32) ----
+// Every binding in the game, in one grouped table, with a TOUCH column beside the key column.
+// This exists because the only control reference the game had was `#belowbar` — two lines of
+// run-on text under the stage — and `#belowbar` is `display:none` below 640px wide OR 520px tall.
+// A phone player therefore had *no* way, anywhere in the game, to learn that ☰ hides Eat, Gift and
+// Ride, or that tapping slot 6 opens the planting board. The reference now renders per-device from
+// one table, so a binding can never again exist on one platform's list and not the other's.
+// `when:"undercroft"` rows are shown always but marked — they're real controls, just situational.
+const CONTROLS = [
+  { sec:"Out in the world", rows:[
+    { key:"WASD or the arrows", touch:"The D-pad, bottom-left",  what:"Move" },
+    { key:"Space",              touch:"USE",                     what:"Use the selected tool on the tile you face — <i>hold it</i> to keep swinging" },
+    { key:"E",                  touch:"ACT",                     what:"Harvest, talk, open a door, cook, load a machine, sleep" },
+    { key:"Q",                  touch:"🔍",                       what:"Examine whatever you're facing" },
+    { key:"F",                  touch:"☰ then 🍎 Eat",           what:"Eat the best food you're carrying" },
+    { key:"G",                  touch:"☰ then 🎁 Gift",          what:"Give a gift to whoever you're standing beside" },
+    { key:"H",                  touch:"☰ then 🐴 Ride",          what:"Get on or off the horse" },
+    { key:"Shift or right-click", touch:"🛡",                     what:"Raise the Warden's Guard — time it to parry a blow", when:"in the Undercroft" },
+  ]},
+  { sec:"Your belt", rows:[
+    { key:"1 – 6",              touch:"Tap a slot",              what:"Pick a tool" },
+    // touch:"—" is deliberate and CHECKED, not a gap: the belt has no swipe handler (refreshHotbar
+    // gives each slot a plain onclick), and it needs none — all six slots are on screen and tappable,
+    // which the row above already documents. Omitting beats printing a gesture that does nothing.
+    { key:"Tab or the scroll wheel", touch:"—",                  what:"Move along the belt" },
+    { key:"R",                  touch:"Tap the last slot",       what:"Choose what to plant — seeds, saplings, hives, machines, décor" },
+  ]},
+  { sec:"Books and panels", rows:[
+    { key:"I",                  touch:"☰ then 🎒 Backpack",      what:"What you're carrying, and how full your pack is" },
+    { key:"J",                  touch:"☰ then ✒ Journal",        what:"Your tasks, the Almanac, and the Collection" },
+    { key:"K",                  touch:"☰ then ★ Skills",         what:"Levels, mastery, and every perk still ahead of you" },
+    { key:"P",                  touch:"☰ then ⚙ Settings",       what:"Sound, music and the HUD" },
+    { key:"U",                  touch:"☰ then ⚙ Settings",       what:"Hide the HUD for a clean look at the valley" },
+    { key:"?",                  touch:"☰ then ❔ Controls",       what:"This card" },
+    { key:"Esc",                touch:"✕",                       what:"Close whatever's open" },
+  ]},
+];
+
 const HOWTO_TEXT =
 "Move with WASD or the arrow keys.\n\n" +
 "Space uses your selected tool on the tile you face:\n" +
@@ -1773,16 +1817,34 @@ const HOWTO_TEXT =
 "Fishing: cast with the Rod, wait for the !, then press Space to hook it. Now HOLD Space to raise the green bar and keep the fish inside it — let it slip and the line goes slack. Land one cleanly for a perfect catch.\n\n" +
 "Explore! The east road leads to the village — shops, the Guild, and your neighbours. The old mine opens on the village's north ridge, the coast lies down its south path, and the Deep Grove waits through the farm's western trees. Keep hens in the coop and cows in the barn — visit them each morning.\n\n" +
 "Read the sky. Tomorrow's weather is chalked on the noticeboard every evening, and each kind of day offers something the others don't — rain doubles your foraging and brings the fish up; a storm shuts the coast but drives the veins, and leaves wrack on the sand the morning after; fog makes the deep seams read rich. Sleep through a day and you miss what it was offering. Nothing is ever lost.\n\n" +
-"Tom can only shift so much of one thing a day. Sell forty of the same crop and the price slides; bring him variety and it doesn't. Watch the price in his shop before you sell.\n\n" +
+// v4.32: the paragraph that stood here taught Tom's Demand — "sell forty of the same crop and the
+// price slides; watch the price before you sell". That mechanic was RETIRED in v4.9 and
+// `demandMult()` (01-data.js) has been a hardcoded `return 1` ever since. The How-to was still
+// coaching a new player to spread their sales and watch a number that never moves: worse than no
+// advice, because it costs real time and teaches distrust of the shop UI. Replaced with what the
+// selling loop actually rewards now.
+"Sell at Tom's counter — every unit fetches its full price, however many you bring, so there's never a reason to hold back a good harvest.\n\n" +
+"But raw is the worst price anything will ever fetch. Cooking is worth about half as much again as the ingredients you put in; the Cellar's kegs more than double a crop, if you can spare three nights. And the noticeboard by Tom's door pays better than the counter for the very thing you were going to sell anyway — and whoever asked will warm to you for it.\n\n" +
 "Bram knows five fish that rise only when everything lines up — the right water, the right hour, the right weather, the right season. He'll tell you about one for every heart you earn, and the Almanac remembers.\n\n" +
 "Saplings and beehives go in open ground (press R to select one, then Space). A tree takes a season to bear, then bears every day of its season, forever. Bees make more honey where more is in bloom.\n\n" +
 "The valley keeps a calendar. Four festivals return every year — be on the coast on the day, and bring something (Bram's Luau wants a fish; the Harvest Fair judges the best crop you've sold that season). Everyone has a birthday, too: a gift on the day is worth three. Check the Almanac in your Journal (J).\n\n" +
 "A noticeboard stands by Tom's door. Each morning someone in the valley wants something small — bring it to them for good coin and warmer feelings. It's never required, and it's gone by dawn.\n\n" +
 "Your grandfather tore up his old almanac and left the pages where he lived. You'll find them by working the way he worked. Nine in all, and the last one isn't a page about farming.\n\n" +
 "Every skill keeps paying past its last unlock: mastery lands at 25, 50, 75 and 99. And when your coin outgrows your needs, read the ledger on Rowan's desk — the valley has unfinished work.\n\n" +
+// v4.32: Warding and the pack were BOTH absent from this text. Warding is the sixth 1-99 skill,
+// 45 floors of the Undercroft, seven creature families and the whole of Act III's story spine —
+// shipped across v4.0-v4.5 and never once mentioned in the game's own how-to. The pack shipped in
+// v4.31 and changes how the player relates to every pickup. A How-to that omits two whole systems
+// isn't a how-to, it's an archive of an older game.
+"There is a tenth door under the Guild, and behind it the Undercroft — the one place in the valley that isn't safe. Warding is a craft like any other, 1 to 99, and the floors go down a long way. Nothing down there can take anything from you: lose your Resolve and you simply wake up at home, everything still yours. Hold Shift as a blow lands to guard it, and time it well to turn the blow back. It's yours to enter, or not.\n\n" +
+"Your pack holds so many different things — not so much of each, so carry nine hundred wood if you like. Find something new with no room for it and it goes to the chest in your cottage, and the game tells you so. Nothing is ever lost that way; open the chest to fetch it, or store what you don't need. Tom sells a roomier pack when you've the coin.\n\n" +
 "Give your neighbours time and gifts and they'll open up — each has scenes of their own. Two of them might one day accept a Willowbrook bouquet.\n\n" +
 "Sell at Tom's stall, buy seeds and upgrade tools. Every action trains a skill from 1 to 99. Follow the tasks in your Journal (J) to wake the valley.\n\n" +
-"R cycles seeds · F eats food · G gifts Maya · K skills · I backpack";
+// v4.32: this trailing crib-sheet listed five bindings out of twenty-odd and had no touch column,
+// so it was both incomplete and useless on a phone. The full, per-device table now lives in the
+// Controls card (CONTROLS above; ? on a keyboard, ☰ then ❔ on touch) — point at that instead of
+// maintaining a second, always-drifting copy here.
+"Every control in the game is listed on the Controls card — press ? for it, or open ☰ and tap ❔.";
 
 // ---- EXAMINE TEXT (RuneScape-style "look" flavor; generated, then hand-tuned) ----
 const EXAMINE = {

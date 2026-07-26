@@ -782,10 +782,17 @@ body{
 #belowbar{ margin-top:.8em; text-align:center; max-width:min(1040px,96vw); }
 #controlsHint{ font-size:clamp(11px,1.7vw,17px); color:#a99a82; line-height:1.7; }
 #controlsHint b{ color:var(--parch); }
-#controlsHint kbd{
+/* v4.32: the keycap style was scoped to #controlsHint, so the Controls card rendered its <kbd>
+   elements as bare text — the one place in the game where a key needs to LOOK like a key. Shared
+   now between the strip under the stage and the card itself. */
+#controlsHint kbd, #helpPanel kbd{
   background:var(--wood); border:.09em solid var(--wood-d); border-bottom-width:.2em;
   border-radius:.3em; padding:0 .35em; color:var(--gold-hi); font-family:var(--font);
 }
+/* The card's two columns: keycaps left, what it does right, both vertically centred so a
+   two-line description doesn't drag its keycap to the top of the row. */
+#helpPanel .row{ align-items:center; }
+#helpPanel .row .lead{ font-size:1.05em; }
 
 @media (max-width:640px){
   #belowbar{ display:none; }

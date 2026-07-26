@@ -1335,6 +1335,33 @@ function qtyCtl(qid, max){
     `<button onclick="stepQty('${qid}',1)">+</button>`;
 }
 // The machine chooser — the gift panel's pattern for the cellar. interact() opens it whenever a
+// ============================== THE CONTROLS CARD (v4.32) ==============================
+// Renders the one CONTROLS table (01-data.js) for THIS device. Touch players get the touch column,
+// keyboard players get the key column — never both, because a doubled table is exactly the wall of
+// text this replaces. Reachable from `?`, from the touch menu, and from Settings.
+function renderHelp(){
+  const b = $("helpPanel").querySelector(".body");
+  let html = `<div class="desc" style="margin-bottom:.6em;color:var(--ink-soft);">` +
+    (IS_TOUCH ? `Everything you can do, and where to tap for it. <b>☰</b> is the menu button by the USE pad.`
+              : `Everything you can do, and the key for it. Nothing here is required reading — the valley is patient.`) +
+    `</div>`;
+  for(const g of CONTROLS){
+    html += `<h2 style="font-size:1em;color:var(--gold-hi);margin:.5em 0 .2em;">${g.sec.toUpperCase()}</h2>`;
+    for(const r of g.rows){
+      const bind = IS_TOUCH ? r.touch : r.key;
+      if(bind === "—") continue;                      // no equivalent on this device — omit rather than lie
+      const cell = IS_TOUCH ? `<b>${bind}</b>` : bind.split(" ").map(w =>
+        /^[A-Za-z0-9?–—]+$/.test(w) && w !== "or" && w !== "the" ? `<kbd>${w}</kbd>` : w).join(" ");
+      html += `<div class="row"><span class="lead" style="flex:0 0 42%;">${cell}</span>` +
+        `<span style="text-align:left;flex:1;">${r.what}` +
+        (r.when ? ` <span class="sub" style="color:var(--gold-hi)">— ${r.when}</span>` : ``) + `</span></div>`;
+    }
+  }
+  html += `<div class="desc" style="margin-top:.8em;color:var(--ink-soft);">` +
+    `Looking for how any of it <i>works</i>, rather than which button? That's <b>How to Play</b>, in Settings.</div>`;
+  b.innerHTML = html;
+}
+
 // ============================== THE COTTAGE CHEST (v4.31) ==============================
 // The other half of the pack. A carry limit is only fair if the player has somewhere to put the
 // overflow AND a way to choose what rides along — so this is a real two-sided chest screen, laid
@@ -1940,6 +1967,7 @@ function renderSettings(){
     `<div class="setRow"><span>Pick tools for me</span>` +
       `<button class="dangerBtn" id="setSmartTool" style="min-width:3em;background:${!state.flags.noSmartTool?"#3d5a2e":"#332e2b"};border-color:${!state.flags.noSmartTool?"#6a8f52":"#544d48"};color:${!state.flags.noSmartTool?"#eaffd8":"#a89f98"};">${!state.flags.noSmartTool?"On":"Off"}</button></div>` +
     `<div class="setRow"><span></span><span style="color:var(--ink-soft);font-size:.8em;">Facing a tree with the watering can? USE reaches for the axe instead. Only when there's exactly one right tool — watering vs planting on bare soil stays your call.</span></div>` +
+    `<div class="setRow"><span>Controls</span><button class="dangerBtn" id="setControls" style="background:#3a4a30;border-color:#6a8f52;color:#eaffd8;">${IS_TOUCH?"Show the card":"Show the card (?)"}</button></div>` +
     `<div class="setRow"><span>How to play</span><button class="dangerBtn" id="setHelp" style="background:#3a4a30;border-color:#6a8f52;color:#eaffd8;">Read the guide</button></div>` +
     `<div class="setRow"><span>Save</span><span style="color:var(--ink-soft);font-size:.85em;">auto-saves each night</span></div>` +
     `<div class="setRow"><span>Version</span><button class="dangerBtn" id="setNews" style="background:#3a3550;border-color:#6a648f;color:#e6e0ff;">v${VERSION.name} — What's New</button></div>` +
@@ -1955,6 +1983,7 @@ function renderSettings(){
   hud.oninput = () => { setHudOpacity(hud.value/100); hud.nextElementSibling.textContent = hud.value; };
   $("setHudOn").onclick = () => { setHudOn(!HUDPREF.on); playSfx("select"); renderSettings(); };
   $("setSmartTool").onclick = () => { state.flags.noSmartTool = !state.flags.noSmartTool; playSfx("select"); saveGame(); renderSettings(); };
+  $("setControls").onclick = () => openPanel("helpPanel", renderHelp);
   $("setHelp").onclick = () => { closeAllPanels(); openLetter("❔ How to Play", HOWTO_TEXT); };
   $("setNews").onclick = () => openPanel("newsPanel", renderNews);
   $("setWipe").onclick = () => { if(confirm("Delete your save and restart from the title?")){ wipeSave(); location.reload(); } };
@@ -2083,10 +2112,14 @@ function showSleepCard(s){
 
 // ---- controls hint ----
 function setControlsHint(){
-  // Line 1 = left-hand world verbs (all reachable without leaving WASD); line 2 = right-hand menus.
+  // v4.32: ONE line, not two. This printed twenty-odd bindings as a wall of run-on text under the
+  // stage — 92px of vertical space spent on a reference nobody reads twice, and one that vanishes
+  // entirely below 640px wide or 520px tall, which is precisely where a player most needs help.
+  // The full per-device table now lives in the Controls card, so this only has to carry the four
+  // verbs you need in the first ten seconds plus the way to find the rest.
   $("controlsHint").innerHTML =
-    `<b>Move</b> <kbd>WASD</kbd> · <b>Use tool</b> <kbd>Space</kbd> · <b>Interact / harvest / talk</b> <kbd>E</kbd> · <b>Examine</b> <kbd>Q</kbd> · <b>Cycle seeds</b> <kbd>R</kbd> · <b>Eat</b> <kbd>F</kbd> · <b>Gift Maya</b> <kbd>G</kbd> · <b>Guard</b> <kbd>Shift</kbd> <span style="opacity:.7">(in the Undercroft)</span><br>` +
-    `<b>Skills</b> <kbd>K</kbd> · <b>Backpack</b> <kbd>I</kbd> · <b>Journal</b> <kbd>J</kbd> · <b>Ride</b> <kbd>H</kbd> · <b>Hide HUD</b> <kbd>U</kbd> · slots <kbd>1</kbd>–<kbd>6</kbd> · Enter buildings, the mine &amp; the coast · <b>Sleep</b> in your bed indoors`;
+    `<b>Move</b> <kbd>WASD</kbd> · <b>Use tool</b> <kbd>Space</kbd> · <b>Interact</b> <kbd>E</kbd> · ` +
+    `<b>Backpack</b> <kbd>I</kbd> · <b>Journal</b> <kbd>J</kbd> · <b>All controls</b> <kbd>?</kbd>`;
 }
 
 // ---- INPUT ----
@@ -2145,6 +2178,9 @@ document.addEventListener("keydown", e => {
   else if(k === "i") togglePanel("invPanel", renderInv);
   else if(k === "j") togglePanel("questPanel", renderJournal);
   else if(k === "p" || k === "o") togglePanel("settingsPanel", renderSettings);
+  // v4.32: `?` is the near-universal "what are the controls" key. Bound to both the shifted glyph and
+  // the bare `/` so it works whatever the layout puts where.
+  else if(k === "?" || k === "/") togglePanel("helpPanel", renderHelp);
   // v4.29: R still cycles (the ring is short now — in-season, in-stock only), but Shift+R opens the
   // picker, and R opens it too when there is genuinely nothing to cycle TO.
   else if(k === "r"){ if(inputBusy()) return;
@@ -2271,7 +2307,7 @@ function wireTouch(){
   if(guardBtn) guardBtn.addEventListener("pointerdown", e => { e.preventDefault(); firstGesture(); startGuard(); });
 
   // Backpack / Journal / Skills / Settings have no key on a touch device — give them a menu.
-  const RENDER = { invPanel:renderInv, questPanel:renderJournal, skillsPanel:renderSkills, settingsPanel:renderSettings };
+  const RENDER = { invPanel:renderInv, questPanel:renderJournal, skillsPanel:renderSkills, settingsPanel:renderSettings, helpPanel:renderHelp };
   $("btnMenu").addEventListener("pointerdown", e => { e.preventDefault(); firstGesture();
     if(isCutscene() || fishing.state === "reel") return;
     const m = $("touchMenu"); const opening = m.classList.contains("hidden");

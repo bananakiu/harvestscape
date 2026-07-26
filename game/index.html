@@ -7,7 +7,7 @@
 <title>Harvestscape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=159">
+<link rel="stylesheet" href="css/style.css?v=162">
 </head>
 <body>
 <div id="frame">
@@ -95,6 +95,10 @@
          below) so the limit always has an answer: nothing the pack turns away is ever lost, and
          you choose what rides along. -->
     <div class="panel wide hidden" id="shelfPanel"><div class="phead"><h2>THE COTTAGE CHEST</h2><button class="pclose">✕</button></div><div class="body"></div></div>
+    <!-- v4.32: the Controls card. #belowbar was the only control reference in the game and it is
+         display:none below 640px wide OR 520px tall — so touch players had none at all. This renders
+         per-device from the one CONTROLS table in 01-data.js. -->
+    <div class="panel wide hidden" id="helpPanel"><div class="phead"><h2>CONTROLS</h2><button class="pclose">✕</button></div><div class="body"></div></div>
     <div class="panel hidden" id="settingsPanel"><div class="phead"><h2>SETTINGS</h2><button class="pclose">✕</button></div><div class="body"></div></div>
     <div class="panel wide hidden" id="newsPanel"><div class="phead"><h2>WHAT'S NEW</h2><button class="pclose">✕</button></div><div class="body"></div></div>
     <div class="panel hidden" id="liftPanel"><div class="phead"><h2>THE OLD LIFT</h2><button class="pclose">✕</button></div><div class="body"></div></div>
@@ -175,6 +179,7 @@
         <button data-panel="questPanel">✒ Journal</button>
         <button data-panel="skillsPanel">★ Skills</button>
         <button data-panel="settingsPanel">⚙ Settings</button>
+        <button data-panel="helpPanel">❔ Controls</button>
         <button data-action="eat">🍎 Eat</button>
         <button data-action="gift">🎁 Gift</button>
         <button data-action="ride">🐴 Ride</button>
@@ -187,21 +192,21 @@
   </div>
 </div>
 
-<script src="js/00-core.js?v=159"></script>
-<script src="js/01-data.js?v=159"></script>
-<script src="js/02-audio.js?v=159"></script>
-<script src="js/03-art.js?v=159"></script>
-<script src="js/04-world.js?v=159"></script>
-<script src="js/05-particles.js?v=159"></script>
-<script src="js/06-weather.js?v=159"></script>
-<script src="js/07-entities.js?v=159"></script>
-<script src="js/08-actions.js?v=159"></script>
-<script src="js/09-quests.js?v=159"></script>
-<script src="js/13-content.js?v=159"></script>
-<script src="js/15-warding.js?v=159"></script>
-<script src="js/10-ui.js?v=159"></script>
-<script src="js/11-title.js?v=159"></script>
-<script src="js/14-story.js?v=159"></script>
-<script src="js/12-game.js?v=159"></script>
+<script src="js/00-core.js?v=162"></script>
+<script src="js/01-data.js?v=162"></script>
+<script src="js/02-audio.js?v=162"></script>
+<script src="js/03-art.js?v=162"></script>
+<script src="js/04-world.js?v=162"></script>
+<script src="js/05-particles.js?v=162"></script>
+<script src="js/06-weather.js?v=162"></script>
+<script src="js/07-entities.js?v=162"></script>
+<script src="js/08-actions.js?v=162"></script>
+<script src="js/09-quests.js?v=162"></script>
+<script src="js/13-content.js?v=162"></script>
+<script src="js/15-warding.js?v=162"></script>
+<script src="js/10-ui.js?v=162"></script>
+<script src="js/11-title.js?v=162"></script>
+<script src="js/14-story.js?v=162"></script>
+<script src="js/12-game.js?v=162"></script>
 </body>
 </html>

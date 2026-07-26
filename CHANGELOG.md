@@ -22,6 +22,97 @@
 
 ---
 
+## 2026-07-26 — v4.32.0 "The Card" (code 119, tag `v4.32.0`) — the game explains itself again
+
+### Why this release
+
+Two problems in the same place, both found by reading the game's own player-facing text against the
+code that text describes.
+
+### Fixed — the How-to was teaching a mechanic that had been deleted
+
+`HOWTO_TEXT` (`01-data.js`) contained this paragraph:
+
+> "Tom can only shift so much of one thing a day. Sell forty of the same crop and the price slides;
+> bring him variety and it doesn't. Watch the price in his shop before you sell."
+
+**Tom's Demand was retired in v4.9.** `demandMult()` has been `return 1` ever since — a hardcoded
+constant. Every unit has fetched full base price for twenty-three releases, and the game's own guide
+has spent all of them coaching new players to spread their sales and watch a number that cannot move.
+
+This is worse than saying nothing. It costs the player real time, it makes the shop UI look broken
+when the "sliding" price never slides, and it teaches distrust of every other thing the guide says.
+
+Replaced with what the selling loop *actually* rewards — and the replacement was **measured against
+live data before it was written**, because swapping one wrong claim for another would be no better.
+My first draft said cooked dishes are worth "far more" than their ingredients and that the Cellar's
+machines are "worth more again". Measurement refuted both:
+
+| route | multiple over inputs |
+| --- | --- |
+| Cooking (32 recipes) | median **1.46×**, range 1.29–2.10× |
+| Keg | **2.2×** (3 nights) |
+| Preserves Jar | 1.6× (2 nights) |
+| Cheese Press | 1.5× (1 night) |
+| Noticeboard request | **1.4×** the counter, floored at 60g, never worse (`requestPay`) |
+
+So the keg *beats* the median dish, and the press and jar are roughly level with it — "worth more
+again" was simply false. The shipped text says cooking is worth about half as much again, that a keg
+more than doubles a crop if you can spare three nights, and that the noticeboard pays better than the
+counter for the thing you were going to sell anyway.
+
+### Fixed — the How-to never mentioned Warding at all
+
+Zero occurrences of Warding, Undercroft, Resolve or Guard in the entire guide. That is the sixth 1–99
+skill, forty-five floors, seven creature families and the whole of Act III's story spine — shipped
+across v4.0–v4.5 and never once acknowledged by the game's own explanation of itself. The pack and the
+cottage chest (v4.31) were missing too. A how-to that omits two whole systems isn't a how-to; it's an
+archive of an older game. Both added, including the part that matters most: **nothing in the Undercroft
+can take anything from you.**
+
+### Added — the Controls card, and why touch players had nothing
+
+`#belowbar` was the *only* control reference in the game. Its CSS:
+
+```css
+@media (max-width:640px){ #belowbar{ display:none; } }
+@media (max-height:520px){ #belowbar{ display:none; } }
+```
+
+So on a phone — the exact device whose controls are least guessable — the reference is gone. A touch
+player had no way, anywhere in the game, to discover that ☰ hides Eat, Gift and Ride (v4.19's whole
+touch-parity fix), or that tapping the last belt slot opens the planting board (v4.29). The features
+shipped; the means of finding them did not.
+
+The card renders **per-device from one `CONTROLS` table** (`01-data.js`) — the key column on a
+keyboard, the touch column on touch, never both, because a doubled table is exactly the wall of text
+this replaces. One table means a binding can no longer exist on one platform's list and not the
+other's. Reachable three ways: `?` (and bare `/`), the touch menu's new ❔ entry, and Settings.
+
+### Changed — the strip under the stage
+
+From two lines of twenty-odd bindings to one line of six. It now carries only what's needed in the
+first ten seconds plus `?` for the rest. `#belowbar` was costing 92px of vertical space to print a
+reference nobody reads twice.
+
+### Verified
+
+- **Every touch instruction on the card was resolved against a real DOM control** — all 18 rows
+  checked programmatically against `#touchMenu`'s buttons, `#touchBtns`, `#dpad` and `.pclose`.
+  **Zero unresolved.** A controls card that lies is worse than no card, so this is asserted, not assumed.
+- One row is deliberately omitted on touch, and that omission is checked rather than accidental:
+  Tab/scroll-wheel belt cycling has **no** swipe handler (`refreshHotbar` gives each slot a plain
+  `onclick`), and needs none — all six slots are on screen and tappable, which the row above already
+  documents. My draft had claimed "swipe across the slots"; reading the handler refuted it before it
+  shipped.
+- "Hide the HUD" was initially marked unreachable on touch; Settings *does* carry a HUD toggle
+  (`setHudOn`), so the card now points there rather than under-reporting a control that exists.
+- The economy figures above were measured in the live build, not read off the tables by hand.
+- All 16 files parse; keycap styling confirmed applied inside the panel (the `<kbd>` rule was scoped
+  to `#controlsHint` only, so the card first rendered its keys as bare text); console clean.
+
+---
+
 ## 2026-07-26 — v4.31.0 "The Shelf" (code 118, tag `v4.31.0`) — a carry limit that cannot cost you anything
 
 ### Why this release
