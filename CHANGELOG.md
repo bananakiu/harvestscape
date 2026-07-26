@@ -22,6 +22,102 @@
 
 ---
 
+## 2026-07-26 — v4.36.0 "True Pixels" (code 123, tag `v4.36.0`) — the stage stops lying about its shape
+
+### Why this release
+
+Found by a seven-lens UX audit of v4.31 (46 findings surveyed, 42 surviving an adversarial
+verification pass). This was its top-ranked item, and it is worse than a layout nit: it silently
+breaks the text layer.
+
+### The bug
+
+`#stage` declared an `aspect-ratio:320/208` and then clamped the derived height with
+`max-height:calc(100dvh - 92px)` — **with no matching `max-width`**. Per CSS sizing, a clamp on the
+derived axis simply abandons the ratio. So every viewport short enough for the clamp to bind rendered
+the entire game horizontally stretched. Measured at 1280×700: **1.7105 against a target of 1.5385**,
+`scaleX` 3.25 vs `scaleY` 2.923.
+
+### Why it wasn't only cosmetic
+
+`_textScale` (`05-particles.js:26`) is computed from **width alone**:
+
+```js
+_textScale = w / VIEW_W;                        // display px per game px
+```
+
+and `flushText` (`:33-35`) applies that one factor to **both** axes:
+
+```js
+const sx = (t.screen ? t.wx : t.wx - camX) * S;
+const sy = (t.screen ? t.wy : t.wy - camY) * S;   // <-- S is a WIDTH ratio
+```
+
+That is correct only while `scaleX === scaleY`. On a stretched stage every string on the `#gtext`
+overlay — NPC name tags, `+N XP` and `+Ng` floaters, the HOLD prompts — is positioned with the wrong
+vertical scale, and the error grows with depth. Measured at 1280×700, a tag at world y=190 drew at
+618px against a correct 555px: **62px low, and past the 608px stage bottom — off-screen entirely.**
+
+So the practical symptom was "name tags and floaters vanish near the bottom of the view on a short
+window", and nothing in the text code was wrong. The fix belongs in the CSS.
+
+### The fix
+
+Express the height limit as a **width** term, so the ratio is never the clamped axis:
+
+```css
+--chrome:56px;
+width:min(1600px, 98vw, calc((100dvh - var(--chrome)) * 320 / 208));
+aspect-ratio:320 / 208;
+```
+
+`max-height` is gone. This makes `scaleX === scaleY` structurally true at every viewport, which
+retires the whole class of `_textScale` bug rather than patching one symptom.
+
+The `@media (max-height:520px)` rule had the same defect (`max-height:96dvh`) and would have
+re-broken the ratio on exactly the small screens least able to afford it; both media rules now hand
+the height back through `--chrome` instead.
+
+### Changed — the stage is much bigger, and honestly reserved
+
+Two things were shrinking it:
+
+- **The 1040px cap.** At 1440×900 that used **54.2%** of the viewport where far more fit.
+- **A 92px chrome reservation** sized for the *two-line* controls strip that v4.32 replaced with one
+  line. The strip measures **29px**. The stale figure was costing ~60px of stage height at every size.
+
+Now `--chrome:56px` (29px of strip plus its margin, with headroom) and a 1600px cap. At 1440×900 the
+stage is **1298×844 — 84.6% of the viewport**, up from 54.2%. The 1600px cap also happens to land on
+exactly **5×** at 2560×1440.
+
+**Deliberately not done:** snapping to integer multiples of 320. The audit floated it and its own
+worked example was wrong — 1280×832 does *not* fit inside the old `100dvh - 92px` = 808px at
+1440×900, so the suggestion would have silently re-broken the ratio it was meant to sharpen. Scaling
+was already non-integer (3.25×) before this release, so nothing regresses by leaving it; a correct
+ratio at every size is the larger win and it stands on its own.
+
+### Verified
+
+`#game.getBoundingClientRect()` measured at **seven** viewports — 1440×900, 1280×700, 1366×768,
+844×390, 390×844, 2560×1440, 700×560:
+
+| viewport | canvas | ratio | scaleX == scaleY |
+| --- | --- | --- | --- |
+| 1440×900 | 1298×844 | 1.5385 | ✓ (4.058) |
+| 1280×700 | 991×644 | 1.5385 | ✓ (3.096) |
+| 1366×768 | 1095×712 | 1.5385 | ✓ |
+| 844×390 | 588×382 | 1.5385 | ✓ |
+| 390×844 | 382×248 | 1.5385 | ✓ |
+| 2560×1440 | 1600×1040 | 1.5385 | ✓ (5.000) |
+| 700×560 | 686×446 | 1.5385 | ✓ |
+
+Target is 1.5385 (320/208) at all seven; the pre-fix figure at 1280×700 was 1.7105. Text Y-error at
+world y=190 is **0px** at every size (was 62px). No horizontal or vertical body scrollbar anywhere;
+`#belowbar` fully on screen wherever it isn't hidden by its own media rule. Screenshot comparison at
+1280×700 shows square tiles and an unstretched player sprite where both were visibly wide before.
+
+---
+
 ## 2026-07-26 — v4.35.0 "Where You Left It" (code 122, tag `v4.35.0`) — the three lists v4.30 missed
 
 ### Why this release

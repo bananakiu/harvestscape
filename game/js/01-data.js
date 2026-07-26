@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.35.0", code: 122, codename: "Where You Left It", date: "2026-07-26" };
+const VERSION = { name: "4.36.0", code: 123, codename: "True Pixels", date: "2026-07-26" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.36.0", code:123, date:"2026-07-26", name:"True Pixels", notes:[
+    { t:"fix", s:"The game is drawn at the shape it was actually painted in, on every window size. On any window that wasn't tall enough, the whole valley was being stretched sideways \u2014 sprites wider than they should be, tiles no longer square." },
+    { t:"fix", s:"That stretch was hiding text, too. Name tags over people's heads, the +XP and +gold numbers, the HOLD prompts \u2014 all of them were placed using the sideways stretch as though it applied downward as well, so anything low on the screen drifted down and off the bottom. Fixed at the root: the picture can no longer be stretched, so the text can no longer be misplaced." },
+    { t:"change", s:"The game is bigger. It was capped at 1040 pixels wide and reserving room for a two-line controls strip that became one line in 4.32 \u2014 together those cost a lot of screen. On a 1440\u00d7900 display it now fills 85% of the window instead of 54%, and on a large monitor it lands on a clean 5\u00d7 scale." },
+  ]},
   { v:"4.35.0", code:122, date:"2026-07-26", name:"Where You Left It", notes:[
     { t:"fix", s:"Tom's sell list stays put. It was ordered by whenever each thing first entered your bag, and selling out of something removes it \u2014 so earning it again sent its row to the bottom. On the one screen where you empty stacks by definition, the list reshuffled itself almost every visit. Crops, fish and dishes are grouped first now (matching the sell-all button above them), then everything else, each in alphabetical order." },
     { t:"fix", s:"The same fix for the machine loader and the gift picker \u2014 both were in that same shifting order, and both are things you do daily aimed at a tile you remember." },

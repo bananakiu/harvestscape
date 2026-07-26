@@ -36,11 +36,23 @@ body{
 /* ---------- stage & canvas ---------- */
 #stage{
   position:relative;
-  width:min(1040px, 98vw);
+  /* v4.36 "True Pixels": size from BOTH axes, always.
+     This used to declare `aspect-ratio:320/208` and then clamp the derived height with a
+     `max-height` and NO matching `max-width`. Per CSS sizing that abandons the ratio outright, so
+     every viewport short enough for the clamp to bind drew the whole game horizontally stretched —
+     measured 1.71 against a target of 1.538 at 1280x700.
+     That is not merely cosmetic. `_textScale` (05-particles.js) is computed as `w / VIEW_W` — width
+     only — and `flushText` applies that same factor to Y. On a stretched stage every string on the
+     #gtext overlay (NPC name tags, +XP and +gold floaters, HOLD prompts) is positioned with the
+     wrong vertical scale: at 1280x700 a tag at world y=190 drew 62px low, i.e. off the stage
+     entirely. Expressing the height limit as a WIDTH term keeps scaleX === scaleY, which makes that
+     whole class of bug impossible rather than merely unlikely.
+     --chrome is the one-line controls strip below the stage plus its margin. It was 92px, sized for
+     the two-line strip that v4.32 replaced; the strip measures 29px now, so the old figure was
+     silently costing ~60px of stage height at every window size. */
+  --chrome:56px;
+  width:min(1600px, 98vw, calc((100dvh - var(--chrome)) * 320 / 208));
   aspect-ratio:320 / 208;
-  /* leave room for the two-line controls hint below — a 94dvh stage pushed it off-screen and the
-     centered layout clipped it mid-glyph. On short viewports the hint hides instead (media rule). */
-  max-height:calc(100dvh - 92px);
   border-radius:10px;
   overflow:hidden;
   box-shadow:
@@ -794,13 +806,18 @@ body{
 #helpPanel .row{ align-items:center; }
 #helpPanel .row .lead{ font-size:1.05em; }
 
+/* v4.36: when the strip is hidden there is no chrome to reserve, so hand the height back through
+   --chrome rather than through a max-height. A max-height here would re-break the aspect ratio for
+   exactly the small screens that can least afford a stretched stage — which is what the old
+   `max-height:96dvh` did. */
 @media (max-width:640px){
   #belowbar{ display:none; }
+  #stage{ --chrome:2dvh; }
 }
 /* short viewports: give the game the height back; the hints would crowd it out */
 @media (max-height:520px){
   #belowbar{ display:none; }
-  #stage{ max-height:96dvh; }
+  #stage{ --chrome:2dvh; }
 }
 
 /* v3.40 — quantity boxes (the owner's sell/pledge steppers). Sized for three digits, themed to the panel. */
