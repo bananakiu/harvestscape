@@ -22,6 +22,52 @@
 
 ---
 
+## 2026-07-26 — v4.35.0 "Where You Left It" (code 122, tag `v4.35.0`) — the three lists v4.30 missed
+
+### Why this release
+
+v4.30 fixed insertion-order shuffling in the backpack and stopped there. A grep for
+`Object.keys(state.inv)` found **three more player-facing lists** with the identical defect, and the
+worst of them is the one where it bites hardest.
+
+The mechanism, unchanged from v4.30's write-up: `state.inv` is iterated in key-insertion order, and
+`take()` **deletes** a key when it hits zero. So spending the last of something and acquiring it again
+moves its row to the bottom of the list — the exact opposite of the fixed-position muscle memory a
+list like this is supposed to build.
+
+### Fixed — Tom's sell list
+
+This is the screen where you empty stacks *by definition*. Every visit sold something out, every
+harvest put it back, and the list rearranged itself almost every time you opened it. It also carries
+index-keyed quantity boxes (`sq_0`, `sq_1`, …), so a reshuffle moves which stepper belongs to which
+row between visits.
+
+Sorted **produce first, then everything else, alphabetical within each group**. Produce-first because
+the "sell all produce — your materials stay put" button sits directly above the rows, and the list
+should agree with the affordance it's under: what you came to sell is at the top, and the materials
+that button deliberately protects are visibly separate below.
+
+### Fixed — the machine loader and the gift picker
+
+Same defect, same shifting order. Loading a keg empties a crop stack; gifting is a daily habit aimed
+at a tile you remember. Both sorted alphabetically.
+
+### Verified
+
+Built a deliberately scrambled insertion order (`Wood, Salmon, Stone, Turnip, Iron Ore, Carrot,
+Copper Ore, Trout, Potato`), rendered the sell list, then **sold out of two different items and
+re-earned them** — the precise motion that used to move a row — and re-rendered:
+
+```
+before: Carrot Potato Salmon Trout Turnip | Copper Ore Iron Ore Stone Wood
+after:  Carrot Potato Salmon Trout Turnip | Copper Ore Iron Ore Stone Wood
+```
+
+Byte-identical, produce grouped ahead of materials, alphabetical within each. Machine loader and gift
+picker each confirmed sorted against their own scrambled inputs. All 16 files parse; console clean.
+
+---
+
 ## 2026-07-26 — v4.34.0 "Said Aloud" (code 121, tag `v4.34.0`) — two things the game changed without mentioning
 
 ### Why this release

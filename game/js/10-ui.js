@@ -1082,7 +1082,14 @@ function renderShop(){
   const shopTab = panelTabs("shopPanel", "shopTabs", TABS, renderShop);
   let html = "";
   if(shopTab === "sell"){
-    const sellables = Object.keys(state.inv).filter(i => ITEM_SELL[i]);
+    // v4.35: stable order. v4.30 fixed exactly this in the backpack and stopped there — these rows were
+    // still in `Object.keys` insertion order, and since `take()` deletes a key at zero, SELLING something
+    // and earning it again sent it to the bottom of the list. This is the screen where that happens most:
+    // you empty stacks here by definition, so the list reshuffled itself on almost every visit.
+    // Produce first, matching the "sell all produce" button directly above it, then alphabetical within
+    // each group — so the things you came to sell are at the top and stay where you left them.
+    const sellables = Object.keys(state.inv).filter(i => ITEM_SELL[i])
+      .sort((a, b) => (isProduce(b) - isProduce(a)) || a.localeCompare(b));
     if(!sellables.length) html += `<div class="locked">Nothing to sell yet — go harvest, chop, mine or fish!</div>`;
     // v4.11: one-click "sell all produce" — crops, fish & cooked dishes only (materials are kept safe).
     const pv = (typeof produceValue === "function") ? produceValue() : 0;
@@ -1499,7 +1506,9 @@ function openMachineChooser(kind, tx, ty){
 }
 function renderMachineChooser(kind, tx, ty){
   const M = MACHINES[kind], b = $("machPanel").querySelector(".body");
-  const items = Object.keys(state.inv).filter(it => (state.inv[it]||0) > 0 && M.accepts(it));
+  // v4.35: sorted, for the same reason as the sell list — you empty stacks into machines, so an
+  // insertion-ordered list reshuffles as you use it.
+  const items = Object.keys(state.inv).filter(it => (state.inv[it]||0) > 0 && M.accepts(it)).sort((a,b) => a.localeCompare(b));
   let html = `<div style="color:var(--ink-soft);margin-bottom:6px;">Pick what goes in.` +
     (kind === "sawmill" ? ` The mill takes up to ${M.batch} of one species.` : ` One at a time; ${M.days} ${M.days===1?"night":"nights"} each.`) + `</div>`;
   items.forEach(it => {

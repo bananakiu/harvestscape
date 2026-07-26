@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.34.0", code: 121, codename: "Said Aloud", date: "2026-07-26" };
+const VERSION = { name: "4.35.0", code: 122, codename: "Where You Left It", date: "2026-07-26" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"4.35.0", code:122, date:"2026-07-26", name:"Where You Left It", notes:[
+    { t:"fix", s:"Tom's sell list stays put. It was ordered by whenever each thing first entered your bag, and selling out of something removes it \u2014 so earning it again sent its row to the bottom. On the one screen where you empty stacks by definition, the list reshuffled itself almost every visit. Crops, fish and dishes are grouped first now (matching the sell-all button above them), then everything else, each in alphabetical order." },
+    { t:"fix", s:"The same fix for the machine loader and the gift picker \u2014 both were in that same shifting order, and both are things you do daily aimed at a tile you remember." },
+  ]},
   { v:"4.34.0", code:121, date:"2026-07-26", name:"Said Aloud", notes:[
     { t:"fix", s:"The last slot on your belt used to change without telling you. Set down your last beehive and it quietly became a crop \u2014 so the next time you pressed USE you planted a turnip where you meant to place a keg. It now says what the slot holds instead." },
     { t:"fix", s:"The noticeboard card says when what's being asked for is sitting in your cottage chest, so a request never looks impossible when it isn't." },

@@ -1638,7 +1638,8 @@ function giftPref(def, item){
 function giftNpc(id){
   const r = ensureRel(id), def = NPCDEF[id];
   if(r.giftedDay === state.day){ showDialog(def.name+"   "+heartStr(heartsOf(id)), "You already gave me something today — you're too kind. Save the rest for tomorrow. ♥", def.portrait); return; }
-  const giftables = Object.keys(state.inv).filter(i => ITEM_SELL[i] && ITEM_SELL[i]>0 && !i.endsWith("Seeds"));
+  // v4.35: sorted. Gifting is a daily habit aimed at a remembered tile; insertion order moved it.
+  const giftables = Object.keys(state.inv).filter(i => ITEM_SELL[i] && ITEM_SELL[i]>0 && !i.endsWith("Seeds")).sort((a,b) => a.localeCompare(b));
   if(!giftables.length){ toast("Nothing to give — crops, fish, gems and cooked food work."); return; }
   openGiftPicker(id, giftables);
 }
