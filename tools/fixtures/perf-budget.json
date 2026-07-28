@@ -1,24 +1,24 @@
 {
   "recorded": "2026-07-28",
-  "version": "5.7.0",
+  "version": "6.1.1",
   "note": "baseline = what it measured; budget = the ceiling (~3× time, 1.5× size). Re-record with: node tools/check-perf.mjs --set",
   "baseline": {
-    "migrateSave (dense)": 0.585,
-    "save serialize": 0.173,
+    "migrateSave (dense)": 0.549,
+    "save serialize": 0.171,
     "save size KB": 55.2,
-    "Strongbox export+parse": 1.422,
+    "Strongbox export+parse": 1.319,
     "export size KB": 55.3,
-    "map gen (slowest)": 1.014,
-    "map gen (all maps)": 3.834
+    "map gen (slowest)": 0.889,
+    "map gen (all maps)": 4.226
   },
   "budget": {
     "migrateSave (dense)": 2,
     "save serialize": 1,
     "save size KB": 83,
-    "Strongbox export+parse": 5,
+    "Strongbox export+parse": 4,
     "export size KB": 83,
-    "map gen (slowest)": 4,
-    "map gen (all maps)": 12
+    "map gen (slowest)": 3,
+    "map gen (all maps)": 13
   },
   "frame": {
     "measuredOn": "Apple M4 / macOS 26.1 / Chromium preview pane, dense-year3 fixture at noon",

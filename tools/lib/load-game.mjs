@@ -29,7 +29,13 @@ export const ROOT = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)
 // layer does calls into them. If a future migration reaches into one of those, add it here AND
 // stub what it needs; do not stub the game function itself.
 export const CORE_FILES = [
-  "00-core.js", "01-data.js", "04-world.js", "08-actions.js",
+  // ★ 06-weather.js was MISSING until v6.1.2, and its absence was silent. It holds `curHour`,
+  // `seasonOf`, `isRain/isStorm/isFog` and `beachEvent` — which `spawnMapNpcs` needs for every
+  // schedule and which `genMine` reads for its ore/gem weather boost. Adding the schedule harness
+  // surfaced it (every NPC "never spawned"), and it also means check-perf had been timing the mine
+  // generator through a thrown exception rather than through its real work. Nothing in it draws at
+  // load time, so it loads headlessly like the rest.
+  "00-core.js", "01-data.js", "04-world.js", "06-weather.js", "08-actions.js",
   "09-quests.js", "13-content.js", "15-warding.js", "14-story.js", "11-title.js",
 ];
 

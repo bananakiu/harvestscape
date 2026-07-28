@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "6.1.1", code: 137, codename: "Room to Stand", date: "2026-07-29" };
+const VERSION = { name: "6.1.2", code: 138, codename: "Room to Stand", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"6.1.2", code:138, date:"2026-07-29", name:"Room to Stand", notes:[
+    { t:"fix", s:"Nell walks up to the shop of an evening now instead of Tom walking down to the dairy \u2014 which was the plan, until it turned out it would have shut the shop three evenings a week. Same twenty-year marriage finally happening on screen; nothing closed." },
+    { t:"fix", s:"More room on the square. The four people on the plaza had their patches set edge to edge, which still let them meet along the borders; there are proper gaps between them now." },
+  ]},
   { v:"6.1.1", code:137, date:"2026-07-29", name:"Room to Stand", notes:[
     { t:"fix", s:"The plaza got crowded. Adding Wick and Corin to the village left three people sharing one patch of ground with Maya and Pip \u2014 they drifted to about a tile apart and their floating name tags sat on top of each other. The square is divided between its four people now: nobody's name covers anybody else's." },
   ]},

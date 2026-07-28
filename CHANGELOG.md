@@ -22,6 +22,52 @@
 
 ---
 
+## 2026-07-29 — v6.1.2 "Room to Stand" (code 138, tag `v6.1.2`) — the sweep becomes a file, and finds three more things
+
+### Why
+
+The v6.1 and v6.1.1 changelogs both claimed a sweep was "now the standard check for any schedule
+change." That check was a snippet typed into a browser console and thrown away — which is exactly the
+failure `GAME_BALANCE_PRINCIPLES.md` names from v5.0: **a rule nothing measures is a rule that quietly
+stops being true.**
+
+So it is a file now: **`tools/check-schedules.mjs`**, run alongside the others. It asserts three
+things, all of which are structurally invisible in a diff:
+
+1. **Nobody is ever in two places at the same moment** — swept across every NPC × every map × 13
+   hours × 28 days (364 snapshots, ~3,650 placements).
+2. **Every NPC appears somewhere in the week** — a character the player can never meet is the v4.6
+   unreachable-event bug in schedule form.
+3. **No two wander boxes collide their name tags**, measured by *simulating* 400 steps rather than by
+   comparing rectangles: two boxes can overlap on paper and never put their occupants close, and two
+   can barely touch and collide constantly.
+
+### It found three things immediately, and one of them was invisible to every other harness
+
+**★ `06-weather.js` was missing from the node loader — and its absence was silent.** It holds
+`curHour`, `seasonOf`, `isRain/isStorm/isFog` and `beachEvent`. The schedule harness surfaced it
+loudly (every NPC "never spawns", 0 placements), but the consequence reaches further:
+
+> **`check-perf.mjs` had never actually measured the mine generator.** `genMine` reads `isStorm()`
+> and `isFog()` for its ore and gem weather boost; with those undefined it threw, and the harness's
+> per-map `try/catch` dutifully reported it as unavailable — below the visible fold of the top-six
+> list. The mine now appears at **0.421 ms**, and the all-maps total moved 3.83 → 4.32 ms because a
+> real map joined the measurement rather than because anything got slower. Baseline re-recorded.
+
+**Tom's milk run was a double-booking, and the obvious fix was the wrong one.** The store branch has
+no hours — Tom is behind that counter 24/7, deliberately, so the shop always works — so sending him
+to the dairy put him in two places. Closing the shop three evenings a week to fix it would have
+traded a real convenience the player has always had for a flavour beat. **So Nell comes to him
+instead:** same beat, her genuinely free evening hours, nothing closed. Arguably better — she visits
+*him*, which inverts the assumption the scene was built on.
+
+**v6.1.1's plaza fix was incomplete.** It tiled the four boxes edge to edge, which still lets
+occupants meet along a shared border; the harness measured 18px where a single hand-run had reported
+34px. There are now two clear tiles between every pair (the corridors at x20–21 and y14–15).
+
+*The general shape of all three: a single measurement taken once by hand is an anecdote. The same
+measurement taken 400 times at three hours across 18 maps is a fact.*
+
 ## 2026-07-29 — v6.1.1 "Room to Stand" (code 137, tag `v6.1.1`) — v6.1's own crowding, fixed
 
 A regression from adding people, caught by looking rather than by a test.
