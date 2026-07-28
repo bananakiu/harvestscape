@@ -1,6 +1,10 @@
 # Version 6 — The Valley, Whole (the plan)
 
-> **Status:** roadmap, not built — and **deliberately one notch less locked than `V5_PLAN.md`.**
+> **Status:** roadmap, not built. ★ **All five §4 owner decisions RESOLVED 2026-07-29** — the child is
+> in, the Long Round pays a walk-out bonus (never a fall penalty), the deep is endless and procedural,
+> the audio is the full seasonal identity, and the "one newcomer" question was superseded by a
+> village-population program that **re-cut the release train** (§2, §4.1). Still **deliberately one
+> notch less locked than `V5_PLAN.md`.**
 > V6 is the second of the two versions the owner asked for (direction 2026-07-28, `DEVLOG.md`).
 > Everything here is designed against the game as it will stand *after* V5; re-verify every anchor
 > and re-ground the priorities against real V5 playtest signal before building v6.0. The analysis
@@ -57,10 +61,43 @@ different from year 1?* Four programs:
 
 ## 2. The release train
 
-Order rationale: the deep flagship first (it is the headline, it double-counts against `V4_PLAN`'s
-oldest debt, and its venues host later tail unlocks); telemetry second (cheap, retroactive,
-re-lights the blanked goal card early in the version); then the calendar; then ease; people and
-ceremony close the version because they read best when everything else is alive.
+> ★ **RE-CUT 2026-07-29** on the owner's direction (§4.1). The original order put the deep flagship
+> first and people fifth of seven. The owner's stated experience of the game is *"the village still
+> feels empty and it doesn't feel like there is enough stuff to do"* — said after ten V5 releases
+> that added a great deal of depth. **People move to the front.** The original rationale is kept
+> below the table for the record.
+
+**Order rationale (revised).** The village program leads, because it is the thing the owner is
+actually missing and because it is *breadth* — new faces and doors that open, which is what reads as
+"more to do" when depth already exists. The deep flagship follows immediately (it is still the
+headline feature, and still pays `V4_PLAN`'s oldest debt). Telemetry lands third — cheap, retroactive,
+and it re-lights the blanked goal card. Then the calendar, then ease, then ceremony last, because a
+100% ceremony can only be written once everything it counts exists.
+
+| Release | Contents |
+|---|---|
+| **v6.0 "The Wrens and the Harrows"** | ★ **The two latched doors open.** Both south-lane houses have carried family names on their signs since v3 behind a comment promising "a later chapter" — this is that chapter. **Two households, four new people**, each meeting the full bar the existing cast meets (schedule, gift tastes, recognitions, festival presence, a heart ladder to 10, heart events of their own): the **Wrens**, and the **Harrows**. Interiors on the `genRoom` pattern; NPCs on `NPCDEF` + `spawnMapNpcs`; hearts on the v5.6 ten-tier ladder. **The cast goes 7 → 11 and the village stops being a set.** |
+| **v6.1 "Neighbours"** | ★ **They have lives, not just presence.** The co-location pass the original plan buried in v6.5 — Tom delivers Nell's milk on Tuesdays, visibly; Pip fishes beside Bram some mornings; the new households have standing business with the old cast. Plus **the returned warden** (the original §4.2 recommendation, kept — it pays `V4_PLAN`'s dangling thread and attaches a person to the deep) as a **third romance candidate**, and **a newcomer arriving is itself an event**: the valley's repopulation becomes visible rather than asserted. |
+| **v6.2 "Below the Bottom"** | The deep flagship, unchanged in content, moved back two slots. The **Gloam Grove ring** (Woodcutting ~55) and the **Sunken Workings** (Mining ~55); **the Long Round** — an opt-in descent below floor 45, ★ **endless and procedurally generated**, composition and count scaling while stats stay honest (owner decision §4.4). ★ **Scoring: a depth record PLUS a banked bonus for walking out** (owner decision §4.3) — and the contract line is absolute and unchanged: **bonus-on-exit only, never loss-on-knockout.** A knockout costs nothing carried and nothing found; walking out multiplies what you gained. Plus the weekly seed ("the wing dreams"). |
+| **v6.3 "The Ledger of the Valley"** | The perfection meter ("The Valley, Whole"), the records book, the Harvest Fair judging your own record book, post-99 cape ranks. All derived from state that already exists, all retroactive, zero migration — and it permanently fixes `standingGoalsHtml` blanking at the top. |
+| **v6.4 "The High Craft"** | One transformative unlock per skill at ~L92 — the greenhouse, the heartwood coppice, the assay bench, Bram's deep-sea charter (+ the third late legend), the feast table, the tenth warden's round. The 45.4% tail, at last. |
+| **v6.5 "The Turning Year"** | A second festival per season, each *playable* rather than watched; year-aware recurrence keyed to story flags, married state, records set and year count. ★ **Plus the full seasonal audio identity** (owner decision §4.5) — seasonal music variants, festival themes, ambient wind/surf/rain beds. Moved here from the closing release because the second festivals are exactly what the new music has to carry. **★ The listening pass is in the definition of done and is not optional.** |
+| **v6.6 "The Irrigation Ledger"** | Earned automation as visible purchasable dreams, capped so attended play always out-earns it; the Loom and the fibre chain (feeding v5.7's interior catalog its second wave); Wine and Jam into gift/order/writ tables. |
+| **v6.7 "The Hundredth Light"** | ★ **The child** (owner decision §4.1) — gives, never demands, no meters, no neglect, a presence that only ever adds. Placed last on purpose: a child belongs in a house that is already furnished (v5.7), in a marriage that already has an arc (v5.5), in a village that is already full (v6.0–6.1). Plus the 100% ceremony, the founding star relit, the records of past valleys, and the polish bundle. |
+
+<details><summary>Original order and rationale, for the record</summary>
+
+> Order rationale: the deep flagship first (it is the headline, it double-counts against `V4_PLAN`'s
+> oldest debt, and its venues host later tail unlocks); telemetry second (cheap, retroactive,
+> re-lights the blanked goal card early in the version); then the calendar; then ease; people and
+> ceremony close the version because they read best when everything else is alive.
+>
+> Original train: v6.0 Below the Bottom · v6.1 The Ledger of the Valley · v6.2 The High Craft ·
+> v6.3 The Turning Year · v6.4 The Irrigation Ledger · v6.5 New Faces · v6.6 The Hundredth Light.
+
+</details>
+
+<details><summary>The original release table (superseded — kept because its content specs still stand)</summary>
 
 | Release | Contents |
 |---|---|
@@ -72,6 +109,8 @@ ceremony close the version because they read best when everything else is alive.
 | **v6.5 "New Faces"** | **One newcomer with a full arc** (the valley's repopulation made real — a returned warden fits `V4_PLAN`'s dangling thread), full heart ladder, schedule, recognitions, festival presence — and **a third romance candidate** if the owner wants the replay hook. **The child, if the owner says yes** (★ decision point below): giving-never-demanding, no care meters, no neglect states — a child that *adds* scenes and never subtracts anything. **NPC pairs** — the co-location pass: Tom delivers Nell's milk on Tuesdays, visibly; Pip fishes beside Bram some mornings. The twenty-year marriage the dialogue describes finally happens on screen. |
 | **v6.6 "The Hundredth Light"** | **The 100% ceremony** — when the Valley, Whole meter fills: a bespoke valley-scale ceremony on the anniversary template, a permanent visible change (the founding star relit over the ridge — cosmetic, per the cape precedent), and **"the records of past valleys"** — a title-screen memorial page listing finished saves' headline numbers, the game's first acknowledgment that long-lasting play sometimes means playing again. **The audio identity pass** rides here or earlier as capacity allows: seasonal music variants, a festival theme, wind/surf/rain ambient beds — with a *listening* pass explicitly in the definition of done (the scorecard item deferred seven audits running because testing runs muted). **The polish bundle:** machine ready-state cues, the rod-and-cast pose, chimney smoke — the "farm that shows its state" set. |
 
+</details>
+
 ## 3. Constraints carried into every V6 build
 
 1. **The Long Round's knockout rule is the version's load-bearing sentence** (§2, v6.0) — it is the
@@ -82,27 +121,80 @@ ceremony close the version because they read best when everything else is alive.
    as v5.2 did for Resolve food.
 3. **Records only rise; contests are never losable** — derby "competition" is your own record book
    plus NPC flavor rivals; no withheld reward exists anywhere in the version.
-4. **The child (if built) can never be neglected** — no meters, no states that read as your
-   failure. It gives; it never demands.
+4. **The child can never be neglected** (★ now BUILT, per §4.1) — no meters, no states that read as
+   your failure. It gives; it never demands.
+5. ★ **A new NPC either meets the full bar or is not a character.** The owner's word was
+   *"functional"*: schedule, gift tastes, recognitions, festival presence, a heart ladder to 10, and
+   heart events of their own. Someone who merely stands somewhere satisfies the request on paper and
+   fails it in play — and would make the village feel *more* like a set, not less.
+6. ★ **V6 weights toward BREADTH.** The owner reported "not enough to do" *after* ten releases that
+   added a great deal to do. Depth on systems a player already uses does not register; new doors,
+   new faces and new small reasons to walk into the village do. When a release could go either way,
+   it goes wide.
 5. **Retroactivity is the default** — the meter, records, post-99 ranks, the terminal fight, year
    variants: every one lands fully on a save that "finished" years ago, the QP precedent
    throughout. Zero features in V6 require starting over.
 6. **The tier ladder still does not move; no asset files, still** — the L92 unlocks are venues,
    builds and verbs, not new tiers; every new sprite and sound remains procedural.
 
-## 4. Owner decision points (before building v6.0)
+## 4. Owner decision points — ★ ALL RESOLVED 2026-07-29
 
-1. **The child: yes or no.** The sketch is contract-clean, but it is a tonal commitment the owner
-   should make explicitly, not inherit from a roadmap.
-2. **The newcomer's identity** — the returned warden (recommended; pays `V4_PLAN`'s dangling
-   thread) vs. a wholly new face; and whether they are the third romance candidate.
-3. **Long Round scoring** — depth-record only (recommended: pure, unlosable) vs. a banked-bonus
-   multiplier for walking out (legal *only* as bonus-on-exit, never loss-on-knockout — if this
-   distinction ever feels blurry in playtest, ship record-only).
-4. **How deep "below the bottom" goes** — endless with soft-scaling composition (recommended;
-   composition and count scale, stats stay honest) vs. a fixed second wing (floors 46–90).
-5. **Audio scope** — the full seasonal identity vs. festival themes + ambient beds only. The
-   listening pass is non-negotiable either way; the scope is.
+Taken at full scope. Three override this plan's own recommendation; that is the owner's call and is
+recorded, not re-argued. Build against the **Decision** line. (`DEVLOG.md`, same date.)
+
+1. **The child** → ★ **YES, build it.** On the contract-clean sketch: gives and never demands, no
+   care meters, no neglect states, nothing that can read as your failure.
+2. **The newcomer's identity** → ★ **SUPERSEDED BY A LARGER ASK.** The question was "one newcomer:
+   returned warden or new face?" The answer was *a lot more characters*, because **the village feels
+   empty and there isn't enough to do**. This stopped being a casting decision and became a program —
+   see §4.1 and the re-cut train in §2.
+3. **Long Round scoring** → ★ **Record PLUS a banked bonus for walking out.** (This plan recommended
+   record-only; overridden.) **The constraint is unchanged and absolute: bonus-on-exit ONLY, never
+   loss-on-knockout.** Walking out multiplies what you gained; falling costs nothing carried and
+   nothing found. §3's load-bearing sentence binds exactly as written. If the distinction ever blurs
+   in play, it reverts to record-only — that fallback stays on the table permanently.
+4. **How deep** → ★ **ENDLESS, procedurally generated.** Composition and count scale; stats stay
+   honest (no HP inflation). No fixed floor, because a fixed floor just moves "the wing ends here"
+   down 45 rungs — the exact defect v5.4 shipped to fix.
+5. **Audio scope** → ★ **The FULL seasonal identity.** Seasonal music variants, festival themes, and
+   ambient wind/surf/rain beds. The listening pass in the definition of done was already
+   non-negotiable and stays so — this has been deferred seven audits running because testing runs
+   muted, which is exactly how you ship audio nobody has heard.
+
+### 4.1 ★ The village program — the direction that re-shaped this plan
+
+**The owner's words:** *"I actually want a lot more characters on the horizon because right now the
+village still feels empty and it doesn't feel like there is enough stuff to do, like there are two
+empty houses and stuff. So it would be good to have to fill it in with the story and make them
+functional characters that have their own lives and their own scenes."*
+
+**The complaint is verifiable in the source, and it is worse than remembered.** `genVillage`
+(`13-content.js`) raises **two houses on the south lane with family names on their signs** — *"The
+Wrens'"* and *"The Harrows'"* — with latched doors and this comment:
+
+> `// --- ambient neighbours on the south lane (doors are latched; they open in a later chapter) ---`
+
+**The game has named two families in the village square since v3 and promised "a later chapter" that
+never came.** Same defect class v5.5 fixed for the spouse — a promise the game makes out loud and
+does not keep — except this one is read every single day, on the way to the store.
+
+Three separable asks, and collapsing them would fail the direction:
+
+- **Population.** More people, not one person. Seven NPCs for a valley whose entire story is
+  *repopulation* is a thematic contradiction the content has never resolved.
+- **Function.** *"Functional characters that have their own lives and their own scenes."* The bar is
+  the one the existing cast already meets: schedule, heart ladder to 10, gift tastes, recognitions,
+  festival presence, heart events. **A new NPC who merely stands somewhere fails this ask while
+  technically satisfying it.**
+- **Breadth, not depth.** *"It doesn't feel like there is enough stuff to do"* — said **after** ten
+  V5 releases that added a great deal to do. That is the finding, not a contradiction of it. V5 was
+  almost entirely *depth* (ladders, trials, the deep, the home). Depth added to systems a player
+  already engages with does not register as "more to do"; **new surfaces do.** V6 must weight toward
+  new doors, new faces and new small reasons to walk into the village.
+
+**Consequence for the train:** v6.5 "New Faces" was one newcomer plus an optional child, fifth of
+seven, behind the deep flagship. On the owner's stated priority that ordering is wrong. The village
+program is promoted to the front and expanded; §2 is re-cut below.
 
 ## 5. The sequencing truth between the two versions
 

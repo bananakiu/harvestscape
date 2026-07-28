@@ -247,9 +247,19 @@ tests a copy tests nothing.
   keep. ★ **All ten V5 releases are built (v5.0–v5.9); every §4 item shipped and every §6 decision is
   resolved and recorded in `V5_PLAN.md`.** The linter graded the version's own work: Mining 88.5% →
   60.9% dead, Warding 88.5% → 59.1%, Fishing 79.0% → 56.8%.
-  **Next: `V6_PLAN.md`** — but read its header first. It is deliberately one notch less locked than V5
-  was and says to re-ground against real V5 playtest signal before building v6.0, and its five owner
-  decisions (the child above all) are OPEN. Do not inherit them from the roadmap; ask. Build it the
+  **Next: `V6_PLAN.md`** — ★ **all five §4 owner decisions are now RESOLVED (2026-07-29)** and the
+  release train has been **RE-CUT** around the biggest of them. Build against §4's Decision lines and
+  §2's revised table, not the original: the child is IN (placed last, in a furnished house and a full
+  village); the Long Round pays a **banked bonus for walking out** and — absolutely — **never a
+  penalty for falling**; the deep below 45 is **endless and procedural**; audio is the **full seasonal
+  identity** with a mandatory listening pass. ★ The fifth question ("one newcomer, who?") was
+  superseded: the owner reported *"the village still feels empty… two empty houses"*, which is
+  verifiable — `genVillage` has raised **"The Wrens'"** and **"The Harrows'"** since v3 behind latched
+  doors and a comment promising "a later chapter". **v6.0 opens them: two households, four people,
+  each meeting the FULL cast bar (schedule, gift tastes, recognitions, festival presence, hearts to
+  10, own heart events). A new NPC who merely stands somewhere fails this ask.** ★ And the meta-lesson
+  driving the re-cut: "not enough to do" was said AFTER ten depth-heavy releases — **V6 weights toward
+  breadth**; new doors and faces register as "more to do", more depth on existing systems does not. Build it the
   `V4_BUILD_PLAN.md` way — write that release's build order fresh, re-verify every symbol anchor
   `V5_PLAN.md` names, one release per session, strictly in order.
   ★ Two load-order lessons from v5.1, both worth carrying: (1) a `const X = f()` evaluated at load in

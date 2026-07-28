@@ -14,6 +14,76 @@
 
 ---
 
+## 2026-07-29 — Direction: the V6 decisions, and "the village still feels empty"
+
+**Owner direction (near-verbatim), answering `V6_PLAN.md` §4's five open decisions:**
+
+> Yeah, sure, add the child. I actually want a lot more characters on the horizon because right now
+> the village still feels empty and it doesn't feel like there is enough stuff to do, like there are
+> two empty houses and stuff. So it would be good to have to fill it in with the story and make them
+> functional characters that have their own lives and their own scenes, right?
+>
+> Regarding the long round scoring, record plus bank bonus for walking out. How deep does below the
+> bottom go? Endless procedurally generated stuff like that. For the audio scope, full seasonal
+> activities identity rather than festival themes and ambits also. So all.
+
+**The five decisions, resolved.** All five taken at full scope; three of them override the plan's own
+recommendation, which is the owner's call and is recorded as such rather than re-argued:
+
+1. **The child — YES.** Build it, on the plan's contract-clean sketch (gives, never demands; no care
+   meters, no neglect states, nothing that reads as your failure).
+2. **The newcomer — ★ SUPERSEDED, and this is the important one.** The question asked was "one
+   newcomer: returned warden or new face?" The answer given was much larger: *a lot more characters*,
+   because **the village feels empty and there isn't enough to do.** This is no longer a casting
+   decision; it is a program. See below.
+3. **Long Round scoring — record PLUS a banked bonus for walking out.** (Plan recommended
+   record-only.) The constraint that makes this legal is unchanged and absolute: **bonus-on-exit
+   only, never loss-on-knockout.** Walking out multiplies what you gained; falling costs nothing you
+   carried or found. If that line ever blurs in play, it reverts to record-only.
+4. **How deep — ENDLESS, procedurally generated.** (Plan recommended this.) Composition and count
+   scale; stats stay honest.
+5. **Audio — the FULL seasonal identity.** (Plan offered festival themes + beds as the smaller
+   option.) Seasonal music variants, festival themes, ambient beds. The listening pass in the
+   definition of done was already non-negotiable and stays so.
+
+**★ Interpretation — the real signal here is #2, and it re-shapes V6.**
+
+The literal complaint is verifiable in the code, and it is worse than the owner remembered. `genVillage`
+(`13-content.js`) builds **two houses on the south lane with family names on signs** — *"The Wrens'"*
+and *"The Harrows'"* — with doors that are latched shut and a source comment reading:
+
+> `// --- ambient neighbours on the south lane (doors are latched; they open in a later chapter) ---`
+
+**The game has been advertising two families by name since v3, with a promise of "a later chapter"
+that has never arrived.** That is precisely the defect class v5.5 shipped to fix for the spouse (a
+promise the game makes out loud and then doesn't keep), except this one is nailed to the village
+square where it is read every single day.
+
+Two distinct asks are bundled in the quote and should not be collapsed:
+
+- **Population** — more people, not one person. The cast is 7 (Maya, Tom, Rowan, Bram, Pip, Elias,
+  Nell) for a valley the story says is *repopulating*, which is a thematic contradiction the content
+  has never resolved.
+- **Function** — *"functional characters that have their own lives and their own scenes."* Not
+  set dressing. The bar named is the one the existing cast meets: a schedule, a heart ladder, gift
+  tastes, recognitions, festival presence, and scenes of their own. A new NPC that only stands
+  somewhere would fail this ask while technically satisfying it.
+
+And a third, quieter one: *"it doesn't feel like there is enough stuff to do."* Note this comes
+**after ten V5 releases that added a great deal to do** — which is itself the finding. The V5 work was
+overwhelmingly *depth* (ladders, trials, the deep, the home). The owner is describing a want for
+*breadth at the surface* — more people to see, more doors that open, more small reasons to walk into
+the village. Depth added to systems a player already engages with does not register as "more to do";
+new surfaces do.
+
+**What this changes in `V6_PLAN.md`.** v6.5 "New Faces" was one newcomer plus an optional child, fifth
+in a train of seven, behind the deep flagship. That ordering is now wrong on the owner's own stated
+priority. The village program is promoted and expanded; the plan's §2 release train is re-cut around
+it, with the Wrens' and the Harrows' doors as the concrete anchor — two houses, two families, already
+named, already standing, already promised.
+
+→ Produced: the `V6_PLAN.md` §4 resolutions and the re-cut release train (same entry date).
+
 ## 2026-07-28 — Direction: the thousand-foot view → a two-version roadmap
 
 **Owner direction (near-verbatim):**
