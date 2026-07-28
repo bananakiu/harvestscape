@@ -85,9 +85,11 @@ Sell and upgrade at **Tom's stall**; **sleep at your cottage door** to pass the 
   cottage, hearts to 10, the ferry merchant. **Shipped so far: v5.0 "The Strongbox"** (save
   export/import, the migration harness, the perf budget, the unlock-cadence linter) and **v5.1 "The
   Trials"** (mastery trials at 50 and 75 for all six crafts, the Warding technique ladder, the Stave
-  arts). Every owner decision in §6 is resolved. Shipped through **v5.7 "Four Walls"** — the mastery trials,
-  the Cooking→Resolve economy, the gem seams, the boss ladder and the floor-45 terminal fight, the
-  spouse moving in, hearts to ten, and a cottage you furnish and keep. v5.8 "The Ferry Comes In" is next.
+  arts). ★ **Version 5 is complete** — all ten releases (v5.0–v5.9), every owner decision resolved: save
+  export/import and the checks, mastery trials at 50 and 75, the Warding techniques and Stave arts, food
+  that steadies you in the deep, gem seams, the boss ladder and the floor-45 terminal fight, the spouse
+  moved in, hearts to ten, a cottage you furnish and expand, the ferry and the rare sky, and the Guild's
+  writ.
 - `V6_PLAN.md` — the Version 6 roadmap ("The Valley, Whole"): the elder game — the deep venues + the
   uncapped Long Round, the perfection ledger + records book, year-aware festivals, earned automation,
   the 100% ceremony. Directional; re-ground after V5. Roadmap, not built.

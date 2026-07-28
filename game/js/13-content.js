@@ -1762,6 +1762,19 @@ function talkNpc(id){
     startMarriage(id); return; }
   const ev = heartEventFor(id);
   if(ev){ state.flags[ev.flag] = true; startCutscene(ev.steps); return; }
+  // v5.9: Rowan keeps the writ. Opened by TALKING to him rather than by a new object, because the
+  // Guild hall already has a ledger, a noticeboard and nine wings in it, and the valley does not need
+  // another thing to walk up to and press E on.
+  if(id === "rowan" && state.flags.act1Done && !state.flags.turnInPending){
+    const rem = writRemaining(), open = Object.keys(rem).length;
+    if(open || writFunded()){
+      showDialog("Elder Rowan   " + heartStr(heartsOf("rowan")),
+        (state.writDone ? "There is always another." : "The Guild keeps a writ — a list of what the valley needs next. Take it or leave it lying; it will not go anywhere.") +
+        "\n\n“" + currentWrit().blurb + "”", NPCDEF.rowan.portrait);
+      setTimeout(() => openPanel("writPanel", renderWrit), 260);
+      return;
+    }
+  }
   if(tryMarriedScene(id)) return;   // v5.5: the arc past the bouquet — outranks everything but a heart event
   // v5.1: the mastery trial's scene. Placed AFTER heart events (a friendship beat is the rarer thing
   // and should never be queued behind a craft errand) and BEFORE the noticeboard filler, so the ask

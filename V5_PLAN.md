@@ -1,6 +1,13 @@
 # Version 5 — A Life in the Valley (the plan)
 
-> **Status:** roadmap, not built. Owner direction 2026-07-28 (`DEVLOG.md`): *"take a thousand-foot
+> **★ Status: BUILT AND SHIPPED — all ten releases, v5.0 through v5.9, 2026-07-28/29.** Every item in
+> §4's release train shipped and every owner decision in §6 is resolved (see the ★ marks there). The
+> measured outcome, from the linter this version shipped in v5.0: Mining 88.5% → 60.9% dead share,
+> Warding 88.5% → 59.1%, Fishing 79.0% → 56.8%. Two decisions were changed mid-build by measurement
+> rather than opinion — the gem-seam rate (wrong by 6× until sampled) and the second legend's level
+> (75 → 80, because 75 was already a mastery milestone). Kept as the design record behind the version.
+>
+> *Original status line:* roadmap, not built. Owner direction 2026-07-28 (`DEVLOG.md`): *"take a thousand-foot
 > view… think about how it can be improved as a game that can be playable for a while… apply all the
 > good gaming concepts… a very detailed roadmap that can span maybe two whole big versions."*
 > **This is version one of two.** `V6_PLAN.md` is the second.

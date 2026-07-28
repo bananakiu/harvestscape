@@ -8,13 +8,19 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "5.8.0", code: 133, codename: "The Ferry Comes In", date: "2026-07-29" };
+const VERSION = { name: "5.9.0", code: 134, codename: "The Writ", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"5.9.0", code:134, date:"2026-07-29", name:"The Writ", notes:[
+    { t:"new", s:"Rowan keeps a writ \u2014 a list of what the valley needs next, sized to a few relaxed evenings. Eight of them, each asking for things from three different crafts, each one a job that visibly changes something: the village road re-lit, the Guild larder full, Bram's three half-built hulls finished, the ridge path shored before winter takes it." },
+    { t:"new", s:"There is no date on it. None. The next writ is only written when this one is finished \u2014 nothing expires, nothing is missed, and nobody is counting the days. Take a season over one if you like; you have lost exactly nothing." },
+    { t:"new", s:"Writs pay gold and writ marks, and marks buy four things the Guild gives and does not sell: a pennant for the kitchen wall, the writ desk, a row of little lamps lit the way the village road is lit, and a map of the valley drawn by somebody who watched you mend it." },
+    { t:"change", s:"The long-sight card in your Journal names the writ first \u2014 it's the only standing goal in the game that fits inside a few evenings rather than a season or a whole skill." },
+  ]},
   { v:"5.8.0", code:133, date:"2026-07-29", name:"The Ferry Comes In", notes:[
     { t:"new", s:"Some mornings the ferry is in. A trader ties up at the coast road landing with four things off the boat \u2014 seeds out of season, a deep material, something salvaged, a stone with no story \u2014 and two hours later the tide turns and he's gone. About twice a week, never on a day you could name in advance. Nothing he carries is anything the valley can't give you eventually; he just has it today." },
     { t:"new", s:"Some nights the sky does something. Meteor showers, the northern lights over the ridge, and once in about five years, the comet. The board tells you the evening before, so it's a thing you can plan an early night around \u2014 and it arrives as a MORNING, with star-glass in the grass, so sleeping is never the wrong move." },
@@ -1025,6 +1031,14 @@ const FURNITURE = {
   // the dear ones
   cornerdesk:  { name:"Corner Desk",      cost:2200, blurb:"For ledgers, letters, and the long evening sort of thinking." },
   standclock:  { name:"Standing Clock",   cost:5200, blurb:"It keeps the valley's time and says so, once an hour, whether asked or not." },
+  // v5.9: the writ set — bought with writ MARKS only, never with coin. The owner's reward-channel
+  // decision (`V5_PLAN.md` §6.2) needed a catalog to be worth anything, and this is it: four pieces
+  // that say, in a room, that you did the valley's work. Cosmetic to the last pixel, per the contract
+  // — marks may never gate anything a player needs.
+  guildbanner: { name:"Guild Pennant",  marks:6,  blurb:"The Guild's own colours, small enough for a kitchen wall. They gave you one." },
+  writdesk:    { name:"Writ Desk",      marks:10, blurb:"Where the valley's lists get written. There is always another list." },
+  lanternrow:  { name:"Lantern Row",    marks:14, blurb:"Five little lamps on a rail, lit the way the village road is lit." },
+  valleymap:   { name:"The Valley, Mapped", marks:20, blurb:"Every path you've mended, drawn by somebody who watched you mend them." },
 };
 // ============================================================
 // v5.8 "The Ferry Comes In" — the visiting merchant, Tom's Craving, and the rare sky.
@@ -1110,6 +1124,70 @@ function skyTonight(){
   for(const e of SKY_EVENTS){ acc += e.odds; if(r < acc) return e; }
   return null;
 }
+// ============================================================
+// v5.9 "The Writ" — the missing middle rung of the goal ladder. The last release of Version 5.
+//
+// The measured gap: the game has DAILIES (the noticeboard request, Nell's order, Elias's round) and
+// then, as the very next rung up, a FESTIVAL every 28 days. There is nothing in between — no goal
+// sized to a few relaxed evenings, which is exactly the size most play sessions actually are.
+//
+// ★ THE FRAMING DECISION, made deliberately and stated in the plan before a line was written: **the
+// writ rotates when COMPLETED, never on a timer.** No expiry, no streak, no "3 days left". The
+// living-world lens's anti-nagging objection (bible §8.4) is honoured by construction rather than by
+// restraint — there is no clock to be behind, so there is nothing to feel guilty about. A player who
+// takes a season over one writ has lost nothing at all.
+//
+// Cross-skill by construction, like the mastery trials: a writ names things from three different
+// crafts, so it cannot be fed by rabbit-holing. Sized to ~4–7 relaxed days.
+const WRITS = [
+  { id:"lanterns", name:"The Lantern Round",
+    ask:{ "Pine Lumber":14, "Copper Ore":10, "Cooked Salmon":4 },
+    blurb:"Rowan wants every lamp on the village road re-posted before the nights draw in.",
+    done:"The road is lit end to end. Folk are walking it after dark again, which is the whole point of a lit road." },
+  { id:"larder", name:"The Guild Larder",
+    ask:{ "Fine Cheese":5, "Honey":10, "Large Egg":10, "Wheat":24 },
+    blurb:"The hall feeds whoever turns up, and lately that is rather a lot of people.",
+    done:"The Guild larder is full for the first time since it closed. Rowan keeps opening the door to look at it." },
+  { id:"deeproad", name:"The Deep Road",
+    ask:{ "Iron Ore":16, "Stone":60, "Maple Lumber":10 },
+    blurb:"The lift line wants re-shoring: iron for the brackets, stone for the bed, maple for the cribbing.",
+    done:"The lift runs quiet now. A miner three floors down can hear themselves think, which they will tell you is a mixed blessing." },
+  { id:"boatyard", name:"The Boatyard",
+    ask:{ "Elder Wood":18, "Gold Ore":6, "Prize Fleece":5, "Fish Stew":3 },
+    blurb:"Bram has three hulls half-built and a shortage of everything that finishes a hull.",
+    done:"Three boats, finished, on the sand. Bram walked round them twice and said 'aye' and that was the speech." },
+  { id:"wing", name:"The Warden's Wing",
+    ask:{ "Gloam Thread":16, "Warden's Ash":8, "Ember Grit":10, "Peony Cordial":2 },
+    blurb:"Elias keeps the wing alone. He has stopped pretending that is sustainable.",
+    done:"The wing is stocked corner to corner. He said thank you twice, which from him is a parade." },
+  { id:"green", name:"The Festival Green",
+    ask:{ "Willow Lumber":16, "Silverwood Beam":2, "Starfruit Sorbet":3, "Cherry Tart":3 },
+    blurb:"The Green wants proper trestles and a canopy before the next festival, not the borrowed nonsense of last year.",
+    done:"Trestles, canopy, and a table long enough for everybody. Maya has already drawn it." },
+  { id:"ridge", name:"The Ridge Path",
+    ask:{ "Stone":80, "Heartwood Beam":4, "Cobalt Ore":8 },
+    blurb:"The switchbacks up to the ridge are one bad winter from being no path at all.",
+    done:"Cut, shored and stepped the whole way to the cairn. The view was always free; now the climb is fair." },
+  { id:"creamery", name:"The Butterbrook Line",
+    ask:{ "Oak Lumber":16, "Deepsilver Ore":6, "Large Milk":12, "Butterbrook Reserve":1 },
+    blurb:"Nell's creamery has outgrown its own plumbing, and she is too polite to say so loudly.",
+    done:"The creamery runs on new pipe and new sense. Nell says nothing and gives you cheese, which IS her saying something." },
+];
+// Writ marks — the reward channel the owner chose (`V5_PLAN.md` §6.2: gold + marks toward cosmetics).
+// ★ The dependency that came with that decision, honoured by the release order: marks are worthless
+// until a catalog exists, so v5.7's interior list had to land first. It did.
+function writIndex(){ return (state.writDone || 0) % WRITS.length; }
+function currentWrit(){ return WRITS[writIndex()]; }
+function writRemaining(){
+  const w = currentWrit(), paid = state.writBundle || {}, rem = {};
+  for(const it in w.ask){ const r = w.ask[it] - (paid[it] || 0); if(r > 0) rem[it] = r; }
+  return rem;
+}
+function writFunded(){ return Object.keys(writRemaining()).length === 0; }
+// Pay scales with how many you have finished, gently — the eighth writ asks for deeper things than
+// the first, so it should pay like it. Linear, never exponential (the lift's lesson, GBP §2.7).
+function writPay(){ return 6000 + 1500 * (state.writDone || 0); }
+function writMarks(){ return 3 + Math.floor((state.writDone || 0) / 2); }
 const HOME_MAX = 24;   // the cottage is 11×9; two dozen pieces dresses it without making it a warehouse
 const DECOR_MAX = 40;   // a generous cap so a farm can be dressed, but not infinitely spammed
 const ORCHARD_MAX = 30;   // v4.9: fruit trees were the ONE uncapped placeable (hives/machines/décor all cap). A full orchard, bounded — restores passive-beats-active income (more warranted now flat pricing removed the sell-side brake). Grandfathered: only blocks NEW plantings past the cap.

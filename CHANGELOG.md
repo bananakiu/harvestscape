@@ -22,6 +22,89 @@
 
 ---
 
+## 2026-07-29 — v5.9.0 "The Writ" (code 134, tag `v5.9.0`) — the missing middle rung, and the end of Version 5
+
+### Why this release
+
+The goal ladder has **dailies** (the noticeboard request, Nell's order, Elias's round) and then, as the
+very next rung, a **festival every 28 days**. There is nothing between them — no goal sized to a few
+relaxed evenings, which is exactly the size most play sessions actually are.
+
+### Added — the Guild's writ
+
+Eight standing bundles, cross-skill by construction like the mastery trials, each sized to ~4–7
+relaxed days and each a job that visibly changes something: the village road re-lit, the Guild larder
+full for the first time since it closed, Bram's three half-built hulls finished, the ridge path shored
+before a bad winter takes it. Rowan keeps it — opened by **talking to him**, not by a new object,
+because the Guild hall already has a ledger, a noticeboard and nine wings in it and the valley does
+not need another thing to walk up to and press E on.
+
+> **★ The framing decision, made in the plan before a line was written: the writ rotates when
+> COMPLETED, never on a timer.** No expiry, no streak, no "3 days left". The living-world lens's
+> anti-nagging objection (bible §8.4) is honoured **by construction** rather than by restraint —
+> there is no clock to be behind, so there is nothing to feel guilty about. A player who takes a
+> season over one writ has lost exactly nothing, and the panel says so in as many words.
+
+Two things it inherits on purpose, both named in `V5_PLAN.md` as part of this release's definition of
+done, and both bug classes this repo has already paid for:
+
+- **Chest-awareness** (v4.33's `matList` / `chestNote`) — every row prints what you carry *and* what
+  is sitting in the cottage chest, so an ask never looks impossible when it isn't.
+- **The v4.32 HOWTO figures** — every number the panel prints is the number the deposit uses.
+
+Pay scales linearly with writs closed (6,000g + 1,500 each), never exponentially — the lift's own
+lesson, GBP §2.7. The eighth writ asks for deeper things than the first, so it pays like it.
+
+### Added — writ marks, and the four things they buy
+
+**★ Shipped in the same release as the marks themselves**, because v5.6 taught this lesson twice in
+one afternoon: a number that buys nothing is a promise the game doesn't keep. Marks buy the **writ
+set** — a Guild pennant, the writ desk, a row of little lamps lit the way the village road is lit, and
+a map of the valley drawn by somebody who watched you mend it. All four are cosmetic to the last
+pixel (marks may never gate anything a player needs), all four are **earned and never sold** — they
+are filtered out of Tom's Cottage tab entirely — and all four slot into v5.7's interior catalog.
+
+This is the dependency the owner's reward-channel decision came with (`V5_PLAN.md` §6.2: *"marks want
+a small catalog to exist"*), and the release order honoured it: v5.7 landed the catalog, v5.9 spends
+into it.
+
+### Changed — the long-sight card names the writ first
+
+`standingGoalsHtml` now leads with the open writ, matching the existing `.qt-obj` row shape exactly
+rather than inventing a card style — it is the only standing goal in the game that fits inside a few
+evenings rather than a season or a whole skill.
+
+### Fixed on sight
+
+The panel's action button rendered as a bare browser button: every button style in this game is scoped
+`.row button`, and a `.buy` outside a `.row` inherits nothing. Caught on the first screenshot.
+
+---
+
+## ✦ Version 5 — "A Life in the Valley" — complete
+
+Ten releases, v5.0 through v5.9, every item in `V5_PLAN.md` §4 shipped and every owner decision in §6
+resolved and recorded.
+
+**The Ladder** — mastery trials at 50 and 75 for all six crafts (bank-and-release, grandfathered);
+the Warding technique ladder and the two Stave arts; the Cooking→Resolve economy and the tonics; the
+gem seams and Read-the-seams; the boss ladder and the floor-45 terminal fight; two late legends.
+
+**The Home** — the spouse moved in, with their things and an arc past the bouquet; hearts to ten with
+Tom's and Pip's long-missing capstones; a cottage you furnish, keep and expand; the ferry, the sky and
+Tom's craving; the writ.
+
+**Measured, not asserted.** The unlock-cadence linter shipped in v5.0 and then graded every content
+release that followed: **Mining 88.5% → 60.9% dead, Warding 88.5% → 59.1%, Fishing 79.0% → 56.8%.**
+Two design decisions were changed mid-build *by* that measurement — the seam rate (wrong by 6× until
+it was sampled) and the second legend's level (75 → 80, worth 17.9 percentage points because 75 was
+already a mastery milestone). The save harness grew from 437 invariants to 1,297 and caught three real
+defects; the perf budget caught two; the atlas generator caught a boot-killing TDZ.
+
+**Next: `V6_PLAN.md`.** It is deliberately one notch less locked than V5 was, and its own header says
+to re-ground it against real V5 playtest signal before building v6.0. Its five owner decisions — the
+child above all — are open and should be made explicitly rather than inherited.
+
 ## 2026-07-29 — v5.8.0 "The Ferry Comes In" (code 133, tag `v5.8.0`) — the week gets a texture
 
 ### Why this release

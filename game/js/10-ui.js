@@ -449,6 +449,22 @@ function pickPlantable(sel){
 let _goalCache = null, _goalStamp = "";
 function invalidateGoals(){ _goalCache = null; }
 function standingGoalsHtml(){
+  // v5.9: the writ is the first thing the long-sight card should name — it is the only standing goal
+  // in the game sized to a few evenings rather than a season or a whole skill.
+  if(typeof currentWrit === "function" && state.flags && state.flags.act1Done){
+    const w = currentWrit(), rem = writRemaining();
+    const total = Object.values(w.ask).reduce((a,b)=>a+b,0);
+    const left = Object.values(rem).reduce((a,b)=>a+b,0);
+    const pct = Math.round(((total-left)/total)*100);
+    // Matches the existing `.qt-obj` row shape exactly — a new card style here would make the one
+    // surface that already blanks look like two different features stacked.
+    const row = `<div class="qt-obj">✒ ${escapeHtml(w.name)} <span class="sub">` +
+      (writFunded() ? "ready — take it to Rowan" : `${pct}% · no date on it`) + `</span></div>`;
+    return row + _standingGoalsRest();
+  }
+  return _standingGoalsRest();
+}
+function _standingGoalsRest(){
   if(gameMode !== "play" || !state || !state.skills) return "";
   const stamp = state.day + ":" + (state.discovered ? Object.keys(state.discovered).length : 0);
   if(_goalCache !== null && _goalStamp === stamp) return _goalCache;
@@ -1303,7 +1319,8 @@ function renderShop(){
     const placed = Object.keys((state.home && state.home.objects) || {}).length;
     html += `<div class="desc" style="margin-bottom:.5em;color:var(--ink-soft);">Furniture for the cottage. Buy a piece, choose it from your placeables, and set it down inside — it stays where you put it, night after night, and the axe shifts it again if you change your mind. <span style="color:var(--gold-hi)">${placed}/${HOME_MAX} placed.</span></div>`;
     for(const k in FURNITURE){
-      const F = FURNITURE[k], own = state.inv[F.name]||0, cost = tomPrice(F.cost);
+      const F = FURNITURE[k]; if(F.marks) continue;   // v5.9: the writ set is earned, never sold
+      const own = state.inv[F.name]||0, cost = tomPrice(F.cost);
       html += `<div class="row"><span class="lead" data-icon="item_${F.name}"><canvas></canvas><span>${F.name}` +
         (own ? ` <span class="sub" style="color:var(--gold-hi)">×${own}</span>` : "") +
         `<br><span class="sub">${F.blurb}</span></span></span>` +
@@ -2308,6 +2325,96 @@ function doRestore(txt, msg){
   location.reload();
 }
 
+// ============================================================
+// v5.9 "The Writ" — the Guild's standing bundle, and V5's last release.
+//
+// Rendered into the Warden's-Ledger-shaped surface the game already uses for a bundle: a list of what
+// is wanted, what you carry, and a deposit that takes what you have and remembers the rest. Two
+// things this inherits ON PURPOSE, because both were bug classes the repo has already paid for:
+//   · **Chest-awareness** (v4.33's `matList` + `chestNote`): an ask never looks impossible when the
+//     thing is sitting in the cottage chest.
+//   · **The v4.32 HOWTO figures**: every number the panel prints is the number the deposit uses.
+// `V5_PLAN.md` names both as part of this release's definition of done.
+function renderWrit(){
+  const b = $("writPanel").querySelector(".body");
+  const w = currentWrit(), rem = writRemaining(), done = state.writDone || 0;
+  let html = `<div class="newsHead">${escapeHtml(w.name)}</div>` +
+    `<div class="desc" style="color:var(--ink-soft);margin-bottom:.6em;">“${escapeHtml(w.blurb)}”</div>`;
+  html += `<div class="desc" style="margin-bottom:.5em;color:var(--ink-soft);font-size:.88em;">` +
+    `Bring what you can, when you can. <b>There is no date on this.</b> The next writ is only written when this one is finished — ` +
+    `nothing expires, nothing is missed, and nobody is counting the days.</div>`;
+  for(const it in w.ask){
+    const need = w.ask[it], paid = (state.writBundle || {})[it] || 0;
+    const have = state.inv[it] || 0, shelved = (state.shelf || {})[it] || 0;
+    const ok = paid >= need;
+    html += `<div class="row"><span class="lead" data-icon="item_${it}"><canvas></canvas><span>${escapeHtml(it)} ` +
+      `<span class="sub" style="color:${ok?"var(--green)":"var(--ink-soft)"}">${Math.min(paid,need)}/${need} delivered</span>` +
+      `<br><span class="sub">you carry ${have}${shelved?` · ${shelved} in the chest`:""}</span></span></span>` +
+      `<span>${ok ? `<span class="sub" style="color:var(--green)">✔</span>` : ""}</span></div>`;
+  }
+  // `.row`, not `.setRow` — every button style in this game is scoped `.row button`, so a `.buy`
+  // outside a `.row` renders as a bare browser button. Caught on the first screenshot.
+  const canGive = Object.keys(rem).some(it => (state.inv[it] || 0) > 0);
+  html += `<div class="row"><span class="lead"><span>${writFunded() ? "Everything the writ asked for is delivered." : "Deliver whatever you're carrying — the ledger keeps the tally."}</span></span><span>` +
+    (writFunded()
+      ? `<button class="buy" onclick="closeWrit()">hand it in — ${writPay().toLocaleString()}g + ${writMarks()} marks</button>`
+      : `<button class="buy" ${canGive?"":"disabled"} onclick="depositWrit()">deliver what you have</button>`) +
+    `</span></div>`;
+  // v5.9 the marks exchange. Shipped in the SAME release as the marks themselves, because v5.6 taught
+  // this exact lesson twice in one afternoon: a number that buys nothing is a promise the game
+  // doesn't keep. Everything here is cosmetic — marks may never gate anything a player needs.
+  const marks = state.writMarks || 0;
+  html += `<div class="desc" style="margin:.8em 0 .3em;border-top:1px solid rgba(0,0,0,.18);padding-top:.55em;">` +
+    `<b style="color:var(--gold-hi)">✦ The writ set.</b> <span style="color:var(--ink-soft)">Four things the Guild gives, and does not sell. You have <b>${marks}</b> mark${marks===1?"":"s"}.</span></div>`;
+  for(const k in FURNITURE){
+    const F = FURNITURE[k]; if(!F.marks) continue;
+    const own = state.inv[F.name] || 0, can = marks >= F.marks;
+    html += `<div class="row"><span class="lead" data-icon="item_${F.name}"><canvas></canvas><span>${F.name}` +
+      (own ? ` <span class="sub" style="color:var(--gold-hi)">×${own}</span>` : "") +
+      `<br><span class="sub">${F.blurb}</span></span></span>` +
+      `<span><span class="price">${F.marks} marks</span> ` +
+      `<button class="buy" ${can?"":"disabled"} onclick="redeemWrit('${jsq(k)}')">take it</button></span></div>`;
+  }
+  html += `<div class="desc" style="margin-top:.6em;color:var(--ink-soft);font-size:.85em;">` +
+    `Writs closed: <b>${done}</b> · writ marks: <b>${state.writMarks || 0}</b>` +
+    (done >= WRITS.length ? ` — you have finished the whole book once. Rowan has started it again, and is not embarrassed about that.` : "") +
+    `</div>`;
+  b.innerHTML = html;
+  if(typeof hydrateIcons === "function") hydrateIcons(b);
+}
+function redeemWrit(kind){
+  const F = FURNITURE[kind]; if(!F || !F.marks) return;
+  if((state.writMarks || 0) < F.marks){ playSfx("error"); return; }
+  state.writMarks -= F.marks; give(F.name, 1, true);
+  toast(F.name + " — the Guild's own. Set it down inside.", "#ffe6a0");
+  playSfx("upgrade"); pSparkle(state.px, state.py - 12, "#ffd75a", 14);
+  saveGame(); refreshHUD(); renderWrit();
+}
+function depositWrit(){
+  const rem = writRemaining(), gave = [];
+  if(!state.writBundle) state.writBundle = {};
+  for(const it in rem){
+    const d = Math.min(state.inv[it] || 0, rem[it]);
+    if(d > 0 && take(it, d)){ state.writBundle[it] = (state.writBundle[it] || 0) + d; gave.push(d + "× " + it); }
+  }
+  if(!gave.length){ toast("Nothing on you that the writ still wants." + chestNote(Object.keys(rem)[0] || ""), "#c98a6a"); playSfx("error"); return; }
+  toast("Delivered " + gave.join(", ") + ".", "#8fe8c8"); playSfx("coin");
+  saveGame(); refreshHUD(); renderWrit();
+}
+function closeWrit(){
+  if(!writFunded()) return;
+  const w = currentWrit(), pay = writPay(), marks = writMarks();
+  state.gold += pay;
+  state.writMarks = (state.writMarks || 0) + marks;
+  state.writDone = (state.writDone || 0) + 1;
+  state.writBundle = {};                       // the next writ starts clean — and only NOW, never on a clock
+  banner("✒ " + w.name + " — done", w.done);
+  playSfx("upgrade"); pSparkle(state.px, state.py - 12, "#ffd75a", 24);
+  setTimeout(() => toast(`+${pay.toLocaleString()}g · +${marks} writ marks. Rowan is already writing the next one.`, "#ffe6a0"), 1400);
+  saveGame(); refreshHUD();
+  if(typeof invalidateGoals === "function") invalidateGoals();
+  renderWrit();
+}
 // The "What's New" / version-history panel — the player-facing mirror of CHANGELOG.md.
 function renderNews(){
   const b = $("newsPanel").querySelector(".body");

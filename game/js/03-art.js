@@ -997,6 +997,24 @@ function buildInteriors(){
     px(g,5,3,6,5,"#2c2018"); px(g,6,4,4,3,"#f2e4c2"); px(g,7,5,2,1,"#2c2018");
     px(g,7,9,2,4,"#c9922f"); px(g,7,13,2,1,"#8a6a2a"); });
 
+  // v5.9 the writ set — the four the Guild gives and does not sell. Guild colours: deep green and gold.
+  mkDecor("guildbanner", "Guild Pennant", 16, 16, g => {
+    px(g,2,2,12,1,"#6e4a2a"); px(g,4,3,8,9,"#2f5a3a"); px(g,4,3,8,1,"#3f7a4a");
+    px(g,7,5,2,5,"#ffce5a"); px(g,5,6,6,2,"#ffce5a"); px(g,7,6,2,2,"#fff0c0");
+    px(g,4,12,2,2,"#2f5a3a"); px(g,10,12,2,2,"#2f5a3a"); });
+  mkDecor("writdesk", "Writ Desk", 16, 16, g => {
+    px(g,1,6,14,2,"#8a5f38"); px(g,1,6,14,1,"#a5763f"); px(g,2,8,2,6,"#6e4a2a"); px(g,12,8,2,6,"#6e4a2a");
+    px(g,4,3,7,3,"#f2e4c2"); px(g,5,4,5,1,"#8a7a6a"); px(g,5,5,3,1,"#8a7a6a");
+    px(g,12,3,1,3,"#2c2018"); px(g,12,2,1,1,"#ffce5a"); });
+  mkDecor("lanternrow", "Lantern Row", 16, 16, g => {
+    px(g,1,4,14,1,"#6e4a2a");
+    for(let i=0;i<5;i++){ const x=2+i*3; px(g,x,5,2,3,"#4a4038"); px(g,x,6,2,1,"#ffce5a"); px(g,x,5,2,1,"#8a7a6a"); }
+    px(g,2,6,2,1,"#fff0c0"); px(g,11,6,2,1,"#fff0c0"); });
+  mkDecor("valleymap", "The Valley, Mapped", 16, 16, g => {
+    px(g,1,2,14,12,"#6e4a2a"); px(g,2,3,12,10,"#e8d8b0"); px(g,2,3,12,1,"#f2e4c2");
+    px(g,4,5,3,3,"#4f8a34"); px(g,9,4,4,2,"#5a7a9a"); px(g,3,10,9,1,"#a08a68");
+    px(g,7,7,2,2,"#c9922f"); px(g,11,9,2,2,"#8a6a4a"); px(g,5,8,1,1,"#b0503a"); });
+
   mkDecor("flowerbed", "Flower Bed", 16, 16, g => {
     px(g,1,10,14,5,"#6b4c2a"); px(g,1,10,14,1,"#7d5a35");
     px(g,4,9,1,2,"#4f8a34"); px(g,7,8,1,3,"#4f8a34"); px(g,10,9,1,2,"#4f8a34"); px(g,13,8,1,3,"#4f8a34");

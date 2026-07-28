@@ -240,8 +240,16 @@ tests a copy tests nothing.
   2.2ms). **v5.8 "The Ferry Comes In" SHIPPED** — the
   seeded visiting merchant (1.7 days/week measured), rare sky events (8.2/year, 2.0/season measured over
   five simulated years), and Tom's Craving (the retired Demand's texture with the sign flipped).
-  ★ The stall is `MONETIZATION.md`'s diegetic home and ships SYSTEM-FIRST on purpose. **Next unbuilt
-  release: v5.9 "The Writ" — the last of V5.** Build it the
+  ★ The stall is `MONETIZATION.md`'s diegetic home and ships SYSTEM-FIRST on purpose. **v5.9 "The Writ" SHIPPED — ✦ VERSION 5 IS COMPLETE.**
+  Eight cross-skill standing bundles that rotate **when completed, never on a timer** (no expiry, no
+  streak, nothing to be behind), plus writ marks and the four cosmetics they buy — shipped in the SAME
+  release as the marks, because v5.6 taught that a number buying nothing is a promise the game doesn't
+  keep. ★ **All ten V5 releases are built (v5.0–v5.9); every §4 item shipped and every §6 decision is
+  resolved and recorded in `V5_PLAN.md`.** The linter graded the version's own work: Mining 88.5% →
+  60.9% dead, Warding 88.5% → 59.1%, Fishing 79.0% → 56.8%.
+  **Next: `V6_PLAN.md`** — but read its header first. It is deliberately one notch less locked than V5
+  was and says to re-ground against real V5 playtest signal before building v6.0, and its five owner
+  decisions (the child above all) are OPEN. Do not inherit them from the roadmap; ask. Build it the
   `V4_BUILD_PLAN.md` way — write that release's build order fresh, re-verify every symbol anchor
   `V5_PLAN.md` names, one release per session, strictly in order.
   ★ Two load-order lessons from v5.1, both worth carrying: (1) a `const X = f()` evaluated at load in
