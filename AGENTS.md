@@ -227,7 +227,9 @@ tests a copy tests nothing.
   (a mine floor has ~100 open tiles, not ~600), and the second legend moved 75 → 80 because 75 is
   already a mastery milestone — the linter turned both into one-line fixes. **v5.4 "The Oldest Knot" SHIPPED** — the boss ladder (floors 10/20/30/40 each gain one move the wing
   already taught) and the floor-45 terminal fight Act III's finale had been naming with nothing behind
-  it. **Next unbuilt release: v5.5 "Moved In."** Build it the
+  it. **v5.5 "Moved In" SHIPPED** — the spouse
+  is in the cottage mornings and evenings, their props stamp into `genCottage`, two post-wedding scenes
+  on `daysMarried()`, and time-of-day married dialogue pools. **Next unbuilt release: v5.6 "Ten Hearts."** Build it the
   `V4_BUILD_PLAN.md` way — write that release's build order fresh, re-verify every symbol anchor
   `V5_PLAN.md` names, one release per session, strictly in order.
   ★ Two load-order lessons from v5.1, both worth carrying: (1) a `const X = f()` evaluated at load in

@@ -44,6 +44,20 @@ function genCottage(m){
   put(m,2,2,"bed"); put(m,4,1,"painting"); put(m,8,2,"bookshelf"); put(m,9,3,"plantpot");
   put(m,2,4,"stove"); put(m,1,3,"barrel"); put(m,6,3,"table"); put(m,6,2,"chair"); put(m,7,4,"chair");
   put(m,9,6,"chest",{story:"cottagechest"}); put(m,2,6,"lamp");
+  // v5.5: a married cottage LOOKS married. Each spouse's props are the ones their own dialogue
+  // promised — Maya said "I'm moving my sketchbooks into the cottage tonight" in the wedding scene
+  // itself, and for four versions she then didn't. Stamped at generation so it survives the nightly
+  // regeneration without any persistence at all (the cottage is a transient map until v5.7).
+  const sp = typeof spouseId === "function" ? spouseId() : null;
+  if(state.flags && state.flags.married && sp === "maya"){
+    put(m,8,4,"bookshelf",{title:"Maya's sketchbooks", story:"mayashelf"});
+    put(m,3,1,"painting",{title:"The valley, as it was", story:"mayapaint"});
+    put(m,7,2,"chair");
+  } else if(state.flags && state.flags.married && sp === "bram"){
+    put(m,8,4,"barrel",{title:"Bram's rod rack", story:"bramrods"});
+    put(m,3,1,"painting",{title:"The point, from the rocks", story:"brampaint"});
+    put(m,1,6,"crate");
+  }
   exitAt(m,5,"farm",7*TILE+8,8*TILE);
 }
 function genCoop(m){
@@ -1117,11 +1131,10 @@ function npcStory(id){
       "Good day for it. Maya's got young Pip chasing pigeons round the fountain again.",
       "It's nice — folk in the square. Wasn't always. Feels like the valley's remembering how." ]);
   } else if(id==="maya"){
-    if(spouseId()==="maya") return pick([
-      "Morning, love — I watered the east rows before you woke. Don't you dare argue about it. ♥",
-      "Our valley. Ours. I still say it out loud sometimes, just to believe it's real. ♥",
-      "Home before dark tonight? I'm trying Gran's recipe again. Bring your appetite. ♥",
-      "I left something on the table for you. No, I won't say what. Go look. ♥" ]);
+    // v5.5: married talk is TIME-OF-DAY now. Four lines on an endless rotation read as a recording
+    // after about a week; a spouse who says morning things in the morning and tired things at night
+    // reads as somebody living alongside you. Same idea as the NPC schedules, applied to speech.
+    if(spouseId()==="maya") return pick(marriedPool("maya"));
     if(state.flags.married) return pick([
       "You and Bram, then. …Good. Truly. He's been alone on those rocks long enough.",
       "He smiled at me in the market. Bram. Smiled. Whatever you've done to that man, keep doing it." ]);
@@ -1142,11 +1155,7 @@ function npcStory(id){
       "I walk the whole Guild of an evening now, window to window, all ten. I stop longest at the tenth. …I nailed that door shut with these hands. You opened it with yours. That is the difference between us — and it is the finest difference a man could hope to be on the wrong side of." ]);
     if(state.flags.festivalDone) return "Nine wings, lit. I was certain I'd die in the dark of this hall. Thank you, child — truly.";
   } else if(id==="bram"){
-    if(spouseId()==="bram") return pick([
-      "Watered your east rows before the tide turned. Don't thank me. …You may thank me a little. ♥",
-      "Caught two. Ate one. The other's on your kitchen table, and it's the bigger one. ♥",
-      "Folk keep congratulating me. I keep saying nothing. But I'm not unhappy about it. ♥",
-      "Come down to the rocks tonight. Bring nothing. Just sit badly, the way you do. ♥" ]);
+    if(spouseId()==="bram") return pick(marriedPool("bram"));
     if(state.flags.married) return pick([
       "Maya's good. She's been good a long while and nobody noticed. You did. …That's the whole of my opinion on it.",
       "Aye, I heard. Congratulations. …That's it. That's the speech." ]);
@@ -1286,6 +1295,14 @@ function spawnMapNpcs(m){
     if(h>=18.5 && h<22) m.npcs.push(mkNpc("nell", 16*TILE, 14*TILE, {wander:{x0:12,y0:11,x1:24,y1:18}}));
   } else if(m.id==="dairy"){
     if(h>=7 && h<18.5) m.npcs.push(mkNpc("nell", 6*TILE+8, 3*TILE, {face:"down"}));
+  } else if(m.id==="cottage"){
+    // v5.5: the promise, kept. Mornings before you head out and evenings once you're back — the two
+    // times a person who lives with you is actually there. Between those they're about the valley
+    // like everyone else (Maya on the plaza, Bram on his rocks), because a spouse who stands in one
+    // room all day reads as furniture, not a person.
+    const sp = spouseId();
+    if(sp && state.flags.married && ((h>=6 && h<9) || (h>=18.5 && h<23)))
+      m.npcs.push(mkNpc(sp, 5*TILE, 5*TILE, {wander:{x0:2,y0:2,x1:8,y1:6}}));
   } else if(m.id==="village"){
     if(h>=7 && h<18.5) m.npcs.push(mkNpc("maya", 24*TILE, 12*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));
     if(h>=8 && h<19)   m.npcs.push(mkNpc("pip",  17*TILE, 16*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));
@@ -1615,6 +1632,56 @@ function buyBouquet(){
 // ---- relationships ----
 function heartsOf(id){ const r=state.rel[id]; return r ? Math.min(6, Math.floor(r.points/100)) : 0; }
 function heartStr(h){ let s=""; for(let i=0;i<6;i++) s += i<h ? "♥":"♡"; return s; }
+// v5.5 the married pools — morning / day / evening, per spouse. Deliberately three small pools
+// rather than one big one: variety alone doesn't fix a recording, CONTEXT does. A line that could
+// only be said at that hour is worth five that could be said at any.
+const MARRIED_LINES = {
+  maya: {
+    morning: [
+      "Morning, love — I watered the east rows before you woke. Don't you dare argue about it. ♥",
+      "You were talking in your sleep again. Something about turnips. I have chosen not to investigate. ♥",
+      "There's bread on the table and I'm not saying who burnt the first loaf. It was me. It was clearly me. ♥",
+      "Sit for five minutes before you go out. Five. The valley managed twenty years without you; it can manage five more minutes. ♥",
+    ],
+    day: [
+      "Our valley. Ours. I still say it out loud sometimes, just to believe it's real. ♥",
+      "I left something on the table for you. No, I won't say what. Go look. ♥",
+      "Papa asked after you at the Guild. He does it every single day and pretends it's a new question. ♥",
+      "I'm painting the pond again. Fourth time. It keeps changing, or I do. ♥",
+    ],
+    evening: [
+      "Home before dark. Good. I'm trying Gran's recipe again — bring your appetite and low expectations. ♥",
+      "Come outside a minute. The light's doing that thing over the ridge and I want somebody to see it with. ♥",
+      "You smell of the deep. Wash first, then tell me all of it, and don't leave out the frightening parts. ♥",
+      "I've been drawing since four and I have no idea what I've made. Look at it tomorrow. Sit with me now. ♥",
+    ],
+  },
+  bram: {
+    morning: [
+      "Watered your east rows before the tide turned. Don't thank me. …You may thank me a little. ♥",
+      "Tide's wrong this morning. Kettle's on regardless. ♥",
+      "You sleep like a landed fish. It's a compliment. It is nearly a compliment. ♥",
+      "Take a line with you today. Even if you don't cast it. Man ought to have the option. ♥",
+    ],
+    day: [
+      "Caught two. Ate one. The other's on your kitchen table, and it's the bigger one. ♥",
+      "Folk keep congratulating me. I keep saying nothing. But I'm not unhappy about it. ♥",
+      "Mended the net. Mended the door. Ran out of things to mend. Sat down. Strange feeling. ♥",
+      "The rocks are still there. I check. …I don't need to check. I check. ♥",
+    ],
+    evening: [
+      "Come down to the rocks tonight. Bring nothing. Just sit badly, the way you do. ♥",
+      "Stew's on. It's the same stew. It has always been the same stew. You've never complained. ♥",
+      "Long day on you. Sit. I'll not ask about it until you've eaten. …Right. Now tell me. ♥",
+      "Thirty-one years I ate standing up. Sitting down's better. Took me long enough. ♥",
+    ],
+  },
+};
+function marriedPool(id){
+  const p = MARRIED_LINES[id]; if(!p) return ["♥"];
+  const h = curHour();
+  return h < 11 ? p.morning : h >= 18 ? p.evening : p.day;
+}
 function talkNpc(id){
   const r = ensureRel(id), def = NPCDEF[id];
   if(r.talkedDay !== state.day){ r.talkedDay = state.day; r.points += 15;
@@ -1627,6 +1694,7 @@ function talkNpc(id){
     startMarriage(id); return; }
   const ev = heartEventFor(id);
   if(ev){ state.flags[ev.flag] = true; startCutscene(ev.steps); return; }
+  if(tryMarriedScene(id)) return;   // v5.5: the arc past the bouquet — outranks everything but a heart event
   // v5.1: the mastery trial's scene. Placed AFTER heart events (a friendship beat is the rarer thing
   // and should never be queued behind a craft errand) and BEFORE the noticeboard filler, so the ask
   // lands the first time you speak to them after crossing the gate — not on some later visit.

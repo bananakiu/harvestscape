@@ -8,13 +8,19 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "5.4.0", code: 129, codename: "The Oldest Knot", date: "2026-07-29" };
+const VERSION = { name: "5.5.0", code: 130, codename: "Moved In", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"5.5.0", code:130, date:"2026-07-29", name:"Moved In", notes:[
+    { t:"fix", s:"Your spouse actually lives with you now. Maya says at her own wedding \u2014 out loud, on screen \u2014 that she's moving her sketchbooks into the cottage that night, and then for four whole versions she went home to her father's house and slept there forever. She's in the kitchen mornings and evenings now. So is Bram." },
+    { t:"new", s:"And their things are in the house. Maya's sketchbook shelf goes up by the window because that's the good light, and the painting of the valley as it was goes on the wall. Bram's rod rack takes an entire wall, and he offers to move it, and then doesn't." },
+    { t:"new", s:"Two scenes after the wedding \u2014 one a week in, one a season in \u2014 because the story of a marriage shouldn't stop at the bouquet. Maya finishes the sketchbook she started when she was nine. Bram makes a speech, badly, once, and then never speaks of it again." },
+    { t:"change", s:"Married talk knows what time it is. Instead of four lines rotating forever, there's a morning pool, a daytime pool and an evening pool for each of them \u2014 so the person you live with says morning things in the morning and tired things at night." },
+  ]},
   { v:"5.4.0", code:129, date:"2026-07-29", name:"The Oldest Knot", notes:[
     { t:"new", s:"Floor 45 finally has something on it. The bottom of the Undercroft \u2014 the place Act III's last chapter names, and the place that until today simply said \u201cthe wing ends here\u201d \u2014 is where the Oldest Knot has been all along. Three phases, and every single move in all three is one the wing already taught you: it slams, then it starts shedding halves, then it throws the dark and learns to face you. A final exam, not a new syllabus." },
     { t:"change", s:"The Great Knots stop being the same fight four times. Every tenth floor's boss now has its own shape: floor 10 is the ring and the reach you learned it on; floor 20 comes apart as you strike it; floor 30 throws the dark between slams; floor 40 does both at once. Their numbers grew too, but the numbers were never the problem \u2014 by the Star Stave the old one died in four swings." },

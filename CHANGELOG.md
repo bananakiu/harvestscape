@@ -22,6 +22,61 @@
 
 ---
 
+## 2026-07-29 — v5.5.0 "Moved In" (code 130, tag `v5.5.0`) — the promise the wedding scene made, four versions late
+
+### Why this release
+
+`DESIGN_SCORECARD.md` flagged this at **v3.32** and it was still unshipped at v5.4. It is the
+plainest broken promise in the game, and the game makes it out loud, in its own voice:
+
+> **Maya, in `MARRIAGE_SCENES`, at her own wedding: *"I'm moving my sketchbooks into the cottage
+> tonight."*** — and then `spawnMapNpcs` had **no cottage case at all**, so she went home to the
+> Alderman House and slept there forever.
+
+The V5 review's summary was "married life is five watered tiles and a coin-flip." Worse than the
+missing content is *where* it is missing: the most emotionally loaded moment in the game was also the
+point at which the relationship system stopped having anything to say.
+
+### Added — they are in the house
+
+A `cottage` branch in `spawnMapNpcs`: the spouse is there **mornings (6–9) and evenings (18:30–23)**,
+wandering the room. Between those they are about the valley like everyone else — Maya on the plaza,
+Bram on his rocks — because a spouse who stands in one room all day reads as furniture, not a person.
+Same reasoning the NPC schedules have always used, finally applied to the one person who lives with you.
+
+### Added — their things are in the house
+
+Spouse props stamp into `genCottage`, and each one is a prop that character's own dialogue promised:
+Maya's **sketchbook shelf by the window** ("that's the good light, and I'm not negotiating about it")
+and her painting of the valley as it was; Bram's **rod rack**, which takes the whole wall, which he
+offers to take out again, and then doesn't.
+
+Stamped at generation rather than persisted, so it survives the nightly cottage regeneration with
+zero migration. (The cottage becomes genuinely persistent in v5.7; this needs nothing from that.)
+
+### Added — the arc continues past the bouquet
+
+Two scenes per spouse, keyed on `daysMarried()` — **a week in**, and **a season in**.
+
+Measured from a new `wedDay` rather than from hearts, on purpose: hearts cap at 6 until v5.6, and a
+married arc that waits on a cap raise is a married arc that doesn't ship this release. Days are also
+the truer unit — what makes a marriage is time in it. Saves wed before today have no `wedDay`; rather
+than invent one (which would either fire both scenes at once or lock them out forever), the migration
+day becomes day zero. They get the arc from here: a gift, never a loss.
+
+The scenes sit **after** heart events and **before** the mastery trials in `talkNpc` — a marriage beat
+outranks a craft errand, and a friendship beat outranks both.
+
+### Changed — married talk knows what time it is
+
+Four lines on an endless rotation read as a recording after about a week. Each spouse now has a
+**morning / day / evening** pool of four. Deliberately three small pools rather than one big one:
+variety alone doesn't fix a recording, *context* does. A line that could only be said at that hour is
+worth five that could be said at any.
+
+> *"You were talking in your sleep again. Something about turnips. I have chosen not to investigate."*
+> *"Thirty-one years I ate standing up. Sitting down's better. Took me long enough."*
+
 ## 2026-07-29 — v5.4.0 "The Oldest Knot" (code 129, tag `v5.4.0`) — the climax gets its encounter, and the boss stops being one fight in four costumes
 
 ### Why this release

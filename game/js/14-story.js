@@ -1299,8 +1299,77 @@ function spouseName(){ const s = spouseId(); return s && NPCDEF[s] ? NPCDEF[s].n
 function anyConfided(){ return Object.keys(NPCDEF).some(id => NPCDEF[id].romance && state.flags["confided_"+id]); }
 function wed(id){
   state.flags.married = true; state.flags.spouse = id;
+  state.flags.wedDay = state.day;   // v5.5: the arc past the bouquet is measured from here
   ensureRel(id).points = Math.max(state.rel[id].points, 600);
   pSparkle(state.px, state.py-10, "#ff9ab0", 20);
+}
+// ============================================================
+// v5.5 "Moved In" — the post-marriage cliff, repaired.
+//
+// The scorecard flagged this at v3.32 and it was still unshipped at v5.4: **Maya says, on screen, in
+// `MARRIAGE_SCENES`, "I'm moving my sketchbooks into the cottage tonight" — and then sleeps at the
+// Alderman House forever.** `spawnMapNpcs` had no cottage case at all. The wedding was five watered
+// tiles, a breakfast roll and four rotating lines, and then the relationship system was inert: the
+// most emotionally loaded moment in the game was also the point at which it stopped having anything
+// to say.
+//
+// Three fixes, all small, all promises the game had already made out loud:
+//   1. They are IN THE HOUSE. Mornings and evenings, on a simple schedule.
+//   2. Their things are in the house — props stamped into genCottage, so the room visibly changes.
+//   3. The arc continues: two scenes after the wedding, at a week and at a season.
+//
+// Measured from `wedDay` rather than hearts on purpose. Hearts cap at 6 until v5.6, and a married
+// arc that waits on a cap raise is a married arc that doesn't ship this release. Days are also the
+// truer unit: what makes a marriage is time in it.
+// ============================================================
+function daysMarried(){
+  if(!state.flags.married) return 0;
+  // Saves wed before v5.5 have no wedDay. Rather than invent one (which would either fire both
+  // scenes at once or lock them out), treat the migration day as day zero: they get the arc from
+  // here, which is a gift and never a loss.
+  if(state.flags.wedDay == null) state.flags.wedDay = state.day;
+  return Math.max(0, state.day - state.flags.wedDay);
+}
+const MARRIED_SCENES = {
+  maya: [
+    { after:7, flag:"ms_maya_1", steps:[
+      { type:"say", who:"Maya", portrait:"port_maya", text:"There. Last box. The sketchbooks are on the shelf by the window because that's the good light, and I'm not negotiating about it." },
+      { type:"say", who:"Maya", portrait:"port_maya", text:"…I lived in that house twenty-six years and it took me one week to stop calling it home. Isn't that awful? It isn't awful. Papa said the same about the Guild." },
+      { type:"say", who:"Maya", portrait:"port_maya", text:"I keep waking up before you and just — looking at the ceiling. Our ceiling. It has a crack shaped like a heron. I've decided I love it. ♥" },
+    ]},
+    { after:28, flag:"ms_maya_2", steps:[
+      { type:"say", who:"Maya", portrait:"port_maya", text:"Come and sit. No, properly sit, you're always halfway to somewhere. …I finished it." },
+      { type:"say", who:"Maya", portrait:"port_maya", text:"The sketchbook. The one I started when I was nine, with the festival in it. Last page was blank for seventeen years because I couldn't draw an ending I didn't believe in." },
+      { type:"say", who:"Maya", portrait:"port_maya", text:"It's this kitchen. You, doing something clumsy at the stove. Me, drawing you doing it. That's the ending. It was never the lanterns. ♥" },
+      { type:"run", fn:()=>{ give("Grandpa's Guild Pin", 0); state.flags.mayaSketchDone = true; } },
+    ]},
+  ],
+  bram: [
+    { after:7, flag:"ms_bram_1", steps:[
+      { type:"say", who:"Bram", portrait:"port_bram", text:"Moved the rod rack in. Took the whole wall. …I can take it out again." },
+      { type:"say", who:"Bram", portrait:"port_bram", text:"…No. Right. Leaving it." },
+      { type:"say", who:"Bram", portrait:"port_bram", text:"Thirty-one years I slept where I could hear the water. Slept badly here the first night for want of it. Second night I slept like a stone. …Turns out it wasn't the water. ♥" },
+    ]},
+    { after:28, flag:"ms_bram_2", steps:[
+      { type:"say", who:"Bram", portrait:"port_bram", text:"Sit down a minute. I've something to say and I'll say it once, badly, and then we'll never speak of it." },
+      { type:"say", who:"Bram", portrait:"port_bram", text:"I'd made my peace with finishing on those rocks. Not sad about it — settled. A man can be settled and still be wrong." },
+      { type:"say", who:"Bram", portrait:"port_bram", text:"…That's it. That's the speech. Your tea's going cold. ♥" },
+      { type:"run", fn:()=>{ state.flags.bramSpoke = true; } },
+    ]},
+  ],
+};
+function marriedSceneFor(id){
+  if(!state.flags.married || spouseId() !== id) return null;
+  const arc = MARRIED_SCENES[id]; if(!arc) return null;
+  const d = daysMarried();
+  for(const ev of arc) if(d >= ev.after && !state.flags[ev.flag]) return ev;
+  return null;
+}
+function tryMarriedScene(id){
+  const ev = marriedSceneFor(id); if(!ev) return false;
+  state.flags[ev.flag] = true;
+  startCutscene(ev.steps, () => saveGame());
+  return true;
 }
 
 const MARRIAGE_SCENES = {
