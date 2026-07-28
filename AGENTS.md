@@ -165,6 +165,15 @@ Treat the changelog as non-optional deliverable output, the same as the code its
   shapes, integration points), and per-release specs with schemas, starting balance
   numbers, and definition-of-done. **This is the entry point for building each v4 release** —
   one release per session, strictly in order (v4.0 done; start the next unbuilt release's §).
+- `MONETIZATION.md` — **inward monetization** (owner direction 2026-07-28): turn the rewarded-ad slot
+  inwards so it shows our OWN brands (H&Y et al) rather than an ad network's — product video, store
+  visits and social engagement in exchange for temporary in-game boosters. ★ The rule that governs it:
+  the baseline IS the balanced game and is never tuned around boosters; the moment a balance change is
+  justified with "they can always watch a video for it", the cozy contract is broken in spirit. Also
+  records the constraints that decide what is buildable at all (incentivized ratings are prohibited
+  outright; incentivized likes/shares generally violate social platform terms; video-of-our-own-content
+  and store visits are the safe core) and the deliberate carve-out to the no-asset-files rule (brand
+  media is CONTENT, not game art — the game itself stays procedural). Roadmap, not built.
 - `NEW_PLAYER_EXPERIENCE.md` — the onboarding beta plan (shipped in v2.2.0; polish tier still
   on the roadmap).
 - `GAME_DESIGN_PRINCIPLES.md` — the design bible; the yardstick audits grade against.

@@ -14,6 +14,49 @@
 
 ---
 
+## 2026-07-28 — Direction: turn monetization inwards
+
+**Owner direction (near-verbatim):**
+
+> The core idea is to convert all forms of traditional monetization and turn it inwards. For example,
+> instead of watching an ad of a competitor or the ad network on iOS, we instead make them watch
+> videos of Nasalite — maybe, sorry, of H&Y — our latest products, or some crave-worthy video, to
+> gain some boosters. Just to induce craving, or make them visit our store, or like our pages, like a
+> video, share a video, things like that. It's just a way to engage our audience, to keep them in our
+> brand, or maybe even cross-brand.
+
+**Interpretation.** A rewarded-ad slot is a rented audience; we already own the audience, so rent it
+to ourselves. The same placement stops handing attention to a third party (often a direct competitor,
+since networks sell to whoever bids) and returns a warm lead instead of a fraction of a cent.
+
+The important reframe for anyone building this: **it is not a way to make money from the game, it is
+a way to make the game pay for the brand.** So the metric is not eCPM or completion rate — it is how
+the player feels about H&Y afterwards. A player who watched three videos and now finds the brand
+slightly grating is a net loss whatever the dashboard says.
+
+**Why it fits here specifically.** The cozy contract makes conventional monetization structurally
+impossible — no energy timers, no revives, no loss to insure against, nothing painful to pay to skip.
+That normally reads as a problem; it is actually the precondition. Because we have nothing to sell the
+player, every offer can be pure upside, and they can tell. The game already has the exact idiom twice
+(the daily noticeboard, and Tom's Warden's Salvage with its own explicit button).
+
+**The rule that has to survive contact:** the baseline is the balanced game, and it is never tuned
+around boosters. The moment a balance change is justified with "they can always watch a video for it",
+the cozy contract is broken in spirit while technically intact.
+
+**Flagged for owner decision, because they change what is buildable rather than merely how:**
+incentivized *ratings* are prohibited outright by both app stores and must never be built; incentivized
+*likes/follows/shares* generally violate social platform terms and should be treated as blocked pending
+legal review; incentivized views of our own video and store visits are the safe core. Also open: the
+under-13 question, and whether the brand appears diegetically or as a clearly-marked sponsor (the
+recommendation is clearly-marked — a cozy game's core asset is trust).
+
+**Produced:** `MONETIZATION.md` — the plan, with the booster taxonomy mapped onto existing systems,
+placement rules, the engagement ladder, the constraints above, and a sequencing table that puts a
+cheap web-build poster test ahead of any SDK work.
+
+---
+
 ## 2026-07-26 — Closing out the inventory brief: the one ask that needed a safety proof
 
 **Owner feedback (near-verbatim), from the UI rework brief:**
