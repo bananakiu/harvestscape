@@ -8,13 +8,19 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "5.3.0", code: 128, codename: "The Deep Seams", date: "2026-07-29" };
+const VERSION = { name: "5.4.0", code: 129, codename: "The Oldest Knot", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"5.4.0", code:129, date:"2026-07-29", name:"The Oldest Knot", notes:[
+    { t:"new", s:"Floor 45 finally has something on it. The bottom of the Undercroft \u2014 the place Act III's last chapter names, and the place that until today simply said \u201cthe wing ends here\u201d \u2014 is where the Oldest Knot has been all along. Three phases, and every single move in all three is one the wing already taught you: it slams, then it starts shedding halves, then it throws the dark and learns to face you. A final exam, not a new syllabus." },
+    { t:"change", s:"The Great Knots stop being the same fight four times. Every tenth floor's boss now has its own shape: floor 10 is the ring and the reach you learned it on; floor 20 comes apart as you strike it; floor 30 throws the dark between slams; floor 40 does both at once. Their numbers grew too, but the numbers were never the problem \u2014 by the Star Stave the old one died in four swings." },
+    { t:"balance", s:"None of it bends the contract. A knockout still costs nothing, the floor-45 bell is still a checkpoint, and the whole fight is tuned for someone who walked in with an empty bag. It is long, not punishing." },
+    { t:"new", s:"Settle the Oldest Knot and it stays settled \u2014 a finale you have to re-fight every morning isn't a finale. The wing stays open, and its drops keep dropping." },
+  ]},
   { v:"5.3.0", code:128, date:"2026-07-29", name:"The Deep Seams", notes:[
     { t:"new", s:"Four gem seams in the deep mine \u2014 opal, emerald, ruby and diamond \u2014 each a band of the gem running visibly through the rock, each unlocked at its own Mining level (15 / 35 / 55 / 78). You learn where rubies LIVE instead of hoping a gem rock rolls one. The Ruby Seam sits at 55, right in the middle of the emptiest stretch of any skill in the game." },
     { t:"new", s:"Read the seams \u2014 at Mining 60, every seam on a floor shimmers once as you arrive. It shows you nothing you couldn't find by walking the whole floor yourself; it saves the walking, which is what a prospector's eye actually is." },
@@ -616,6 +622,19 @@ const CREATURES = {
   // creature's HP, two telegraphed moves (a ground-slam ring + a reaching lunge), a signature drop.
   greatknot: { name:"The Great Knot",  lvl:40, hp:42, dmg:20, xp:360, drop:"Heartknot", n:1, drop2:"Warden's Ash", n2:3,
                tele:0.9, speed:12, col:"#6a5a44", col2:"#2c2318", boss:true },
+  // v5.4 "The Oldest Knot" — the TERMINAL fight, on floor 45, the bottom of the wing.
+  //
+  // Act III's finale chapter names this place, ch7's dialogue calls it "the deepest knot", and until
+  // today floor 45 spawned NOTHING: `genUndercroft` printed "the wing ends here — for now" and the
+  // emotional climax of the whole game had no mechanical mirror at all. This is that mirror.
+  //
+  // Deliberately built from the vocabulary the wing already taught rather than a new move set: it
+  // slams (floor 10's lesson), it sheds Tanglets (the Gloam Tangle), it lobs star-bolts (the
+  // Star-Gnarl), and in its last phase it guards a front (the Hollow Warden). Every telegraph the
+  // player has learned in forty-five floors, asked all at once. Knockout is still free — the contract
+  // does not bend for a finale.
+  oldestknot: { name:"The Oldest Knot", lvl:85, hp:240, dmg:24, xp:6000, drop:"Heartknot", n:3, drop2:"Gloamstar", n2:2,
+                tele:0.85, speed:14, col:"#7a6448", col2:"#241c14", boss:true, terminal:true },
   // v4.2 the top two tiers — Warding now has a family at every rung of the unified ladder (1/10/20/30/45/70/85).
   // XP stays under the deep ore curve (deepsilver L70=1050, star metal L85=1560).
   deepknot:  { name:"Deep Knot",       lvl:70, hp:22, dmg:20, xp:190, drop:"Deepgnarl", n:1, drop2:"Snarlthread", n2:1,
@@ -2311,6 +2330,29 @@ const EXAMINE_TILE = {
 // call anything that reads a save. That is why it re-walks the tables instead of reusing
 // unlocksAt (08-actions.js), which hides the Stave behind state.flags.staveEarned.
 // ============================================================
+// ============================================================
+// v5.4 — THE BOSS LADDER
+//
+// `CREATURES.greatknot` was stat-frozen: hp 42, dmg 20, xp 360, no depth term at all. Floors 10, 20,
+// 30 and 40 hosted the IDENTICAL two-move fight, and by the Star Stave it died in four swings — so
+// the game's recurring set-piece got less interesting exactly as the player got better, which is the
+// opposite of a ladder.
+//
+// The fix is composition, not numbers. Each decade's Knot keeps the slam-and-lunge base and gains ONE
+// move the wing has already taught you, so every boss asks the question the preceding floors answered:
+//   · 10 — the plain Knot. Learn the ring and the lunge.
+//   · 20 — it SHEDS Tanglets when struck (the Gloam Tangle's lesson: clear the halves).
+//   · 30 — it lobs star-bolts between slams (the Star-Gnarl's lesson: sidestep, or turn them at 55).
+//   · 40 — both at once.
+// Stats scale gently alongside — the composition is the difficulty, the numbers only keep pace.
+const KNOT_LADDER = {
+  10: { hp:42,  dmg:20, xp:360,  moves:[],                  blurb:"the first of them — a ring and a reach" },
+  20: { hp:78,  dmg:22, xp:900,  moves:["shed"],            blurb:"it comes apart as you strike it" },
+  30: { hp:130, dmg:24, xp:1900, moves:["bolt"],            blurb:"it throws the dark at you between slams" },
+  40: { hp:190, dmg:26, xp:3400, moves:["shed","bolt"],     blurb:"everything the wing has taught you, at once" },
+};
+function knotRungFor(depth){ return KNOT_LADDER[depth] || KNOT_LADDER[10]; }
+
 const LADDER_SKILLS = ["Farming", "Woodcutting", "Mining", "Fishing", "Cooking", "Warding"];
 const LADDER_GAP_WARN = 8;   // levels with no new noun before a band counts as dead
 

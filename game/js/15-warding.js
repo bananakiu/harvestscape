@@ -70,7 +70,12 @@ function nearestCreature(x, y, maxD){
 function mkCreature(kind, tx, ty, rng){
   const d = CREATURES[kind];
   const x = tx*TILE+8, y = ty*TILE+8;
-  return { kind, x, y, hp: d.hp, face:"down",
+  // v5.4: a Great Knot is the rung it stands on. Stats and extra moves come off KNOT_LADDER rather
+  // than the frozen CREATURES row, so floors 10/20/30/40 stop being the same fight four times. The
+  // row stays the floor-10 baseline, which is also what any un-laddered spawn falls back to.
+  let hp = d.hp, moves = null;
+  if(kind === "greatknot"){ const r = knotRungFor(state.wardDepth || 10); hp = r.hp; moves = r.moves; }
+  return { kind, x, y, hp, knotMoves: moves, face:"down",
            walk:0, moving:false, state:"idle", stateT:0,
            timer: 0.4 + (rng ? rng() : Math.random())*1.4,
            wvx:0, wvy:0, lvx:0, lvy:0, hurtT:0, warm:0, alive:true, homeFloor: state.wardDepth||1,
@@ -117,6 +122,7 @@ function updateCreatures(dt){
     const d = CREATURES[cr.kind];
     cr.hurtT = Math.max(0, (cr.hurtT||0) - dt);
     cr.guardOpen = Math.max(0, (cr.guardOpen||0) - dt);   // v4.4: a parried Hollow Warden's dropped-guard window
+    if(cr.shedT > 0) cr.shedT = Math.max(0, cr.shedT - dt);   // v5.4 the boss ladder's shed cooldown
     cr.parryXpT  = Math.max(0, (cr.parryXpT||0)  - dt);   // v4.9: per-creature parry-XP cooldown (anti-mill)
     cr.warm  = Math.max(0, (cr.warm||0) - dt*0.6);
     cr.hpBarT = Math.max(0, (cr.hpBarT||0) - dt);   // v4.0.3: health bar/nameplate linger after a hit
@@ -127,6 +133,7 @@ function updateCreatures(dt){
     const pdx = state.px - cr.x, pdy = state.py - cr.y, dist = Math.hypot(pdx, pdy);
 
     // v4.1 the Great Knot — a rooted boss with two telegraphed moves (a ground-slam ring + a reaching lunge).
+    if(d.terminal){ updateOldestKnot(cr, d, dt, pdx, pdy, dist); continue; }   // v5.4 the floor-45 fight
     if(d.boss){ updateGreatKnot(cr, d, dt, pdx, pdy, dist); continue; }
     // v4.1 the Hollow Warden turns to keep its guarded FRONT toward you — but SLOWLY (a turn-lag), so
     // you can circle to its side or back faster than it re-faces. Its guard (frontalHit) tests against
@@ -192,7 +199,50 @@ function updateCreatures(dt){
 // The Great Knot — rooted at its spawn (the stair spot), guards quietly until you close in, then
 // alternates two clearly-telegraphed moves: a ground-slam ring (step out of it) and a reaching lunge.
 // Same settle verb, just a longer fight and bigger tells. Nothing here can take anything (contract).
+// v5.4: the rung's numbers, for a live boss. One accessor so damage, XP and the drop all agree.
+function knotStats(cr){
+  const d = CREATURES[cr.kind];
+  if(cr.kind !== "greatknot") return d;
+  const r = knotRungFor(cr.homeFloor || state.wardDepth || 10);
+  return { ...d, hp:r.hp, dmg:r.dmg, xp:r.xp };
+}
+function knotHas(cr, move){ return !!(cr.knotMoves && cr.knotMoves.includes(move)); }
+// ============================================================
+// v5.4 — THE OLDEST KNOT (floor 45, the terminal fight)
+//
+// Act III's finale names this place and floor 45 spawned nothing at all: `genUndercroft` printed
+// "the wing ends here — for now" and the emotional climax of the game had no mechanical mirror.
+//
+// Three phases, and every move in all three is one the wing already taught — this is a FINAL EXAM,
+// not a new syllabus. Phase 1 is the plain Knot (ring and reach). At two thirds it starts shedding
+// (the Gloam Tangle). At one third it sheds AND throws (the Star-Gnarl) and turns a guarded front
+// toward you between moves (the Hollow Warden), so the last stretch asks for the answer to every
+// creature family in the wing, in sequence, under pressure.
+//
+// ★ The contract does not bend for a finale: knockout is still free, the bell on floor 45 is still a
+// checkpoint, and the fight is tuned for a player who walked in with an empty bag (GBP §5.2b). It is
+// long, not punishing — the difficulty is composition and stamina, never a cost.
+function updateOldestKnot(cr, d, dt, pdx, pdy, dist){
+  const frac = cr.hp / d.hp;
+  const phase = frac > 0.66 ? 1 : frac > 0.33 ? 2 : 3;
+  if(phase !== cr.bossPhase){
+    cr.bossPhase = phase;
+    cr.terminalShed = phase >= 2;     // read by hitCreature
+    cr.terminalBolt = phase >= 3;     // read by the slam
+    if(phase > 1){
+      cam.shake = 5; playSfx("bellRing"); pSparkle(cr.x, cr.y-6, "#ffd88a", 26);
+      floatText(cr.x, cr.y-26, phase === 2 ? "it comes apart…" : "…and it remembers the dark", d.col);
+      // the wing itself reacts — the beat that tells you the fight changed shape
+      toast(phase === 2 ? "The Oldest Knot begins to shed. Clear the halves." : "It throws the dark now, and it has learned to face you.", "#bfe4ff");
+    }
+  }
+  // Phase 3 turns a guarded front between moves — the Hollow Warden's lesson, on the last boss.
+  if(phase >= 3 && (cr.state === "cooldown" || cr.state === "idle")) cr.gDown = false;
+  else cr.gDown = true;
+  updateGreatKnot(cr, d, dt, pdx, pdy, dist);
+}
 function updateGreatKnot(cr, d, dt, pdx, pdy, dist){
+  d = knotStats(cr);   // v5.4 — the rung, not the frozen row
   cr.face = Math.abs(pdx) > Math.abs(pdy) ? (pdx<0?"left":"right") : (pdy<0?"up":"down");
   if(dist < 6*TILE) cr.hpBarT = Math.max(cr.hpBarT||0, 0.5);   // keep the boss bar + name up while you're near
   const easeHome = () => { const hx=cr.rx-cr.x, hy=cr.ry-cr.y, hd=Math.hypot(hx,hy);
@@ -211,6 +261,10 @@ function updateGreatKnot(cr, d, dt, pdx, pdy, dist){
     if(cr.stateT <= 0){                                    // the ground gives — a ring of force
       cam.shake = 5; hitstop = 0.06; playSfx("staveHit"); pRing(cr.x, cr.y, "#8a7a5c");
       if(dist < 1.8*TILE && !(state.iFrame > 0)) drainResolve(d.dmg, cr.x, cr.y);
+      // v5.4 ★ the 30-rung's move: the dark comes with the slam. Fired AFTER the ring so the two
+      // telegraphs never overlap — a bolt you cannot see because a ring is filling the screen is
+      // not a telegraph, it is a trick, and the wing does not do tricks.
+      if(knotHas(cr, "bolt") || cr.terminalBolt) setTimeout(() => { if(cr.alive) fireStarBolt(cr); }, 260);
       cr.state="cooldown"; cr.stateT=1.4;
     } return;
   }
@@ -373,7 +427,7 @@ function spawnTanglets(cr){   // a Gloam Tangle breaks into two smaller Tanglets
   }
 }
 function hitCreature(cr, power, fx, fy){
-  const d = CREATURES[cr.kind];
+  const d = (cr.kind === "greatknot" && typeof knotStats === "function") ? knotStats(cr) : CREATURES[cr.kind];
   // Gloam Tangle — the FIRST strike splits it into two Tanglets rather than damaging it (V4_BUILD_PLAN §4).
   if(d.splits && !cr.split){
     cr.alive = false; cr.hurtT = 0.18;   // the parent becomes its halves — no loot of its own
@@ -381,11 +435,22 @@ function hitCreature(cr, power, fx, fy){
     spawnTanglets(cr); floatText(cr.x, cr.y-14, "it splits!", d.col);
     return;
   }
+  // v5.4 ★ the 20-rung's move: struck, it sheds. Reuses spawnTanglets — the Gloam Tangle's own
+  // mechanic, which is the point: every boss move is a lesson an earlier floor already taught, so a
+  // player who learned the wing is never asked something out of nowhere. Rate-limited so a fast stave
+  // cannot bury the room, and capped by the live count for the same reason.
+  if(cr.alive && (knotHas(cr, "shed") || cr.terminalShed) && !(cr.shedT > 0)){
+    const loose = (curMap.creatures || []).filter(c => c.alive && c.kind === "tanglet").length;
+    if(loose < 4){ spawnTanglets(cr); cr.shedT = 3.2; floatText(cr.x, cr.y-22, "it sheds!", d.col); }
+  }
   // Hollow Warden — GUARDS the front it faces; a strike from where it's looking clangs off. Circle to its
   // side/back — OR parry its blow (v4.4) to knock its guard open (cr.guardOpen), then a frontal strike lands.
   // v5.1: the Settling Blow (the Warding 75 art) is the one thing in the game that does not care
   // about a guarded front — it is slower and narrower for exactly this reason.
-  if(d.block && frontalHit(cr) && !(cr.guardOpen > 0) && !cr.gDown && !_settlingBlow){   // v4.22: gDown = the guard's rest beat — strike now
+  // v5.4: the Oldest Knot's phase 3 guards a front between moves (`d.terminal && !cr.gDown`), which
+  // is the Hollow Warden's rule applied to the last boss — circle it, parry it open, or bring the
+  // Settling Blow, exactly as the wing taught.
+  if((d.block || (d.terminal && !cr.gDown)) && frontalHit(cr) && !(cr.guardOpen > 0) && !_settlingBlow){   // v4.22: gDown = the guard's rest beat — strike now
     cr.hpBarT = 2.6; cr.hurtT = 0.05; cam.shake = 1.0; playSfx("staveHit");
     spawnHitsplat(cr.x, cr.y-10, 0, "block"); floatText(cr.x, cr.y-16, "guarded", "#9fb0d0");
     return;
@@ -404,9 +469,25 @@ function hitCreature(cr, power, fx, fy){
   spawnHitsplat(cr.x, cr.y - 10, dealt, killed ? "settle" : "hit");   // red hit, violet on the settling blow
   if(killed) settleCreature(cr);
 }
+// v5.4: the Oldest Knot's ending. Not a door — there is nothing below it — so this is the one settle
+// in the game that opens no stair and simply STOPS. The flag is permanent: a finale you have to
+// re-fight every morning is not a finale, and the wing stays walkable and its drops keep dropping.
+function settleTerminal(cr, d){
+  state.flags.oldestKnotSettled = true;
+  cam.shake = 6; playSfx("legend"); pSparkle(cr.x, cr.y-4, "#ffd88a", 40);
+  if(d.xp) addXP("Warding", d.xp); bump("warded");
+  if(d.drop) give(d.drop, d.n||1);
+  if(d.drop2) give(d.drop2, d.n2||1);
+  if(hasMastery("Warding",25)) state.resolve = Math.min(resolveMax(), (state.resolve||0) + 8);
+  banner("❖ The Oldest Knot settled", "Forty-five floors of grief, and this was the shape at the bottom of it. It comes apart like everything else did — slowly, then all at once, and then not at all.");
+  setTimeout(() => toast("Elias: “That's it. That's the whole of it. …I never thought I'd see the bottom of this wing quiet. Come up. Come up and sit down.”", "#ffe6a0"), 2600);
+  setTimeout(() => toast("The dark down here is only dark now. Nothing in it is waiting.", "#bfe4ff"), 5200);
+  saveGame();
+}
 function settleCreature(cr){
   cr.alive = false;
-  const d = CREATURES[cr.kind];
+  const d = (cr.kind === "greatknot") ? knotStats(cr) : CREATURES[cr.kind];   // v5.4: the rung's XP/drops, not the frozen row
+  if(d.terminal){ settleTerminal(cr, d); return; }   // the floor-45 fight has its own ending
   pSparkle(cr.x, cr.y-2, d.col, d.boss ? 28 : 16);
   if(d.drop) give(d.drop, d.n||1);
   if(d.drop2 && (d.boss || chance(0.5))) give(d.drop2, d.n2||1);   // the boss always yields its ash

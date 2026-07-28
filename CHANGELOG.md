@@ -22,6 +22,63 @@
 
 ---
 
+## 2026-07-29 — v5.4.0 "The Oldest Knot" (code 129, tag `v5.4.0`) — the climax gets its encounter, and the boss stops being one fight in four costumes
+
+### Why this release
+
+Two findings from the V5 review, both of them about the same thing: the game's combat set-piece got
+*less* interesting exactly as the player got better.
+
+1. **`CREATURES.greatknot` was stat-frozen** — hp 42, dmg 20, xp 360, **no depth term at all**. Floors
+   10, 20, 30 and 40 hosted the identical two-move fight, and by the Star Stave it died in four swings.
+2. **Floor 45 spawned nothing.** `genUndercroft` printed *"the wing ends here — for now"*. Act III's
+   finale chapter names that place; ch7's dialogue calls it "the deepest knot". **The emotional climax
+   of the whole game had no mechanical mirror.**
+
+### Added — the boss ladder (floors 10 / 20 / 30 / 40)
+
+The fix is **composition, not numbers**. Each decade keeps the slam-and-lunge base and gains one move
+the wing has already taught, so every boss asks the question the preceding floors answered:
+
+| Floor | HP | Gains |
+|---|---|---|
+| 10 | 42 | — the plain Knot: learn the ring and the reach |
+| 20 | 78 | **sheds Tanglets when struck** (the Gloam Tangle's lesson) |
+| 30 | 130 | **lobs star-bolts between slams** (the Star-Gnarl's lesson — sidestep, or turn them with Bolt-Turn at 55) |
+| 40 | 190 | both at once |
+
+Stats scale alongside, but the composition is the difficulty and the numbers only keep pace. Two
+details worth recording: the bolt fires **260ms after** the slam ring rather than with it (a bolt you
+cannot see because a ring is filling the screen is not a telegraph, it is a trick, and the wing does
+not do tricks); and shedding is rate-limited and capped at four loose Tanglets, so a fast stave cannot
+bury the room.
+
+`knotStats()` is the one accessor for a live boss's numbers, so damage, XP and drops can never
+disagree about which rung they are on.
+
+### Added — the Oldest Knot (floor 45, the terminal fight)
+
+240 HP, three phases, and **every move in all three is one the wing already taught** — this is a final
+exam, not a new syllabus:
+
+- **Phase 1** (above ⅔) — the plain Knot. Ring and reach.
+- **Phase 2** (⅔ → ⅓) — it begins to shed. *"The Oldest Knot begins to shed. Clear the halves."*
+- **Phase 3** (below ⅓) — it sheds **and** throws, and between moves it turns a guarded front toward
+  you (the Hollow Warden's rule, on the last boss). Circle it, parry it open, or bring the Settling
+  Blow — exactly as forty-five floors taught you.
+
+It is the one settle in the game that **opens no stair**: there is nothing below it. Settling it sets
+a permanent flag, because a finale you re-fight every morning is not a finale — the wing stays
+walkable and its drops keep dropping, only the fight is done. **Retroactive by construction:** a save
+that "finished" the wing years ago finds the fight waiting the next time it walks down, with no
+migration at all.
+
+### The contract, unbent
+
+Knockout is still free. The floor-45 bell is still a checkpoint. The fight is tuned for a player who
+walked in with an empty bag (GBP §5.2b, shipped last release and binding here first). It is **long,
+not punishing** — the difficulty is composition and stamina, never a cost.
+
 ## 2026-07-29 — v5.3.0 "The Deep Seams" (code 128, tag `v5.3.0`) — the worst void in the game, filled, and measured on the way out
 
 ### Why this release

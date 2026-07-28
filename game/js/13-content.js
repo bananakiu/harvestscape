@@ -357,7 +357,14 @@ function genUndercroft(m){
       ? "Floor " + depth + "  ·  something old holds the way down"
       : "Floor " + depth + "  ·  something down here wants tending";
   } else {
-    m.subtitle = "Floor " + depth + "  ·  the wing ends here — for now";
+    // v5.4: floor 45 is no longer a full stop. The Oldest Knot roots at the centre of the bottom
+    // chamber — no stair under it (there is nowhere further down), so settling it is the END rather
+    // than a door. Retroactive by construction: a save that "finished" the wing years ago simply
+    // finds the fight waiting the next time it walks down.
+    m.meta.terminalFloor = true;
+    m.subtitle = state.flags.oldestKnotSettled
+      ? "Floor " + depth + "  ·  the bottom of the wing, quiet at last"
+      : "Floor " + depth + "  ·  the oldest knot in the valley";
   }
 
   // ---- the restless things — kind by depth band, kept OFF the stairs route and away from the entry ----
@@ -374,6 +381,14 @@ function genUndercroft(m){
   }
   // the boss sits ON the stair spot (rooted); settling it drops the ladder there
   if(m.meta.bossFloor && m.meta.knot){ m.creatures.push(mkCreature("greatknot", m.meta.knot.x, m.meta.knot.y, rng)); }
+  // v5.4 the terminal fight. Once settled it stays settled — `oldestKnotSettled` is a permanent flag,
+  // because a finale you have to re-fight every day is not a finale. (The wing is still walkable and
+  // its drops still drop; only the one fight is done.)
+  if(m.meta.terminalFloor && !state.flags.oldestKnotSettled){
+    const spot = floors.filter(([x,y]) => Math.abs(x-ux)+Math.abs(y-uy) > 8 && !m.objects[key(x,y)]);
+    const [bx,by] = spot.length ? spot[randiR(rng,0,spot.length-1)] : [ux, uy+4];
+    m.creatures.push(mkCreature("oldestknot", bx, by, rng));
+  }
   m.meta.up = {x:ux,y:uy};
 }
 

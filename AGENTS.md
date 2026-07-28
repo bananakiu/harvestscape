@@ -225,8 +225,9 @@ tests a copy tests nothing.
   worst void), "Read the seams" at 60, and two late legends; Mining 88.5% → 60.9% dead, Fishing 79.0% →
   56.8%. ★ Two lessons: the seam rate was wrong by 6× until it was SAMPLED against the live generator
   (a mine floor has ~100 open tiles, not ~600), and the second legend moved 75 → 80 because 75 is
-  already a mastery milestone — the linter turned both into one-line fixes. **Next unbuilt release:
-  v5.4 "The Oldest Knot."** Build it the
+  already a mastery milestone — the linter turned both into one-line fixes. **v5.4 "The Oldest Knot" SHIPPED** — the boss ladder (floors 10/20/30/40 each gain one move the wing
+  already taught) and the floor-45 terminal fight Act III's finale had been naming with nothing behind
+  it. **Next unbuilt release: v5.5 "Moved In."** Build it the
   `V4_BUILD_PLAN.md` way — write that release's build order fresh, re-verify every symbol anchor
   `V5_PLAN.md` names, one release per session, strictly in order.
   ★ Two load-order lessons from v5.1, both worth carrying: (1) a `const X = f()` evaluated at load in
