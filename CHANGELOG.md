@@ -22,6 +22,67 @@
 
 ---
 
+## 2026-07-29 — v6.1.3 "Nothing Lost" (code 139, tag `v6.1.3`) — seven persists that were silently doing nothing
+
+### How this was found
+
+Not by testing v6.1.3. By running an **adversarial review of a design that hasn't been built yet** —
+v6.2's Long Round — with three independent agents briefed to *refute* the claim that its knockout
+contract holds. All three refuted it, and the mechanical lens's headline finding turned out not to be
+about v6.2 at all. It was already in the shipped game.
+
+### The bug
+
+```js
+function saveGame(){
+  if(_wipe || !state) return;
+  if(isCutscene()) return;   // don't persist mid-cutscene state
+```
+
+That guard is right in general — a half-played scene is not a save-worthy state. But `cutNext`
+executes a `run` step **with `cutscene` still non-null** (`14-story.js:126`). So **every
+`saveGame()` written inside a cutscene has been a no-op since the guard shipped.** There were seven,
+all deliberate, all committing something that had just genuinely happened:
+
+| Where | What it was supposed to commit |
+|---|---|
+| `wardKnockout` (15-warding.js) | **the haul you just carried up out of the Undercroft** |
+| the tenth door opening | `tenthDoorOpen` + Elias's regard |
+| the day-one arrival | `arrivalSeen` |
+| the reunion scene | the scene's state |
+| Thea's arrival (v6.1) | her initial regard |
+| a mastery trial's scene (v5.1) | that the scene has been seen |
+| the festival handoff | the festival's state |
+
+**The knockout one is the one that matters.** Its entire job is to write the game down at the moment
+the lantern-bearers set you at the door — and a knockout is the one moment in the game a player is
+*most* likely to stop playing. Close the tab there and everything found in the wing went with it. In
+a game whose first principle is *nothing is ever taken from the player*, that is the sharpest possible
+hole, and it has been open since v4.0.
+
+**Proven empirically rather than by reading**: a scripted cutscene with one `run` step that writes a
+marker and calls `saveGame()` leaves `localStorage` untouched.
+
+### The fix
+
+`saveGame(force)`. `force` bypasses **only** the cutscene guard — the wipe latch and the half-run
+festival/turn-in guards still hold, because those describe states that genuinely must not be written.
+The seven deliberate call sites pass `true`; every other caller is unchanged, so the guard still does
+its real job. Verified both directions: a plain `saveGame()` inside a cutscene is still correctly
+refused, a forced one lands.
+
+### What this says about the tooling
+
+`tools/check-saves.mjs` has 2,277 invariants and could not have caught this, because it tests
+`migrateSave` against fixtures — it never runs a cutscene. `check-schedules.mjs` sweeps NPCs.
+`check-perf.mjs` times generators. **A dead call site is invisible to all of them**, and would have
+stayed invisible indefinitely: the code reads correctly, the intent is documented in its own comment,
+and the failure is silent by construction.
+
+It took an adversarial reader briefed to *break* something, given the actual source. That is worth
+remembering as its own technique, distinct from the harnesses: **the harnesses check that the rules
+hold; only a skeptic checks that the code does what its comment says.**
+
 ## 2026-07-29 — v6.1.2 "Room to Stand" (code 138, tag `v6.1.2`) — the sweep becomes a file, and finds three more things
 
 ### Why

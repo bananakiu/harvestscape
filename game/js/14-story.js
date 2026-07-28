@@ -190,7 +190,7 @@ function maybeArrival(){
       text:"For now, though? That little plot below your cottage is just begging for seeds. I'll leave you to it — welcome home." },
     { type:"move", actor:"maya", x:14, y:15, face:"down", sp:46 },
     { type:"run", fn:()=>{ if(spawned && !(curHour()>=7 && curHour()<18.5)){ const k=curMap.npcs.indexOf(maya); if(k>=0) curMap.npcs.splice(k,1); } } },
-    { type:"run", fn:()=>{ state.flags.arrivalSeen = true; saveGame(); } },   // only now is it "seen" — persist it
+    { type:"run", fn:()=>{ state.flags.arrivalSeen = true; saveGame(true); } },   // only now is it "seen" — persist it
     { type:"run", fn:actBanner },
   ]);
 }
@@ -223,7 +223,7 @@ function maybeLanternTest(){
     { type:"wait", t:1.0 },
     { type:"say", who:"Maya", portrait:"port_maya", text:"It's not the festival. But from the right angle… it isn't nothing, is it?" },
     { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"Not yet. But nearer than I've been in eleven years. Back to work, the lot of us." },
-    { type:"run", fn:()=>{ saveGame(); const h=curHour(); for(const n of temp){ if(n.id==="maya" && h>=7 && h<18.5) continue; const i=curMap.npcs.indexOf(n); if(i>=0) curMap.npcs.splice(i,1); } } },
+    { type:"run", fn:()=>{ saveGame(true); const h=curHour(); for(const n of temp){ if(n.id==="maya" && h>=7 && h<18.5) continue; const i=curMap.npcs.indexOf(n); if(i>=0) curMap.npcs.splice(i,1); } } },
     { type:"banner", big:"✦ The Lantern Test", small:"Half the line lit. Nearer than in eleven years.", t:3 },
   ]);
 }
@@ -673,7 +673,7 @@ function maybeTheaArrival(){
     { type:"say", who:"Thea", portrait:"port_thea", text:"…" },
     { type:"say", who:"Thea", portrait:"port_thea", text:"Right. Right. Point me at the pond and then leave me alone for an hour, if you'd be so kind." },
     { type:"banner", big:"✦ A warden comes home", small:"Thea has come back to Willowbrook. She'll be about the valley — and she keeps the wing with Elias now.", t:3.6 },
-    { type:"run", fn:()=>{ ensureRel("thea").points = 60; saveGame(); } },
+    { type:"run", fn:()=>{ ensureRel("thea").points = 60; saveGame(true); } },
   ]);
 }
 function onEnterMap(id){
@@ -929,7 +929,7 @@ function buildHomecomingSteps(){
     { type:"run", fn:()=>{ festivalWarmth(40); ensureRel("elias").points = 200; } },
     { type:"banner", big:"♥ The Valley Remembers", small:"Read the stone any time — it keeps his letter", t:3.4 },
     { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"Nine wings and a stone. …He'd have grumbled about the expense and visited it every single morning. Go home, child. Sleep. You've done a hard, kind thing." },
-    { type:"run", fn:()=>{ saveGame(); } },
+    { type:"run", fn:()=>{ saveGame(true); } },
   ];
 }
 function festivalTick(dt){
@@ -1774,7 +1774,7 @@ function tryTrialScene(id){
   // The ask itself, in plain numbers, from the player's side of the conversation — the game's own
   // rule (GBP §5.5, "dress a gate in character, never hide its mechanics"): the scene carries the
   // voice, the closing card carries the figures.
-  steps.push({ type:"run", fn:() => { state.flags["trialScene_" + trialKey(owed.skill, owed.gate)] = true; saveGame(); } });
+  steps.push({ type:"run", fn:() => { state.flags["trialScene_" + trialKey(owed.skill, owed.gate)] = true; saveGame(true); } });
   steps.push({ type:"banner", big:"✦ " + d.title, small:d.ask + "  ·  It's in your Journal (J) — pay it in pieces, from anywhere.", t:4.2 });
   startCutscene(steps);
   return true;

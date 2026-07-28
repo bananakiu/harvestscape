@@ -302,9 +302,20 @@ function genFarm(m){
 
 // ---- save / load (only the farm map + meta persist) ----
 let _wipe = false;
-function saveGame(){
+// ★ v6.1.3 — `force` exists because the cutscene guard below was silently eating SEVEN deliberate
+// persists. The guard is right in general (a half-played scene is not a save-worthy state), but a
+// `run` step executes with `cutscene` still non-null (14-story.js:126), so every `saveGame()` written
+// inside one has been a no-op since the guard shipped — including the one in `wardKnockout`, whose
+// entire job is to commit the haul you just carried up out of the wing.
+//
+// Proven empirically, not by reading: a scripted cutscene with a single `run` step that writes a
+// marker and calls saveGame() leaves localStorage untouched.
+//
+// `force` bypasses ONLY the cutscene guard. The wipe latch and the half-run festival/turn-in guards
+// still hold, because those describe states that genuinely must not be written.
+function saveGame(force){
   if(_wipe || !state) return;
-  if(typeof isCutscene === "function" && isCutscene()) return;   // don't persist mid-cutscene state
+  if(!force && typeof isCutscene === "function" && isCutscene()) return;   // don't persist mid-cutscene state
   if(state.flags && state.flags.festivalActive && !state.flags.festivalDone) return;  // don't persist a half-run festival
   if(state.flags && state.flags.seasonalActive) return;                                // nor a half-run seasonal one
   if(state.flags && state.flags.turnInPending) return;                                 // nor a quest advanced but not yet narrated

@@ -637,7 +637,7 @@ function wardKnockout(){
     { type:"fade", on:false },
     { type:"say", who:"", portrait:"port_valley", text:"The lantern-bearers found you before the dark had a chance to. They always do — that is the whole reason for the bells." },
     { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"Back at the door, and everything you carried is still yours — down to the last coin. Sit a while. The Undercroft keeps; it has kept for eleven years." },
-    { type:"run", fn:()=>{ _wardKOing = false; state.resolve = resolveMax(); clearTonic(); saveGame(); } },   // v5.2: the descent ended, so the tonic did too
+    { type:"run", fn:()=>{ _wardKOing = false; state.resolve = resolveMax(); clearTonic(); saveGame(true); } },   // v6.1.3 force: this commits the haul you carried up, and was a no-op before   // v5.2: the descent ended, so the tonic did too
   ]);
 }
 
@@ -932,7 +932,7 @@ function walkWardRound(){
         playSfx("gift"); pSparkle(state.px, state.py-14, "#bfe4ff", 16); if(typeof refreshHotbar==="function") refreshHotbar(); } },
     { type:"say", who:"Elias", portrait:"port_elias", text:"A warden's Stave. Basic and worn — Tom can forge you a truer one when your hands have learned it. And there are bells down there. Ring one and the lantern-bearers will always find you. Nothing in that dark is worth losing yourself over. Nothing ever will be." },
     { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"Ten wings, then. …We'll light the last one properly one day, when it's earned. Go gently, child. And come back up for supper — both of you." },
-    { type:"run", fn:()=>{ state.flags.tenthDoorOpen = true; ensureRel("elias").points = Math.max(ensureRel("elias").points||0, 120); saveGame(); } },
+    { type:"run", fn:()=>{ state.flags.tenthDoorOpen = true; ensureRel("elias").points = Math.max(ensureRel("elias").points||0, 120); saveGame(true); } },
     { type:"banner", big:"❖ The Tenth Door", small:"The Warden's wing is open. Step through it in the Guild.", t:3.4 },
   ] };
   // A quiet recognition once the door's open — Elias, warden to warden, if you meet him topside.
