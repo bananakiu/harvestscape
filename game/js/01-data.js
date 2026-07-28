@@ -8,13 +8,19 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "5.7.0", code: 132, codename: "Four Walls", date: "2026-07-29" };
+const VERSION = { name: "5.8.0", code: 133, codename: "The Ferry Comes In", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"5.8.0", code:133, date:"2026-07-29", name:"The Ferry Comes In", notes:[
+    { t:"new", s:"Some mornings the ferry is in. A trader ties up at the coast road landing with four things off the boat \u2014 seeds out of season, a deep material, something salvaged, a stone with no story \u2014 and two hours later the tide turns and he's gone. About twice a week, never on a day you could name in advance. Nothing he carries is anything the valley can't give you eventually; he just has it today." },
+    { t:"new", s:"Some nights the sky does something. Meteor showers, the northern lights over the ridge, and once in about five years, the comet. The board tells you the evening before, so it's a thing you can plan an early night around \u2014 and it arrives as a MORNING, with star-glass in the grass, so sleeping is never the wrong move." },
+    { t:"new", s:"Tom is short of something every day and pays half again for it \u2014 announced on the board, and named right on the price wherever you look at it. It's the texture the old sliding prices used to give the sell screen, with the sign flipped: this one is only ever good news." },
+    { t:"balance", s:"No number in the game is tuned assuming any of it. The ferry sells conveniences, never necessities; the sky gives a handful of things you could also find; the craving only ever pays more, never less." },
+  ]},
   { v:"5.7.0", code:132, date:"2026-07-29", name:"Four Walls", notes:[
     { t:"new", s:"The cottage is yours to furnish. Fifteen pieces at Tom's \u2014 rugs, lamps, a bookcase, an armchair you will absolutely fall asleep in, a standing clock \u2014 bought, carried home, and set down wherever you like. And they STAY. The one room you wake up in every single day has been a diorama since the game began; it isn't one now." },
     { t:"new", s:"Rowan will build onto the house. Two expansions on the ledger, paid in pieces like everything else he builds: he knocks through the east wall, and later puts up the long room with the good light. The cottage stops being a cottage." },
@@ -1020,6 +1026,90 @@ const FURNITURE = {
   cornerdesk:  { name:"Corner Desk",      cost:2200, blurb:"For ledgers, letters, and the long evening sort of thinking." },
   standclock:  { name:"Standing Clock",   cost:5200, blurb:"It keeps the valley's time and says so, once an hour, whether asked or not." },
 };
+// ============================================================
+// v5.8 "The Ferry Comes In" — the visiting merchant, Tom's Craving, and the rare sky.
+//
+// Three separate answers to the same finding: **the valley's week has no texture.** Every day offers
+// the same shops, the same noticeboard shape and the same sky; week 40 holds nothing week 4 didn't.
+//
+// ★ Owner decision (`V5_PLAN.md` §6.3): the ferry comes in on **~2 days a week, SEEDED** — not a
+// fixed weekday. Seeded reads as life; a fixed day reads as a schedule to plan around, and planning
+// around a schedule is work.
+//
+// ★ THE CONTRACT LINE, and it governs the whole stall: **nothing baseline-required is ever
+// merchant-exclusive.** An expiring offer is foregone gain, which is legal (v3.15's Deep Run
+// established it); a missed NECESSITY would not be. Everything below is a convenience, a shortcut or
+// a curio — the seeds are out-of-season copies of seeds Tom sells in season, the material is one you
+// can mine, and the décor is cosmetic. GBP §5.2b, pointed at the economy: **no number in this game is
+// tuned assuming the merchant.**
+const FERRY_STOCK = [
+  { item:"Starfruit Seeds", cost:900,  n:3, blurb:"out of season, and none of my business why you want them" },
+  { item:"Cloudberry Seeds", cost:700, n:3, blurb:"they'll not grow for me. Perhaps they'll grow for you" },
+  { item:"Deepsilver Ore",  cost:1400, n:4, blurb:"bought off a miner three coasts north. He was retiring" },
+  { item:"Silverwood Beam", cost:2600, n:2, blurb:"pale as a moon and twice as stubborn to cut" },
+  { item:"Fine Cheese",     cost:520,  n:4, blurb:"not as good as Nell's. Don't tell her I said the reverse" },
+  { item:"Diamond",         cost:2800, n:1, blurb:"one stone, one price, no haggling and no story" },
+  { item:"Wall Hanging",    cost:1900, n:1, blurb:"woven inland. The pattern means something there" },
+  { item:"Brass Lamp",      cost:1200, n:1, blurb:"salvage. Somebody read by this for forty years" },
+  { item:"Bait",            cost:10,   n:20, blurb:"cheaper than Bram's, and he knows it, and we don't discuss it" },
+];
+// ~2 days in 7, seeded off the day number so it is the same for a given save and unknowable in
+// advance. Never on a festival day: the coast belongs to the festival, and a stall competing with a
+// ceremony helps nobody.
+function ferryToday(){
+  if(typeof beachEvent === "function" && beachEvent()) return false;
+  return makeRng(9001 + state.day * 17)() < 0.28;
+}
+function ferryStockToday(){
+  const rng = makeRng(3300 + state.day * 41);
+  const pool = FERRY_STOCK.slice();
+  const out = [];
+  for(let i = 0; i < 4 && pool.length; i++) out.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
+  return out;
+}
+// Tom's Craving — the sell-side texture that Tom's Demand used to provide, rebuilt POSITIVE-ONLY.
+// The retired mechanic slid a price DOWN for selling too much of one thing; this pays MORE for one
+// thing today. Same texture, opposite sign — and the reason the sign matters is the owner's own call
+// on why Demand was retired (v4.9): the slide read as a punishment for a good harvest.
+function todaysCraving(){
+  const pool = [];
+  for(const k in CROPS) pool.push(CROPS[k].name);
+  for(const f of FISH) pool.push(f.name);
+  for(const r of RECIPES) if(!r.flag) pool.push(r.name);
+  const rng = makeRng(7777 + state.day * 13);
+  return pool.length ? pool[Math.floor(rng() * pool.length)] : null;
+}
+const CRAVING_MULT = 1.5;
+
+// ★ Rare sky events — the cross-check's best impact-per-effort item. Seeded, ~2–3 a season,
+// announced the evening before by the board so it is a thing you can plan an early night around.
+// Each is a MORNING, not a mechanic: a small gatherable or a warm hour, and nothing that punishes
+// having slept through it.
+const SKY_EVENTS = [
+  // ★ Odds MEASURED against a full 112-day year, not guessed: the first pass gave 7 events a year
+  // (under the "~2–3 a season" target) and put the comet on the sky twice a year while its own text
+  // says "it was last here before Rowan was born". Retuned to ~9–10 a year — and the comet to roughly
+  // once every five years, so the line stays true.
+  { id:"meteor",  name:"a meteor shower", odds:0.050,
+    eve:"The board says: clear skies tonight, and the old almanac marks it a night for falling stars.",
+    morn:"Half the night the sky was throwing sparks. There's star-glass in the grass this morning.",
+    gift:{ item:"Starlight Shard", n:3 } },
+  { id:"aurora",  name:"an aurora", odds:0.032,
+    eve:"The board says: the ridge folk expect the lights tonight. Nobody can say why they come.",
+    morn:"Green light stood over the ridge until nearly dawn. Nobody in the valley slept, and nobody minded.",
+    buff:"aurora" },
+  { id:"comet",   name:"the comet", odds:0.002,
+    eve:"The board says: the comet is due. It was last here before Rowan was born.",
+    morn:"The comet hung over the water all night with a tail like a dropped ribbon. You will not see it again.",
+    gift:{ item:"Starstone", n:1 } },
+];
+function skyTonight(){
+  const rng = makeRng(555 + state.day * 29);
+  const r = rng();
+  let acc = 0;
+  for(const e of SKY_EVENTS){ acc += e.odds; if(r < acc) return e; }
+  return null;
+}
 const HOME_MAX = 24;   // the cottage is 11×9; two dozen pieces dresses it without making it a warehouse
 const DECOR_MAX = 40;   // a generous cap so a farm can be dressed, but not infinitely spammed
 const ORCHARD_MAX = 30;   // v4.9: fruit trees were the ONE uncapped placeable (hives/machines/décor all cap). A full orchard, bounded — restores passive-beats-active income (more warranted now flat pricing removed the sell-side brake). Grandfathered: only blocks NEW plantings past the cap.

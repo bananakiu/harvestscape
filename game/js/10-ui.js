@@ -1134,7 +1134,8 @@ function projectsRowsHtml(){
 // (selling is universal — sell anything, anywhere, at full price). Tom is the general store (+ tools,
 // décor); Bram's Bait & Tackle is on the coast; Nell's Larder is at the Butterbrook dairy.
 let _shopVendor = "tom";
-const SHOP_TITLES = { tom:"TOM'S GENERAL STORE", bram:"BRAM'S BAIT & TACKLE", nell:"NELL'S LARDER" };
+const SHOP_TITLES = { tom:"TOM'S GENERAL STORE", bram:"BRAM'S BAIT & TACKLE", nell:"NELL'S LARDER",
+                     ferry:"THE FERRY TRADER" };   // v5.8
 function openShop(tab, silent, vendor){ _shopVendor = vendor || "tom"; _panelTab["shopPanel"] = tab || "sell"; openPanel("shopPanel", renderShop);
   if(!silent && _shopVendor === "tom") toast(pick(TOM_GREET), "#e9dcc0"); }
 function renderShop(){
@@ -1143,6 +1144,7 @@ function renderShop(){
   const h2 = $("shopPanel").querySelector(".phead h2"); if(h2) h2.textContent = SHOP_TITLES[vendor] || "SHOP";
   const TABS = vendor === "tom"  ? [["sell","Sell"],["buy","Seeds & Food"],["tools","Tools"],["decor","Décor"],["home","Cottage"]]
              : vendor === "bram" ? [["sell","Sell"],["buy","Bait & Tackle"]]
+             : vendor === "ferry"? [["buy","Today's Cargo"]]     // v5.8: no sell tab — he isn't buying, he's passing through
              :                     [["sell","Sell"],["buy","Larder"]];
   if(!TABS.some(t => t[0] === _panelTab["shopPanel"])) _panelTab["shopPanel"] = "sell";   // snap to a tab this vendor has
   const shopTab = panelTabs("shopPanel", "shopTabs", TABS, renderShop);
@@ -1180,7 +1182,21 @@ function renderShop(){
         `<button onclick="sellItem('${jsq(i)}',${state.inv[i]})" title="${allTotal}g for all ${state.inv[i]}">all · ${allTotal}g</button></span></div>`;
     });
   } else if(shopTab === "buy"){
-    if(vendor === "bram" || vendor === "nell"){
+    if(vendor === "ferry"){
+      // v5.8 the visiting trader. Four of nine lines, seeded by the day — so what he has is a fact
+      // about today rather than a catalogue, and the same for every player on that day of that save.
+      html += `<div class="desc" style="margin-bottom:.5em;color:var(--ink-soft);">` +
+        `“Two hours, then the tide turns and I go. Whatever's on the boat is on the boat.”<br>` +
+        `<span style="font-size:.9em;">Nothing here is anything the valley can't give you eventually — he just has it <i>today</i>.</span></div>`;
+      for(const o of ferryStockToday()){
+        const qid = "fq_" + o.item.replace(/[^a-z0-9]/gi,"");
+        html += `<div class="row"><span class="lead" data-icon="item_${o.item}"><canvas></canvas><span>${o.item}` +
+          ` <span class="sub">×${state.inv[o.item]||0}</span><br><span class="sub">“${o.blurb}”</span></span></span>` +
+          `<span><span class="price">${o.cost}g</span> ${qtyCtl(qid, Math.min(o.n, Math.floor(state.gold/o.cost)))} ` +
+          `<button class="buy" ${state.gold>=o.cost?"":"disabled"} onclick="buyFood('${jsq(o.item)}',${o.cost},Math.min(${o.n},qv('${qid}')))">buy</button></span></div>`;
+      }
+      html += `<div class="desc" style="margin-top:.5em;color:var(--ink-soft);font-size:.85em;">He'll be back. Not on any day you could name, but he'll be back.</div>`;
+    } else if(vendor === "bram" || vendor === "nell"){
       // the specialty vendors: a small, distinct buy list (buyFood is generic — spends gold, gives the item).
       const row = (item, cost, sub) => { const qid = "vq_" + item.replace(/[^a-z0-9]/gi,"");
         return `<div class="row"><span class="lead" data-icon="item_${item}"><canvas></canvas><span>${item} <span class="sub">×${state.inv[item]||0}</span> <span class="sub">${sub}</span></span></span>` +
@@ -1469,6 +1485,7 @@ function sellPriceTag(item){
   if(curSeason() === "Winter" && FISH_NAMES.has(item)) bits.push("winter");
   if(hasMastery("Cooking", 99) && RECIPE_NAMES.has(item)) bits.push("★ Renowned");
   if(item.indexOf("Cooked ") === 0 && cookedMult() > 1) bits.push("your cooking");
+  if(item === todaysCraving()) bits.push("Tom wants this today");   // v5.8
   return bits.length ? ` <span style="color:var(--gold-hi)">· ${bits.join(" · ")}</span>` : "";
 }
 
@@ -2330,6 +2347,9 @@ function showSleepCard(s){
   $("scSub").textContent = s.season ? `${s.season} has come to Willowbrook.` : w.line;
   const list = $("scList"); list.innerHTML = "";
   const lines = [];
+  // v5.8: last night's sky, first — it is the rarest line the card will ever print, and a rare thing
+  // buried under "3 crops grew overnight" is a rare thing nobody notices.
+  if(s.sky) lines.push(`✦ ${s.sky.morn}`);
   if(s.wrack) lines.push(`🐚 The storm has thrown wrack up the beach`);
   lines.push(`${w.icon} ${w.offer}`);
   if(s.fruited) lines.push(`🍎 ${s.fruited} tree${s.fruited>1?"s":""} bore fruit`);

@@ -556,7 +556,16 @@ function forecastLine(){
 // What the board itself says when you read it.
 function boardText(){
   const w = weatherInfo(state.weather);
-  const head = `${w.icon} Today: ${w.name}. ${w.offer}\n${forecastLine()}\n\n────────────\n\n`;
+  // v5.8: the board is where the valley's WEEK gets announced — the ferry, tonight's sky and Tom's
+  // craving all post here, because the board is the one surface a player already checks each morning
+  // and a second notice-place would just be a second thing to remember.
+  let extra = "";
+  if(typeof ferryToday === "function" && ferryToday()) extra += "\n⚓ The ferry is in at the coast road landing today. A trader is on it.";
+  const sky = (typeof skyTonight === "function") ? skyTonight() : null;
+  if(sky) extra += "\n✦ " + sky.eve;
+  const crave = (typeof todaysCraving === "function") ? todaysCraving() : null;
+  if(crave) extra += `\n◉ Tom is short of ${crave} today and will pay half again for it.`;
+  const head = `${w.icon} Today: ${w.name}. ${w.offer}\n${forecastLine()}${extra}\n\n────────────\n\n`;
   const r = todaysRequest();
   if(!r) return head + "Nothing else pinned today. Come back tomorrow.";
   const def = NPCDEF[r.who];

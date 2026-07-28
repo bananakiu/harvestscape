@@ -237,7 +237,11 @@ tests a copy tests nothing.
   shop tab, lossless pickup, and two house-expansion pledges that grow the map (11×9 → 15×9 → 19×11 via
   a `MAPS.cottage` getter — ★ which must guard `state` itself being null, as the atlas found on its
   first run). Measured: the dressed cottage is the CHEAPEST map in the game (p50 0.5ms vs the farm's
-  2.2ms). **Next unbuilt release: v5.8 "The Ferry Comes In."** Build it the
+  2.2ms). **v5.8 "The Ferry Comes In" SHIPPED** — the
+  seeded visiting merchant (1.7 days/week measured), rare sky events (8.2/year, 2.0/season measured over
+  five simulated years), and Tom's Craving (the retired Demand's texture with the sign flipped).
+  ★ The stall is `MONETIZATION.md`'s diegetic home and ships SYSTEM-FIRST on purpose. **Next unbuilt
+  release: v5.9 "The Writ" — the last of V5.** Build it the
   `V4_BUILD_PLAN.md` way — write that release's build order fresh, re-verify every symbol anchor
   `V5_PLAN.md` names, one release per session, strictly in order.
   ★ Two load-order lessons from v5.1, both worth carrying: (1) a `const X = f()` evaluated at load in

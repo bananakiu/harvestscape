@@ -1025,6 +1025,11 @@ function interact(){
       }
       case "shipbin": toast("Shipping bin — sell your goods here.", "#e9dcc0"); openShop("sell", true); return;
       case "sign": showDialog("Weathered Sign", obj.text || "…", "port_sign"); return;
+      // v5.8 the visiting trader. Opens the same shop panel every vendor uses (one grammar), on its
+      // own vendor id so the tab set and the greeting are its own.
+      case "stall":
+        if(obj.ferry){ openShop("buy", false, "ferry"); return; }
+        break;
       case "noticeboard": tutTip("tip_board","Someone in the valley wants something small each day. Bring it for coin and goodwill — never required."); showDialog("The Noticeboard", boardText(), "port_sign"); return;
       case "ledger": openProjects(); return;
       case "wardledger":   // v4.3 the Warden's Ledger — Act III. Latched shut until the tenth door gives.
@@ -1668,7 +1673,9 @@ function doSleep(){
     showSleepCard(summary);
   });
 }
+let pendingSky = null;   // v5.8: last night's sky event, handed to the morning summary
 function newDay(){
+  pendingSky = null;
   const farm = state.farm, wasRain = state.weather === "rain";
   const wasStorm = state.weather === "storm";      // the sea gives it back the morning after
   // married: your spouse tends a few crops overnight (and sometimes leaves breakfast)
@@ -1723,8 +1730,19 @@ function newDay(){
   state.flags.stormWrack = wasStorm;   // one day only; the beach regenerates nightly
   state.deepRun = false;               // a new dawn ends any deep run — you always wake home, haul intact
   if(typeof clearTonic === "function") clearTonic();   // v5.2: a tonic lasts one descent; a night is not one
+  // v5.8: the sky that was announced last night actually happened. Delivered as a MORNING — a line
+  // and a small gift on the doorstep — rather than a night-time event you had to stay up for, because
+  // the sleep verb is how this game passes time and an event that punishes using it is a trap.
+  // Yesterday's seed, deliberately: `skyTonight()` reads state.day, and the day has already rolled.
+  const skyLast = (typeof skyTonight === "function") ? (function(){
+    const d = state.day; state.day = d - 1; const e = skyTonight(); state.day = d; return e; })() : null;
+  if(skyLast){
+    state.flags.lastSky = skyLast.id;
+    if(skyLast.gift) give(skyLast.gift.item, skyLast.gift.n, true);
+    pendingSky = skyLast;
+  }
   saveGame();
-  return { grew, ready, cellared, rain: state.weather === "rain", withered, season: seasonChanged ? newSeason : null,
+  return { sky: pendingSky, grew, ready, cellared, rain: state.weather === "rain", withered, season: seasonChanged ? newSeason : null,
            spouse: spouseTended, built, weather: state.weather, forecast: state.forecast, wrack: wasStorm,
            fruited: orchard.fruited, honeyed: orchard.honeyed };
 }
@@ -1979,6 +1997,11 @@ function baseUnitPrice(item){
   // cannot double-dip. Net multipliers vs the old flat 1.75: 1.40 / 1.47 / 1.54 / 1.65 — every rung is a
   // real trim of the endgame loop, and the top of the ladder is still the best gold in the game.
   if(item.indexOf("Cooked ") === 0) p *= cookedMult();
+  // v5.8 Tom's Craving — one thing he wants today, at 1.5×. Applied HERE, in the one function every
+  // price surface reads (sellPriceNow, bundlePrice, sellItem, the sell panel), so the counter and
+  // every readout of it agree by construction. That is v4.37's lesson: a premium computed in one
+  // place and displayed from another is how "prices were wrong wherever you looked" happens.
+  if(item === todaysCraving()) p *= CRAVING_MULT;
   return p;
 }
 // The earned half of the grilled premium. Deliberately gentle and monotone: a fisher who never touches

@@ -22,6 +22,59 @@
 
 ---
 
+## 2026-07-29 — v5.8.0 "The Ferry Comes In" (code 133, tag `v5.8.0`) — the week gets a texture
+
+### Why this release
+
+One finding, three answers: **the valley's week is flat.** Every day offers the same shops, the same
+noticeboard shape and the same sky. `V6_PLAN.md` §1 puts it plainly for the year — *"Year 2 contains
+no moment year 1 didn't"* — and the same is true of the week. Week 40 holds nothing week 4 didn't.
+
+### Added — the visiting merchant
+
+**★ Owner decision (`V5_PLAN.md` §6.3): ~2 days a week, seeded — not a fixed weekday.** Seeded reads
+as life; a fixed day reads as a schedule to plan around, and planning around a schedule is work.
+Measured across a full year: **27 ferry days, 1.7 a week.** Never on a festival date — the coast
+belongs to the festival, and a stall competing with a ceremony helps nobody.
+
+Four of nine cargo lines, seeded by the day, at the coast road landing that has had a mooring "kept
+good for a boat that never comes" since v3.36. He gets his own vendor id and **no sell tab** — he
+isn't buying, he's passing through.
+
+> **★ The contract line, and it governs the whole stall: nothing baseline-required is ever
+> merchant-exclusive.** An expiring offer is *foregone gain*, which v3.15's Deep Run established as
+> legal; a missed *necessity* would not be. Every line is a convenience, a shortcut or a curio — the
+> seeds are out-of-season copies of seeds Tom sells in season, the material is one you can mine, the
+> décor is cosmetic. GBP §5.2b pointed at the economy: **no number is tuned assuming the merchant.**
+
+This stall is also `MONETIZATION.md`'s designated diegetic home, and it ships **system-first** on
+purpose: by the time any brand slot is ever discussed, the stall will have been ordinary valley
+furniture for a full version. The world first, the message later, and never the reverse.
+
+### Added — rare sky events
+
+Meteor showers, an aurora over the ridge, and the comet. Announced on the board **the evening before**
+so it is something you can plan an early night around, and delivered as a **morning** — a line on the
+sleep card and star-glass in the grass — rather than a night-time event you had to stay up for. The
+sleep verb is how this game passes time; an event that punishes using it is a trap.
+
+**★ Odds measured over five simulated years, not guessed.** The first pass gave 7 a year and put the
+comet in the sky twice a year while its own text says *"it was last here before Rowan was born."*
+Retuned to **8.2 a year — 2.0 a season** — with the comet at roughly once every five years, so the
+line stays true.
+
+### Added — Tom's Craving
+
+One item a day at **1.5×**, announced on the board and named on the price wherever it appears. This is
+the sell-side texture Tom's Demand used to provide, rebuilt **positive-only**: the retired mechanic
+slid a price *down* for selling too much of one thing; this pays *more* for one thing today. Same
+texture, opposite sign — and the sign is the whole point, because the owner's reason for retiring
+Demand (v4.9) was that the slide read as a punishment for a good harvest.
+
+Applied inside `baseUnitPrice`, the one function every price surface reads. v4.37's entire release was
+about premiums computed in one place and displayed from another; verified here — a winter Sardine
+prints `30g → 56g · winter · Tom wants this today`, and the counter pays 56.
+
 ## 2026-07-29 — v5.7.0 "Four Walls" (code 132, tag `v5.7.0`) — the room you wake in every day stops being a diorama
 
 ### Why this release

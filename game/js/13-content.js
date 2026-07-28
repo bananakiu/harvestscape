@@ -638,6 +638,10 @@ function genCoastRoad(m){
   // the ferry landing: a grey plank dock into the sea, kept good for a boat that never comes (yet)
   for(let y=15;y<=19;y++) for(let x=39;x<=41;x++) t[y*W+x]=T.WOOD;
   put(m, 40, 19, "mooring");
+  // v5.8: on ferry days a stall stands at the landing. Generated, not persisted — the coast road
+  // regenerates daily like every non-farm map, so "the ferry is in today" is simply a fact about
+  // today's map, with nothing to migrate and nothing to clean up tomorrow.
+  if(typeof ferryToday === "function" && ferryToday()) put(m, 38, 18, "stall", { ferry:true });
   put(m, 37, 14, "sign", {text:"FERRY — Marrow Pt. · no service"});
   // the milestone at the road's east end — the road is drawn continuing past it into the wall
   put(m, 43, 7, "milestone");
