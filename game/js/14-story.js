@@ -640,8 +640,45 @@ function catchUpPages(){
 }
 
 // Called at the end of setMap — the one place that knows you have arrived somewhere.
+// ============================================================
+// v6.1 — Thea's arrival. ★ A newcomer ARRIVING is itself an event.
+//
+// The plan's line was "the valley's repopulation becomes visible rather than asserted". The valley
+// has been *told* it is coming back to life for six versions; nobody has ever watched it happen.
+//
+// Staged at the ferry landing on the coast road, which has carried a mooring since v3.36 with an
+// examine line that reads: **"Nothing has tied up here in years. Somebody keeps the boards good
+// anyway."** Three versions of a dock kept ready for a boat that never comes — and now the boat
+// comes. Nothing new had to be built for this beat; it was already waiting in the geography.
+//
+// Gated on the tenth wing being lit, because that is the thing she would have heard about in the
+// north. Fires once, on entering the coast road, and never mid-anything.
+function maybeTheaArrival(){
+  if(state.flags.theaArrived || !state.flags.tenthWingLit) return;
+  if(isCutscene() || paused || sleeping || uiBlocking() || gameMode !== "play") return;   // try again next visit
+  if(curHour() < 8 || curHour() > 18) return;
+  state.flags.theaArrived = true;
+  startCutscene([
+    { type:"wait", t:0.4 },
+    { type:"say", who:"", portrait:"port_valley", text:"There is a boat at the landing.\n\nThere has not been a boat at the landing in eleven years. Somebody has kept the boards good the whole time anyway." },
+    { type:"setpos", actor:"thea", x:40, y:17, face:"down" },
+    { type:"say", who:"Thea", portrait:"port_thea", text:"…This is Willowbrook? The Willowbrook? With the Guild?" },
+    { type:"say", who:"Thea", portrait:"port_thea", text:"I've been three days on that boat working out what I'd say and I had something much better than that." },
+    { type:"say", who:"Thea", portrait:"port_thea", text:"Right. Again. — I'm Thea. I was one of Orla's. Wardens, the tenth craft, the wing nobody talks about. She sent four of us north the summer before it closed and then the letters stopped." },
+    { type:"say", who:"You", portrait:"port_player", text:"…Four of you?" },
+    { type:"say", who:"Thea", portrait:"port_thea", text:"Four of us. I'm the one who came back. I'd rather you didn't ask about the other three today; I'll tell you when I know you better." },
+    { type:"say", who:"Thea", portrait:"port_thea", text:"I saw the tenth window lit from the water. Eleven years I've watched that hillside go past dark on the northern run, and last month it was LIT." },
+    { type:"say", who:"Thea", portrait:"port_thea", text:"So I got off the boat. …Is Elias alive? Nobody up north would tell me and I stopped asking." },
+    { type:"say", who:"You", portrait:"port_player", text:"He's alive. He's by the pond most days." },
+    { type:"say", who:"Thea", portrait:"port_thea", text:"…" },
+    { type:"say", who:"Thea", portrait:"port_thea", text:"Right. Right. Point me at the pond and then leave me alone for an hour, if you'd be so kind." },
+    { type:"banner", big:"✦ A warden comes home", small:"Thea has come back to Willowbrook. She'll be about the valley — and she keeps the wing with Elias now.", t:3.6 },
+    { type:"run", fn:()=>{ ensureRel("thea").points = 60; saveGame(); } },
+  ]);
+}
 function onEnterMap(id){
   if(gameMode !== "play" || !state || !state.flags) return;
+  if(id === "coastroad") setTimeout(maybeTheaArrival, 900);   // v6.1 — the boat, at last
   if(id === "guild" && wingsLit() >= 5) queuePage(5, 1200);
   if(id === "mine" && (state.mineDepth||1) >= 3) queuePage(2, 1200);
   if(id === "mine") prospectFloor();   // v5.3 ◇ Read the seams (Mining 60)
@@ -1497,6 +1534,41 @@ const HEART_EVENTS = {
     ]},
   ];
 
+  // v6.1 Thea — a full candidate ladder. Her arc is the one thread `V4_PLAN` left hanging: four
+  // wardens went north, the letters stopped, and the game never said what happened. She answers it
+  // slowly, and the answer is the ordinary one, which is what makes it land.
+  HEART_EVENTS.thea = [
+    { hearts:2, flag:"he_thea_2", steps:[
+      { type:"say", who:"Thea", portrait:"port_thea", text:"He didn't know me. Elias. Stood at that pond and looked at me for about nine seconds like I was somebody's daughter." },
+      { type:"say", who:"Thea", portrait:"port_thea", text:"Then he said my name. Just — 'Thea'. And sat down on the grass, which at his age is a whole undertaking." },
+      { type:"say", who:"Thea", portrait:"port_thea", text:"We didn't say much after that. Sat by the water till it got cold. …Best afternoon I've had in eleven years, and neither of us said above forty words." },
+    ]},
+    { hearts:4, flag:"he_thea_4", steps:[
+      { type:"say", who:"Thea", portrait:"port_thea", text:"You've been down to the bottom of that wing. Elias told me. He was insufferably proud about it and pretended he wasn't." },
+      { type:"say", who:"Thea", portrait:"port_thea", text:"I went down as far as the fifth floor yesterday and had to come back up. Not fear. Just — that smell. Gloam and cold stone. Twenty-two years old, the last time I smelled it." },
+      { type:"say", who:"Thea", portrait:"port_thea", text:"I'll get further tomorrow. That's not bravado, it's just how it works: you go as far as you can and then you go a bit further the next day, until one day the wing is just a place again." },
+      { type:"say", who:"Thea", portrait:"port_thea", text:"You'd know. You did the whole of it alone." },
+    ]},
+    { hearts:6, flag:"he_thea_6", steps:[
+      { type:"say", who:"Thea", portrait:"port_thea", text:"You asked, the first day, about the other three. I said I'd tell you when I knew you better. I know you better." },
+      { type:"say", who:"Thea", portrait:"port_thea", text:"Nothing happened to them. That's the thing nobody wants to hear. There was no last stand. Rin married a man in a port town. Ovan went into the timber trade and is, by every account, extremely happy. Sella died at seventy-one of being seventy-one." },
+      { type:"say", who:"Thea", portrait:"port_thea", text:"The order didn't fall. It just… stopped being what any of us did on a Tuesday. That's how a craft dies. Not a tragedy — an attendance problem." },
+      { type:"say", who:"Thea", portrait:"port_thea", text:"I'm the only one who couldn't let it be a Tuesday. …I've never decided whether that's the good thing about me or the bad one." },
+      { type:"run", fn:()=>{ state.flags.confided_thea = true; } },
+      { type:"banner", big:"♥ Thea, 6 hearts", small:"There's a bouquet at Tom's, if you're ready.", t:2.6 },
+    ]},
+    { hearts:8, flag:"he_thea_8", steps:[
+      { type:"say", who:"Thea", portrait:"port_thea", text:"Elias has started teaching me things. Properly, I mean — the Settling Blow, Orla's grip, the whole of it. Forty years late and he's handing it over like a man clearing a shelf." },
+      { type:"say", who:"Thea", portrait:"port_thea", text:"And I keep having to stop him and say: you taught me this. In the yard. When I was nineteen. He doesn't remember teaching it. He remembers being TAUGHT it, by her, and somewhere in between it stopped being a thing he'd done." },
+      { type:"say", who:"Thea", portrait:"port_thea", text:"So now I tell him. Every time. 'You taught me that.' He goes quiet each time like it's news. …I'll keep telling him. It seems to be worth something." },
+    ]},
+    { hearts:10, flag:"he_thea_10", steps:[
+      { type:"say", who:"Thea", portrait:"port_thea", text:"Come down to the landing. No, now — it's the light I want you to see it in." },
+      { type:"say", who:"Thea", portrait:"port_thea", text:"That's the boards I stepped off onto. Somebody kept them good for eleven years with no boat coming. Do you know how mad that is? Somebody planed those boards in a year when nobody was coming." },
+      { type:"say", who:"Thea", portrait:"port_thea", text:"I asked around. It was Elias. Of course it was Elias. Every spring, on his own, for eleven years, for a boat he had no reason to expect." },
+      { type:"say", who:"Thea", portrait:"port_thea", text:"That's the whole valley, isn't it. Somebody keeping something good on the chance. …I'm not leaving. I want that said out loud, standing on the exact boards I'd leave from. ♥" },
+    ]},
+  ];
   HEART_EVENTS.wick = [
     { hearts:2, flag:"he_wick_2", steps:[
       { type:"say", who:"Wick Harrow", portrait:"port_wick", text:"You're the farm one. Pip talks about you CONSTANTLY. It's a lot." },
@@ -1590,6 +1662,19 @@ const MARRIED_SCENES = {
       { type:"run", fn:()=>{ give("Grandpa's Guild Pin", 0); state.flags.mayaSketchDone = true; } },
     ]},
   ],
+  thea: [
+    { after:7, flag:"ms_thea_1", steps:[
+      { type:"say", who:"Thea", portrait:"port_thea", text:"I have moved in with a farmer. My whole kit fits in one crate and it took me four minutes and I have been quietly appalled about that all week." },
+      { type:"say", who:"Thea", portrait:"port_thea", text:"Eleven years of everything I own being able to go on a boat at an hour's notice. Turns out that isn't travelling light, that's just not putting anything down." },
+      { type:"say", who:"Thea", portrait:"port_thea", text:"So I've bought a chair. A heavy one. Deliberately too heavy to carry. …Don't laugh at me, it was a whole thing. ♥" },
+    ]},
+    { after:28, flag:"ms_thea_2", steps:[
+      { type:"say", who:"Thea", portrait:"port_thea", text:"A letter came. From Rin — the one who married the man in the port town. She'd heard the wing was lit." },
+      { type:"say", who:"Thea", portrait:"port_thea", text:"She asked whether she should come. And I sat with it for two days, and I wrote back: no. Not because you're not wanted. Because you're happy, and the craft doesn't need you to be unhappy to survive." },
+      { type:"say", who:"Thea", portrait:"port_thea", text:"That would have been unthinkable to me at nineteen. Orla would have called it a betrayal and then, I think, agreed with it." },
+      { type:"say", who:"Thea", portrait:"port_thea", text:"The order's alive because two of us keep it and one of us teaches it. That's enough. It was always enough. …Come to bed. ♥" },
+    ]},
+  ],
   bram: [
     { after:7, flag:"ms_bram_1", steps:[
       { type:"say", who:"Bram", portrait:"port_bram", text:"Moved the rod rack in. Took the whole wall. …I can take it out again." },
@@ -1619,6 +1704,18 @@ function tryMarriedScene(id){
 }
 
 const MARRIAGE_SCENES = {
+  // v6.1 the third candidate. Deliberately staged at the ferry landing — the place she arrived, the
+  // boards Elias kept good for eleven years, and the one spot in the valley that means "I could have
+  // left and didn't" to her specifically.
+  thea: () => [
+    { type:"say", who:"You",  portrait:"port_player", text:"Thea. Down at the landing. There's something I want to ask you standing on those boards." },
+    { type:"say", who:"Thea", portrait:"port_thea", text:"…You've picked the spot on purpose. You absolute article." },
+    { type:"say", who:"Thea", portrait:"port_thea", text:"I have got off a boat here once already knowing nothing about what came next, and it was the best thing I ever did. I am not going to be frightened of doing it twice." },
+    { type:"say", who:"Thea", portrait:"port_thea", text:"Yes. Obviously yes. Put the flowers down before you drop them in the water. ♥" },
+    { type:"sfx", name:"level" },
+    { type:"run", fn:()=>wed("thea") },
+    { type:"banner", big:"♥ You and Thea are wed ♥", small:"A warden came home, and stayed", t:3.4 },
+  ],
   maya: () => [
     { type:"say", who:"You",  portrait:"port_player", text:"Maya. I brought you something." },
     { type:"say", who:"Maya", portrait:"port_maya", text:"…That's a Willowbrook bouquet. You know what it means here. You know exactly what it means." },

@@ -253,7 +253,17 @@ tests a copy tests nothing.
   V6's own diagnosis called near-orphans), birthdays, recognitions, standing dialogue and a full heart
   ladder to ten. Two new interiors; 18 maps. ★ The rule this release established, now `V6_PLAN.md`
   §3.5: **a new NPC either meets the full cast bar or is not a character** — someone who merely stands
-  somewhere satisfies the ask on paper and fails it in play. **Next unbuilt release: v6.1 "Neighbours."**
+  somewhere satisfies the ask on paper and fails it in play. ★ **v6.1 "Neighbours" SHIPPED** — Thea, the returned
+  warden, arriving by boat at the mooring v3.36 described as "kept good anyway" for a boat that never
+  comes; she is the third romance candidate and clears every married surface v5.5/v5.6 built. Plus the
+  co-location pass (Tom's evening milk run, Pip beside Bram, Sable with Elias, Corin with Rowan).
+  ★ **Two rules came out of it, both now enforced rather than intended:** (1) the harness asserts the
+  cast bar for every NPC and every romance candidate; (2) **nobody is in two places at once** — one
+  `npcIsElsewhere` post-pass with a stated authority order, because fixing the two new double-bookings
+  by hand uncovered a third (v5.5's spouse, on every day since) and a fourth (the festival cast).
+  ★ **The standard check for ANY schedule change:** sweep every NPC × every map × every few hours ×
+  a month and print anyone appearing twice. Overlapping windows are invisible in a diff.
+  **Next unbuilt release: v6.2 "Below the Bottom."**
   **Next: `V6_PLAN.md`** — ★ **all five §4 owner decisions are now RESOLVED (2026-07-29)** and the
   release train has been **RE-CUT** around the biggest of them. Build against §4's Decision lines and
   §2's revised table, not the original: the child is IN (placed last, in a furnished house and a full

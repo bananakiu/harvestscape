@@ -22,6 +22,80 @@
 
 ---
 
+## 2026-07-29 — v6.1.0 "Neighbours" (code 136, tag `v6.1.0`) — the boat comes in, and the valley starts visiting itself
+
+### Added — Thea, and the mooring that was waiting for her
+
+`V4_PLAN.md` left a thread hanging: **Orla's order had more than one warden, and the game never said
+what happened to the rest.** Thea is the rest. Four were sent north the summer before the wing closed;
+the letters stopped; she saw the tenth window lit from the water on the northern run and got off the
+boat.
+
+**★ Her arrival is staged at the ferry landing, and nothing new had to be built for it.** The coast
+road has carried a mooring since v3.36 whose examine line reads:
+
+> *"Nothing has tied up here in years. Somebody keeps the boards good anyway."*
+
+Three versions of a dock kept ready for a boat that never comes — **and now the boat comes.** The beat
+was already sitting in the geography waiting to be used, which is the best kind of content there is.
+Her 10♥ scene closes it: she asked around, and it was Elias who planed those boards every spring for
+eleven years, alone, for a boat he had no reason to expect.
+
+The answer to "what happened to the other three" is deliberately **not** a tragedy: Rin married a man
+in a port town, Ovan went into timber and is extremely happy, Sella died at seventy-one of being
+seventy-one. *"The order didn't fall. It just stopped being what any of us did on a Tuesday. That's
+how a craft dies — not a tragedy, an attendance problem."*
+
+### The third romance candidate, and the bar she had to clear
+
+Being romanceable means clearing **every married surface v5.5 and v5.6 built** — a candidate you can
+marry and who then has nothing to say is precisely the broken promise v5.5 shipped to repair, and a
+third candidate could have re-opened it in one line. So Thea has: a heart ladder to ten, her own
+proposal scene (staged on the boards she arrived on — *"you've picked the spot on purpose, you
+absolute article"*), morning/day/evening married dialogue pools, the post-wedding arc on `daysMarried`,
+and spouse props in `genCottage`.
+
+★ **That rule is now a harness invariant, not a habit.** `tools/check-saves.mjs` asserts, for every
+NPC in the game: a birthday, gift tastes, and heart events — and for every romance candidate
+additionally a marriage scene, a married arc, married dialogue pools, and a ladder that reaches the
+heart cap. **2,277 invariants**, up from 1,697.
+
+### Added — the co-location pass
+
+The valley's people have never been in the same frame as each other. Four fixes, all schedule data:
+
+- **Tom's milk run** — twice a week, and ★ it had to be an *evening* run. Tom is the shopkeeper and
+  "never two places" is load-bearing: a store with nobody in it is a store you cannot use. So he
+  walks the milk down after the shop shuts, for the twenty-year marriage the dialogue has been
+  describing since v3.44 and never once shown.
+- **Pip fishes beside Bram** some mornings — which Pip has wanted since v1.0 — and is correspondingly
+  *not* on the plaza those mornings.
+- **Sable brings Elias a tea he doesn't need** and sits with him at the pond. Their two 8♥ scenes are
+  about the same eleven years; putting them in one frame says it without either having to.
+- **Corin works the Guild's stonework with Rowan** two days in five, which is where the restorations
+  you fund actually get built.
+
+### Fixed — nobody is in two places at once (four bugs, one rule)
+
+Giving two people second homes immediately put **both of them in two places at once** — Sable on the
+ridge (11–16) *and* at the pond (13–16); Corin on the plaza (9–18:30) *and* inside the Guild (10–16).
+Two windows written independently, in different branches, minutes apart.
+
+Fixing those two by hand found a **third**: v5.5's spouse stands in the cottage 6–9 and 18:30–23,
+while Maya also stands on the plaza 7–18:30 — **shipped four releases ago, on every single day, and
+never noticed.** And a **fourth**: on festival days the entire cast is on the sand *and* at their day
+jobs.
+
+So the fix is structural rather than careful. Every branch may over-add; **one post-pass**
+(`npcIsElsewhere`) strips anyone with somewhere more authoritative to be, in a stated authority order
+(a festival outranks a day job; being home with your spouse outranks a day job). One rule, one place,
+and it cannot drift out of sync with a schedule the way paired `if`s do.
+
+**★ The check that found all four is now standard for any schedule change:** sweep every NPC across
+every map, every few hours, for a full month, and print anyone appearing twice. Two overlapping
+windows are invisible in a diff and obvious the instant you print the whole week. Result after the
+fix: **308 snapshots, 2,781 placements, zero double-bookings.**
+
 ## 2026-07-29 — v6.0.0 "The Wrens and the Harrows" (code 135, tag `v6.0.0`) — two doors that were nailed shut in v3
 
 ### Why this release, and why it is v6.0 and not v6.5

@@ -65,6 +65,12 @@ function genCottage(m){
     put(m,8,4,"bookshelf",{title:"Maya's sketchbooks", story:"mayashelf"});
     put(m,3,1,"painting",{title:"The valley, as it was", story:"mayapaint"});
     put(m,7,2,"chair");
+  } else if(state.flags && state.flags.married && sp === "thea"){
+    // v6.1: the chair she bought deliberately too heavy to carry (her 7-day married scene), her kit
+    // hung on the wall, and the one crate that held everything she owned for eleven years.
+    put(m,8,4,"armchair",{title:"the too-heavy chair", story:"theachair"});
+    put(m,3,1,"wallhanging",{title:"a warden's kit, hung up", story:"theakit"});
+    put(m,1,6,"crate",{title:"the crate it all fitted in"});
   } else if(state.flags && state.flags.married && sp === "bram"){
     put(m,8,4,"barrel",{title:"Bram's rod rack", story:"bramrods"});
     put(m,3,1,"painting",{title:"The point, from the rocks", story:"brampaint"});
@@ -1117,6 +1123,14 @@ const NPCDEF = {
            loved:["Cloudberry","Honey"], liked:["Sea Aster","Sea Holly","Mountain Thyme","Snowdrop","Samphire","Berry Bun"] },
   wick:  { name:"Wick Harrow",  portrait:"port_wick",  spr:"wick",
            loved:["Starlight Shard","Berry Bun"], liked:["Shell","Opal","Topaz","Melon","Coral"] },
+  // v6.1 — the returned warden. `V4_PLAN`'s dangling thread: Orla's order had more than one member,
+  // and the game has never said what happened to the rest. Thea is the rest. She is also the third
+  // romance candidate, which is the replay hook the plan wanted — and being romanceable means she
+  // must clear EVERY married surface v5.5 and v5.6 built (marriage scene, married dialogue pools,
+  // the post-wedding arc, spouse props in genCottage, hearts to ten). A candidate who can be married
+  // and then has nothing to say is the exact broken promise v5.5 shipped to repair.
+  thea:  { name:"Thea",         portrait:"port_thea",  spr:"thea",  romance:true,
+           loved:["Gloamstar","Heartknot","Starstone"], liked:["Warden's Ash","Deepgnarl","Snarlthread","Cooked Salmon","Ember Broth","Gloam Thread"] },
 };
 
 // dialogue by heart tier (index clamps); some react to progress
@@ -1253,6 +1267,16 @@ function npcStory(id){
     if(state.flags.festivalDone) return "Nine wings, lit. I was certain I'd die in the dark of this hall. Thank you, child — truly.";
   } else if(id==="bram"){
     if(spouseId()==="bram") return pick(marriedPool("bram"));
+  } else if(id==="thea"){
+    if(spouseId()==="thea") return pick(marriedPool("thea"));
+    if(state.flags.married) return pick([
+      "Congratulations. Genuinely. …I'd have said something sooner but I'm told I have a face that makes people think I'm cross.",
+      "You've built something here. I got off a boat into the middle of it. Bit unfair, really." ]);
+    return pick([
+      "Fifth floor. Then the seventh. It gets to be a place, if you keep going back.",
+      "Elias is teaching me things he doesn't remember teaching me the first time. I've stopped correcting him about half of it.",
+      "The order was four of us. Rin's happy, Ovan's in timber, Sella died old. I'm the one who couldn't let it lie.",
+      "This valley leaves its lamps on for people who never come. I don't know another place that does that." ]);
     if(state.flags.married) return pick([
       "Maya's good. She's been good a long while and nobody noticed. You did. …That's the whole of my opinion on it.",
       "Aye, I heard. Congratulations. …That's it. That's the speech." ]);
@@ -1420,6 +1444,24 @@ function npcLine(id, h){
 // ---- placement per map & time ----
 function mkNpc(id, x, y, opt={}){ return { id, x, y, face:opt.face||"down", walk:0, moving:false,
   wander:opt.wander||null, timer:0, dir:{x:0,y:0} }; }
+// v6.1 — ★ WHERE-SOMEBODY-IS predicates, defined ONCE.
+//
+// The co-location pass added second homes for two characters and immediately put both of them in two
+// places at the same time: Sable on the ridge (11–16) *and* at Elias's pond (13–16), Corin on the
+// plaza (9–18:30) *and* inside the Guild (10–16). Two windows written independently, in different
+// branches, minutes apart — and completely invisible until a sweep printed where all twelve people
+// were at 2pm on each of seven days.
+//
+// The fix is structural rather than careful: one predicate per "somewhere else", read by BOTH
+// branches, so the two can never disagree again. Any future schedule that gives someone a second
+// place goes through the same shape.
+function sableVisitingElias(){
+  return !!(state.flags.act2Done && curHour() >= 13 && curHour() < 16
+            && state.day % 4 !== 0 && state.day % 7 < 2);
+}
+function corinAtGuild(){
+  return curHour() >= 10 && curHour() < 16 && state.day % 5 < 2;
+}
 function spawnMapNpcs(m){
   m.npcs = [];
   const h = curHour();
@@ -1428,6 +1470,10 @@ function spawnMapNpcs(m){
     // he came home, and he fishes the pond his daughter grew up beside. Every fourth day (v3.36)
     // he walks the coast road instead, to stand at the landing he sailed from — see below.
     if(state.flags.act2Done && h>=7 && h<19 && state.day % 4 !== 0) m.npcs.push(mkNpc("elias", 32*TILE, 25*TILE, {face:"right"}));
+    // v6.1 co-location: Sable brings Elias a tea he doesn't need, twice a week, and sits with him.
+    // Her 8♥ scene and his are about the same eleven years; putting them in one frame says it without
+    // either of them having to.
+    if(sableVisitingElias()) m.npcs.push(mkNpc("sable", 31*TILE, 26*TILE, {face:"up"}));
   } else if(m.id==="coastroad"){
     // v3.36: the ferryman at the ferry landing, looking the other way for once — north, toward
     // the town he finally left. Same hours as his pond days; only the fourth days — and never on
@@ -1437,7 +1483,11 @@ function spawnMapNpcs(m){
   } else if(m.id==="ridge"){
     // v6.0: Sable gathers on the scree in the afternoons — the herbalist and the alpine forage map
     // are obviously each other's, and nobody was standing there.
-    if(h>=11 && h<16) m.npcs.push(mkNpc("sable", 30*TILE, 20*TILE, {wander:{x0:26,y0:17,x1:36,y1:24}}));
+    // ★ v6.1 fix: NOT on the days she sits with Elias — the farm visit (13–16) overlapped this
+    // window (11–16) and put her on the ridge and at the pond simultaneously. Caught by a
+    // where-is-everyone-at-2pm sweep across a full week, which is now the standard check for any
+    // schedule change; two overlapping windows are invisible until you print the whole week.
+    if(h>=11 && h<16 && !sableVisitingElias()) m.npcs.push(mkNpc("sable", 30*TILE, 20*TILE, {wander:{x0:26,y0:17,x1:36,y1:24}}));
   } else if(m.id==="butterbrook"){
     // v3.44: of an evening (18:30–22:00) Nell walks the meadow; by day she's inside the creamery
     // (below, Tom's shopkeeper model — never two places), and after 22:00 she's home abed like
@@ -1446,6 +1496,11 @@ function spawnMapNpcs(m){
     if(h>=18.5 && h<22) m.npcs.push(mkNpc("nell", 16*TILE, 14*TILE, {wander:{x0:12,y0:11,x1:24,y1:18}}));
   } else if(m.id==="dairy"){
     if(h>=7 && h<18.5) m.npcs.push(mkNpc("nell", 6*TILE+8, 3*TILE, {face:"down"}));
+    // v6.1 the co-location pass — ★ Tom's milk run, and the rule it had to obey. Tom is the
+    // shopkeeper and "never two places" is load-bearing: a store with nobody in it is a store you
+    // cannot use. So the run is an EVENING run, after the shop shuts. Twice a week, visibly, for the
+    // twenty-year marriage the dialogue has described since v3.44 and never once shown.
+    if(h>=19 && h<22 && state.day % 7 < 2) m.npcs.push(mkNpc("tom", 5*TILE, 4*TILE, {face:"up"}));
     // v6.0: Ada buys her fleece where the fleece is. Two established characters standing in the same
     // room with a reason to be there is worth more than either of them alone.
     if(h>=10 && h<15) m.npcs.push(mkNpc("ada", 3*TILE, 5*TILE, {face:"right"}));
@@ -1469,16 +1524,35 @@ function spawnMapNpcs(m){
       m.npcs.push(mkNpc(sp, 5*TILE, 5*TILE, {wander:{x0:2,y0:2,x1:8,y1:6}}));
   } else if(m.id==="village"){
     if(h>=7 && h<18.5) m.npcs.push(mkNpc("maya", 24*TILE, 12*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));
-    if(h>=8 && h<19)   m.npcs.push(mkNpc("pip",  17*TILE, 16*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));
+    // v6.1: on his beach mornings Pip is at the beach, not here. Nobody is ever in two places — the
+    // rule the shopkeeper schedule established, applied to the child who now has somewhere to go.
+    const pipFishing = (h>=7 && h<11 && state.day % 3 === 0 && !beachEvent() && !state.flags.reunionScene);
+    if(h>=8 && h<19 && !pipFishing) m.npcs.push(mkNpc("pip", 17*TILE, 16*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));
     // v6.0: Corin is on the plaza's stonework through the working day — the mason who has been
     // silently building Rowan's restorations all this time, finally visible doing it. Wick runs the
     // lane with Pip, which is the point of Wick: Pip has been the only child in the valley.
-    if(h>=9 && h<18.5) m.npcs.push(mkNpc("corin", 20*TILE, 17*TILE, {wander:{x0:16,y0:15,x1:26,y1:19}}));
+    // ★ v6.1 fix: not while he's inside the Guild working its stonework — same double-booking as
+    // Sable's, same cause (two windows written independently), same sweep caught it.
+    if(h>=9 && h<18.5 && !corinAtGuild()) m.npcs.push(mkNpc("corin", 20*TILE, 17*TILE, {wander:{x0:16,y0:15,x1:26,y1:19}}));
     if(h>=9 && h<18)   m.npcs.push(mkNpc("wick",  19*TILE, 16*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));
   } else if(m.id==="store"){ m.npcs.push(mkNpc("tom", 7*TILE+8, 2*TILE+8, {face:"down"})); }
   else if(m.id==="mayahouse"){ if(h>=18.5 || h<7) m.npcs.push(mkNpc("maya", 6*TILE, 4*TILE, {face:"down"})); }
-  else if(m.id==="guild"){ m.npcs.push(mkNpc("rowan", 8*TILE+8, 5*TILE, {face:"down"})); }
+  else if(m.id==="guild"){
+    m.npcs.push(mkNpc("rowan", 8*TILE+8, 5*TILE, {face:"down"}));
+    // v6.1: Thea keeps a warden's cell in the hall — she has no house, which is itself true of her.
+    // By day she is at the tenth door or on the coast; evenings and nights she is here.
+    if(state.flags.theaArrived && (curHour() >= 18 || curHour() < 8))
+      m.npcs.push(mkNpc("thea", 12*TILE, 6*TILE, {wander:{x0:10,y0:4,x1:14,y1:7}}));
+    // v6.1 the co-location pass: Corin works the hall's stonework with Rowan two days in five, which
+    // is where the restorations you fund actually get built.
+    if(corinAtGuild()) m.npcs.push(mkNpc("corin", 6*TILE, 6*TILE, {face:"right"}));
+  }
   else if(m.id==="beach"){
+    // v6.1: Pip fishes beside Bram some mornings. Pip has wanted to be near Bram since v1 and the
+    // game has never once put them in the same frame; this is three lines of schedule and it does
+    // more for "the valley is populated" than a paragraph of dialogue would.
+    if(!state.flags.reunionScene && !beachEvent() && h>=7 && h<11 && state.day % 3 === 0)
+      m.npcs.push(mkNpc("pip", 12*TILE, 12*TILE, {face:"right"}));
     if(state.flags.reunionScene){              // staged cast for the homecoming cutscene
       m.npcs.push(mkNpc("bram",  13*TILE, 11*TILE, {face:"right"}));
       m.npcs.push(mkNpc("maya",  22*TILE, 11*TILE, {face:"down"}));
@@ -1494,6 +1568,35 @@ function spawnMapNpcs(m){
       m.npcs.push(mkNpc("bram", 9*TILE, (m.h-9)*TILE, {face:"down"}));
     }
   }
+  // ============================================================
+  // ★ v6.1 — ONE place that resolves "this person is somewhere else today".
+  //
+  // The co-location pass gave two people a second home and instantly put both of them in two places
+  // at once. Fixing those two by hand found a THIRD (v5.5's spouse, in the cottage 6–9 and on the
+  // plaza 7–18:30 — shipped four releases ago, unnoticed) and a FOURTH (the whole festival cast, on
+  // the sand AND at their day jobs, on every festival day).
+  //
+  // Fixing four instances by hand would have left the fifth for the next release. Every branch above
+  // is free to over-add; this strips anyone who has somewhere more authoritative to be. One rule,
+  // one place, and it cannot drift out of sync with a schedule the way paired `if`s do.
+  //
+  // Found by a sweep — twelve people × eleven maps × seven hours × fourteen days — which is now the
+  // standard check for any schedule change. Two overlapping windows are invisible in a diff and
+  // obvious the moment you print the whole week.
+  if(m.npcs.length) m.npcs = m.npcs.filter(n => !npcIsElsewhere(n.id, m.id));
+}
+// Authority order: a festival outranks a day job; being at home with your spouse outranks a day job.
+const FESTIVAL_CAST = new Set(["rowan","tom","maya","bram","pip","elias"]);
+function spouseAtHome(){
+  if(!state.flags.married || !spouseId()) return false;
+  const h = curHour();
+  return (h >= 6 && h < 9) || (h >= 18.5 && h < 23);
+}
+function npcIsElsewhere(id, mapId){
+  if(mapId !== "beach" && typeof beachEvent === "function" && beachEvent()
+     && !state.flags.reunionScene && FESTIVAL_CAST.has(id)) return true;
+  if(mapId !== "cottage" && spouseAtHome() && id === spouseId()) return true;
+  return false;
 }
 function updateNpcs(dt){
   if(!curMap) return;
@@ -1851,6 +1954,26 @@ const MARRIED_LINES = {
       "Come outside a minute. The light's doing that thing over the ridge and I want somebody to see it with. ♥",
       "You smell of the deep. Wash first, then tell me all of it, and don't leave out the frightening parts. ♥",
       "I've been drawing since four and I have no idea what I've made. Look at it tomorrow. Sit with me now. ♥",
+    ],
+  },
+  thea: {
+    morning: [
+      "There's a whole hour before anything needs doing. I still don't trust it. …I'm getting used to it. ♥",
+      "Sharpened your hoe while the kettle went. Force of habit — I sharpen whatever's nearest. ♥",
+      "I slept the entire night through. Eleven years of harbour bells and I slept through a whole night. ♥",
+      "Elias is at the pond already. Man's seventy and up before both of us. It's humiliating and I intend to do nothing about it. ♥",
+    ],
+    day: [
+      "Fifth floor and back before noon. It's just a place now. You told me it would be and I didn't believe you. ♥",
+      "Wick asked me if being a warden is scary. I told him the truth. His mother may have words for me. ♥",
+      "I catch myself saying 'ours' about the valley. Took eleven years and a wedding, but there it is. ♥",
+      "The chair's still too heavy to carry. I check occasionally. It's still too heavy. It's very reassuring. ♥",
+    ],
+    evening: [
+      "Sit with me. Don't do anything. That's the entire request and I'll not be repeating it. ♥",
+      "I walked down to the landing again. Just to look at the boards. …No, nothing's wrong. Opposite. ♥",
+      "Come here. You smell of the deep and I'd know that smell in my sleep, and now it comes home. ♥",
+      "Long day on you. I'll get the tea. Sable's tea, mind — brace yourself, it tastes like a hedge. ♥",
     ],
   },
   bram: {

@@ -147,6 +147,30 @@ for(const file of files){
     flagsUsed.add(ev.flag);
   }
 
+  // ---- 1d. v6.0/v6.1: the cast bar. ★ The rule the owner's own word set ("functional characters
+  // that have their own lives and their own scenes"), turned from a promise into a check.
+  //
+  // A new NPC who merely stands somewhere satisfies the ask on paper and fails it in play. This is
+  // the definition of "fails": no birthday, no gift tastes, no arc — or, for a romance candidate,
+  // marriable with nothing to say afterwards, which is precisely the broken promise v5.5 shipped to
+  // repair for the spouse and which a third candidate could re-open in one line.
+  const NPCDEF = sb.get("NPCDEF") || {}, BIRTHDAYS = sb.get("BIRTHDAYS") || {};
+  const MARRIAGE_SCENES = sb.get("MARRIAGE_SCENES") || {}, MARRIED_SCENES = sb.get("MARRIED_SCENES") || {};
+  const MARRIED_LINES = sb.get("MARRIED_LINES") || {};
+  for(const id in NPCDEF){
+    const d = NPCDEF[id];
+    ok(!!BIRTHDAYS[id], `${id} has no birthday — the calendar can't hold them`);
+    ok((d.loved || []).length > 0 && (d.liked || []).length > 0, `${id} has no gift tastes — gifting them is a coin flip`);
+    ok((HEART_EVENTS[id] || []).length > 0, `${id} has no heart events — they're furniture that walks`);
+    if(d.romance){
+      ok(typeof MARRIAGE_SCENES[id] === "function", `${id} is romanceable with no marriage scene`);
+      ok((MARRIED_SCENES[id] || []).length > 0, `${id} can be married and then has no arc — the v5.5 cliff, re-opened`);
+      ok(!!MARRIED_LINES[id], `${id} can be married and then has nothing to say day to day`);
+      const top = Math.max(...(HEART_EVENTS[id] || [{hearts:0}]).map(e => e.hearts));
+      ok(top >= HEART_CAP, `${id}'s ladder tops out at ${top}, below the cap of ${HEART_CAP} — a candidate you can max and then exhaust`);
+    }
+  }
+
   // ---- 2. never lose anything held ----
   for(const item in E.inv){
     const now = (s.inv || {})[item], shelved = (s.shelf || {})[item] || 0;

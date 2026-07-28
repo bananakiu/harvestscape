@@ -590,6 +590,9 @@ const CHAR_SPEC = {
   // The Harrows never left — they shut the door and waited it out. Cooler, older colours: dried herb,
   // slate, the greens of things kept in jars.
   sable:  { skin:"#e0c0a0", skinSh:"#bd9a78", hair:"#9aa0a6", hairSh:"#767c82", shirt:"#4a6a5a", shirtSh:"#354e42", pants:"#3a3a44", pantsSh:"#2a2a32", shoe:"#3a2a1a" },
+  // v6.1 Thea — a warden of Orla's order, back from the north. Warden colours (Elias's slate-blue
+  // lineage) but hers are unfaded: she wasn't here for the years that wore his out.
+  thea:   { skin:"#a8724a", skinSh:"#875634", hair:"#3a3a4a", hairSh:"#26262f", shirt:"#3f5a7a", shirtSh:"#2c4058", pants:"#4a4a52", pantsSh:"#35353c", shoe:"#2a2018" },
   wick:   { skin:"#d8a878", skinSh:"#bd8e60", hair:"#6a4a2a", hairSh:"#4c341c", shirt:"#5a7a9a", shirtSh:"#425c76", pants:"#6a5a3a", pantsSh:"#4e422a", shoe:"#3a2a1a" },
 };
 function buildChars(){
@@ -862,6 +865,8 @@ function buildPortraits(){
     shirt:"#4a6a5a", feature:"braid", extra:"" });
   portrait("port_wick",  { skin:"#d8a878", skinSh:"#bd8e60", hair:"#6a4a2a", brow:"#4c341c",
     shirt:"#5a7a9a", feature:"hair", extra:"freckles" });
+  portrait("port_thea",  { skin:"#a8724a", skinSh:"#875634", hair:"#3a3a4a", brow:"#26262f",
+    shirt:"#3f5a7a", feature:"braid", extra:"" });
   portrait("port_elias", { skin:"#dcae82", skinSh:"#b98c62", hair:"#8a6250", brow:"#66473a",
     shirt:"#6a7a8a", feature:"hair", extra:"beard" });
   portrait("port_valley", { skin:"#8fd06a", skinSh:"#5fa03e", hair:"#4f8a34", brow:"#3f7a2e",

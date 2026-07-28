@@ -8,13 +8,19 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "6.0.0", code: 135, codename: "The Wrens and the Harrows", date: "2026-07-29" };
+const VERSION = { name: "6.1.0", code: 136, codename: "Neighbours", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"6.1.0", code:136, date:"2026-07-29", name:"Neighbours", notes:[
+    { t:"new", s:"A boat comes in at the ferry landing. There has not been one in eleven years \u2014 the mooring's own description has read \u201cnothing has tied up here in years; somebody keeps the boards good anyway\u201d since v3.36. Thea gets off it. She was one of Orla's wardens; four of them were sent north the summer before the wing closed, and she saw the tenth window lit from the water on the northern run." },
+    { t:"new", s:"She's the third person you can marry, and she has everything the other two have \u2014 hearts all the way to ten, a proposal of her own on the boards she arrived on, morning and evening talk once you're wed, an arc that keeps going after the wedding, and her things in the cottage (including a chair she bought deliberately too heavy to carry)." },
+    { t:"new", s:"People visit each other now. Tom walks the milk down to Nell two evenings a week after the shop shuts. Pip fishes beside Bram on the sand some mornings \u2014 which he has wanted since the very first version. Sable brings Elias a tea he doesn't need and sits with him. Corin works the Guild's stonework with Rowan two days in five." },
+    { t:"fix", s:"Nobody is in two places at once any more. Giving people second homes exposed that your own spouse had been standing in the cottage AND on the village plaza every single morning since v5.5, and that on festival days the whole cast was on the sand and at their day jobs simultaneously. Checked now across a full month, every few hours, every map: 2,781 placements, no duplicates." },
+  ]},
   { v:"6.0.0", code:135, date:"2026-07-29", name:"The Wrens and the Harrows", notes:[
     { t:"new", s:"The two houses on the village's south lane open. They have had family names on their signs since Version 3 \u2014 \u201cThe Wrens'\u201d and \u201cThe Harrows'\u201d \u2014 above doors that were nailed shut, with a note in the game's own source promising they'd open \u201cin a later chapter\u201d. This is that chapter. The valley's cast goes from seven people to eleven." },
     { t:"new", s:"The Wrens came back. Ada weaves \u2014 bring her fleece, any fleece, she'll take the ugly stuff \u2014 and Corin is the mason who has quietly been building every one of Rowan's restorations, with his initials underneath where nobody will ever see them. They're the only family in the valley who left in the dark years and returned, and Ada would rather you said so out loud than were gracious about it." },
@@ -733,6 +739,7 @@ const BIRTHDAYS = {
   wick:  { season:"Summer", day:2  },
   corin: { season:"Fall",   day:11 },
   sable: { season:"Winter", day:24 },
+  thea:  { season:"Summer", day:19 },   // v6.1 (clear of the Luau d14 and Tom d6/Nell d24)
 };
 
 // ---- CROPS (level- & season-gated) ----
