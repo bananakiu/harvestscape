@@ -82,9 +82,10 @@ Sell and upgrade at **Tom's stall**; **sleep at your cottage door** to pass the 
 - `V4_BUILD_PLAN.md` — the v4 implementation work orders: locked decisions, verified code anchors, and per-release specs (v4.0–v4.4) any coding agent can execute cold.
 - `V5_PLAN.md` — the Version 5 roadmap ("A Life in the Valley"): the middle of the game pays — mastery
   trials, the Cooking→Resolve economy, the boss ladder + terminal fight, spouse move-in, the decoratable
-  cottage, hearts to 10, the ferry merchant. **v5.0 "The Strongbox" is built and shipped** (save
-  export/import + the migration harness + the perf budget + the unlock-cadence linter); v5.1 "The
-  Trials" is the next unbuilt release.
+  cottage, hearts to 10, the ferry merchant. **Shipped so far: v5.0 "The Strongbox"** (save
+  export/import, the migration harness, the perf budget, the unlock-cadence linter) and **v5.1 "The
+  Trials"** (mastery trials at 50 and 75 for all six crafts, the Warding technique ladder, the Stave
+  arts). Every owner decision in §6 is resolved; v5.2 "The Warden's Table" is next.
 - `V6_PLAN.md` — the Version 6 roadmap ("The Valley, Whole"): the elder game — the deep venues + the
   uncapped Long Round, the perfection ledger + records book, year-aware festivals, earned automation,
   the 100% ceremony. Directional; re-ground after V5. Roadmap, not built.

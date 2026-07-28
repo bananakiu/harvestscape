@@ -1603,6 +1603,10 @@ function talkNpc(id){
     startMarriage(id); return; }
   const ev = heartEventFor(id);
   if(ev){ state.flags[ev.flag] = true; startCutscene(ev.steps); return; }
+  // v5.1: the mastery trial's scene. Placed AFTER heart events (a friendship beat is the rarer thing
+  // and should never be queued behind a craft errand) and BEFORE the noticeboard filler, so the ask
+  // lands the first time you speak to them after crossing the gate — not on some later visit.
+  if(tryTrialScene(id)) return;
   // Bram gives up one legend for every heart. It's a secret, not a wiki page.
   if(id === "bram"){
     const c = bramClueDue(); if(c){ tellClue(c); return; }

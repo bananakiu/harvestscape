@@ -482,6 +482,17 @@ body{
 .sgoal.mast{ color:var(--ink-soft-wood); }   /* v4.37: on --wood-l; --ink-soft is 1.10:1 here */
 .sgoal.done{ color:var(--gold-hi); }
 .sgoal.spark{ color:#9fe0ff; }   /* v4.0 variety spark */
+/* v5.1 the mastery trials. The trial line is gold — it is the craft's live goal, and it outranks the
+   next-unlock line it replaces. The bank line is deliberately CALM (soft, not warning-coloured): it
+   reports a hold, and a hold in this game is never a loss, so it must not borrow the language of one. */
+.sgoal.trial{ color:var(--gold-hi); }
+.sgoal.bank{ color:var(--ink-soft-wood); font-style:italic; white-space:normal; }
+.sdLine.trial{ color:var(--gold-hi); }
+.sdLine.bank{ color:var(--ink-soft); font-style:italic; }
+.sdLine.muted{ color:var(--ink-soft); }
+/* a held bar is full and reads as PAUSED, not as an error — the gold band says "waiting", the
+   diagonal hatch says "not spending". */
+.xpbar.held{ background:linear-gradient(var(--gold), #b8862a); box-shadow:inset 0 .28em 0 rgba(255,255,255,.24); }
 .sparkNote{ font-size:.74em; color:#9fe0ff; background:rgba(120,190,255,.10); border:1px solid rgba(120,190,255,.25);
   border-radius:6px; padding:.35em .5em; margin:.1em 0 .5em; line-height:1.25; }
 #skillDetail{ margin-top:.55em; }

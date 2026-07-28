@@ -89,7 +89,7 @@ globalThis.__DATA__ = JSON.stringify({
   // v5.0: the unlock-cadence audit (01-data.js). Slimmed — the per-skill \`ladder\` array is the
   // raw material, and the atlas already renders every unlock in its own table; what belongs here
   // is the DIAGNOSIS: where the ladder goes quiet, and what that silence costs in XP.
-  LADDER_AUDIT: __opt("LADDER_AUDIT") && LADDER_AUDIT.map(r => ({
+  LADDER_AUDIT: __opt("ladderAudit") && ladderAudit().map(r => ({
     skill:r.skill, unlocks:r.unlocks, milestones:r.milestones, first:r.first, last:r.last,
     dead:r.dead, gaps:r.gaps, worst:r.worst })),
   LADDER_GAP_WARN: __opt("LADDER_GAP_WARN"),

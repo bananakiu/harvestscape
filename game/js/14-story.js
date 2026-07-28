@@ -1313,3 +1313,36 @@ function startMarriage(id){
   take("Bouquet");
   startCutscene(mk(), ()=>{ saveGame(); });
 }
+
+// ============================================================
+// v5.1 "The Trials" — the trial scene, played when you next speak to the craft's NPC.
+//
+// Why it lives here and fires on TALK rather than on the level-up: `addXP` runs in the middle of a
+// swing, a harvest, a cast. Starting a cutscene there would freeze the player mid-action to deliver
+// good news, which reads as an interruption no matter how warm the words are. The level-up moment
+// gets a banner and a pointer (08-actions.js `openTrial`); the scene waits for you to walk over,
+// exactly like a heart event. `TRIALS` (01-data.js) holds the words; this holds the staging.
+// ============================================================
+function trialSceneOwed(id){
+  // Which trial, if any, this NPC is waiting to ASK about. One per NPC by construction —
+  // MASTERY_NPC is a bijection over the six crafts.
+  for(const skill in TRIALS){
+    if(MASTERY_NPC[skill] !== id) continue;
+    const g = trialCurrent(skill);
+    if(g && !state.flags["trialScene_" + trialKey(skill, g)]) return { skill, gate:g };
+  }
+  return null;
+}
+function tryTrialScene(id){
+  const owed = trialSceneOwed(id); if(!owed) return false;
+  const d = trialDef(owed.skill, owed.gate); if(!d) return false;
+  const portrait = "port_" + id;
+  const steps = d.intro.map(([who, text]) => ({ type:"say", who, portrait, text }));
+  // The ask itself, in plain numbers, from the player's side of the conversation — the game's own
+  // rule (GBP §5.5, "dress a gate in character, never hide its mechanics"): the scene carries the
+  // voice, the closing card carries the figures.
+  steps.push({ type:"run", fn:() => { state.flags["trialScene_" + trialKey(owed.skill, owed.gate)] = true; saveGame(); } });
+  steps.push({ type:"banner", big:"✦ " + d.title, small:d.ask + "  ·  It's in your Journal (J) — pay it in pieces, from anywhere.", t:4.2 });
+  startCutscene(steps);
+  return true;
+}

@@ -200,7 +200,17 @@ function selectPlantable(sel){
 }
 
 // ---- skills / xp ----
-const skillLvl = s => levelFor(state.skills[s]);
+// v5.1 "The Trials": THE one accessor for a skill's EFFECTIVE level, and therefore the single place
+// the mastery gate lives. `levelFor(xp)` stays a pure reading of the curve — migrations, the save
+// harness and anything that must know the true XP use it — while everything that asks "what level am
+// I?" goes through here and sees the gate.
+//
+// The clamp is the whole banking design. XP accrues at full rate forever; the LEVEL waits at 50 (then
+// 75) until that craft's trial is cleared, and the instant it clears, every banked level lands at once.
+// Nothing is ever lost, spent, or rolled back — `trialCap` can only ever RISE (50 → 75 → 99), so a
+// clamped level can only ever go up. That property is what makes this legal under the cozy contract,
+// and `tools/check-saves.mjs` asserts it across every era fixture.
+const skillLvl = s => Math.min(levelFor(state.skills[s]), trialCap(s));
 // v4.23 "The Even Hand" — the variety spark gains a RHYTHM term. The spark already paid ~21-25% of a
 // level per skill per day at every band (genuinely well-calibrated; don't touch SPARK_MULT), but nothing
 // rewarded actually rotating: with food making energy effectively free, a focused player could simply
@@ -232,6 +242,7 @@ function nextUnlock(skill){
   if(skill==="Mining")      for(const k in ORES)  add(ORES[k].lvl,  ORES[k].name);
   if(skill==="Fishing"){ FISH.forEach(f=>add(f.lvl, f.name)); LEGENDS.forEach(l=>add(l.lvl, l.name+" (legend)")); }
   if(skill==="Cooking") for(const r of RECIPES) if(!r.flag) add(r.lvl, r.name);   // v4.13: flag-gated (friendship-taught) recipes aren't level unlocks
+  if(skill==="Warding") for(const t of WARD_TECHS) add(t.lvl, "⟡ " + t.name);   // v5.1 the technique ladder
   // v4.20: creature families are NOT level unlocks (spawns are keyed on depth — see WARD_BANDS), so the
   // old Warding branch here was a phantom. The REAL gates are the tool ladder and the grove's deadfalls.
   toolGates(skill, add);
@@ -264,6 +275,10 @@ function unlocksAt(skill, lvl){
   // (The old Warding creature rows are gone: they were depth content, not level unlocks. See WARD_BANDS.)
   toolGates(skill, (n, label) => { if(n === lvl) u.push(label); });
   if(skill==="Woodcutting") for(const r in DEADFALL) if(DEADFALL[r].lvl === lvl) u.push("the grove's " + ordinalRing(+r) + " ring");
+  // v5.1: Warding's technique ladder — the first thing a Warding LEVEL has ever bought. This is the
+  // direct answer to the cadence linter's worst row (10 unlocks, 88.5% dead share, the thinnest
+  // ladder in the game); every rung here is a new input or outcome, never a damage stat.
+  if(skill==="Warding") for(const t of WARD_TECHS) if(t.lvl === lvl) u.push("⟡ " + t.name + " — " + t.blurb);
   if(MASTERY[skill] && MASTERY[skill][lvl]) u.push("★ " + MASTERY[skill][lvl]);
   return u;
 }
@@ -290,11 +305,19 @@ function addXP(skill, amt){
     pSparkle(state.px + rand(-3,3), state.py - 16, "#9fe0ff", 6);   // a distinct cold-blue spark on a boosted grant
     if(firstToday) toast("✦ Variety spark — " + skill + " earns bonus XP for a while today.", "#9fe0ff");
   }
-  const before = levelFor(state.skills[skill]);
+  // v5.1: EFFECTIVE levels on both sides of the grant, so a level held behind an unpassed trial
+  // fires no level-up banner — the release banner comes later, from completeTrial, all at once.
+  const before = skillLvl(skill);
+  const rawBefore = levelFor(state.skills[skill]);
   state.skills[skill] += amt;
   floatText(state.px + rand(-4,4), state.py - 22, "+"+amt+" "+skill.slice(0,4).toLowerCase(), "#9fd8ff");
   showXpOrb(skill);   // the circular level-progress ring by the energy bar (10-ui.js)
-  const after = levelFor(state.skills[skill]);
+  const after = skillLvl(skill);
+  // v5.1: crossing a trial gate for the first time. Announced HERE (a banner + a line in the NPC's
+  // voice) but never played out here — the scene itself waits until you next talk to them, because a
+  // cutscene that yanks you out of a harvest to congratulate you is a punishment wearing a party hat.
+  for(const g of TRIAL_GATES)
+    if(rawBefore < g && levelFor(state.skills[skill]) >= g && !trialPassed(skill, g)) openTrial(skill, g);
   if(after > before){
     let unl = []; for(let l=before+1; l<=after; l++) unl = unl.concat(unlocksAt(skill, l));
     // §4.3 "always show the next unlock" — at the level-up moment too, not only in the panel: when
@@ -329,6 +352,54 @@ function checkValleyMaster(){
     playSfx("legend"); pSparkle(state.px, state.py-16, "#ffd75a", 34);
   }, 2000);   // let the Lv 99 banner (and its mastery praise) land first
   setTimeout(() => toast("Elder Rowan: “Your grandfather mastered two. Two, and we called him a great man. …Go and see Tom, child.”", "#ffe6a0"), 4200);
+}
+// ---- v5.1 the mastery trials: opening and closing one ----
+//
+// openTrial fires the moment your RAW level first reaches a gate. It does three things and no more:
+// says what happened, says it is not a loss, and says who to go and see. It deliberately does NOT
+// start a cutscene (see addXP) and does NOT stop you doing anything — you can ignore a trial for the
+// rest of the save and simply keep the level you have, banking the rest.
+function openTrial(skill, gate){
+  const d = trialDef(skill, gate); if(!d) return;
+  const id = MASTERY_NPC[skill], who = (NPCDEF[id] && NPCDEF[id].name) || id;
+  if(!state.flags) state.flags = {};
+  state.flags["trialSeen_" + trialKey(skill, gate)] = false;   // the SCENE is still owed (set true when it plays)
+  setTimeout(() => {
+    banner("✦ " + skill + " " + gate + " — " + d.title,
+      `${who} has something to ask before you go further. Your XP keeps banking meanwhile — nothing is lost, and nothing is waiting on a clock.`);
+    playSfx("quest");
+  }, 1500);
+  setTimeout(() => toast(`Go and see ${who} — the trial is in your Journal (J) too.`, "#ffe6a0"), 4200);
+  if(typeof invalidateGoals === "function") invalidateGoals();
+  saveGame();
+}
+// Called from completePledge when a trial's ask is filled. The banked levels land here, all at once,
+// with the banner each of them was owed — and then the craft's unlocks are named, because the whole
+// reason the hold was tolerable is the release.
+function completeTrial(skill, gate){
+  if(trialPassed(skill, gate)) return;
+  const d = trialDef(skill, gate); if(!d) return;
+  const before = skillLvl(skill);
+  if(!state.trialsDone) state.trialsDone = [];
+  state.trialsDone.push(trialKey(skill, gate));
+  const after = skillLvl(skill);                     // trialCap has risen — the bank empties
+  const id = MASTERY_NPC[skill], who = (NPCDEF[id] && NPCDEF[id].name) || id;
+  banner("★ " + d.title, `${who} counts it done. ${skill} is yours past ${gate}.`);
+  playSfx("upgrade"); pSparkle(state.px, state.py - 14, "#ffd75a", 26);
+  setTimeout(() => { toast(d.done, "#ffe6a0"); playSfx("heart"); }, 1600);
+  if(after > before){
+    // Every level that was waiting, announced as one arrival rather than a silent number change.
+    let unl = []; for(let l = before + 1; l <= after; l++) unl = unl.concat(unlocksAt(skill, l));
+    setTimeout(() => {
+      banner("⬆ " + skill + " Lv " + after + "!",
+        (after - before > 1 ? `${after - before} levels were waiting on this. ` : "") +
+        (unl.length ? "Unlocked: " + unl.join(", ") : "The ladder is open again."));
+      playSfx("level"); pSparkle(state.px, state.py - 14, "#8fd3ff", 18); refreshHotbar();
+    }, 3400);
+    checkValleyMaster();
+  }
+  if(typeof invalidateGoals === "function") invalidateGoals();
+  saveGame();
 }
 // The valley acknowledges a milestone. A toast in the relevant neighbour's voice, a beat after the
 // level banner so they don't collide. Fires once per tier, naturally, as you cross it.

@@ -206,6 +206,25 @@ function migrateSave(s){
     const kinds = bagKindsIn(s.inv || {});
     s.bagBonus = Math.max(0, kinds + 4 - BAG_CAPS[Math.min(BAG_CAPS.length - 1, s.bagTier || 0)]);
   }
+  // v5.1 "The Trials": grandfather every save that predates the mastery gates. A player standing at
+  // Fishing 78 today reached it under the old rules, and a rule added this afternoon may never reach
+  // backwards and take a level — so every gate they are ALREADY past is marked passed, once, here.
+  // (They keep the levels; they simply never see those trials. The trials they have not reached yet
+  // are still ahead of them, which is the honest half of the deal.)
+  //
+  // MUST run before the generic backfill below, or freshState's `trialsSeeded:true` lands first and
+  // this becomes dead code — the same trap documented three times above (v2.6.1's Collection, v4.31's
+  // bagBonus). `tools/check-saves.mjs` now asserts the outcome across nine eras, which is how this
+  // one gets to be the last time that trap is only guarded by a comment.
+  if(s.trialsSeeded === undefined){
+    s.trialsDone = s.trialsDone || [];
+    for(const skill in TRIALS){
+      const lv = levelFor((s.skills && s.skills[skill]) || 0);
+      for(const g of TRIAL_GATES)
+        if(lv >= g && !s.trialsDone.includes(skill + g)) s.trialsDone.push(skill + g);
+    }
+    s.trialsSeeded = true;
+  }
   const f = freshState();
   for(const k in f){ if(s[k] === undefined) s[k] = f[k]; }
   s.mounted = false;   // v3.22: never load mid-ride (a stale saddle would strand the speed/sprite)

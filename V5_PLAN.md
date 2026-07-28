@@ -163,19 +163,33 @@ plumbing to exist).
 6. **Docs in lockstep** — changelog reasoning per release as ever; v4.32's measured HOWTO figures
    re-verified whenever an economy number moves.
 
-## 6. Owner decision points (before building v5.0)
+## 6. Owner decision points — ★ ALL RESOLVED 2026-07-28/29
 
-1. **Trials at 50 only, or 50+75?** Recommended: both, same engine, 75's asks drawn from deeper
-   content — but 75 can ship dark and be enabled by data if pacing feels tight.
-2. **The writ's reward channel** — gold + marks toward cosmetics (recommended) vs. patron-material
-   credit. Marks want a small catalog to exist; the cosmetics can come from v5.7's interior list.
-3. **Merchant cadence** — ~2 days/week seeded (recommended) vs. weekly fixed day. Seeded reads as
-   life; fixed reads as schedule. (The brand slot from `MONETIZATION.md` remains a separate,
-   later decision — the stall ships system-first regardless.)
-4. **Heart cap 10 vs. 8.** 10 recommended (room for V6's married/newcomer arcs); 8 if the writing
-   budget for ~9 new scenes feels heavy — the cap can rise once, it should not rise twice.
-5. **Save export UI placement** — title screen + Settings (recommended both; the title button is
-   the one a player finds *after* a scare).
+Every one of these is now locked. Build against the **Decision** line, not the discussion.
+
+1. **Trials at 50 only, or 50+75?** → ★ **DECIDED: both, live from the start.** Not "75 ships dark" —
+   the owner took the full ladder. 12 trial scenes per save, one engine, 75's asks drawn from deeper
+   content. *Rationale for the record:* shipping 75 dark would have left L75 as one more empty rung
+   in the exact band V5 exists to fill, and the linter would have gone on reporting it.
+   **Built in v5.1.**
+2. **The writ's reward channel** → ★ **DECIDED: gold + writ marks toward cosmetics** (the
+   recommendation). Carries a dependency to hold in view: marks are worthless until a catalog exists,
+   so **v5.7's interior list must land before v5.9's writ**, which the release order already does.
+3. **Merchant cadence** → ★ **DECIDED: ~2 days/week, seeded** like `todaysRequest` (the
+   recommendation) — seeded reads as life, a fixed day reads as a schedule to plan around. (The
+   `MONETIZATION.md` brand slot stays a separate, later decision; the stall ships system-first.)
+4. **Heart cap 10 vs. 8** → ★ **DECIDED: 10.** The one-way door, taken deliberately: it leaves room
+   for V6's married and newcomer arcs, and the cap may not rise twice. **This binds v5.5 as well as
+   v5.6** — married scenes are written into the 10-tier ladder, not retrofitted onto it later.
+5. **Save export UI placement** → ★ **RESOLVED by shipping:** v5.0 put it on the title screen *and*
+   in Settings, as recommended.
+
+### Decisions this leaves open
+
+None for V5. `V6_PLAN.md` §4 still holds five — the child (yes/no), the newcomer's identity, Long
+Round scoring, how deep "below the bottom" goes, and audio scope — and they are deliberately not due
+until V5 has produced playtest signal. The child is the only tonal commitment among them and should
+be made explicitly by the owner rather than inherited from a roadmap.
 
 ## 7. What V5 explicitly leaves for V6
 

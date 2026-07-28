@@ -235,7 +235,19 @@ function fireStarBolt(cr){
 function updateWardBolts(dt){
   for(let i=wardBolts.length-1;i>=0;i--){ const b = wardBolts[i];
     b.life += dt; b.x += b.vx*dt; b.y += b.vy*dt;
-    if(Math.hypot(b.x-state.px, b.y-(state.py-4)) < 9 && !(state.iFrame > 0)){ drainResolve(b.dmg, b.x, b.y, b.src); wardBolts.splice(i,1); continue; }
+    if(Math.hypot(b.x-state.px, b.y-(state.py-4)) < 9 && !(state.iFrame > 0)){
+      // v5.1 ★ Bolt-Turn (Warding 55): note whether this contact was met by a PERFECT parry before
+      // drainResolve consumes the guard, then send the bolt home. A turned bolt is a normal bolt
+      // with the firer as its target, so it settles them through the same path everything else uses.
+      const perfect = (state.guardT||0) > GUARD_WINDOW - (GUARD_PARRY + (hasTech("footing") ? 0.10 : 0)) && guardFacing(b.x, b.y);
+      drainResolve(b.dmg, b.x, b.y, b.src);
+      if(perfect) boltTurn(b);
+      wardBolts.splice(i,1); continue;
+    }
+    // a TURNED bolt hunts its firer — the one bolt in the game that damages a creature
+    if(b.turned && b.src && b.src.alive && Math.hypot(b.x-b.src.x, b.y-b.src.y) < 9){
+      hitCreature(b.src, Math.max(6, b.dmg), b.x, b.y); wardBolts.splice(i,1); continue;
+    }
     if(b.life >= b.max || !wardWalkable(b.x, b.y)){ pSparkle(b.x, b.y, "#c8b8ff", 5); wardBolts.splice(i,1); }
   }
 }
@@ -306,11 +318,25 @@ function drawCreature(cr){
 function staveSwing(tx, ty, power){
   const fx = tx*TILE+8, fy = ty*TILE+8;
   let hitAny = false;
+  // v5.1: reach and power come from the technique ladder and the set art, computed once here so the
+  // knot branch below (which is the same swing) sees the same numbers.
+  //   · ★ Long Reach (Warding 35) widens the arc — a crowd standing apart is caught in one sweep.
+  //   · The Sweep art (the Warding 50 trial) widens it further and softens the blow: it is a
+  //     CHOICE, not an upgrade — more things touched, each one settled slower.
+  //   · The Settling Blow (the 75 trial) is the opposite trade: narrow, slow, and it goes THROUGH a
+  //     Hollow Warden's guard rather than round it. `_settlingBlow` is read by hitCreature.
+  const art = staveArt();
+  let reach = 15;
+  if(hasTech("cleave")) reach += 5;                       // ★ Long Reach
+  if(art === "sweep")   { reach += 7; power = Math.max(1, Math.round(power * 0.7)); }
+  if(art === "settle")  { reach -= 3; power = Math.round(power * 1.35); }
+  _settlingBlow = (art === "settle");
   // .slice(): a Gloam Tangle's split pushes new Tanglets into curMap.creatures — iterate a snapshot so
   // they aren't also struck by the same swing (they must be settled on later swings).
   if(curMap.creatures) for(const cr of curMap.creatures.slice()){
-    if(cr.alive && Math.hypot(cr.x-fx, cr.y-fy) <= 15){ hitCreature(cr, power, fx, fy); hitAny = true; }
+    if(cr.alive && Math.hypot(cr.x-fx, cr.y-fy) <= reach){ hitCreature(cr, power, fx, fy); hitAny = true; }
   }
+  _settlingBlow = false;
   if(hitAny){ cam.shake = 2.2; hitstop = 0.05; return; }
   const o = objAt(tx,ty);
   if(o && o.kind === "knot"){
@@ -356,7 +382,9 @@ function hitCreature(cr, power, fx, fy){
   }
   // Hollow Warden — GUARDS the front it faces; a strike from where it's looking clangs off. Circle to its
   // side/back — OR parry its blow (v4.4) to knock its guard open (cr.guardOpen), then a frontal strike lands.
-  if(d.block && frontalHit(cr) && !(cr.guardOpen > 0) && !cr.gDown){   // v4.22: gDown = the guard's rest beat — strike now
+  // v5.1: the Settling Blow (the Warding 75 art) is the one thing in the game that does not care
+  // about a guarded front — it is slower and narrower for exactly this reason.
+  if(d.block && frontalHit(cr) && !(cr.guardOpen > 0) && !cr.gDown && !_settlingBlow){   // v4.22: gDown = the guard's rest beat — strike now
     cr.hpBarT = 2.6; cr.hurtT = 0.05; cam.shake = 1.0; playSfx("staveHit");
     spawnHitsplat(cr.x, cr.y-10, 0, "block"); floatText(cr.x, cr.y-16, "guarded", "#9fb0d0");
     return;
@@ -399,6 +427,22 @@ function settleCreature(cr){
     floatText(cr.x, cr.y-16, d.name + " settled", d.col);
     maybeDropStair(cr);   // v4.22: the way down falls out of the fighting, not out of a search
   }
+  lanternFlare(cr);   // v5.1 ★ Lantern Flare (Warding 15)
+}
+// ---------------- v5.1 the technique ladder (WARD_TECHS, 01-data.js) ----------------
+// ★ Lantern Flare — Warding 15. Settling something flares the lantern, and whatever is standing too
+// close hesitates. Not damage: a beat of breathing room, which is what a crowd actually takes from
+// you. It is the first Warding level in the game's history that buys a VERB rather than a number.
+function lanternFlare(cr){
+  if(!hasTech("flare") || !curMap || !curMap.creatures) return;
+  let lit = 0;
+  for(const o of curMap.creatures){
+    if(!o.alive || o === cr) continue;
+    if(Math.hypot(o.x - cr.x, o.y - cr.y) > 30) continue;
+    if(CREATURES[o.kind].boss) continue;                 // bosses shrug off stuns, as everywhere else
+    if(o.state !== "stunned"){ o.state = "stunned"; o.stateT = Math.max(o.stateT || 0, 0.9); o.hpBarT = 1.6; lit++; }
+  }
+  if(lit){ pSparkle(cr.x, cr.y-4, "#ffe8b0", 10); playSfx("guardBlock"); }
 }
 // v4.22 (owner playtest: "it's not exciting to look for the ladder… have the ladder randomly spawn upon
 // killing a mob, sort of like mining rocks"). This is deliberately the MINE'S model, which the owner named
@@ -431,8 +475,12 @@ function drainResolve(amt, srcX, srcY, attacker){
   // v4.4 the Warden's Guard intercepts BEFORE any drain — every damage source (melee/slam/lunge/bolt)
   // funnels through here, so one check covers them all. A braced, FACING guard stops the strike.
   if((state.guardT||0) > 0 && guardFacing(srcX, srcY)){
-    const perfect = state.guardT > GUARD_WINDOW - GUARD_PARRY;   // caught in the opening beat = a parry
-    state.guardT = 0; state.guardCd = GUARD_CD; state.iFrame = 0.7;   // one press stops one strike
+    // v5.1 ★ Sure Footing (Warding 65) — a kinder parry window and a shorter recovery. The only rung
+    // that touches a number, and deliberately an INPUT one: it changes how forgiving the timing is,
+    // never how hard you hit.
+    const parryWin = GUARD_PARRY + (hasTech("footing") ? 0.10 : 0);
+    const perfect = state.guardT > GUARD_WINDOW - parryWin;   // caught in the opening beat = a parry
+    state.guardT = 0; state.guardCd = hasTech("footing") ? GUARD_CD * 0.6 : GUARD_CD; state.iFrame = 0.7;   // one press stops one strike
     // melee sources pass the attacker's own center (nearestCreature returns it at dist 0); a bolt passes
     // its impact point near the player, so prefer the explicit firer (attacker) when we have one still alive.
     const cr = (attacker && attacker.alive) ? attacker : nearestCreature(srcX, srcY, 26);
@@ -451,6 +499,7 @@ function drainResolve(amt, srcX, srcY, attacker){
       // safe floor-1 wisp could be re-parried forever for a risk-free XP mill (the Guard's own exploit).
       // Settling is still the real XP; this keeps parry-XP a garnish, not a grind that skips the danger loop.
       if(cr && !(cr.parryXpT > 0)){ addXP("Warding", 6); cr.parryXpT = 10; }
+      wardPulse();           // v5.1 ★ Ward-Pulse (Warding 80)
       return;                // parried: nothing lost
     }
     // a valid but late guard — most of the blow caught
@@ -528,6 +577,21 @@ function renderBells(){
   } else if(depth % 5 !== 0){
     const next = Math.min(45, Math.ceil(depth/5)*5);
     if(next > depth) html += `<div class="desc" style="margin-top:.4em;color:var(--ink-soft);">The next Warden's Bell is on floor ${next}.</div>`;
+  }
+  // v5.1 the Stave arts — set here, at the bell, because a stance is a decision you make BEFORE the
+  // floor rather than mid-swing. Only shown once you have earned something to choose between; a menu
+  // with one option is a menu that teaches nothing.
+  if(staveArtOwned("sweep") || staveArtOwned("settle")){
+    const cur = staveArt();
+    html += `<div class="desc" style="margin:.7em 0 .3em;border-top:1px solid rgba(0,0,0,.18);padding-top:.55em;">` +
+      `<b style="color:var(--gold-hi)">⟡ The stave's art.</b> <span style="color:var(--ink-soft)">One at a time — set it here before you go down. Each is a trade, not an upgrade.</span></div>`;
+    for(const a of STAVE_ARTS){
+      if(!staveArtOwned(a.id)) continue;
+      html += `<div class="row"><span class="lead"><span>${a.name}${cur===a.id?` <span class="sub" style="color:var(--gold-hi)">— set</span>`:""}` +
+        `<br><span class="sub">${a.blurb}</span></span></span>` +
+        (cur === a.id ? `<span class="sub">in hand</span>`
+                      : `<button class="buy" onclick="setStaveArt('${a.id}')">take it up</button>`) + `</div>`;
+    }
   }
   // the workbench
   html += `<div class="desc" style="margin:.7em 0 .3em;border-top:1px solid rgba(0,0,0,.18);padding-top:.55em;">` +
@@ -873,3 +937,69 @@ function wardExpeditionDone(def){
 }
 function wardChapterReady(def){ def = def || wardChapterDef(); return !!def && wardBundleFunded() && wardExpeditionDone(def); }
 function wardChaptersAllDone(){ return (state.wardChapter||0) >= WARD_CHAPTERS.length; }
+
+// ---------------- v5.1 the rest of the technique ladder ----------------
+// ★ Ward-Pulse — Warding 80. A perfect parry stops being a private moment between you and one
+// attacker: it rings outward, and everything close enough to feel it loses its footing. The reward
+// for the highest-skill input in the game is a bigger CONSEQUENCE, not a bigger number.
+function wardPulse(){
+  if(!hasTech("pulse") || !curMap || !curMap.creatures) return;
+  let rung = 0;
+  for(const o of curMap.creatures){
+    if(!o.alive || CREATURES[o.kind].boss) continue;
+    if(Math.hypot(o.x - state.px, o.y - state.py) > 34) continue;
+    o.state = "stunned"; o.stateT = Math.max(o.stateT || 0, 1.2); o.hpBarT = 2.0; rung++;
+  }
+  if(rung){
+    pSparkle(state.px, state.py - 8, "#eaf6ff", 22); cam.shake = 3;
+    floatText(state.px, state.py - 30, "⟡ ward-pulse", "#bfe4ff"); playSfx("bellRing");
+  }
+}
+// ★ Bolt-Turn — Warding 55. A star-bolt caught on the opening beat is not merely negated: it goes
+// BACK. Called from updateWardBolts, which is the only place that knows a bolt was the source — the
+// guard path itself is source-agnostic by design (one check covers melee, slam, lunge and bolt), so
+// turning a bolt has to be handled where the bolt lives.
+function boltTurn(b){
+  if(!hasTech("boltpar") || !b || !b.src || !b.src.alive) return false;
+  const a = Math.atan2(b.src.y - state.py, b.src.x - state.px), sp = 96;   // faster going home than it came
+  wardBolts.push({ x:state.px + Math.cos(a)*10, y:state.py - 4 + Math.sin(a)*10,
+                   vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:0, max:2.0,
+                   dmg:b.dmg, src:b.src, turned:true });
+  floatText(state.px, state.py - 26, "⟡ turned!", "#e8dcff");
+  pSparkle(state.px, state.py - 6, "#e8dcff", 12); playSfx("guardParry");
+  return true;
+}
+
+// ---------------- v5.1 the Stave arts ----------------
+// Earned from Warding's two mastery trials (01-data.js TRIALS.Warding) and SET at a Warden's Bell —
+// one at a time, deliberately a stance and never a combo (the bible's §6.5.3: cozy combat is read,
+// position and timing; it is not an execution test). Each art is a TRADE, so "which one" is a real
+// question with no strictly-correct answer:
+//   · plain  — the stave as Elias handed it over. No trade.
+//   · sweep  — wider arc, softer blow. For crowds; worse against anything that wants settling fast.
+//   · settle — narrow and heavy, and it goes through a guarded front. For the Hollow Wardens, and
+//              clumsy in a room full of wisps.
+function staveArtOwned(id){
+  if(id === "plain") return true;
+  if(id === "sweep")  return trialPassed("Warding", 50);
+  if(id === "settle") return trialPassed("Warding", 75);
+  return false;
+}
+function staveArt(){
+  const a = state.stanceArt || "plain";
+  return staveArtOwned(a) ? a : "plain";   // never let a save carry an art it hasn't earned
+}
+let _settlingBlow = false;   // transient: is THIS swing a Settling Blow? (read by hitCreature)
+const STAVE_ARTS = [
+  { id:"plain",  name:"The plain hold",   blurb:"the stave as Elias gave it to you — no trade, no trick" },
+  { id:"sweep",  name:"The Sweep",        blurb:"wider arc, softer touch — for when they crowd you" },
+  { id:"settle", name:"The Settling Blow", blurb:"narrow and heavy, and it goes through a guarded front" },
+];
+function setStaveArt(id){
+  if(!staveArtOwned(id)){ playSfx("error"); return; }
+  state.stanceArt = id;
+  const a = STAVE_ARTS.find(x => x.id === id);
+  toast("Stave art set: " + a.name + ".", "#bfe4ff"); playSfx("select");
+  saveGame();
+  if(openPanels.has("bellPanel")) renderBells();
+}

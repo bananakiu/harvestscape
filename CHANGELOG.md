@@ -22,6 +22,147 @@
 
 ---
 
+## 2026-07-29 — v5.1.0 "The Trials" (code 126, tag `v5.1.0`) — the ladder grows people on it, and Warding's levels finally buy verbs
+
+### Why this release
+
+`V5_PLAN.md`'s first content release, and the oldest debt in the repo: mastery trials were specced in
+`V4_PLAN.md` §4.1 and deferred out of v4.1, v4.3, v4.4 and v4.5 — four times, always for the same
+honest reason (they touch every skill's progression and want a release of their own).
+
+The measurement that finally forced it is now in the build. `auditUnlockCadence` (v5.0) prints it
+every release: **45.4% of every 1–99 climb sits above L85**, and Warding — the v4 flagship — had the
+thinnest ladder in the game at **10 unlocks and an 88.5% dead share**. A player who commits is
+climbing through silence for most of the journey. This release puts two people and five verbs into
+that silence.
+
+### Owner decisions, locked 2026-07-29
+
+`V5_PLAN.md` §6 is now fully resolved, and the plan updated to match:
+
+1. **Trials at 50 AND 75, live from the start** — not "75 ships dark". Shipping it dark would have
+   left L75 empty in the exact band this release exists to fill, and the linter would have gone on
+   reporting it every version.
+2. **Heart cap → 10** (binds v5.5/v5.6; the cap may rise once and not twice).
+3. **Writ rewards: gold + marks toward cosmetics** — with the dependency written down, that v5.7's
+   interior catalog must exist before v5.9's marks mean anything.
+4. **Merchant cadence: ~2 days/week, seeded.**
+
+### Added — the mastery trials (12 of them, six crafts × two gates)
+
+**The contract first, because it is why this took five releases.** A naive reading of "a trial gates
+the level" takes a level, and this game does not take. So:
+
+- **Bank, never regress.** XP accrues at full rate past the gate; the LEVEL waits. The instant the
+  trial clears, every banked level lands at once with the banner it was owed. `trialCap` can only
+  ever rise (50 → 75 → 99), so a clamped level can only ever go up — that property is what makes the
+  whole design legal, and the harness now asserts it directly.
+- **Grandfather everything.** Any save already past a gate auto-passes it, once, in `migrateSave`
+  (guarded by `trialsSeeded`, placed before the generic backfill — the dead-code trap this file
+  documents three times). Verified live: a save at Cooking 70 loaded with `Cooking50` marked passed,
+  effective level unchanged at 70, and only the 75-trial ahead of it.
+- **No timer, no failure, no expiry.** A trial can be ignored for the rest of a save; you keep the
+  level you have and bank the rest.
+
+**Every ask is cross-skill by construction** — that is the anti-rabbit-hole design (`V4_PLAN` §4),
+applied to the ladder itself rather than to the story. Maya's Farming 50 wants sawn boards, iron pins
+and lunch; Rowan's Mining 50 wants oak sills, maple beams and a stew that keeps in a cold gallery;
+Bram's Fishing 50 wants a gaff forged and hafted. Nothing is rare-drop-gated: every item is farmable,
+choppable, mineable, catchable or cookable on demand, so a trial can never become a wall of bad luck.
+
+**Where each piece lives, and why:**
+
+- **The ask rides the Pledge Ledger as a sixth prefix** (`trial:<Skill>:<gate>`). That buys partial
+  deposits, the Journal's Restorations page, and the no-wasted-trip rule for free — the same argument
+  v4.26's Patron made for not being a `PROJECTS` entry.
+- **The scene fires on TALK, not on the level-up.** `addXP` runs mid-swing, mid-harvest, mid-cast;
+  starting a cutscene there freezes the player to deliver good news, which reads as an interruption
+  however warm the words are. The gate-crossing gets a banner and a pointer; the scene waits for you
+  to walk over, exactly like a heart event — and sits *after* heart events in `talkNpc`, because a
+  friendship beat is the rarer thing and must never queue behind a craft errand.
+- **The Skills panel explains the hold.** A held craft shows a full gold bar (the XP genuinely IS
+  past the top of that level), who is waiting, how many levels are banked, and what is still owed.
+  "Banked" is only reassuring if you can see the number; a held level that doesn't explain itself is
+  indistinguishable from a bug. The old "0 to Lv 51" line — literally true and completely misleading
+  while a trial holds — now reads "banked past Lv 50".
+
+### Added — the Warding technique ladder (15 / 35 / 55 / 65 / 80)
+
+The direct answer to the linter's worst row. **The rule every rung obeys: a new INPUT or a new
+OUTCOME, never a damage stat.** A "+3% stave power at 55" would have been another number; a guard
+that suddenly turns star-bolts changes what you can stand in front of.
+
+- **15 — Lantern Flare.** Settling something flares the lantern; whatever stands too close hesitates.
+  Not damage — a beat of breathing room, which is what a crowd actually takes from you.
+- **35 — Long Reach.** The swing's arc widens, so a crowd standing apart is caught in one sweep.
+- **55 — Bolt-Turn.** A star-bolt caught on the opening beat of a Guard goes *back*, and settles the
+  Star-Gnarl that fired it through the same path everything else uses. (Handled in `updateWardBolts`,
+  because the guard path is deliberately source-agnostic — one check covers melee, slam, lunge and
+  bolt — so only the bolt's own code knows a bolt was involved.)
+- **65 — Sure Footing.** A kinder parry window (+0.10s) and a shorter recovery. The one rung that
+  touches a number, deliberately an *input* one: how forgiving the timing is, never how hard you hit.
+- **80 — Ward-Pulse.** A perfect parry stops being private and rings outward; everything close loses
+  its footing. The highest-skill input in the game earns a bigger *consequence*.
+
+Measured effect on the diagnosis that motivated it: **Warding 10 unlocks → 15, dead share 88.5% →
+59.1%.** Still the worst ladder in the game — v5.3 and V6's L92 tail are aimed at the rest — but no
+longer the one whose levels mean nothing.
+
+### Added — the Stave arts (the Warding trials' payout)
+
+Warding's two trials pay *combat identity* rather than materials. Set at a Warden's Bell, one at a
+time, before you go down — **a stance, never a combo system** (the bible's §6.5.3: cozy combat is
+read, position and timing, not an execution test). Each is a trade with no strictly-correct answer:
+
+| Art | Trade |
+|---|---|
+| The plain hold | the stave as Elias gave it over — no trade |
+| **The Sweep** (50) | +7 reach, ×0.7 power — for crowds, worse against anything you want settled fast |
+| **The Settling Blow** (75) | −3 reach, ×1.35 power, and it goes **through** a Hollow Warden's guarded front instead of round it |
+
+The Settling Blow is the only thing in the game that ignores that guard, which is exactly why it is
+slower and narrower.
+
+### Fixed — a `const` TDZ that would have killed the boot
+
+v5.0 ended `01-data.js` with `const LADDER_AUDIT = auditUnlockCadence()`, evaluated at load. This
+release appended a new unlock table (`WARD_TECHS`) *below* it, `unlockLadder` reached for that table,
+and the game died at boot: **"Cannot access 'WARD_TECHS' before initialization"** — in a codebase
+whose entire architecture is one shared script scope where load order is load-bearing.
+
+Fixed at the root rather than by moving lines: the audit is now a **memoized function** (`ladderAudit()`),
+which has no position in the file, so no table added later can ever be too late. The `?lint` print is
+deferred a tick for the same reason — it reads a fully evaluated file rather than whatever happened to
+be declared by the time that line was reached. Caught by the node loader (`tools/lib/load-game.mjs`)
+before it ever reached a browser, which is the second time in two releases the v5.0 tooling has paid
+for itself.
+
+### Changed — the harness now guards the sharpest thing in the release
+
+`tools/check-saves.mjs` grew the assertions that matter most here, and they check the **effective**
+level (`skillLvl`) rather than the raw curve reading — a grandfathering bug would be invisible to the
+raw number and total to the player:
+
+- every gate a save is already past **is** grandfathered (or that save just lost levels);
+- no gate is marked passed that the save has **not** reached;
+- `trialCap` returns only a legal gate, and never sits below the effective level (a cap under the
+  effective level *is* the demotion).
+
+**697 invariants across ten fixtures, all holding** (up from 437).
+
+### Notes
+
+- New persisted fields: `trialsDone`, `trialsSeeded`, `stanceArt`. Per `AGENTS.md`, each arrived with
+  its fixture assertion in the same change.
+- A technique at 55 is genuinely behind an unpassed 50-trial, because techniques read the effective
+  level. That is the gate meaning something, and nothing is lost by it — pass the trial and every
+  rung lands at once.
+- `staveArt()` refuses to return an art the save has not earned, so a hand-edited or imported save
+  can never carry one.
+- GBP §2.5's obligation was met at spec time: trial asks are materials-first (a gold-only ask is just
+  a wait), sized to roughly one good afternoon in two other crafts at 50 and two at 75, and they are
+  a *sink*, not a faucet — this release mints nothing.
+
 ## 2026-07-28 — v5.0.0 "The Strongbox" (code 125, tag `v5.0.0`) — the save becomes a file you own, and the game starts checking itself
 
 ### Why this release, and why it is first

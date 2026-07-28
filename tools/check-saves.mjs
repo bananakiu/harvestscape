@@ -95,10 +95,39 @@ for(const file of files){
   const E = fx.expect;
 
   // ---- 1. never demote a level (the contract's hardest line) ----
+  //
+  // v5.1 made this the sharpest assertion in the file. The mastery trials CLAMP a skill's effective
+  // level at 50 (then 75) until that craft's trial is cleared — which, applied naively to an existing
+  // save, would silently take levels off every long-standing player in the game. `migrateSave`
+  // grandfathers instead: every gate a save is already past is marked passed on load. So the level
+  // checked here is the EFFECTIVE one (`skillLvl`, what the game actually treats you as), not the raw
+  // curve reading — because a grandfathering bug would be invisible to the raw number and total to
+  // the player.
+  sb.setState(s);   // skillLvl/trialCap read the live `state`
   for(const sk in E.levels){
-    const was = E.levels[sk], now = levelFor(s.skills[sk] || 0);
-    ok(now >= was, `${sk} demoted: was Lv${was}, now Lv${now}`);
+    const was = E.levels[sk], now = sb.get("skillLvl")(sk), raw = levelFor(s.skills[sk] || 0);
+    ok(now >= was, `${sk} demoted: was Lv${was}, now Lv${now} (raw ${raw}) — a mastery gate was applied retroactively`);
     if(now > was) notes.push(`${sk} rose ${was}→${now} (documented one-time gift of the v2.8 curve translation)`);
+  }
+  // ---- 1b. the trials specifically: grandfathered, and holding nothing they already had ----
+  const TRIAL_GATES = sb.get("TRIAL_GATES") || [], TRIALS = sb.get("TRIALS") || {};
+  ok(s.trialsSeeded === true, "trialsSeeded not set — an old save would be re-grandfathered on every load");
+  ok(Array.isArray(s.trialsDone), "trialsDone missing or not an array");
+  for(const sk in TRIALS){
+    const raw = levelFor(s.skills[sk] || 0);
+    for(const g of TRIAL_GATES){
+      if(raw >= g) ok((s.trialsDone || []).includes(sk + g),
+        `${sk} was already Lv${raw} (past ${g}) but its ${g}-trial was not grandfathered — that save just lost levels`);
+      else ok(!(s.trialsDone || []).includes(sk + g),
+        `${sk} is only Lv${raw} but its ${g}-trial is marked passed — a gate was skipped`);
+    }
+  }
+  // The cap is what the clamp reads, so it has to be one of the three legal values and never below
+  // the level the player is standing on — a cap under the effective level would BE the demotion.
+  for(const sk in TRIALS){
+    const capNow = sb.get("trialCap")(sk);
+    ok([50, 75, 99].includes(capNow), `${sk}: trialCap returned ${capNow}, which is not a gate`);
+    ok(capNow >= sb.get("skillLvl")(sk), `${sk}: cap ${capNow} sits below the effective level — that is a demotion`);
   }
   ok(s.skills && s.skills.Warding !== undefined, "skills.Warding missing — a pre-v4 save must gain the sixth skill");
 

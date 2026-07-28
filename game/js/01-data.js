@@ -8,13 +8,20 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "5.0.0", code: 125, codename: "The Strongbox", date: "2026-07-28" };
+const VERSION = { name: "5.1.0", code: 126, codename: "The Trials", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"5.1.0", code:126, date:"2026-07-29", name:"The Trials", notes:[
+    { t:"new", s:"Every craft now has two moments in it that aren't a number. Passing 50 in a skill \u2014 and again passing 75 \u2014 means the person who cares about that craft asks you for one thing first, and it is always something from a DIFFERENT craft. Maya wants the beds framed in sawn boards and iron pins. Rowan won't call you a miner until you've propped a roof. Bram won't teach the deep casts to anyone holding a bent stick. Twelve of them, one per craft per gate." },
+    { t:"new", s:"Nothing is ever held back from you \u2014 only held. Your XP keeps counting at full rate past the gate; it is the LEVEL that waits, and the moment the trial is done every banked level lands at once. There is no timer, no failure, and no way to lose it. If you were already past a gate when this update arrived, that trial is simply marked done \u2014 you keep everything." },
+    { t:"new", s:"Warding levels finally buy something. Five techniques along the ladder: the lantern flares when you settle something and whatever's close hesitates (15); your sweep reaches wider (35); a perfectly-timed Guard sends a star-bolt back where it came from (55); the Guard forgives and recovers faster (65); and a perfect parry rings outward and staggers everything around you (80). Not one of them is a damage number." },
+    { t:"new", s:"Two Stave arts, taught by Elias at Warding 50 and 75, set at any Warden's Bell before you go down. The Sweep is a wider arc and a softer blow \u2014 for when they crowd you. The Settling Blow is narrow, heavy, and goes straight through a Hollow Warden's guard instead of round it. One at a time; each is a trade, not an upgrade." },
+    { t:"change", s:"The Skills panel says what's happening. A held craft shows a full gold bar, who is waiting, how many levels are banked, and exactly what they asked for \u2014 and the Journal takes the payment in pieces from anywhere, like every other pledge." },
+  ]},
   { v:"5.0.0", code:125, date:"2026-07-28", name:"The Strongbox", notes:[
     { t:"new", s:"Your farm is now a file you own. Until today the whole valley lived in one slot of this browser's storage — clearing your browsing data, switching browsers, or getting a new computer left it behind, permanently, with nothing you could have done about it. There is now a Save File panel, on the title screen and in Settings: copy your save, download it, and load it back any time, on any device." },
     { t:"new", s:"Nothing this panel does can cost you a farm. Restoring keeps the save it replaced in an undo slot — one click puts it back, and the one you just loaded takes ITS place, so you can swap either way. “Delete Save & Restart” keeps a copy there too; it is no longer the one button in the game you can't take back." },
@@ -1566,9 +1573,18 @@ function pledgeCost(id){
   if(id.startsWith("lift")) return liftStopCost(parseInt(id.slice(4), 10));
   if(id.startsWith("bell")) return bellCost(parseInt(id.slice(4), 10));   // v4.0 Warden's Bells
   if(id.startsWith("patron")) return patronCost(parseInt(id.slice(6), 10));   // v4.26 the standing commissions
+  // v5.1 the mastery trials — the SIXTH prefix, and the reason the trial ask cost nothing to build:
+  // partial deposits, the Journal page, and the no-wasted-trip rule all come free with the ledger.
+  // Colon-delimited because a trial id carries two fields (skill and gate), not one number.
+  if(id.startsWith("trial:")){
+    const t = trialParse(id), d = trialDef(t.skill, t.gate);
+    return d ? { g: d.g || 0, mats: d.mats } : null;
+  }
   return null;
 }
 function pledgeName(id){
+  if(id.startsWith("trial:")){ const t = trialParse(id), d = trialDef(t.skill, t.gate);
+    return d ? `${d.title} — ${t.skill} ${t.gate}` : id; }   // v5.1
   if(id === "way3") return "the Third-Ring Waystone";
   if(id === "way6") return "the Sixth-Ring Waystone";
   if(id === "way9") return "the Heart Waystone";
@@ -1591,6 +1607,7 @@ function pledgeDone(id){
   if(id.startsWith("lift")) return (state.liftStops||[]).includes(parseInt(id.slice(4), 10));
   if(id.startsWith("bell")) return (state.wardBells||[]).includes(parseInt(id.slice(4), 10));   // v4.0
   if(id.startsWith("patron")) return (state.patronTier||0) >= parseInt(id.slice(6), 10);        // v4.26
+  if(id.startsWith("trial:")){ const t = trialParse(id); return trialPassed(t.skill, t.gate); }  // v5.1
   return false;
 }
 function pledgeDiscovered(id){
@@ -1601,6 +1618,9 @@ function pledgeDiscovered(id){
   // v4.26: only the NEXT commission is ever visible — DERIVED from patronTier, so there is nothing to
   // migrate and the ledger never renders an infinite list.
   if(id.startsWith("patron")) return (state.patronTier||0) >= parseInt(id.slice(6), 10) - 1;
+  // v5.1: a trial is only ever visible once you have actually REACHED its gate. A trial you cannot
+  // start is a chore posted early, and the Journal is not a list of things you are not allowed to do.
+  if(id.startsWith("trial:")){ const t = trialParse(id); return trialOpen(t.skill, t.gate); }
   return false;
 }
 // Everything the Journal's Restorations section should list, in display order.
@@ -1615,7 +1635,11 @@ function ledgerPledges(){
   // v4.26: the standing commissions — only ever ONE open at a time, so the ledger stays a list of real
   // work rather than an infinite scroll. Rowan starts keeping the list once the Guild is properly awake.
   if((state.wingsLit||0) >= 3 || (state.patronTier||0) > 0) out.push("patron" + ((state.patronTier||0) + 1));
-  return out;
+  // v5.1 the mastery trials — listed FIRST when open, because a trial is the only pledge in the
+  // ledger that is currently holding something back, and the ledger should say so at the top.
+  const trials = [];
+  for(const skill in TRIALS){ const g = trialCurrent(skill); if(g) trials.push(trialId(skill, g)); }
+  return trials.concat(out);
 }
 
 // ---- CANOPY NESTS & CHARMS (Grove Depths Phase 3) ----
@@ -2212,6 +2236,7 @@ function unlockLadder(skill){
     if(TOOL_SKILL[tool] !== skill) continue;
     for(let t = 1; t <= MAX_TIER; t++) add(TIER_LEVEL[t], TOOL_TIERS[t] + " " + tool);
   }
+  if(skill === "Warding") for(const t of WARD_TECHS) add(t.lvl, "⟡ " + t.name);   // v5.1 the technique ladder
   if(MASTERY[skill]) for(const l in MASTERY[skill]) add(+l, "★ " + MASTERY[skill][l]);
   u.sort((a,b) => a.lvl - b.lvl);
   return u;
@@ -2243,16 +2268,224 @@ function auditUnlockCadence(){
   }
   return rows;
 }
-const LADDER_AUDIT = auditUnlockCadence();
+// ★ LAZY ON PURPOSE (v5.1). This was `const LADDER_AUDIT = auditUnlockCadence()` — evaluated at load,
+// at the point in the file where it happens to sit. The very next release appended a new unlock table
+// (WARD_TECHS, the Warding technique ladder) BELOW it, `unlockLadder` reached for that table, and the
+// game died at boot with "Cannot access 'WARD_TECHS' before initialization" — a `const` TDZ, in a
+// codebase whose whole architecture is one shared script scope where load order is load-bearing.
+// A memoized function has no position in the file, so no table added later can ever be too late.
+// The same reasoning applies to the `?lint` print below: deferred a tick, so it reads a fully
+// evaluated file rather than whatever had been declared by the time this line was reached.
+let _ladderAudit = null;
+function ladderAudit(){ return _ladderAudit || (_ladderAudit = auditUnlockCadence()); }
 // `?lint` (or localStorage.hs_lint) prints it. Silent for everyone else — see the note above.
-(function(){
+setTimeout(function(){
   let on = false;
   try{ on = /[?&]lint\b/.test(location.search) || !!localStorage.getItem("hs_lint"); }catch(e){}
   if(!on) return;
+  const LADDER_AUDIT = ladderAudit();
   console.info("[ladder cadence] XP-weighted dead share per skill (bands of ≥" + LADDER_GAP_WARN + " levels with no unlock):");
   for(const r of LADDER_AUDIT){
     console.info(`  ${r.skill.padEnd(12)} ${r.unlocks} unlocks over ${r.milestones} levels · dead ${(r.dead*100).toFixed(1)}%` +
                  (r.worst ? ` · worst ${r.worst.from}→${r.worst.to} (${(r.worst.share*100).toFixed(1)}%)` : ""));
     for(const g of r.gaps) console.warn(`    [dead band] ${r.skill} ${g.from}→${g.to}: ${g.span} levels, ${(g.share*100).toFixed(1)}% of the 1–99 climb, nothing unlocked${g.tail ? " (tail)" : ""}.`);
   }
-})();
+}, 0);
+
+// ============================================================
+// v5.1 "The Trials" — THE MASTERY TRIALS (V4_PLAN §4.1, deferred from v4.1/v4.3/v4.4/v4.5)
+//
+// The problem, measured. `auditUnlockCadence` (above) prints it every release: the back half of
+// every ladder pays almost nothing. Four of six skills have their LAST content unlock at level 85,
+// and the band 85→99 alone is 45.4% of a skill's entire 1–99 XP. The middle is nearly as bad —
+// Mining 50→70 is 19.3% of the climb with literally nothing in it. A player who commits is climbing
+// through silence for most of the journey.
+//
+// The trials are the breadth engine's first mechanism: advancing a craft past **50**, and again past
+// **75**, takes a one-time favour asked by the person who cares about that craft — and every favour
+// is deliberately CROSS-SKILL. Rowan won't call you a miner until you've cut props and cooked a
+// meal worth carrying down. That is the anti-rabbit-hole design: the story is structurally incapable
+// of being fed by one skill, and now neither is the ladder.
+//
+// ★ THE CONTRACT, and the reason this took five releases to ship. A naive reading — "your level
+// drops until you clear the trial" — TAKES A LEVEL, and this game does not take. So:
+//   · **Bank, never regress.** XP keeps accruing at full rate past the gate. The LEVEL waits. The
+//     moment the trial clears, every banked level lands at once, with the banner it was owed.
+//   · **Grandfather everything.** Any save already past a gate when this shipped auto-passes it
+//     (`migrateSave`, guarded by `trialsSeeded`). A rule added today may never cost anyone anything
+//     they already had — the same principle as v4.31's bagBonus.
+//   · **No timer, no failure, no expiry.** A trial can be ignored forever; you simply keep the
+//     level you have and bank the rest. `tools/check-saves.mjs` asserts both properties.
+//
+// The ASK rides the Pledge Ledger (the fifth prefix — `trial:<Skill>:<gate>`), which buys partial
+// deposits, the Journal's Restorations page, and the no-wasted-trip rule for free. The SCENE fires
+// when you next talk to the NPC (14-story.js), never mid-swing: a cutscene that yanks you out of a
+// harvest to congratulate you is a punishment wearing a party hat.
+//
+// Owner decision 2026-07-29 (`V5_PLAN.md` §6.1): **both gates, live from the start** — not "75 ships
+// dark". Shipping 75 dark would have left L75 empty in the exact band this release exists to fill.
+// ============================================================
+const TRIAL_GATES = [50, 75];
+
+// Each trial: who asks, what it's called, the cross-skill ask, and the words. `mats` is a plain
+// pledge cost (gold optional) — deliberately materials-first, because a gold-only ask is just a
+// wait, and the whole point is that you had to go and DO something in another craft.
+//
+// Sizing (GBP §2.5's obligation — the arithmetic before the code): each 50-trial asks roughly one
+// good afternoon's work in two other crafts, each 75-trial roughly two, drawn from tiers a player at
+// that level demonstrably reaches. Nothing here is rare-drop-gated: every item is farmable, choppable,
+// mineable, catchable or cookable on demand, so a trial can never become a wall of bad luck.
+const TRIALS = {
+  Farming: {
+    50: { title:"The Long Row", g:2000,
+          mats:{ "Pine Lumber":8, "Iron Ore":6, "Cooked Salmon":2 },
+          ask:"Maya wants the east beds framed and pinned — sawn boards, iron for the pins — and lunch for the two of you while you do it.",
+          intro:[["Maya","You're about to pass a line most folk never get near. Fifty. Half the ladder."],
+                 ["Maya","Papa said a farmer past fifty stops growing food and starts growing a FARM. Bigger thought. Harder."],
+                 ["Maya","So — frame the east beds properly. Sawn boards, iron pins, none of your propped-up nonsense. And bring lunch; I'm helping."]],
+          done:"Maya: “There. Straight as anything, and it'll still be straight in ten years. Go on — you've earned the rest of that ladder.”" },
+    75: { title:"The Seed Vault", g:9000,
+          mats:{ "Silverwood Beam":3, "Cobalt Ore":8, "Cloudberry Preserve":2, "Honey":10 },
+          ask:"A cold-room under the barn: silverwood framing, cobalt fittings, and something sweet on the shelf to prove it keeps.",
+          intro:[["Maya","Seventy-five. You know what happens to a valley when the person who feeds it forgets to write anything down?"],
+                 ["Maya","It goes quiet. Like this one did. Rosa kept a seed vault — every strain she ever grew, labelled, cold, patient. It rotted out the winter after she died."],
+                 ["Maya","Build it again. Silverwood, cobalt fittings, cold and dry. Put something sweet on the shelf so we know it keeps."]],
+          done:"Maya: “Every seed in the valley has a home now. That'll outlive us both, you know. …Sorry. That's the nice version of a compliment.”" },
+  },
+  Woodcutting: {
+    50: { title:"The Sawyer's Bargain", g:2500,
+          mats:{ "Copper Ore":10, "Stone":30, "Farmer's Omelette":2 },
+          ask:"Tom wants the mill's saw re-toothed and its bed re-laid — copper for the teeth, stone for the bed, breakfast for the smith.",
+          intro:[["Tom","Fifty! Right. Before you go swinging at anything bigger, we're fixing my saw, because you BROKE my saw."],
+                 ["Tom","Not maliciously. Volumetrically. Copper for the teeth, stone to re-lay the bed, and feed the smith or he'll do it badly on purpose."],
+                 ["Tom","Do that and I'll stop pretending the deep stuff is out of stock."]],
+          done:"Tom: “Listen to that. Sings, doesn't it? Right — the woods are yours. Try to leave me a tree.”" },
+    75: { title:"The Standing Grove", g:10000,
+          mats:{ "Heartwood Beam":6, "Gold Ore":6, "Starfruit Sorbet":2, "Elder Wood":25 },
+          ask:"Not a felling — a planting. Frame the grove's east ring so the young wood grows straight, and stand a marker in gold.",
+          intro:[["Tom","Seventy-five, and I'm going to ask you for the strangest thing anyone's asked you all year."],
+                 ["Tom","Don't cut anything. Frame the grove's east ring — heartwood posts, so the young trees come up straight instead of leaning for the light."],
+                 ["Tom","Grandad Alder framed the west ring the year I was born. It's the finest wood in the valley now and I've never taken a stick of it. Your turn."]],
+          done:"Tom: “That's a hundred years of good timber you just planted and won't live to sell. Best day's work in the ledger.”" },
+  },
+  Mining: {
+    50: { title:"The Sound Roof", g:2500,
+          mats:{ "Oak Lumber":12, "Maple Lumber":6, "Fish Stew":2 },
+          ask:"Rowan won't sign off on a miner who doesn't prop a roof — oak sills, maple beams, and a stew that keeps in a cold gallery.",
+          intro:[["Elder Rowan","Fifty. Sit down a moment. …No, properly sit. This is the part where I tell you what killed miners here."],
+                 ["Elder Rowan","Not the dark. Not the deep. The roof. Every one of them was a good enough miner to be somewhere a bad roof was."],
+                 ["Elder Rowan","So: props. Oak sills, maple beams, cut by you, set by you, in the galleries you use. And a stew that keeps — a cold miner makes cold decisions."]],
+          done:"Elder Rowan: “Sound as a bell. Now you're a miner, and not before. Go down as far as you like — the roof will hold.”" },
+    75: { title:"The Deep Ledger", g:11000,
+          mats:{ "Deepsilver Ore":8, "Silverwood Beam":3, "Emerald":3, "Plum Pudding":2 },
+          ask:"The Guild's assay ledger, rebuilt: deepsilver rules, a silverwood case, and three true stones to calibrate it.",
+          intro:[["Elder Rowan","Seventy-five. There is one thing left the old Guild had that we do not, and it is not a tool. It is a LEDGER."],
+                 ["Elder Rowan","Every seam this valley ever cut, its depth, its yield, its temperament. Burned, I assume, by someone who thought paper was the least of it."],
+                 ["Elder Rowan","Rebuild the case — deepsilver rules, silverwood, three true stones to calibrate against. And bring pudding; I intend to be here some hours."]],
+          done:"Elder Rowan: “Two hundred years of stone, written down again. …I have wanted this since before you were born, child.”" },
+  },
+  Fishing: {
+    50: { title:"A Proper Gaff", g:2000,
+          mats:{ "Iron Ore":8, "Willow Lumber":6, "Apple Crumble":2 },
+          ask:"Bram won't teach the deep casts to anyone holding a bent stick — iron for the hook, willow for the haft.",
+          intro:[["Bram","Fifty. Aye. And still using that…" ],
+                 ["Bram","…whatever that is. Lad, a fish worth landing will take that off you and leave you apologising to the water."],
+                 ["Bram","Iron for the hook, willow for the haft — springs, won't crack cold. Make one. Make it well. Bring cake; I get maudlin around the forge."]],
+          done:"Bram: “Now THAT'S a gaff. Right — I'll show you the deep casts. Watch my wrists, not the water.”" },
+    75: { title:"The Long Water", g:9500,
+          mats:{ "Cobalt Ore":10, "Heartwood Beam":4, "Frostmelon Ice":2, "Prize Fleece":4 },
+          ask:"A boat that will sit the estuary in weather: heartwood ribs, cobalt fittings, fleece for the caulking.",
+          intro:[["Bram","Seventy-five. There's water out past the ferry landing I've not fished in eleven years, and it is not because I got old."],
+                 ["Bram","It's because the boat went. And I never had the heart. Heartwood ribs, cobalt fittings, fleece for the caulking — she'll sit anything the coast throws."],
+                 ["Bram","Build her and I'll take you out. Both of us. That water remembers me and I'd like to see if it still does."]],
+          done:"Bram: “She sits the swell like she was born to it. …Aye. Aye, it remembers me. Thank you, lad.”" },
+  },
+  Cooking: {
+    50: { title:"The Long Table", g:2200,
+          mats:{ "Maple Lumber":10, "Copper Ore":8, "Large Milk":6, "Wheat":20 },
+          ask:"Pip wants the Guild kitchen's long table back — maple top, copper pans hung over it, and the makings of a proper bake.",
+          intro:[["Pip","FIFTY! Okay okay okay — you know what fifty means? Fifty means you're allowed to cook for more than one person."],
+                 ["Pip","Which we CAN'T. Because the Guild kitchen has no table. It has a plank. On two barrels. It's an insult."],
+                 ["Pip","Maple top, copper pans hung over it, and enough milk and wheat that we can bake the day it's finished. Please please please."]],
+          done:"Pip: “It's SO BIG. Eleven people could eat at this. …We don't have eleven people. Yet. But we could!”" },
+    75: { title:"The Winter Larder", g:10000,
+          mats:{ "Fine Cheese":6, "Silverwood Beam":2, "Deepsilver Ore":6, "Cloudberry":12 },
+          ask:"A larder that carries the valley through a hard winter — silverwood shelving, deepsilver-lined crocks, and the stock to fill them.",
+          intro:[["Pip","Seventy-five. Right. I'm going to be serious for once and it's going to be weird for both of us."],
+                 ["Pip","Nell told me what the bad winters were like. Not hungry — SCARED. Counting jars in November and doing sums you don't say out loud."],
+                 ["Pip","I want a larder that means nobody in this valley ever does that sum again. Silverwood shelves, deepsilver crocks, and full. Properly full."]],
+          done:"Pip: “Look at it. LOOK at it. Nobody's counting jars this year. …Okay I'm going to cry, go away, I love you, go away.”" },
+  },
+  Warding: {
+    50: { title:"The Sweeping Art", g:3000,
+          mats:{ "Gloam Thread":8, "Ember Grit":6, "Pine Lumber":8, "Cheese Toastie":2 },
+          ask:"Elias will teach the Sweep — but the stave has to be rewound first, and he has to be fed while he remembers how.",
+          intro:[["Elias","Fifty. Hm. Then it's time I taught you something my hands still know and my mouth has forgotten how to say."],
+                 ["Elias","The Sweep. You stop striking AT things and start moving them. Wider arc, softer touch, two at once if they're foolish enough to stand together."],
+                 ["Elias","Rewind the stave first — gloam thread, ember grit, a new pine core. And bring something hot. I think better with my hands warm."]],
+          done:"Elias: “There. Now it's a warden's stave and not a stick with history. …Hold it lightly. That's the whole art.”" },
+    75: { title:"The Settling Blow", g:12000,
+          mats:{ "Deepgnarl":8, "Gloamstar":4, "Starstone":1, "Peony Cordial":2 },
+          ask:"The last thing Orla taught him, and the only one he never wrote down: a blow that goes through a guard instead of around it.",
+          intro:[["Elias","Seventy-five. …Orla taught me one more thing than I've ever admitted to anyone, and I've been deciding for a year whether to pass it on."],
+                 ["Elias","The Settling Blow. You hold it. You let it build. And it goes THROUGH a guard rather than round it, because some things down there have learned to face you."],
+                 ["Elias","It wants a core that doesn't flinch — deepgnarl, gloamstar, and a true starstone at the heart. And a drink, after. I'll want one."]],
+          done:"Elias: “That's all of it. Everything Orla knew, in someone's hands again. …I've been carrying that alone a long while. Thank you.”" },
+  },
+};
+function trialDef(skill, gate){ return (TRIALS[skill] || {})[gate] || null; }
+function trialKey(skill, gate){ return skill + gate; }
+function trialId(skill, gate){ return "trial:" + skill + ":" + gate; }
+function trialParse(id){ const p = String(id).split(":"); return { skill:p[1], gate:+p[2] }; }
+function trialPassed(skill, gate){ return ((state.trialsDone) || []).includes(trialKey(skill, gate)); }
+// The gate a skill is currently held at — the FIRST unpassed trial, or 99 if both are behind you.
+// The whole banking design is this one function: raw XP is untouched, the LEVEL is clamped.
+function trialCap(skill){
+  if(!TRIALS[skill]) return 99;
+  for(const g of TRIAL_GATES) if(!trialPassed(skill, g)) return g;
+  return 99;
+}
+// Is a trial open — i.e. have you actually reached its gate? (Never shown before you get there:
+// a trial you cannot start is just a chore posted early.)
+function trialOpen(skill, gate){ return !trialPassed(skill, gate) && levelFor(state.skills[skill] || 0) >= gate; }
+function trialCurrent(skill){   // the one open trial for a skill, if any
+  for(const g of TRIAL_GATES) if(trialOpen(skill, g)) return g;
+  return null;
+}
+// How many levels are waiting behind the gate right now. Shown everywhere the hold is mentioned,
+// because "banked" is only reassuring if you can see the number.
+function trialBanked(skill){
+  const raw = levelFor(state.skills[skill] || 0);
+  return Math.max(0, raw - Math.min(raw, trialCap(skill)));
+}
+
+// ============================================================
+// v5.1 — THE WARDING TECHNIQUE LADDER
+//
+// Warding shipped in v4.0 as the game's newest 1–99 skill and immediately became the one whose
+// levels mean the LEAST: the cadence linter measures 10 unlocks in total and an 88.5% dead share,
+// worst in the game, because v4.20 correctly moved creature spawns to depth-keyed WARD_BANDS and
+// left `unlocksAt` with no Warding branch at all. A Warding level bought a bigger number and
+// nothing else.
+//
+// These are the answer, and the rule they obey is the important part: **every rung is a new INPUT
+// or a new OUTCOME, never a damage stat.** A "+3% stave power at 55" would be another number; a
+// guard that suddenly deflects star-bolts changes what you can stand in front of. The tier ladder
+// (1/10/20/30/45/70/85 — six systems key off it) does NOT move; these interleave between its rungs.
+// ============================================================
+const WARD_TECHS = [
+  { lvl:15, id:"flare",   name:"Lantern Flare",
+    blurb:"settling a creature flares the lantern — anything close hesitates" },
+  { lvl:35, id:"cleave",  name:"Cleaving Sweep",
+    blurb:"one swing settles two, if they crowd you" },
+  { lvl:55, id:"boltpar", name:"Bolt-Parry",
+    blurb:"the Guard turns a star-bolt aside, not just a blow" },
+  { lvl:65, id:"footing", name:"Sure Footing",
+    blurb:"the Guard recovers faster, and its window is a little kinder" },
+  { lvl:80, id:"pulse",   name:"Ward-Pulse",
+    blurb:"a perfect parry rings outward — everything adjacent staggers" },
+];
+function hasTech(id){
+  const t = WARD_TECHS.find(x => x.id === id);
+  return !!t && skillLvl("Warding") >= t.lvl;
+}

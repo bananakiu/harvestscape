@@ -210,9 +210,21 @@ tests a copy tests nothing.
   the year-3 perf fixture, the unlock-cadence linter, and the GBP §2.5/§9/§10 re-anchor.
   **v5.0 SHIPPED** (2026-07-28) — all five items, plus the harness's first catch (a stale literal HP on
   the farm's starter pine, missed by v4.23's rebalance) and a title-screen z-order/click-through fix the
-  new panel exposed. Every check is listed under "Running & verifying" above; run them. **Next unbuilt
-  release: v5.1 "The Trials."** Build it the `V4_BUILD_PLAN.md` way — write that release's build order
-  fresh, re-verify every symbol anchor `V5_PLAN.md` names, one release per session, strictly in order.
+  new panel exposed. **v5.1 "The Trials" SHIPPED** (2026-07-29) — the mastery trials at 50 AND 75 for all
+  six crafts (bank-and-release, grandfathered, cross-skill asks on the Pledge Ledger's sixth prefix,
+  the scene fired on TALK not on the level-up), the Warding technique ladder at 15/35/55/65/80 (every
+  rung a new input or outcome, never a damage stat — Warding's dead share 88.5% → 59.1%, unlocks
+  10 → 15), and the two Stave arts set at a bell. ★ **Owner decisions in `V5_PLAN.md` §6 are ALL
+  RESOLVED** — build against them, don't re-litigate: trials at 50+75 live, heart cap → **10** (binds
+  v5.5 as well as v5.6), writ pays gold + marks toward cosmetics (so v5.7's catalog must precede v5.9),
+  merchant ~2 days/week seeded. **Next unbuilt release: v5.2 "The Warden's Table."** Build it the
+  `V4_BUILD_PLAN.md` way — write that release's build order fresh, re-verify every symbol anchor
+  `V5_PLAN.md` names, one release per session, strictly in order.
+  ★ Two load-order lessons from v5.1, both worth carrying: (1) a `const X = f()` evaluated at load in
+  `01-data.js` breaks the moment a later release appends a table `f` reads — the audit is a memoized
+  function now, and anything similar should be too; (2) `skillLvl` is THE accessor for a skill's
+  effective level and the only place the mastery gate lives — `levelFor(xp)` stays a pure curve
+  reading for migrations and the harness. Don't reach past `skillLvl` for a gate.
 - `V6_PLAN.md` — **the Version 6 roadmap ("The Valley, Whole")**, the elder game; deliberately one notch
   less locked (re-ground after V5 ships). Four programs: Below the Bottom (the two designed deep venues
   + the opt-in Long Round below floor 45 + weekly seeds + a depth record — ★ its knockout rule is the

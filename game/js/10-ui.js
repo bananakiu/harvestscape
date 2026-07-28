@@ -215,12 +215,14 @@ function drawClockDial(){
 const _xpOrbs = new Map();   // skill -> { el, cv, badge, lvl, shown, target, sweep, flash, hideT }
 let _orbRaf = 0, _orbLast = 0;
 function xpFrac(skill){
-  const xp = state.skills[skill], lvl = levelFor(xp);
+  // v5.1: effective level, and a held craft's ring reads FULL — its XP genuinely is past the top of
+  // the level it is standing on. (`clamp` already guarded the overflow; this makes it deliberate.)
+  const xp = state.skills[skill], lvl = skillLvl(skill);
   return lvl >= 99 ? 1 : clamp(inv(xp, XP_TABLE[lvl], XP_TABLE[lvl+1]), 0, 1);
 }
 function showXpOrb(skill){
   const rail = $("xpOrbs"); if(!rail || !state || !(skill in state.skills)) return;
-  const lvl = levelFor(state.skills[skill]), frac = xpFrac(skill);
+  const lvl = skillLvl(skill), frac = xpFrac(skill);   // v5.1: the orb shows the level the game treats you as
   let o = _xpOrbs.get(skill);
   if(!o || !o.el.isConnected){
     // first gain for this skill — build its orb and slot it onto the rail
@@ -554,7 +556,7 @@ function selectSkill(s){ skillSel = (skillSel === s) ? null : s; playSfx("select
 // whole climb to 99, built straight from unlocksAt (so it can never drift from the real gates). Reached
 // milestones are ticked + gold; the rest are dimmed and padlocked. Scrolls inside the detail panel.
 function skillGuideHtml(s){
-  const lvl = levelFor(state.skills[s]);
+  const lvl = skillLvl(s);   // v5.1
   let rows = "", count = 0;
   for(let L = 1; L <= 99; L++){
     const u = (typeof unlocksAt === "function") ? unlocksAt(s, L) : [];
@@ -592,11 +594,30 @@ function skillGuideHtml(s){
 function skillDetailHtml(s){
   if(!s || !(s in state.skills))
     return `<div class="skillHint">Tap a skill for its XP, unlocks and mastery milestones.</div>`;
-  const xp = state.skills[s], lvl = levelFor(xp);
+  const xp = state.skills[s], lvl = skillLvl(s), raw = levelFor(xp);
   const next = lvl>=99 ? xp : XP_TABLE[lvl+1], remain = Math.max(0, next - xp);
   let h = `<div class="sdHead"><span class="sdName">${s}</span><span class="sdLvl">Level ${lvl}</span></div>`;
+  // v5.1: "0 to Lv 51" is nonsense while a trial holds the level — the XP is already past it. Say
+  // what is actually true: how much is banked and waiting.
+  const heldAt = trialCurrent(s);
   h += `<div class="sdXp">${xp.toLocaleString()} XP` +
-       (lvl>=99 ? ` · <span class="max">MAX</span>` : ` · ${remain.toLocaleString()} to Lv ${lvl+1}`) + `</div>`;
+       (lvl>=99   ? ` · <span class="max">MAX</span>`
+        : heldAt  ? ` · <span class="max">banked past Lv ${lvl}</span>`
+        :           ` · ${remain.toLocaleString()} to Lv ${lvl+1}`) + `</div>`;
+  // v5.1: when a trial is holding this craft, the detail strip says so FIRST, in full — what is
+  // held, how much is banked, who is waiting, and exactly what they asked for. Everything about the
+  // hold has to be legible from one place, or "banked" is just a word we used once in a banner.
+  const gate = heldAt;
+  if(gate){
+    const d = trialDef(s, gate), who = (NPCDEF[MASTERY_NPC[s]] || {}).name || "";
+    const rem = pledgeRemaining(trialId(s, gate)), owed = [];
+    if(rem.g > 0) owed.push(`${rem.g.toLocaleString()}g`);
+    for(const it in rem.mats) owed.push(`${rem.mats[it]}× ${it}`);
+    h += `<div class="sdLine trial">✦ <b>${escapeHtml(d.title)}</b> — ${escapeHtml(who)} asks, before ${s} goes past ${gate}.</div>`;
+    h += `<div class="sdLine muted">${escapeHtml(d.ask)}</div>`;
+    h += `<div class="sdLine">Still owed: ${owed.length ? escapeHtml(owed.join(", ")) : "nothing — go and see " + escapeHtml(who)}</div>`;
+    h += `<div class="sdLine bank">⏸ Held at ${gate}${raw > gate ? ` · ${raw - gate} level${raw-gate>1?"s":""} banked and waiting` : ""} — XP keeps counting, and none of it can be lost. There is no timer.</div>`;
+  }
   const un = nextUnlock(s);
   if(un) h += `<div class="sdLine unlock">▸ Unlocks ${un.label} at Lv ${un.at}</div>`;
   const earned = [25,50,75,99].filter(n => lvl >= n);
@@ -609,7 +630,7 @@ function skillDetailHtml(s){
 }
 function renderSkills(){
   const b = $("skillsPanel").querySelector(".body");
-  let total = 0; for(const s in state.skills) total += levelFor(state.skills[s]);
+  let total = 0; for(const s in state.skills) total += skillLvl(s);   // v5.1: the total counts EFFECTIVE levels — the same number every gate and cape reads
   // v4.0: the cap is derived from the live skill count (594 with Warding), so it never drifts again.
   let html = `<div class="skillTotal">Total Level <b>${total}</b> / ${99*Object.keys(state.skills).length}</div>`;
   // v4.0 variety spark — a quiet nudge to rotate: the first few actions in each skill each day earn +50% XP.
@@ -618,20 +639,34 @@ function renderSkills(){
   html += `<div class="sparkNote">✦ <b>Variety spark</b> — the first <b>${sparkCap()}</b> actions in each craft today earn +50% XP, and every craft you take up today adds 5 more to all of them.</div>`;
   html += `<div class="skillGrid">`;
   for(const s in state.skills){
-    const xp = state.skills[s], lvl = levelFor(xp);
+    // v5.1: the tile shows the EFFECTIVE level (skillLvl), because that is the level the game is
+    // treating you as — but when a trial is holding it, the raw progress and the banked count are
+    // spelled out right there. A held level that doesn't explain itself is indistinguishable from
+    // a bug, and this panel is where a player will come looking.
+    const xp = state.skills[s], lvl = skillLvl(s);
     const cur = XP_TABLE[lvl], next = lvl>=99?cur:XP_TABLE[lvl+1];
-    const pct = lvl>=99 ? 100 : Math.floor(inv(xp,cur,next)*100);
+    const gate = trialCurrent(s), tdef = gate ? trialDef(s, gate) : null, banked = trialBanked(s);
+    // Held at a gate, the XP is already past the top of this level — the bar is genuinely full, and
+    // showing it full (rather than letting `inv` run past 1) is the honest picture of a bank.
+    const pct = (lvl >= 99 || gate) ? 100 : Math.floor(inv(xp,cur,next)*100);
     const un = nextUnlock(s), nx = nextMastery(s);
     const spk = Math.max(0, sparkCap() - ((state.dailyXpActs && state.dailyXpActs[s]) || 0));   // sparks left today (v4.23: clamp — the cap can rise mid-day, never let this read negative)
-    const goal = un ? `<span class="sgoal unlock">▸ ${un.label} · ${un.at}</span>`
+    const sparkBadge = spk > 0 ? `<span class="sgoal spark">✦ ${spk} spark${spk>1?"s":""} left today</span>` : "";
+    // Kept SHORT on purpose: `.sgoal` is one nowrap line in a narrow grid cell — measured, anything
+    // longer than ~14 characters ellipsises, and a truncated name ("Tom as…") is worse than none.
+    // The tile flags THAT a trial is waiting; tapping it names who, what, and what's still owed.
+    const goal = gate ? `<span class="sgoal trial">✦ Trial waiting</span>`
+               : un ? `<span class="sgoal unlock">▸ ${un.label} · ${un.at}</span>`
                : nx ? `<span class="sgoal mast">☆ Lv ${nx.at}: ${MASTERY[s][nx.at].split(" — ")[0]}</span>`
                :      `<span class="sgoal done">★ mastered</span>`;
-    const sparkBadge = spk > 0 ? `<span class="sgoal spark">✦ ${spk} spark${spk>1?"s":""} left today</span>` : "";
+    const bankBadge = banked > 0
+      ? `<span class="sgoal bank">⏸ ${banked} level${banked>1?"s":""} banked, nothing lost</span>`
+      : (gate ? `<span class="sgoal bank">⏸ held at ${gate} — XP still banks</span>` : "");
     html += `<div class="skillCell${s===skillSel?" sel":""}" onclick="selectSkill('${s}')">` +
       `<span class="sIcon" data-icon="${SKILL_ICON[s]}"><canvas></canvas><span class="sLvl">${lvl}</span></span>` +
       `<span class="sBody"><span class="sName">${s}</span>` +
-      `<span class="xpbarWrap"><span class="xpbar" style="width:${pct}%"></span></span>` +
-      goal + sparkBadge + `</span></div>`;
+      `<span class="xpbarWrap"><span class="xpbar${gate?" held":""}" style="width:${pct}%"></span></span>` +
+      goal + bankBadge + sparkBadge + `</span></div>`;
   }
   html += `</div><div id="skillDetail">${skillDetailHtml(skillSel)}</div>`;
   html += `<details class="skillHelp"><summary>About the XP curve</summary>` +
@@ -1711,7 +1746,10 @@ function contributePledge(id, frac){
 // A filled pledge wakes INSTANTLY — "come back tomorrow" would be the trip-wasting frustration
 // this system exists to kill, in a smaller size.
 function completePledge(id){
-  if(state.pledges) delete state.pledges[id];   // done-ness lives in waystones/liftStops/wardBells
+  if(state.pledges) delete state.pledges[id];   // done-ness lives in waystones/liftStops/wardBells/trialsDone
+  if(id.startsWith("trial:")){   // v5.1 a mastery trial — the banked levels land in completeTrial
+    const t = trialParse(id); completeTrial(t.skill, t.gate); return;
+  }
   if(id.startsWith("way")){
     if(!state.waystones) state.waystones = [];
     if(!state.waystones.includes(id)) state.waystones.push(id);

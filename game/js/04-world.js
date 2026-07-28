@@ -35,6 +35,9 @@ function freshState(){
     mineDepth:0, mineBest:0,
     groveRing:0, groveBest:0,              // the Deep Grove's rings — mirrors mineDepth/mineBest
     wardDepth:0, wardBest:0,               // v4.0 the Undercroft's floors — mirrors mineDepth/mineBest
+    trialsDone:[],                         // v5.1 mastery trials cleared, as "<Skill><gate>" ("Farming50") — the ONLY record of done-ness
+    trialsSeeded:true,                      // v5.1 a save BORN with the trials; migrateSave grandfathers older ones exactly once (see 11-title.js)
+    stanceArt:"plain",                      // v5.1 the Stave art currently set at the bell: plain | sweep | settle
     wardChapter:0,                         // v4.3 the Warden's Ledger: how many Act III chapters closed (index of the OPEN one)
     wardBundle:{},                         // v4.3 materials deposited toward the CURRENT chapter's bundle {item:qty} — reset when a chapter closes
     resolve:100,                           // v4.0 the combat-only bar; full outside the Undercroft, drains only from contact there
