@@ -155,16 +155,38 @@ Treat the changelog as non-optional deliverable output, the same as the code its
   small-talk (6 NPC_RECOG lines so the cast reacts to Warding) + birthdays for Elias (Fall 26) & Nell
   (Summer 24). Pure data; caught in test that `heartsOf` caps at 6 (an early `hearts:8` event was
   unreachable → retiered 2/4/5/6).
-  Still remaining: **mastery trials at 50** (all six skills — the audit's #2 pick, but must be
-  bank-and-release, never a level that regresses, + grandfather high-level saves), the dedicated deep
-  venues (Gloam Grove ring, Sunken Workings — spatial-variety), and misc backlog (seasonal crop gaps, a
-  repeatable gold sink, cottage decoration, recipes for orphaned goods, Fishing/Cooking charms).
+  Still remaining from v4 — **now absorbed into the V5/V6 roadmap** (see `V5_PLAN.md` / `V6_PLAN.md`):
+  mastery trials at 50/75 (→ v5.1; bank-and-release + grandfathering are locked constraints) and the
+  dedicated deep venues (Gloam Grove ring, Sunken Workings → v6.0). ★ Stale-backlog correction
+  (verified 2026-07-28): three items formerly listed here ALREADY SHIPPED — seasonal crop gaps (v4.7),
+  Fishing/Cooking charms (v4.7: Heron Feather + Hearth Charm), recipes for orphaned goods (v4.8) — and
+  the repeatable gold sink is closed by the Patron (v4.26) + bag tiers (v4.31). Cottage decoration → v5.7.
   Read `V4_PLAN.md` (and its §6 owner decisions) before building anything Act-III-shaped.
 - `V4_BUILD_PLAN.md` — **the implementation work orders for v4**, written to be executed
   cold by any coding agent: locked decisions, verified engine anchors (symbol names, data
   shapes, integration points), and per-release specs with schemas, starting balance
   numbers, and definition-of-done. **This is the entry point for building each v4 release** —
   one release per session, strictly in order (v4.0 done; start the next unbuilt release's §).
+- `V5_PLAN.md` — **the Version 5 roadmap ("A Life in the Valley")**, first of the two-version arc the
+  owner directed 2026-07-28 ("a very detailed roadmap that can span maybe two whole big versions").
+  Produced by an eight-lens design review of v4.37 + adversarial cross-check; every load-bearing number
+  measured against the live tables (headline: 45.4% of every 1–99 climb sits above L85, and for four of
+  six skills L85 is the LAST unlock; Mining 50→70 alone is 19.3% of the climb with nothing in it).
+  Two spines — the Ladder (trials at 50/75, Warding techniques, Cooking→Resolve, boss ladder + the
+  missing floor-45 terminal fight, gem veins) and the Home (spouse move-in, heart cap 6→10 + Tom/Pip
+  capstones, the persistent decoratable cottage, ferry merchant + rare sky events, the weekly writ).
+  ★ v5.0 "The Strongbox" ships infrastructure FIRST: save export/import (one localStorage slot = total
+  loss one cleared cache away — the largest possible contract violation), a migration fixture harness,
+  the year-3 perf fixture, the unlock-cadence linter, and the GBP §2.5/§9/§10 re-anchor.
+- `V6_PLAN.md` — **the Version 6 roadmap ("The Valley, Whole")**, the elder game; deliberately one notch
+  less locked (re-ground after V5 ships). Four programs: Below the Bottom (the two designed deep venues
+  + the opt-in Long Round below floor 45 + weekly seeds + a depth record — ★ its knockout rule is the
+  load-bearing sentence: nothing carried and nothing FOUND is ever lost; only the un-set record and
+  foregone further gain are legal stakes), the Ledger of the Valley (perfection meter + records book +
+  post-99 cape ranks — all derived, all retroactive; fixes standingGoalsHtml blanking at the top), the
+  Turning Year (second festivals, playable verbs, year-aware recurrence), and Ease & Voice (earned
+  automation AFTER decoration per the bible's F2, the Loom fibre chain, newcomer + optional child,
+  the 100% ceremony, the audio-identity pass).
 - `MONETIZATION.md` — **inward monetization** (owner direction 2026-07-28): turn the rewarded-ad slot
   inwards so it shows our OWN brands (H&Y et al) rather than an ad network's — product video, store
   visits and social engagement in exchange for temporary in-game boosters. ★ The rule that governs it:

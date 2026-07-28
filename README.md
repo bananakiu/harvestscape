@@ -70,6 +70,13 @@ Sell and upgrade at **Tom's stall**; **sleep at your cottage door** to pass the 
 - `V4_STATE_OF_THE_GAME.md` — the factual assessment of the game at v3.45.0: full systems inventory + the diagnosis behind Version 4.
 - `V4_PLAN.md` — the Version 4 roadmap ("The Warden's Valley"): combat as the sixth skill, the year-long Act III story spine, and the breadth-pacing engine. Planned, not yet built.
 - `V4_BUILD_PLAN.md` — the v4 implementation work orders: locked decisions, verified code anchors, and per-release specs (v4.0–v4.4) any coding agent can execute cold.
+- `V5_PLAN.md` — the Version 5 roadmap ("A Life in the Valley"): the middle of the game pays — mastery
+  trials, the Cooking→Resolve economy, the boss ladder + terminal fight, spouse move-in, the decoratable
+  cottage, hearts to 10, the ferry merchant. Opens with v5.0 "The Strongbox" (save export + migration
+  harness + perf fixture). Roadmap, not built.
+- `V6_PLAN.md` — the Version 6 roadmap ("The Valley, Whole"): the elder game — the deep venues + the
+  uncapped Long Round, the perfection ledger + records book, year-aware festivals, earned automation,
+  the 100% ceremony. Directional; re-ground after V5. Roadmap, not built.
 - `MONETIZATION.md` — **inward monetization** (owner call 2026-07-28): the rewarded-ad slot points at our
   own brands instead of an ad network. Booster taxonomy, placement rules, the engagement ladder, the
   platform-policy constraints that rule parts of it out, and a sequencing table. Roadmap, not built.

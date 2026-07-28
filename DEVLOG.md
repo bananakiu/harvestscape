@@ -14,6 +14,60 @@
 
 ---
 
+## 2026-07-28 — Direction: the thousand-foot view → a two-version roadmap
+
+**Owner direction (near-verbatim):**
+
+> Go ahead and take a thousand-foot view on the game right now. Think about how it can be improved as
+> a game that can be playable for a while. Just apply all the good gaming concepts and improve the
+> game. Come up with a very detailed roadmap that can span maybe two whole big versions that Opus V
+> can eventually work on.
+
+**Interpretation.** Not a feature request — a mandate for the next *era*. Three asks in one: (1) a
+fresh top-down assessment of the whole game as it stands at v4.37, (2) graded against established
+game-design concepts for long-term play (goal horizons, mastery curves, elder game, player
+expression, living-world rotation), and (3) a roadmap detailed enough that a future agent can pick it
+up cold — the `V4_PLAN.md` treatment, twice.
+
+**Process.** An eight-lens design review against the live code (endgame ceiling, mastery curve,
+combat depth, expression, social layer, economy arc, living world, system synergy), each lens
+grading + citing code, then a cross-check pass that deduped, screened against the existing plans,
+and named what every lens missed. Grades: no lens above *good*, none below *adequate* — the game is
+sound everywhere and deep nowhere a year-2 player lives.
+
+**The headline findings** (each measured, not estimated):
+
+- **45.4% of every 1–99 climb sits above level 85** (the XP curve is exponential), and for four of
+  six skills L85 is the *last* content unlock. Mining 50→70 alone is 19.3% of the climb with
+  nothing in it. The capes/crown actively invite players into the emptiest 45% of every ladder.
+- **Floor 45 — Act III's finale destination — has no encounter.** The Great Knot is stat-frozen
+  across all four appearances. The game's emotional climax has no mechanical mirror.
+- **The V4-specced Cooking→Resolve economy never shipped** — no food touches Resolve; an Undercroft
+  expedition consumes nothing the farm, kitchen or coast produces.
+- **The spouse never moves in.** Maya says "I'm moving my sketchbooks into the cottage tonight" on
+  screen; `spawnMapNpcs` has no cottage case. Married life is five watered tiles and a 40%
+  breakfast roll. Hearts cap at 6 and a player maxes the whole cast in ~two seasons.
+- **The goal ladder blanks at the top** — `standingGoalsHtml` returns `""` once skills/museum/crown
+  complete — and the Patron's *referent* dies at tier 10 while its sink runs on.
+- **Four-lens convergence on the cottage** (expression, economy, social, synergy all arrived at the
+  same room independently) — the strongest single signal in the review.
+- **What no lens saw, caught by the cross-check:** the entire game lives in ONE localStorage slot —
+  browser eviction is total permanent loss, the largest possible cozy-contract violation, one
+  cleared cache away. Save export + a migration fixture harness open V5 as release zero.
+- **Stale-backlog correction:** three items still listed in AGENTS.md already shipped (seasonal
+  crops v4.7, Fishing/Cooking charms v4.7, orphan recipes v4.8) — corrected, so no agent rebuilds them.
+
+**Produced:** `V5_PLAN.md` — *"A Life in the Valley"* (the middle of the game pays: trials at
+50/75, Warding techniques, Cooking→Resolve, the boss ladder + terminal fight, gem veins, spouse
+move-in, the decoratable cottage, hearts to 10, the ferry merchant, rare sky events, the weekly
+writ — opened by v5.0 "The Strongbox" infrastructure). `V6_PLAN.md` — *"The Valley, Whole"* (the
+elder game: the two deep venues + the uncapped Long Round + weekly seeds, the perfection ledger +
+records book + post-99 ranks, year-aware festivals, earned automation after decoration, the Loom,
+newcomers + the optional child, the 100% ceremony). Both written to be executed cold on the
+`V4_BUILD_PLAN` pattern; both reference lists updated.
+
+---
+
 ## 2026-07-28 — Direction: turn monetization inwards
 
 **Owner direction (near-verbatim):**
