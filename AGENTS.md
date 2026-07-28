@@ -232,8 +232,12 @@ tests a copy tests nothing.
   on `daysMarried()`, and time-of-day married dialogue pools. **v5.6 "Ten Hearts" SHIPPED** — the cap rises 6→10
   (free by construction: hearts are DERIVED from uncapped `rel.points`, only the reading was clamped),
   Tom's and Pip's capstones, a late scene for the whole cast, and the v4.6 unreachable-event guard made
-  structural in the harness. **Next unbuilt release: v5.7 "Four Walls"** — ★ the version's XL; the plan
-  says if it slips, it slips WHOLE (never ship a half-persistent cottage). Build it the
+  structural in the harness. **v5.7 "Four Walls" SHIPPED** — the version's XL, whole: `state.home` is the cottage's persistence
+  overlay (the room regenerates, the home does not), fifteen procedural furniture pieces in their own
+  shop tab, lossless pickup, and two house-expansion pledges that grow the map (11×9 → 15×9 → 19×11 via
+  a `MAPS.cottage` getter — ★ which must guard `state` itself being null, as the atlas found on its
+  first run). Measured: the dressed cottage is the CHEAPEST map in the game (p50 0.5ms vs the farm's
+  2.2ms). **Next unbuilt release: v5.8 "The Ferry Comes In."** Build it the
   `V4_BUILD_PLAN.md` way — write that release's build order fresh, re-verify every symbol anchor
   `V5_PLAN.md` names, one release per session, strictly in order.
   ★ Two load-order lessons from v5.1, both worth carrying: (1) a `const X = f()` evaluated at load in

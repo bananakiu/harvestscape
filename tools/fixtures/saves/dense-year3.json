@@ -1,7 +1,7 @@
 {
  "era": "dense-year3",
- "version": "4.37.0",
- "code": 124,
+ "version": "5.7.0",
+ "code": 132,
  "note": "synthetic worst case: year 3, plot fully planted, décor at the cap, every animal, all six skills at 92, deep permanents",
  "generated": "by tools/make-save-fixtures.mjs from the CURRENT build (not an era snapshot)",
  "expect": {
@@ -7114,6 +7114,22 @@
   "groveBest": 9,
   "wardDepth": 0,
   "wardBest": 45,
+  "trialsDone": [
+   "Farming50",
+   "Farming75",
+   "Woodcutting50",
+   "Woodcutting75",
+   "Mining50",
+   "Mining75",
+   "Fishing50",
+   "Fishing75",
+   "Cooking50",
+   "Cooking75",
+   "Warding50",
+   "Warding75"
+  ],
+  "trialsSeeded": true,
+  "stanceArt": "plain",
   "wardChapter": 8,
   "wardBundle": {},
   "resolve": 100,
@@ -7140,6 +7156,84 @@
    "way9"
   ],
   "charm": null,
+  "home": {
+   "objects": {
+    "1,1": {
+     "kind": "woolrug"
+    },
+    "3,1": {
+     "kind": "hearthrug"
+    },
+    "5,1": {
+     "kind": "candlestand"
+    },
+    "7,1": {
+     "kind": "brasslamp"
+    },
+    "9,1": {
+     "kind": "hearthfire"
+    },
+    "11,1": {
+     "kind": "smallshelf"
+    },
+    "13,1": {
+     "kind": "bookcase"
+    },
+    "15,1": {
+     "kind": "sidetable"
+    },
+    "17,1": {
+     "kind": "dresser"
+    },
+    "1,2": {
+     "kind": "armchair"
+    },
+    "3,2": {
+     "kind": "bench"
+    },
+    "5,2": {
+     "kind": "wallhanging"
+    },
+    "7,2": {
+     "kind": "potted"
+    },
+    "9,2": {
+     "kind": "cornerdesk"
+    },
+    "11,2": {
+     "kind": "standclock"
+    },
+    "13,2": {
+     "kind": "woolrug"
+    },
+    "15,2": {
+     "kind": "hearthrug"
+    },
+    "17,2": {
+     "kind": "candlestand"
+    },
+    "1,3": {
+     "kind": "brasslamp"
+    },
+    "3,3": {
+     "kind": "hearthfire"
+    },
+    "5,3": {
+     "kind": "smallshelf"
+    },
+    "7,3": {
+     "kind": "bookcase"
+    },
+    "9,3": {
+     "kind": "sidetable"
+    },
+    "11,3": {
+     "kind": "dresser"
+    }
+   },
+   "rooms": 2
+  },
+  "tonic": null,
   "stats": {
    "legends": 5000,
    "tilled": 5000,

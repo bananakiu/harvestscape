@@ -22,6 +22,91 @@
 
 ---
 
+## 2026-07-29 — v5.7.0 "Four Walls" (code 132, tag `v5.7.0`) — the room you wake in every day stops being a diorama
+
+### Why this release
+
+`V5_PLAN.md` marks this the version's **XL**, with a warning attached: *"if it slips, it slips whole —
+do not ship a half-persistent cottage."*
+
+The measured problem is one sentence: **`genCottage` hard-codes every prop, the cottage regenerates
+nightly (only `state.farm` is in the save), and `plantPermanent`'s very first line refuses décor
+anywhere but the farm.** So the one room the player wakes in every single day of the game was the one
+room they could not touch. Of the four expression channels the cozy genre lives on — home, ground,
+avatar, automation — the game had none; the one adjacent thing it does have (outdoor décor: 21
+pieces, cap 40, lossless pickup) is well built and proves the appetite exists.
+
+### Added — `state.home`, the persistence overlay
+
+The cottage stays a **transient** map. That architecture is right (it is why interiors, the mine and
+the coast are all cheap) and this does not change it. Instead the farm's own pattern is applied one
+level up: `state.home.objects` is the player's layer, stamped over the generated room by `applyHome`
+every time it is built. **The room is regenerated; the home is not.**
+
+Placed furniture wins over a default prop on the same tile, and the default is remembered nowhere —
+so moving the bookshelf is simply putting something where the bookshelf was. Nothing is lost either
+way: the axe returns the piece to your bag, and clearing a tile restores whatever `genCottage` puts
+there tomorrow.
+
+Verified end to end in the browser: placed → **survives `clearMapCache()` and a full regeneration** →
+picked up → returned to the bag → gone from the overlay.
+
+### Added — fifteen pieces, and none of them do anything
+
+Rugs, a hearthrug, a candle stand, a brass lamp, an open hearth fire, shelves, a bookcase, a side
+table, a dresser, an armchair you will fall asleep in, a window bench, a wall hanging in the old
+valley pattern, a potted fern, a corner desk, and a standing clock that announces the hour whether
+asked or not. All procedural, all in a warmer palette than the outdoor set — indoors these sit on
+lamplit floorboards, not grass.
+
+Priced **under** the outdoor catalog at every tier, deliberately: décor is what the valley sees,
+furniture is what *you* see every morning. They sit in their own **Cottage** tab at Tom's rather than
+more rows under Décor, because the two answer different questions and the placed counter counts a
+different set. Placement uses the **same verb** as every other placeable (choose it in the picker,
+face a spot, USE) — the game already taught that gesture four times over, and a second grammar for
+the same action would be a thing to learn for no reason.
+
+### Added — Rowan builds on
+
+Two house-expansion pledges on the Pledge Ledger: the second room (24,000g + lumber and stone) and
+the long room (60,000g + silverwood, heartwood and deepsilver). The cottage's footprint is a
+**function of `state.home.rooms`** — 11×9 → 15×9 → 19×11 — read at generation time, so the map simply
+follows the save.
+
+This is the expression gold sink the economy lens found missing: décor tops out at the 300,000g
+statue and then coin has only the Patron, whose *desire* runs out at tier ten. A bigger house is
+want-shaped — it isn't a number going up, it is more room for the things you chose.
+
+### The tooling caught two things before a player could
+
+1. **The atlas crashed on the first run.** The new `cottage.w` getter read `state.home` — and `state`
+   is `null` at load and in every headless tool. Guarded at the save, not just the field. *Second time
+   in this version the v5.0 tooling has stopped a crash before a browser saw it.*
+2. **A fixture failed the migration harness.** The dense year-3 save claims level 92 in six crafts but
+   is built from *current* code, so `freshState` hands it `trialsSeeded:true` and `migrateSave`
+   correctly declines to grandfather it — leaving every skill clamped at 50. **That is a fixture bug,
+   not a game bug**: the clamp firing on a save that claims 92 without ever passing a gate is exactly
+   what a hand-edited or imported save should get. The fixture now passes its trials, like a real save
+   would have.
+
+### The number this release had to land against
+
+`V5_PLAN.md` gated v5.7 on the v5.0 perf fixture: *"interior draw cost is measured before shipping."*
+The dense fixture grew a fully dressed 19×11 cottage (24 pieces, the cap) and was re-measured:
+
+| | p50 | avg | p95 |
+|---|---|---|---|
+| **Cottage** (dressed, largest room) | **0.5 ms** | 1.08 | 1.6 |
+| Farm (1,179 crops + 100 objects + weather + lighting) | 2.2 ms | 3.2 | 9.5 |
+
+`renderWorld` measured directly on the dense farm: **0.9 ms median**, and every update function
+~0 ms. **The interior this release added drawn state to is the cheapest map in the game.**
+
+★ The probe's own honesty note is now in the budget file: read **p50**, not avg/p95/worst. The probe
+drives `loop()` in a tight synchronous run because the harness browser throttles rAF to ~1 fps, which
+starves the browser and inflates the tail with GC. The 9.5 ms p95 is the measurement, not the game —
+`renderWorld` at 0.9 ms is the honest figure, and it is the one the reporter now prints.
+
 ## 2026-07-29 — v5.6.0 "Ten Hearts" (code 131, tag `v5.6.0`) — the friendship system stops switching itself off
 
 ### Why this release, and the door it closes

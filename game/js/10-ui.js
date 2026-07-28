@@ -405,6 +405,12 @@ function renderSeedPicker(){
   for(const k in DECOR) if((state.inv[DECOR[k].name]||0) > 0)
     dec.push(cell("decor:"+k, "item_"+DECOR[k].name, DECOR[k].name, "décor", false, state.inv[DECOR[k].name]));
   if(dec.length){ any = true; h += `<div class="secHead">✿ Décor</div><div class="seedGrid">${dec.join("")}</div>`; }
+  // --- v5.7 furniture: its own section, because it goes INDOORS and nothing else in this picker does
+  const furn = [];
+  for(const k in FURNITURE) if((state.inv[FURNITURE[k].name]||0) > 0)
+    furn.push(cell("furn:"+k, "item_"+FURNITURE[k].name, FURNITURE[k].name, "cottage", false, state.inv[FURNITURE[k].name]));
+  if(furn.length){ any = true; h += `<div class="secHead">🕯 Cottage</div><div class="seedGrid">${furn.join("")}</div>` +
+    `<div class="desc" style="color:var(--ink-soft);font-size:.85em;">Place these inside your cottage — they stay where you put them.</div>`; }
 
   if(!any) h = `<div class="locked">Nothing to plant or place just yet — buy a few seeds at Tom's.</div>`;
   else h += `<div class="desc" style="margin-top:.4em;color:var(--ink-soft);">Dimmed seeds are out of season — you can still choose one to sow when its season comes round.</div>`;
@@ -1135,7 +1141,7 @@ function renderShop(){
   const b = $("shopPanel").querySelector(".body");
   const vendor = _shopVendor || "tom";
   const h2 = $("shopPanel").querySelector(".phead h2"); if(h2) h2.textContent = SHOP_TITLES[vendor] || "SHOP";
-  const TABS = vendor === "tom"  ? [["sell","Sell"],["buy","Seeds & Food"],["tools","Tools"],["decor","Décor"]]
+  const TABS = vendor === "tom"  ? [["sell","Sell"],["buy","Seeds & Food"],["tools","Tools"],["decor","Décor"],["home","Cottage"]]
              : vendor === "bram" ? [["sell","Sell"],["buy","Bait & Tackle"]]
              :                     [["sell","Sell"],["buy","Larder"]];
   if(!TABS.some(t => t[0] === _panelTab["shopPanel"])) _panelTab["shopPanel"] = "sell";   // snap to a tab this vendor has
@@ -1274,6 +1280,21 @@ function renderShop(){
       }
     }
     }   // end Tom's buy list (v4.9 vendor split)
+  } else if(shopTab === "home"){
+    // v5.7: the interior catalog. Its own tab rather than more rows under Décor, because the two
+    // answer different questions — décor is what the valley sees, furniture is what YOU see every
+    // morning — and because the placed counter has to count a different set.
+    const placed = Object.keys((state.home && state.home.objects) || {}).length;
+    html += `<div class="desc" style="margin-bottom:.5em;color:var(--ink-soft);">Furniture for the cottage. Buy a piece, choose it from your placeables, and set it down inside — it stays where you put it, night after night, and the axe shifts it again if you change your mind. <span style="color:var(--gold-hi)">${placed}/${HOME_MAX} placed.</span></div>`;
+    for(const k in FURNITURE){
+      const F = FURNITURE[k], own = state.inv[F.name]||0, cost = tomPrice(F.cost);
+      html += `<div class="row"><span class="lead" data-icon="item_${F.name}"><canvas></canvas><span>${F.name}` +
+        (own ? ` <span class="sub" style="color:var(--gold-hi)">×${own}</span>` : "") +
+        `<br><span class="sub">${F.blurb}</span></span></span>` +
+        `<span><span class="price">${cost}g${state.flags.tomDiscount?` <span class="sub" style="color:var(--green)">−10%</span>`:""}</span> ` +
+        `<button class="buy" ${state.gold>=cost?"":"disabled"} onclick="buyFurniture('${jsq(k)}')">buy</button></span></div>`;
+    }
+    html += `<div class="desc" style="margin-top:.5em;color:var(--ink-soft);font-size:.85em;">Nothing here does anything. That is the entire point of it.</div>`;
   } else if(shopTab === "decor"){
     const placed = (state.farm ? Object.values(state.farm.objects) : []).filter(o => DECOR[o.kind]).length;
     html += `<div class="desc" style="margin-bottom:.5em;color:var(--ink-soft);">Pieces to make the farm yours — buy one, then set it down like a hive (select it, press USE on open ground; the axe lifts it again). Purely for the joy of it. <span style="color:var(--gold-hi)">${placed}/${DECOR_MAX} placed.</span></div>`;
@@ -1760,6 +1781,14 @@ function contributePledge(id, frac){
 // this system exists to kill, in a smaller size.
 function completePledge(id){
   if(state.pledges) delete state.pledges[id];   // done-ness lives in waystones/liftStops/wardBells/trialsDone
+  if(id.startsWith("room")){   // v5.7 the cottage grows
+    const n = parseInt(id.slice(4), 10), r = HOME_ROOMS[n-1];
+    if(!state.home) state.home = { objects:{}, rooms:0 };
+    state.home.rooms = Math.max(state.home.rooms||0, n);
+    clearMapCache();                       // the cottage is regenerated — show the new wall NOW
+    banner("⌂ " + cap(pledgeName(id)), r ? r.done : "The house is bigger than it was.");
+    playSfx("upgrade"); pSparkle(state.px, state.py-12, "#ffd75a", 22); saveGame(); return;
+  }
   if(id.startsWith("trial:")){   // v5.1 a mastery trial — the banked levels land in completeTrial
     const t = trialParse(id); completeTrial(t.skill, t.gate); return;
   }

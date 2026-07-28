@@ -8,13 +8,19 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "5.6.0", code: 131, codename: "Ten Hearts", date: "2026-07-29" };
+const VERSION = { name: "5.7.0", code: 132, codename: "Four Walls", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"5.7.0", code:132, date:"2026-07-29", name:"Four Walls", notes:[
+    { t:"new", s:"The cottage is yours to furnish. Fifteen pieces at Tom's \u2014 rugs, lamps, a bookcase, an armchair you will absolutely fall asleep in, a standing clock \u2014 bought, carried home, and set down wherever you like. And they STAY. The one room you wake up in every single day has been a diorama since the game began; it isn't one now." },
+    { t:"new", s:"Rowan will build onto the house. Two expansions on the ledger, paid in pieces like everything else he builds: he knocks through the east wall, and later puts up the long room with the good light. The cottage stops being a cottage." },
+    { t:"change", s:"Nothing is ever stuck. The axe shifts any piece back into your bag, exactly like the outdoor décor \u2014 rearrange as often as you like, lose nothing, ever." },
+    { t:"balance", s:"Furniture is priced under the outdoor décor at every tier and none of it does anything at all. That is the entire point of it." },
+  ]},
   { v:"5.6.0", code:131, date:"2026-07-29", name:"Ten Hearts", notes:[
     { t:"change", s:"Hearts go to ten. They stopped at six, which meant that after about two seasons every kind word, gift and shared morning went into a number the game had stopped reading \u2014 the friendship system quietly switched itself off right when you'd made friends. If you're long past six with someone, you simply have more hearts the moment you load: the points were always there, only the reading was capped." },
     { t:"new", s:"Tom's ladder ended at five hearts and Pip's at four. They both have proper endings now. Tom tells you why he kept the shop open through nine years of eleven customers, and what it meant when somebody finally bought six turnip seeds. Pip works out that he doesn't have to be the thing everyone said he'd be, and goes to tell his dad \u2014 the scared way, on purpose, alone." },
@@ -978,6 +984,43 @@ const DECOR = {
   storybanner: { name:"Storyteller's Banner", cost:500, qpGate:true,
                  blurb:"Every task the valley ever asked — done, and told. It flies for the teller." },
 };
+// ============================================================
+// v5.7 "Four Walls" — THE INTERIOR CATALOG
+//
+// The measured problem: `genCottage` hard-codes every prop and the cottage **regenerates nightly**
+// (only `state.farm` persists), and `plantPermanent`'s very first line refuses décor anywhere but the
+// farm. So the one room the player wakes in every single day of the game was the one room they could
+// not touch — a diorama. Four expression channels the cozy genre lives on (home, ground, avatar,
+// automation) were entirely absent; the one that exists (outdoor décor, 21 pieces, cap 40, lossless
+// pickup) is well built and proves the appetite exists.
+//
+// Fifteen pieces at launch, priced under the outdoor catalog at every tier on purpose: an interior
+// piece is seen by you, and the outdoor ones are seen by the valley. The Loom's soft goods arrive in
+// V6 (`V6_PLAN.md` §2, v6.4) and slot straight into this table.
+const FURNITURE = {
+  // rugs & floor
+  woolrug:     { name:"Wool Rug",         cost:280,  blurb:"Warm underfoot on a cold floor. Practically a personality." },
+  hearthrug:   { name:"Hearthrug",        cost:520,  blurb:"Thick, dark, and slightly singed at one corner already." },
+  // light
+  candlestand: { name:"Candle Stand",     cost:340,  blurb:"Three candles, none of them level. It's charming." },
+  brasslamp:   { name:"Brass Lamp",       cost:900,  blurb:"Polished brass. Throws a good, steady, reading sort of light." },
+  hearthfire:  { name:"Hearth Fire",      cost:2600, blurb:"A proper open fire. The room will never be cold again." },
+  // storage & surfaces
+  smallshelf:  { name:"Small Shelf",      cost:300,  blurb:"For the things that have nowhere else to be." },
+  bookcase:    { name:"Bookcase",         cost:780,  blurb:"Tall, honest oak. Will hold more books than you own." },
+  sidetable:   { name:"Side Table",       cost:420,  blurb:"Exactly the right height for a cup and nothing else." },
+  dresser:     { name:"Dresser",          cost:1200, blurb:"Six drawers, three of which stick. All six will be full." },
+  // seats
+  armchair:    { name:"Armchair",         cost:1100, blurb:"You will fall asleep in this. Everyone does. That's the point." },
+  bench:       { name:"Window Bench",     cost:640,  blurb:"Sit in the good light and watch it rain on somebody else's field." },
+  // walls & warmth
+  wallhanging: { name:"Wall Hanging",     cost:1500, blurb:"Woven in the old valley pattern. Nobody remembers what it means." },
+  potted:      { name:"Potted Fern",      cost:260,  blurb:"Green, undemanding, quietly judging your watering habits." },
+  // the dear ones
+  cornerdesk:  { name:"Corner Desk",      cost:2200, blurb:"For ledgers, letters, and the long evening sort of thinking." },
+  standclock:  { name:"Standing Clock",   cost:5200, blurb:"It keeps the valley's time and says so, once an hour, whether asked or not." },
+};
+const HOME_MAX = 24;   // the cottage is 11×9; two dozen pieces dresses it without making it a warehouse
 const DECOR_MAX = 40;   // a generous cap so a farm can be dressed, but not infinitely spammed
 const ORCHARD_MAX = 30;   // v4.9: fruit trees were the ONE uncapped placeable (hives/machines/décor all cap). A full orchard, bounded — restores passive-beats-active income (more warranted now flat pricing removed the sell-side brake). Grandfathered: only blocks NEW plantings past the cap.
 
@@ -1691,6 +1734,20 @@ const PATRON_WORKS = [
 ];
 function patronName(n){ return PATRON_WORKS[n-1] || ("the valley's " + ordinalRing(n) + " commission"); }
 
+// v5.7 the house-expansion pledges. The expression gold sink the economy lens found missing: décor
+// tops out at the 300,000g statue and then coin has only the Patron (whose *desire* runs out at tier
+// ten), so a rich save had nothing left it actually WANTED. A bigger house is want-shaped — it isn't
+// a number going up, it is more room for the things you chose.
+//
+// On the Pledge Ledger like everything Rowan builds (partial deposits, the Journal page, the
+// no-wasted-trip rule). Two rungs only: authoring stops where the room does.
+const HOME_ROOMS = [
+  { g:24000, mats:{ "Oak Lumber":30, "Maple Lumber":18, "Stone":40 },
+    name:"the cottage's second room", done:"Rowan knocks through the east wall and the cottage is suddenly a house." },
+  { g:60000, mats:{ "Silverwood Beam":4, "Heartwood Beam":8, "Deepsilver Ore":10, "Stone":80 },
+    name:"the long room", done:"The gable goes up, the light comes in, and the room is longer than the whole cottage used to be." },
+];
+function homeRoomCost(n){ const r = HOME_ROOMS[n-1]; return r ? { g:r.g, mats:r.mats } : null; }
 function pledgeCost(id){
   if(id.startsWith("way"))  return waystoneCost(id);
   if(id.startsWith("lift")) return liftStopCost(parseInt(id.slice(4), 10));
@@ -1703,11 +1760,13 @@ function pledgeCost(id){
     const t = trialParse(id), d = trialDef(t.skill, t.gate);
     return d ? { g: d.g || 0, mats: d.mats } : null;
   }
+  if(id.startsWith("room")) return homeRoomCost(parseInt(id.slice(4), 10));   // v5.7
   return null;
 }
 function pledgeName(id){
   if(id.startsWith("trial:")){ const t = trialParse(id), d = trialDef(t.skill, t.gate);
     return d ? `${d.title} — ${t.skill} ${t.gate}` : id; }   // v5.1
+  if(id.startsWith("room")){ const r = HOME_ROOMS[parseInt(id.slice(4),10)-1]; return r ? r.name : id; }   // v5.7
   if(id === "way3") return "the Third-Ring Waystone";
   if(id === "way6") return "the Sixth-Ring Waystone";
   if(id === "way9") return "the Heart Waystone";
@@ -1731,6 +1790,7 @@ function pledgeDone(id){
   if(id.startsWith("bell")) return (state.wardBells||[]).includes(parseInt(id.slice(4), 10));   // v4.0
   if(id.startsWith("patron")) return (state.patronTier||0) >= parseInt(id.slice(6), 10);        // v4.26
   if(id.startsWith("trial:")){ const t = trialParse(id); return trialPassed(t.skill, t.gate); }  // v5.1
+  if(id.startsWith("room")) return ((state.home && state.home.rooms) || 0) >= parseInt(id.slice(4), 10);   // v5.7
   return false;
 }
 function pledgeDiscovered(id){
@@ -1744,6 +1804,10 @@ function pledgeDiscovered(id){
   // v5.1: a trial is only ever visible once you have actually REACHED its gate. A trial you cannot
   // start is a chore posted early, and the Journal is not a list of things you are not allowed to do.
   if(id.startsWith("trial:")){ const t = trialParse(id); return trialOpen(t.skill, t.gate); }
+  // v5.7: only the NEXT room is ever offered, and only once the Guild is properly awake — the same
+  // derive-don't-store shape the Patron uses, so there is nothing to migrate.
+  if(id.startsWith("room")){ const n = parseInt(id.slice(4), 10);
+    return (state.wingsLit||0) >= 3 && ((state.home && state.home.rooms) || 0) >= n - 1; }
   return false;
 }
 // Everything the Journal's Restorations section should list, in display order.
@@ -1758,6 +1822,8 @@ function ledgerPledges(){
   // v4.26: the standing commissions — only ever ONE open at a time, so the ledger stays a list of real
   // work rather than an infinite scroll. Rowan starts keeping the list once the Guild is properly awake.
   if((state.wingsLit||0) >= 3 || (state.patronTier||0) > 0) out.push("patron" + ((state.patronTier||0) + 1));
+  { const next = ((state.home && state.home.rooms) || 0) + 1;   // v5.7 the house, one room at a time
+    if(next <= HOME_ROOMS.length && pledgeDiscovered("room"+next)) out.push("room"+next); }
   // v5.1 the mastery trials — listed FIRST when open, because a trial is the only pledge in the
   // ledger that is currently holding something back, and the ledger should say so at the top.
   const trials = [];
@@ -2318,6 +2384,7 @@ const EXAMINE_TILE = {
   // décor (v3.13): the placed pieces read back their catalogue blurb (OBJ_TITLE set in 08-actions.js,
   // where that map lives — it isn't defined yet during this file's load)
   for(const k in DECOR){ EXAMINE_OBJ[k] = DECOR[k].blurb; EXAMINE[DECOR[k].name] = DECOR[k].blurb; }
+  for(const k in FURNITURE){ EXAMINE_OBJ[k] = FURNITURE[k].blurb; EXAMINE[FURNITURE[k].name] = FURNITURE[k].blurb; }   // v5.7
   // v3.32: the quest cape earns a bespoke line — assigned AFTER the loop above, which would
   // otherwise clobber it with the catalogue blurb (Tom's locked-shop tease reads differently
   // from what the earned thing should say to its owner).

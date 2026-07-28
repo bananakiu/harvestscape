@@ -940,6 +940,63 @@ function buildInteriors(){
   // --- DÉCOR (v3.13): each piece gets a world sprite spr[kind] AND a 16×16 backpack icon
   // spr["item_<name>"]. For 16×16 pieces one drawing serves both; taller pieces pass a compact icon. ---
   const mkDecor = (kind, name, w, h, fn, iconFn) => { mkSpr(kind, w, h, fn); mkSpr("item_"+name, 16, 16, iconFn || fn); };
+  // --- v5.7 FURNITURE: the cottage catalog. Same mkDecor contract (world sprite + backpack icon),
+  // warmer palette than the outdoor pieces — indoors these sit on lamplit floorboards, not grass. ---
+  const W_ = "#8a5f38", W2 = "#a5763f", W3 = "#6e4a2a", CLOTH = "#b0503a", CLOTH2 = "#d0705a";
+  mkDecor("woolrug", "Wool Rug", 16, 16, g => {
+    px(g,1,5,14,7,"#c07a5a"); px(g,1,5,14,1,"#d09a7a"); px(g,2,6,12,5,"#a8654a");
+    px(g,4,7,8,3,"#e0b08a"); px(g,6,8,4,1,"#a8654a"); });
+  mkDecor("hearthrug", "Hearthrug", 16, 16, g => {
+    px(g,1,4,14,9,"#4a3040"); px(g,1,4,14,1,"#63405a"); px(g,3,6,10,5,"#6a4258");
+    px(g,5,7,6,3,"#8a5a72"); px(g,7,8,2,1,"#c08aa0"); });
+  mkDecor("candlestand", "Candle Stand", 16, 16, g => {
+    px(g,6,12,4,2,W3); px(g,7,7,2,5,W_); px(g,4,6,8,1,W2);
+    px(g,4,3,1,3,"#f2e4c2"); px(g,7,2,1,4,"#f2e4c2"); px(g,11,3,1,3,"#f2e4c2");
+    px(g,4,2,1,1,"#ffce5a"); px(g,7,1,1,1,"#ffce5a"); px(g,11,2,1,1,"#ffce5a"); });
+  mkDecor("brasslamp", "Brass Lamp", 16, 16, g => {
+    px(g,6,13,4,2,"#8a6a2a"); px(g,7,7,2,6,"#c9922f"); px(g,4,3,8,4,"#e8c86a"); px(g,4,3,8,1,"#ffe6a0");
+    px(g,5,5,6,2,"#fff0c0"); });
+  mkDecor("hearthfire", "Hearth Fire", 16, 16, g => {
+    px(g,1,4,14,10,"#4a4038"); px(g,2,5,12,8,"#2a2018"); px(g,1,4,14,1,"#6a5a48");
+    px(g,5,9,6,4,"#c05a24"); px(g,6,10,4,3,"#ff8a3a"); px(g,7,11,2,2,"#ffd88a");
+    px(g,3,12,10,1,"#5a4030"); });
+  mkDecor("smallshelf", "Small Shelf", 16, 16, g => {
+    px(g,2,5,12,2,W_); px(g,2,5,12,1,W2); px(g,2,10,12,2,W_); px(g,2,10,12,1,W2);
+    px(g,4,7,2,3,"#8a4a4a"); px(g,7,7,2,3,"#4a6a8a"); px(g,10,8,2,2,"#6a8a4a"); });
+  mkDecor("bookcase", "Bookcase", 16, 16, g => {
+    px(g,2,2,12,13,W3); px(g,3,3,10,11,"#2c2018");
+    for(let i=0;i<5;i++) px(g,4+i*2,4,1,3,["#8a4a4a","#4a6a8a","#6a8a4a","#8a7a3a","#7a4a8a"][i]);
+    for(let i=0;i<5;i++) px(g,4+i*2,9,1,3,["#4a6a8a","#8a4a4a","#7a4a8a","#6a8a4a","#8a7a3a"][i]);
+    px(g,3,7,10,1,W_); px(g,3,12,10,1,W_); });
+  mkDecor("sidetable", "Side Table", 16, 16, g => {
+    px(g,3,6,10,2,W_); px(g,3,6,10,1,W2); px(g,4,8,2,6,W3); px(g,10,8,2,6,W3);
+    px(g,7,4,3,2,"#c8d4dc"); px(g,7,4,3,1,"#eaf6ff"); });
+  mkDecor("dresser", "Dresser", 16, 16, g => {
+    px(g,2,4,12,11,W_); px(g,2,4,12,1,W2);
+    px(g,3,6,10,2,W3); px(g,3,9,10,2,W3); px(g,3,12,10,2,W3);
+    px(g,7,7,2,1,"#c9922f"); px(g,7,10,2,1,"#c9922f"); px(g,7,13,2,1,"#c9922f"); });
+  mkDecor("armchair", "Armchair", 16, 16, g => {
+    px(g,3,4,10,8,CLOTH); px(g,3,4,10,1,CLOTH2); px(g,2,7,2,6,CLOTH); px(g,12,7,2,6,CLOTH);
+    px(g,4,9,8,4,CLOTH2); px(g,3,13,2,2,W3); px(g,11,13,2,2,W3); });
+  mkDecor("bench", "Window Bench", 16, 16, g => {
+    px(g,1,7,14,3,W_); px(g,1,7,14,1,W2); px(g,2,10,2,4,W3); px(g,12,10,2,4,W3);
+    px(g,3,5,10,2,CLOTH); px(g,3,5,10,1,CLOTH2); });
+  mkDecor("wallhanging", "Wall Hanging", 16, 16, g => {
+    px(g,2,2,12,1,W3); px(g,3,3,10,10,"#5a4a6a"); px(g,4,4,8,8,"#6a5a80");
+    px(g,7,5,2,6,"#c9a2e0"); px(g,5,7,6,2,"#c9a2e0"); px(g,7,7,2,2,"#f0e0ff"); });
+  mkDecor("potted", "Potted Fern", 16, 16, g => {
+    px(g,5,10,6,5,"#a05a3a"); px(g,5,10,6,1,"#c07a5a");
+    px(g,7,5,2,5,"#3f7a3a"); px(g,4,6,3,2,"#4f8a34"); px(g,9,6,3,2,"#4f8a34");
+    px(g,5,3,2,3,"#5aa044"); px(g,9,3,2,3,"#5aa044"); px(g,7,2,2,3,"#6ab04a"); });
+  mkDecor("cornerdesk", "Corner Desk", 16, 16, g => {
+    px(g,1,5,14,2,W_); px(g,1,5,14,1,W2); px(g,2,7,2,7,W3); px(g,12,7,2,7,W3);
+    px(g,5,8,6,4,W3); px(g,6,9,4,1,"#c9922f");
+    px(g,4,3,5,2,"#f2e4c2"); px(g,10,2,1,3,"#8a5f38"); px(g,10,2,1,1,"#2c2018"); });
+  mkDecor("standclock", "Standing Clock", 16, 16, g => {
+    px(g,4,1,8,14,W3); px(g,5,2,6,12,W_); px(g,5,2,6,1,W2);
+    px(g,5,3,6,5,"#2c2018"); px(g,6,4,4,3,"#f2e4c2"); px(g,7,5,2,1,"#2c2018");
+    px(g,7,9,2,4,"#c9922f"); px(g,7,13,2,1,"#8a6a2a"); });
+
   mkDecor("flowerbed", "Flower Bed", 16, 16, g => {
     px(g,1,10,14,5,"#6b4c2a"); px(g,1,10,14,1,"#7d5a35");
     px(g,4,9,1,2,"#4f8a34"); px(g,7,8,1,3,"#4f8a34"); px(g,10,9,1,2,"#4f8a34"); px(g,13,8,1,3,"#4f8a34");

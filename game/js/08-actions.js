@@ -129,6 +129,7 @@ function plantables(all){
   if((state.inv["Beehive"]||0) > 0) list.push("hive");
   for(const k in MACHINES) if((state.inv[MACHINES[k].name]||0) > 0) list.push("mach:"+k);
   for(const k in DECOR) if((state.inv[DECOR[k].name]||0) > 0) list.push("decor:"+k);
+  for(const k in FURNITURE) if((state.inv[FURNITURE[k].name]||0) > 0) list.push("furn:"+k);   // v5.7
   return list.length ? list : plantables(true);
 }
 const isSapSel   = s => typeof s === "string" && s.startsWith("sap:");
@@ -139,6 +140,7 @@ function plantableName(sel){
   if(isHiveSel(sel)) return "Beehive";
   if(isMachSel(sel)) return MACHINES[sel.slice(5)].name;
   if(isDecorSel(sel)) return DECOR[sel.slice(6)].name;
+  if(isFurnSel(sel)) return FURNITURE[sel.slice(5)].name;   // v5.7
   if(isSapSel(sel)) return FRUIT_TREES[sel.slice(4)].name;
   return CROPS[sel] ? CROPS[sel].name + " Seeds" : "Seeds";
 }
@@ -146,6 +148,7 @@ function plantableIcon(sel){
   if(isHiveSel(sel)) return "beehive";
   if(isMachSel(sel)) return "item_" + MACHINES[sel.slice(5)].name;
   if(isDecorSel(sel)) return "item_" + DECOR[sel.slice(6)].name;
+  if(isFurnSel(sel)) return "item_" + FURNITURE[sel.slice(5)].name;   // v5.7
   if(isSapSel(sel)) return "sapling_" + sel.slice(4);
   return "item_" + (CROPS[sel] ? CROPS[sel].name : "Turnip") + " Seeds";
 }
@@ -184,6 +187,7 @@ function plantableFor(item){
   if(item === "Beehive") return (state.inv["Beehive"]||0) > 0 ? "hive" : null;
   for(const k in MACHINES) if(MACHINES[k].name === item) return "mach:" + k;
   for(const k in DECOR)    if(DECOR[k].name    === item) return "decor:" + k;
+  for(const k in FURNITURE) if(FURNITURE[k].name === item) return "furn:" + k;   // v5.7
   for(const k in FRUIT_TREES) if(FRUIT_TREES[k].name === item) return "sap:" + k;
   if(item.endsWith(" Seeds")){
     const crop = item.slice(0, -6);
@@ -816,7 +820,7 @@ function useTool(){
   }
   else if(tool === "Axe"){
     // an orchard tree or a hive can be dug up and carried off — so a misplacement is never forever
-    if(obj && (obj.kind === "fruittree" || obj.kind === "beehive" || MACHINES[obj.kind] || DECOR[obj.kind])){ digUp(tx, ty, obj); return; }
+    if(obj && (obj.kind === "fruittree" || obj.kind === "beehive" || MACHINES[obj.kind] || DECOR[obj.kind] || FURNITURE[obj.kind])){ digUp(tx, ty, obj); return; }
     // the deadfall — the grove's door west. Chopping THROUGH it is the way deeper, and the
     // door pays you: wood and XP on the fell. Its level req is the next ring's soft gate.
     if(obj && obj.kind === "deadfall"){
@@ -1747,6 +1751,13 @@ function digUp(tx, ty, obj){
     if(obj.item) give(obj.item, obj.qty || 1);      // nothing is ever taken: the whole load comes back out
     give(MACHINES[obj.kind].name, 1, true);
     toast(`You heft the ${MACHINES[obj.kind].name.toLowerCase()}${obj.item ? " — its load comes back out unspoiled" : ""}.`, "#cbb98f");
+  } else if(FURNITURE[obj.kind]){   // v5.7: lossless, like every other placeable
+    give(FURNITURE[obj.kind].name, 1, true);
+    if(state.home && state.home.objects) delete state.home.objects[key(tx,ty)];
+    toast(`You shift the ${FURNITURE[obj.kind].name.toLowerCase()} out of the way.`, "#cbb98f");
+    delete curMap.objects[key(tx,ty)];
+    playSfx("get"); refreshHUD(); saveGame();
+    return;
   } else if(DECOR[obj.kind]){
     give(DECOR[obj.kind].name, 1, true);
     toast(`You pack up the ${DECOR[obj.kind].name.toLowerCase()} to set somewhere new.`, "#cbb98f");
@@ -1765,6 +1776,9 @@ function digUp(tx, ty, obj){
 
 // ---- the orchard and the apiary ----
 function plantPermanent(tx, ty){
+  // v5.7: the cottage is the one interior you own, so furniture goes down here and nowhere else.
+  // Handled before the farm gate below, which has refused every non-farm map since v3.13.
+  if(curMap.id === "cottage" && isFurnSel(state.seedSel)) return placeFurniture(tx, ty);
   if(curMap.id !== "farm"){ toast("This isn't your land — plant it on the farm."); return; }
   const tt = tileAt(tx,ty);
   if(!TILLABLE.has(tt) && tt !== T.TILLED){ toast("Needs open ground."); playSfx("error"); return; }
@@ -2044,6 +2058,39 @@ const TOM_GLUT = [
 ];
 // v3.41 (owner, extending the v3.40 sweep to buying): both take an optional count, clamped to
 // what the purse can cover — ask for 20 with coin for 12 and you get 12, said plainly, one toast.
+// v5.7 the placing verb for interiors. Deliberately the SAME verb as everything else placeable
+// (choose it in the seed/placeable picker, face a spot, USE) rather than a bespoke decorating mode:
+// the game already taught this gesture for hives, machines, saplings and outdoor décor, and a
+// second grammar for the same action would be a thing to learn for no reason.
+function isFurnSel(sel){ return typeof sel === "string" && sel.startsWith("furn:") && !!FURNITURE[sel.slice(5)]; }
+function placeFurniture(tx, ty){
+  const kind = state.seedSel.slice(5), F = FURNITURE[kind];
+  if(!F) return;
+  const k = key(tx, ty);
+  if(curMap.warps[k] || nearDoorway(tx, ty)){ toast("Not in the doorway — you'll want to get out again."); playSfx("error"); return; }
+  if(tileAt(tx, ty) === T.IWALL){ toast("That's the wall."); playSfx("error"); return; }
+  const mine = Object.keys((state.home && state.home.objects) || {}).length;
+  if(mine >= HOME_MAX){ toast(`The cottage is beautifully full (${HOME_MAX} pieces).`); playSfx("error"); return; }
+  if((state.inv[F.name]||0) < 1){ toast("You don't have one." + chestNote(F.name)); playSfx("error"); return; }
+  if(!spendEnergy(1)) return;
+  take(F.name);
+  if(!state.home) state.home = { objects:{}, rooms:0 };
+  if(!state.home.objects) state.home.objects = {};
+  state.home.objects[k] = { kind };
+  curMap.objects[k] = { kind };
+  state.flags["placed_" + kind] = true;
+  toast(`The ${F.name.toLowerCase()} goes there. It looks like it always did.`, "#cbb98f");
+  playSfx("plant"); pSparkle(tx*TILE+8, ty*TILE+8, "#ffe6a0", 8);
+  normalizeSeedSel(); refreshHotbar(); refreshHUD(); saveGame();
+}
+function buyFurniture(kind){
+  const F = FURNITURE[kind]; if(!F) return;
+  const cost = tomPrice(F.cost);              // v5.6's one price function — printed and charged agree
+  if(state.gold < cost){ toast("Not enough gold."); playSfx("error"); return; }
+  state.gold -= cost; give(F.name, 1, true);
+  toast("Bought " + F.name + ". Set it down inside the cottage.", "#cbb98f");
+  playSfx("coin"); refreshHUD(); renderShop(); refreshHotbar();
+}
 function buySeed(id, n){
   const c = CROPS[id], p = tomPrice(c.seed);   // v5.6: the same figure the row printed
   if(state.gold < p) return;

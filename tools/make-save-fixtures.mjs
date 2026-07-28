@@ -179,6 +179,14 @@ function buildDense(){
   s.day = 2 * 112 + 96;              // day 320 — deep in year 3 (a year is 112 days), late fall
   s.gold = 1_480_000;                // past the tenth patron fixture — the endgame wallet
   for(const sk in s.skills) s.skills[sk] = XP[92];
+  // v5.1: a save that genuinely reached 92 in six crafts either earned its mastery trials or was
+  // grandfathered past them. This fixture is built from CURRENT code, so freshState hands it
+  // `trialsSeeded:true` and migrateSave (correctly) declines to grandfather it — leaving every skill
+  // clamped at 50. The harness caught that on the first run. It is a fixture bug, not a game bug: the
+  // clamp firing on a save that claims 92 without ever passing a gate is exactly the behaviour a
+  // hand-edited or imported save should get.
+  s.trialsDone = [];
+  for(const sk in s.skills) for(const g of (get("TRIAL_GATES") || [])) s.trialsDone.push(sk + g);
   for(const t in s.tools) s.tools[t] = get("MAX_TIER");
   s.bagTier = (get("BAG_CAPS") || [0]).length - 1;
 
@@ -207,6 +215,17 @@ function buildDense(){
   // Every animal the buildings hold, every one well-loved.
   const fill = (arr, k, cnt) => { for(let i = 0; i < cnt; i++) arr.push({ friend: 400, [k]: 1, petDay: s.day - 1, name: "Fixture " + i }); };
   fill(s.animals.chickens, "eggDay", 6); fill(s.animals.cows, "milkDay", 4); fill(s.animals.sheep, "woolDay", 4);
+
+  // v5.7: a fully dressed cottage. The year-3 fixture has to grow with the game or it stops being a
+  // worst case — this release added a persisted, drawn layer to the one map the player stands in
+  // every single day, which is precisely what the budget exists to watch.
+  const FURNITURE = get("FURNITURE") || {};
+  s.home = { objects:{}, rooms:2 };
+  { const kinds = Object.keys(FURNITURE); let f = 0;
+    for(let y = 1; y < 10 && f < (get("HOME_MAX") || 24); y++)
+      for(let x = 1; x < 18 && f < (get("HOME_MAX") || 24); x += 2){
+        s.home.objects[x + "," + y] = { kind: kinds[f % kinds.length] }; f++;
+      } }
 
   // A full bag and a full chest, a maxed Collection, every friend at the cap, all the permanents.
   const names = new Set();

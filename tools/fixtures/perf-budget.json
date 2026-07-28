@@ -1,32 +1,46 @@
 {
   "recorded": "2026-07-28",
-  "version": "4.37.0",
+  "version": "5.7.0",
   "note": "baseline = what it measured; budget = the ceiling (~3× time, 1.5× size). Re-record with: node tools/check-perf.mjs --set",
   "baseline": {
-    "migrateSave (dense)": 0.599,
-    "save serialize": 0.172,
-    "save size KB": 54.3,
-    "Strongbox export+parse": 1.936,
-    "export size KB": 54.4,
-    "map gen (slowest)": 0.917,
-    "map gen (all maps)": 3.677
+    "migrateSave (dense)": 0.585,
+    "save serialize": 0.173,
+    "save size KB": 55.2,
+    "Strongbox export+parse": 1.422,
+    "export size KB": 55.3,
+    "map gen (slowest)": 1.014,
+    "map gen (all maps)": 3.834
   },
   "budget": {
     "migrateSave (dense)": 2,
     "save serialize": 1,
-    "save size KB": 82,
-    "Strongbox export+parse": 6,
-    "export size KB": 82,
-    "map gen (slowest)": 3,
+    "save size KB": 83,
+    "Strongbox export+parse": 5,
+    "export size KB": 83,
+    "map gen (slowest)": 4,
     "map gen (all maps)": 12
   },
   "frame": {
-    "avg": 0.99,
-    "p50": 0.5,
-    "p95": 2.7,
-    "worst": 47.8,
-    "on": "Apple M4 / macOS 26.1 / Chromium preview pane, dense-year3 on the farm at noon, 1227 frames",
+    "measuredOn": "Apple M4 / macOS 26.1 / Chromium preview pane, dense-year3 fixture at noon",
+    "cottage": {
+      "note": "v5.7: the fully dressed 19x11 cottage, 24 pieces — the room this release added drawn state to",
+      "avg": 1.08,
+      "p50": 0.5,
+      "p95": 1.6,
+      "frames": 968
+    },
+    "farm": {
+      "note": "the dense farm: 1,179 crops + 100 objects + weather + lighting. The heaviest map in the game.",
+      "avg": 3.2,
+      "p50": 2.2,
+      "p95": 9.5,
+      "frames": 313
+    },
+    "renderWorldMedian": {
+      "farm": 0.9,
+      "note": "median of 60 direct renderWorld() calls on the dense farm — the cleanest single number available, unaffected by the driving harness"
+    },
     "budgetP95": 8,
-    "caveat": "Driven by hand (loop() called in a tight run with requestAnimationFrame stubbed out) because the harness browser throttles rAF to ~1fps. That measures the same WORK a real frame does, but not vsync, compositing, or a real GPU. `worst` is the first frame plus GC, not a steady-state stall. Re-measure on a real window with: await perfProbe(5)"
+    "caveat": "★ Read p50 and renderWorldMedian, NOT avg/p95/worst. The probe drives loop() in a tight synchronous run (rAF is throttled to ~1fps in the harness browser), which starves the browser and inflates the tail with GC — measured directly, every update function is ~0ms and renderWorld is 0.9ms median, so the 9.5ms p95 is the measurement, not the game. On a real window run: await perfProbe(5)"
   }
 }

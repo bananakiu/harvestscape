@@ -7,7 +7,17 @@
 // ---------------- map registry ----------------
 const MAPS = {
   farm:      { w:46, h:36, outdoor:true,  name:"Willowbrook Farm", music:"auto",  gen:genFarm },
-  cottage:   { w:11, h:9,  name:"Your Cottage",          subtitle:"home sweet home", music:"cozy", bg:"#171009", gen:genCottage },
+  // v5.7: the cottage GROWS. Its footprint is a function of `state.home.rooms` (0 → 11×9, the room
+  // it has always been; 1 → 15×9; 2 → 19×11), read at generation time. Nothing else in MAPS is
+  // dynamic, which is exactly why this is a getter-ish function rather than a literal — the map is
+  // rebuilt from `def` every time it is entered, so the size simply follows the save.
+  // ★ `state` is NULL at load and in every headless tool (the atlas enumerates MAPS with no save),
+  // so these getters must guard the save itself, not just the field. Caught by build-atlas.mjs the
+  // first time it ran against this — which is the second time the v5.0 tooling has stopped a crash
+  // before a browser ever saw it.
+  cottage:   { get w(){ return [11,15,19][Math.min(2, homeRooms())]; },
+               get h(){ return [9,9,11][Math.min(2, homeRooms())]; },
+               name:"Your Cottage", subtitle:"home sweet home", music:"cozy", bg:"#171009", gen:genCottage },
   coop:      { w:12, h:9,  name:"The Coop",              subtitle:"cluck, cluck",    music:"cozy", bg:"#1a1208", gen:genCoop },
   barn:      { w:14, h:10, name:"The Barn",              subtitle:"warm straw, slow breathing", music:"cozy", bg:"#1a1208", gen:genBarn },
   store:     { w:14, h:9,  name:"Tom's General Store",   subtitle:"coin for goods",   music:"cozy", bg:"#171009", gen:genStore },
@@ -59,6 +69,32 @@ function genCottage(m){
     put(m,1,6,"crate");
   }
   exitAt(m,5,"farm",7*TILE+8,8*TILE);
+  applyHome(m);   // v5.7: everything the player has placed wins over the defaults above
+}
+// ============================================================
+// v5.7 "Four Walls" — the cottage persistence overlay.
+//
+// The cottage is a TRANSIENT map: it regenerates from `genCottage` every time the day rolls over,
+// because only `state.farm` is in the save. That is the right architecture (it is why interiors,
+// the mine and the coast can all be cheap) and this does not change it. Instead the same pattern the
+// farm's own objects use is applied one level up: `state.home.objects` is the player's layer, stamped
+// over the generated room every time it is built. The room is regenerated; the home is not.
+//
+// Placed furniture WINS over a default prop on the same tile, and the default is remembered nowhere —
+// so moving the bookshelf is simply placing something where the bookshelf was. Nothing is lost either
+// way: `digUp` gives the piece back to the bag, and clearing a tile restores whatever `genCottage`
+// puts there tomorrow.
+function homeRooms(){ return (typeof state !== "undefined" && state && state.home && state.home.rooms) || 0; }
+function applyHome(m){
+  if(!state || !state.home || !state.home.objects) return;
+  for(const k in state.home.objects){
+    const o = state.home.objects[k];
+    if(!o || !FURNITURE[o.kind]) continue;                    // never trust a save's key blindly
+    const [x, y] = k.split(",").map(Number);
+    if(x < 1 || y < 1 || x >= m.w - 1 || y >= m.h - 1) continue;   // a shrunken room must never strand a piece off-map
+    if(m.warps[k]) continue;                                   // and never over the door
+    m.objects[k] = { kind:o.kind };
+  }
 }
 function genCoop(m){
   genRoom(m, T.HAY, T.IWALL);

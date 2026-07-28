@@ -99,8 +99,13 @@ console.log("\n  map generation, slowest first:");
 for(const [id, ms, err] of mapRows.slice(0, 6)) console.log(`    ${pad(id)} ${err ? "n/a — " + err : ms + " ms"}`);
 
 if(prev && prev.frame){
-  console.log(`\n  frame (in-browser, perfProbe — recorded by hand): avg ${prev.frame.avg} ms · p95 ${prev.frame.p95} ms · worst ${prev.frame.worst} ms`);
-  console.log(`    on ${prev.frame.on} · budget: p95 under ${prev.frame.budgetP95} ms (a 60fps frame is 16.7 ms; the game must leave room for the browser)`);
+  const F = prev.frame;
+  console.log(`\n  frame (in-browser, perfProbe — recorded by hand, ${F.measuredOn || F.on || "unknown machine"}):`);
+  for(const k of ["cottage", "farm"]) if(F[k])
+    console.log(`    ${k.padEnd(9)} p50 ${F[k].p50} ms · avg ${F[k].avg} ms · p95 ${F[k].p95} ms   ${F[k].note || ""}`);
+  if(F.renderWorldMedian) console.log(`    renderWorld median on the dense farm: ${F.renderWorldMedian.farm} ms`);
+  console.log(`    budget: p50 under ${F.budgetP95} ms (a 60fps frame is 16.7 ms; the game must leave room for the browser)`);
+  if(F.caveat) console.log(`    ${F.caveat.replace(/\s+/g, " ").slice(0, 300)}`);
 }
 
 if(SET){
