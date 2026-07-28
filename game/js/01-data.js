@@ -8,13 +8,16 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "6.1.0", code: 136, codename: "Neighbours", date: "2026-07-29" };
+const VERSION = { name: "6.1.1", code: 137, codename: "Neighbours", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"6.1.1", code:137, date:"2026-07-29", name:"Room to Stand", notes:[
+    { t:"fix", s:"The plaza got crowded. Adding Wick and Corin to the village left three people sharing one patch of ground with Maya and Pip \u2014 they drifted to about a tile apart and their floating name tags sat on top of each other. The square is divided between its four people now: nobody's name covers anybody else's." },
+  ]},
   { v:"6.1.0", code:136, date:"2026-07-29", name:"Neighbours", notes:[
     { t:"new", s:"A boat comes in at the ferry landing. There has not been one in eleven years \u2014 the mooring's own description has read \u201cnothing has tied up here in years; somebody keeps the boards good anyway\u201d since v3.36. Thea gets off it. She was one of Orla's wardens; four of them were sent north the summer before the wing closed, and she saw the tenth window lit from the water on the northern run." },
     { t:"new", s:"She's the third person you can marry, and she has everything the other two have \u2014 hearts all the way to ten, a proposal of her own on the boards she arrived on, morning and evening talk once you're wed, an arc that keeps going after the wedding, and her things in the cottage (including a chair she bought deliberately too heavy to carry)." },

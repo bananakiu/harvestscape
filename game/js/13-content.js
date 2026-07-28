@@ -1523,18 +1523,22 @@ function spawnMapNpcs(m){
     if(sp && state.flags.married && ((h>=6 && h<9) || (h>=18.5 && h<23)))
       m.npcs.push(mkNpc(sp, 5*TILE, 5*TILE, {wander:{x0:2,y0:2,x1:8,y1:6}}));
   } else if(m.id==="village"){
-    if(h>=7 && h<18.5) m.npcs.push(mkNpc("maya", 24*TILE, 12*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));
+    // ★ v6.1: the plaza is TILED between its people now, not shared. Maya, Pip and Wick were all
+    // given the identical box (x15-25, y11-17) — fine for two, crowded for three: a 200-step
+    // simulation closed them to ~15px, about one tile, and the floating name tags are wider than a
+    // tile, so three tags sat on top of each other. Four quadrants, no overlap, same plaza.
+    if(h>=7 && h<18.5) m.npcs.push(mkNpc("maya", 17*TILE, 12*TILE, {wander:{x0:15,y0:11,x1:20,y1:14}}));
     // v6.1: on his beach mornings Pip is at the beach, not here. Nobody is ever in two places — the
     // rule the shopkeeper schedule established, applied to the child who now has somewhere to go.
     const pipFishing = (h>=7 && h<11 && state.day % 3 === 0 && !beachEvent() && !state.flags.reunionScene);
-    if(h>=8 && h<19 && !pipFishing) m.npcs.push(mkNpc("pip", 17*TILE, 16*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));
+    if(h>=8 && h<19 && !pipFishing) m.npcs.push(mkNpc("pip", 23*TILE, 12*TILE, {wander:{x0:21,y0:11,x1:25,y1:14}}));
     // v6.0: Corin is on the plaza's stonework through the working day — the mason who has been
     // silently building Rowan's restorations all this time, finally visible doing it. Wick runs the
     // lane with Pip, which is the point of Wick: Pip has been the only child in the valley.
     // ★ v6.1 fix: not while he's inside the Guild working its stonework — same double-booking as
     // Sable's, same cause (two windows written independently), same sweep caught it.
-    if(h>=9 && h<18.5 && !corinAtGuild()) m.npcs.push(mkNpc("corin", 20*TILE, 17*TILE, {wander:{x0:16,y0:15,x1:26,y1:19}}));
-    if(h>=9 && h<18)   m.npcs.push(mkNpc("wick",  19*TILE, 16*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));
+    if(h>=9 && h<18.5 && !corinAtGuild()) m.npcs.push(mkNpc("corin", 23*TILE, 17*TILE, {wander:{x0:21,y0:15,x1:26,y1:19}}));
+    if(h>=9 && h<18)   m.npcs.push(mkNpc("wick",  17*TILE, 16*TILE, {wander:{x0:15,y0:15,x1:20,y1:18}}));
   } else if(m.id==="store"){ m.npcs.push(mkNpc("tom", 7*TILE+8, 2*TILE+8, {face:"down"})); }
   else if(m.id==="mayahouse"){ if(h>=18.5 || h<7) m.npcs.push(mkNpc("maya", 6*TILE, 4*TILE, {face:"down"})); }
   else if(m.id==="guild"){

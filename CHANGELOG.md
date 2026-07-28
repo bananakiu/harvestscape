@@ -22,6 +22,23 @@
 
 ---
 
+## 2026-07-29 — v6.1.1 "Room to Stand" (code 137, tag `v6.1.1`) — v6.1's own crowding, fixed
+
+A regression from adding people, caught by looking rather than by a test.
+
+`spawnMapNpcs` gave **Maya, Pip and Wick the identical wander box** (x15–25, y11–17). Fine for the two
+who have shared it since v3; crowded for three. A 400-step simulation of the plaza closed the minimum
+pairwise distance to **~15px — about one tile** — and the floating name tags are wider than a tile, so
+three names sat on top of one another.
+
+The plaza is **tiled** between its four people now rather than shared: Maya northwest, Pip northeast,
+Wick southwest, Corin southeast by the stonework he is actually working on. Same square, same hours,
+same wandering. Minimum separation after: **34px, over two tiles.** Tags clear.
+
+*The general lesson, worth carrying into v6.5's newcomers: a wander box that comfortably holds N people
+does not hold N+1. Every new NPC placed in an existing box needs the box re-cut, and the check is a
+few hundred simulated steps and a minimum-distance print — the same shape as the where-is-everyone
+sweep that found v6.1's double-bookings.*
 ## 2026-07-29 — v6.1.0 "Neighbours" (code 136, tag `v6.1.0`) — the boat comes in, and the valley starts visiting itself
 
 ### Added — Thea, and the mooring that was waiting for her
