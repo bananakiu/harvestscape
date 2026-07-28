@@ -8,13 +8,19 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "5.5.0", code: 130, codename: "Moved In", date: "2026-07-29" };
+const VERSION = { name: "5.6.0", code: 131, codename: "Ten Hearts", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"5.6.0", code:131, date:"2026-07-29", name:"Ten Hearts", notes:[
+    { t:"change", s:"Hearts go to ten. They stopped at six, which meant that after about two seasons every kind word, gift and shared morning went into a number the game had stopped reading \u2014 the friendship system quietly switched itself off right when you'd made friends. If you're long past six with someone, you simply have more hearts the moment you load: the points were always there, only the reading was capped." },
+    { t:"new", s:"Tom's ladder ended at five hearts and Pip's at four. They both have proper endings now. Tom tells you why he kept the shop open through nine years of eleven customers, and what it meant when somebody finally bought six turnip seeds. Pip works out that he doesn't have to be the thing everyone said he'd be, and goes to tell his dad \u2014 the scared way, on purpose, alone." },
+    { t:"new", s:"A late scene for everyone else too. Rowan burns a list he's been reading on bad nights for twenty years. Elias goes back to his old house on the ridge and finds a birch growing where the kitchen was. Nell tells you the thing nobody in the village knows. And at ten hearts, Maya counts the windows, and Bram finally says what thirty-one years alone on the water was actually about." },
+    { t:"new", s:"Tom means it about the discount \u2014 everything in his shop is 10% off, forever, from the moment he says it." },
+  ]},
   { v:"5.5.0", code:130, date:"2026-07-29", name:"Moved In", notes:[
     { t:"fix", s:"Your spouse actually lives with you now. Maya says at her own wedding \u2014 out loud, on screen \u2014 that she's moving her sketchbooks into the cottage that night, and then for four whole versions she went home to her father's house and slept there forever. She's in the kitchen mornings and evenings now. So is Bram." },
     { t:"new", s:"And their things are in the house. Maya's sketchbook shelf goes up by the window because that's the good light, and the painting of the valley as it was goes on the wall. Bram's rod rack takes an entire wall, and he offers to move it, and then doesn't." },
@@ -1283,6 +1289,14 @@ RECIPES.forEach(r => { ITEM_SELL[r.name] = r.sell; EDIBLE[r.name] = r.energy; })
 // never be a way to launder a Fish Stew into more gold than the stew was worth, or the kitchen grows
 // a second faucet by accident (GBP §2.5's obligation — the arithmetic before the code). They are a
 // SINK: brewing one spends a dish and a settling drop and returns something you drink.
+// v5.6: Tom's Ledger — a 10♥ keepsake, not a commodity. Sell value 0 for the same reason the
+// Pocketwatch and the Forester's Band have none: a gift that closes somebody's arc is not inventory.
+ITEM_SELL["Tom's Ledger"] = 0;
+// v5.6: Tom's 8♥ discount. He says "have a discount and stop looking at me like that" and this is it —
+// 10% off everything he sells, forever. ★ Deliberately ONE function called by BOTH the shop rows and
+// the buy handlers: v4.37's whole release was about prices that disagreed with the counter, and a
+// discount applied in one place and not the other is exactly that bug wearing a bow.
+function tomPrice(g){ return (state.flags && state.flags.tomDiscount) ? Math.max(1, Math.round(g * 0.9)) : g; }
 ITEM_SELL["Ember Broth"] = 240; ITEM_SELL["Gloamsalve"] = 300; ITEM_SELL["Warden's Tea"] = 260;
 
 // ---- ROWAN'S RESTORATION PROJECTS ----
@@ -2265,6 +2279,7 @@ const EXAMINE_TILE = {
     const sm = GEM_SEAMS[sk];
     EXAMINE_OBJ[sk] = "A seam of " + sm.gem.toLowerCase() + " running clean through the stone. Follow it, don't chase it.";
   }
+  EXAMINE["Tom's Ledger"] = "Every price in the valley, in three generations of handwriting. The early pages are his father's. The last one is blank, and has your name at the top of it.";
   EXAMINE["Ember Broth"] = "Ember grit stirred through good stew. Warm the whole way down, and it keeps being warm.";
   EXAMINE["Gloamsalve"] = "Gloam thread steeped in honey until it goes clear. Orla swore by it. She would.";
   EXAMINE["Warden's Tea"] = "Ash and apple, which sounds worse than it tastes. Steadies the hands, and that is the entire trick.";

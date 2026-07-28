@@ -1209,13 +1209,13 @@ function renderShop(){
       const qid = "bq_" + (bidx++);
       html += `<div class="row ${ok?"":"locked"}"><span class="lead" data-icon="item_${c.name} Seeds"><canvas></canvas>` +
         `<span>${c.name} Seeds <span class="sub">×${owned}</span> <span class="sub">${sub}</span></span></span>` +
-        `<span><span class="price">${c.seed}g</span> ${ok ? qtyCtl(qid, Math.floor(state.gold/c.seed)) : ""} ` +
-        `<button class="buy" ${ok&&state.gold>=c.seed?"":"disabled"} onclick="buySeed('${id}',qv('${qid}'))">buy</button></span></div>`;
+        `<span><span class="price">${tomPrice(c.seed)}g${state.flags.tomDiscount?` <span class="sub" style="color:var(--green)">−10%</span>`:""}</span> ${ok ? qtyCtl(qid, Math.floor(state.gold/tomPrice(c.seed))) : ""} ` +
+        `<button class="buy" ${ok&&state.gold>=tomPrice(c.seed)?"":"disabled"} onclick="buySeed('${id}',qv('${qid}'))">buy</button></span></div>`;
     }
-    const foodRow = (item, cost, sub) => {
-      const qid = "bq_" + (bidx++);
+    const foodRow = (item, cost0, sub) => {
+      const qid = "bq_" + (bidx++), cost = tomPrice(cost0);   // v5.6: priced once, printed and charged from the same number
       return `<div class="row"><span class="lead" data-icon="item_${item}"><canvas></canvas><span>${item} <span class="sub">×${state.inv[item]||0}</span> <span class="sub">${sub}</span></span></span>` +
-        `<span><span class="price">${cost}g</span> ${qtyCtl(qid, Math.floor(state.gold/cost))} ` +
+        `<span><span class="price">${cost}g${state.flags.tomDiscount?` <span class="sub" style="color:var(--green)">−10%</span>`:""}</span> ${qtyCtl(qid, Math.floor(state.gold/cost))} ` +
         `<button class="buy" ${state.gold>=cost?"":"disabled"} onclick="buyFood('${jsq(item)}',${cost},qv('${qid}'))">buy</button></span></div>`;
     };
     html += foodRow("Berry Bun", 30, "+34 energy");

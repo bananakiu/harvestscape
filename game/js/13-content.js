@@ -1630,8 +1630,36 @@ function buyBouquet(){
 }
 
 // ---- relationships ----
-function heartsOf(id){ const r=state.rel[id]; return r ? Math.min(6, Math.floor(r.points/100)) : 0; }
-function heartStr(h){ let s=""; for(let i=0;i<6;i++) s += i<h ? "♥":"♡"; return s; }
+// ============================================================
+// v5.6 "Ten Hearts" — the cap rises 6 → 10. Owner decision, 2026-07-29 (`V5_PLAN.md` §6.4).
+//
+// The measured problem: `heartsOf` clamped at 6, so **every relationship point past 600 evaporated**.
+// A player maxes the entire cast in roughly two seasons and the friendship system is then inert for
+// the rest of the save — while the points keep accruing into a number nothing reads. Tom's ladder
+// ended at 5♥, Pip's at 4♥, and the scorecard has asked for their capstones since v3.32.
+//
+// ★ THIS IS A ONE-WAY DOOR, and the plan says so in as many words: *the cap can rise once, it should
+// not rise twice.* 10 was chosen over 8 to leave room for V6's married and newcomer arcs.
+//
+// ★ THE MIGRATION IS FREE, BY CONSTRUCTION — and that is the whole reason this is safe. Hearts are
+// DERIVED from `rel[id].points`, which was never capped; only the reading was. So a save that has
+// been over 600 with Maya for a year simply *has* more hearts the moment it loads. Nothing is
+// granted, nothing is owed, nothing is migrated — the points were always there.
+//
+// ★ THE HARD GUARD, from v4.6's unreachable-event bug (an early `hearts:8` event was written when
+// the cap was 6, and was therefore unreachable forever): a retier must never re-gate a scene the
+// player has already SEEN, and must never make a reached tier unreachable. Both are structurally
+// impossible here — every existing event sits at 2–6, every new one at 8 or 10, and every event is
+// latched by its own `flag`, so a seen scene stays seen no matter what the tier arithmetic does.
+// `tools/check-saves.mjs` asserts the first half across every era fixture.
+const HEART_CAP = 10;
+function heartsOf(id){ const r=state.rel[id]; return r ? Math.min(HEART_CAP, Math.floor(r.points/100)) : 0; }
+// The row of hearts. Ten pips is a wide string for a dialogue header, so past six it prints compactly
+// — the full row while it can still be read at a glance, a count once it can't.
+function heartStr(h){
+  if(h > 6) return "♥×" + h;
+  let s=""; for(let i=0;i<6;i++) s += i<h ? "♥":"♡"; return s;
+}
 // v5.5 the married pools — morning / day / evening, per spouse. Deliberately three small pools
 // rather than one big one: variety alone doesn't fix a recording, CONTEXT does. A line that could
 // only be said at that hour is worth five that could be said at any.

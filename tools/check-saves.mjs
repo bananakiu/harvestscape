@@ -131,6 +131,22 @@ for(const file of files){
   }
   ok(s.skills && s.skills.Warding !== undefined, "skills.Warding missing — a pre-v4 save must gain the sixth skill");
 
+  // ---- 1c. v5.6: the heart retier is not allowed to cost anyone a scene ----
+  //
+  // The v4.6 bug this guards: an early `hearts:8` event was written while `heartsOf` capped at 6, so
+  // it was UNREACHABLE forever and nobody noticed until an audit read the table. Raising the cap to
+  // 10 makes the opposite mistake possible too, so both directions are asserted — and the "already
+  // seen stays seen" half is checked on the real fixture, not in the abstract.
+  const HEART_EVENTS = sb.get("HEART_EVENTS") || {}, HEART_CAP = sb.get("HEART_CAP") || 6;
+  const seenBefore = Object.keys(fx.save.flags || {}).filter(k => /^he_/.test(k) && fx.save.flags[k]);
+  for(const k of seenBefore) ok(s.flags[k] === true, `${k} was a seen scene and the migration un-saw it`);
+  const flagsUsed = new Set();
+  for(const id in HEART_EVENTS) for(const ev of HEART_EVENTS[id]){
+    ok(ev.hearts <= HEART_CAP, `${id}'s ${ev.hearts}♥ scene is above the cap of ${HEART_CAP} — unreachable forever (the v4.6 bug)`);
+    ok(!flagsUsed.has(ev.flag), `duplicate heart-event flag ${ev.flag} — one of those scenes can never fire`);
+    flagsUsed.add(ev.flag);
+  }
+
   // ---- 2. never lose anything held ----
   for(const item in E.inv){
     const now = (s.inv || {})[item], shelved = (s.shelf || {})[item] || 0;

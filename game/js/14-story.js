@@ -1282,6 +1282,106 @@ const HEART_EVENTS = {
     ]},
   ],
 };
+// ============================================================
+// v5.6 "Ten Hearts" — the late tiers.
+//
+// Appended rather than woven in, so the existing arcs are untouched: every scene above sits at 2–6,
+// every scene here at 8 or 10, and each is latched by its own flag. Nothing already seen can be
+// re-gated by the retier (the v4.6 unreachable-event lesson, applied as structure rather than care).
+//
+// Tom's ladder ended at 5 and Pip's at 4 — the two capstones `DESIGN_SCORECARD.md` has asked for
+// since v3.32. The rest of the cast gets one late scene each at 8, and the two romance candidates
+// get theirs at 10, where a marriage has had time to become ordinary in the good way.
+(function addLateHeartEvents(){
+  const add = (id, evs) => { if(HEART_EVENTS[id]) HEART_EVENTS[id].push(...evs); };
+
+  add("tom", [
+    { hearts:8, flag:"he_tom_8", steps:[
+      { type:"say", who:"Tom", portrait:"port_tom", text:"Shop's shut. Sit. …No, on the good stool, you've earned the good stool." },
+      { type:"say", who:"Tom", portrait:"port_tom", text:"I want to tell you something I've told exactly one other person, and she married me, so she had to listen." },
+      { type:"say", who:"Tom", portrait:"port_tom", text:"When the Guild closed I had eleven customers. ELEVEN. I kept the shop open because shutting it would have meant saying out loud that the valley was finished. So I stood behind that counter for nine years selling turnip seed to people who were leaving." },
+      { type:"say", who:"Tom", portrait:"port_tom", text:"And then you came in and bought six. Six turnip seeds. And I thought — well. Somebody's planting something. …Anyway. That's the story. Have a discount and stop looking at me like that." },
+      { type:"run", fn:()=>{ state.flags.tomDiscount = true; } },
+    ]},
+    { hearts:10, flag:"he_tom_10", steps:[
+      { type:"say", who:"Tom", portrait:"port_tom", text:"Right. I've a proposition and Nell says if I don't make it today she's making it for me, so." },
+      { type:"say", who:"Tom", portrait:"port_tom", text:"The ledger. My ledger — every price, every supplier, every trick of this trade going back to my father. I want you to have a copy of it. Not to compete with me. Because somebody besides me ought to know how this valley actually feeds itself." },
+      { type:"say", who:"Tom", portrait:"port_tom", text:"You'll be here when I'm not. That's not a sad thing to say. That's the best thing I know about you." },
+      { type:"run", fn:()=>{ give("Tom's Ledger", 1, true); } },
+    ]},
+  ]);
+
+  add("pip", [
+    { hearts:6, flag:"he_pip_6", steps:[
+      { type:"say", who:"Pip", portrait:"port_pip", text:"Okay so. I've been thinking. Which Mum says I should do LESS of but she's wrong." },
+      { type:"say", who:"Pip", portrait:"port_pip", text:"Everyone always says I'll be a shopkeeper like Dad. And I LIKE the shop! But I don't want to SELL things. I want to GROW things. Like you do." },
+      { type:"say", who:"Pip", portrait:"port_pip", text:"Is that allowed? Can you just… decide to be a different thing than the thing everyone said? …You did. You were nobody from nowhere and now you're the whole valley's — thing. So it's allowed." },
+      { type:"say", who:"Pip", portrait:"port_pip", text:"Okay. OKAY. I'm gonna go tell Dad. …In a bit. After lunch. Don't come, you'll make me brave and I want to do it the scared way." },
+    ]},
+    { hearts:8, flag:"he_pip_8", steps:[
+      { type:"say", who:"Pip", portrait:"port_pip", text:"I TOLD HIM. I told Dad. About the growing thing." },
+      { type:"say", who:"Pip", portrait:"port_pip", text:"He didn't even say anything for AGES. And then he went in the back and came out with a trowel. HIS trowel. From when HE was little. He'd kept it in a box for THIRTY YEARS." },
+      { type:"say", who:"Pip", portrait:"port_pip", text:"He said 'your grandad gave me this and I was rubbish at it.' And then he went all — you know. Face. And went to do stock." },
+      { type:"say", who:"Pip", portrait:"port_pip", text:"So anyway I have a trowel now and I'm going to be SO GOOD at this. I'm starting behind the shop. Mum says the light's wrong there. Mum is WRONG." },
+      { type:"run", fn:()=>{ give("Carrot Seeds", 6, true); } },   // his first crop, pressed on you the way he pressed the sapling
+    ]},
+  ]);
+
+  add("rowan", [
+    { hearts:8, flag:"he_rowan_8", steps:[
+      { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"Sit with an old man a moment. The hall's warm and I have been putting this off for a season." },
+      { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"I have kept a list, all these years, of everyone who left. Two hundred and six names. I read it on the bad nights. I could not tell you why — penance, I suppose, badly aimed." },
+      { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"I burned it last week. Not out of forgetting. Out of… finishing. The valley they left isn't the valley outside that window any more, and a list of the dead is a poor way to describe the living." },
+      { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"You did that. Not with the wings — with the twenty ordinary mornings I watched you have. Thank you, child. Now go, before I start again." },
+    ]},
+  ]);
+
+  add("elias", [
+    { hearts:8, flag:"he_elias_8", steps:[
+      { type:"say", who:"Elias", portrait:"port_elias", text:"…I went to the house. My old one, on the ridge. First time in eleven years." },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"It's a ruin. Roof's gone. There's a birch growing where the kitchen was, and it's a good birch — straight, no lean to it. Some seed got in and simply got on with it." },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"I stood there expecting to feel the old thing. And what I felt was — that's a good birch. That's all. That's the whole of what I felt." },
+      { type:"say", who:"Elias", portrait:"port_elias", text:"I don't know what to do with a feeling that small. …I think it might be the first honest one I've had since Orla. Don't tell me what it means. Just — thank you." },
+    ]},
+  ]);
+
+  add("nell", [
+    { hearts:8, flag:"he_nell_8", steps:[
+      { type:"say", who:"Nell", portrait:"port_valley", text:"Sit down, you. You've the look of somebody who's been standing since five." },
+      { type:"say", who:"Nell", portrait:"port_valley", text:"I'll tell you what nobody in that village knows. I nearly left. Year before you came. Bag packed, ferry money counted, the lot. Tom never knew." },
+      { type:"say", who:"Nell", portrait:"port_valley", text:"What stopped me was a cow. Truly. Old Blossom went down with milk fever the night I meant to go, and by the time she was up again the ferry had gone and I'd remembered why I stay." },
+      { type:"say", who:"Nell", portrait:"port_valley", text:"I'm not telling you to be tragic. I'm telling you because you're the reason I don't count ferry money any more. Take some cheese and go home." },
+      { type:"run", fn:()=>{ give("Fine Cheese", 3, true); } },
+    ]},
+  ]);
+
+  add("maya", [
+    { hearts:8, flag:"he_maya_8", steps:[
+      { type:"say", who:"Maya", portrait:"port_maya", text:"I've been asked to paint the Guild's tenth window. Properly, I mean — the real one, in glass, that'll be there in a hundred years." },
+      { type:"say", who:"Maya", portrait:"port_maya", text:"I said no. Twice. Because the last person who put something permanent in that hall was Gran, and it went dark for twenty years, and some stupid frightened part of me thinks that's what happens to things I make." },
+      { type:"say", who:"Maya", portrait:"port_maya", text:"…I've said yes now. It'll be the pond at first light, and there'll be two people in it, and I'm not saying who. ♥" },
+    ]},
+    { hearts:10, flag:"he_maya_10", steps:[
+      { type:"say", who:"Maya", portrait:"port_maya", text:"Come out to the green. It's late and it's cold and I want to show you something and no I will not do it indoors." },
+      { type:"say", who:"Maya", portrait:"port_maya", text:"…There. The whole valley lit, window by window. Count them if you like. I have. Twice." },
+      { type:"say", who:"Maya", portrait:"port_maya", text:"When I was small I used to stand here and count the DARK ones. Every year there were more, and I'd go home and not say anything about it to anyone." },
+      { type:"say", who:"Maya", portrait:"port_maya", text:"There aren't any. …I'm not going to be clever about this. There aren't any dark windows, and I'm standing outside in the cold holding your hand, and that is everything I ever wanted and never once said out loud. ♥" },
+    ]},
+  ]);
+
+  add("bram", [
+    { hearts:8, flag:"he_bram_8", steps:[
+      { type:"say", who:"Bram", portrait:"port_bram", text:"Sit. …I've named a boat after somebody once before and it went badly, so understand what it costs me to say this next part." },
+      { type:"say", who:"Bram", portrait:"port_bram", text:"The new one. She's finished. And I've not painted the name on yet because I've been arguing with myself about it for a fortnight." },
+      { type:"say", who:"Bram", portrait:"port_bram", text:"…It's your name. It was always going to be your name. Stop grinning. Get in the boat." },
+    ]},
+    { hearts:10, flag:"he_bram_10", steps:[
+      { type:"say", who:"Bram", portrait:"port_bram", text:"Out past the point, where I've not taken anyone. Sit still and don't talk for a minute. …Right. Now look back." },
+      { type:"say", who:"Bram", portrait:"port_bram", text:"That's the whole valley from the water. That's what the folk who left saw last. I've looked at it alone for thirty-one years and never once been able to say what it was I felt." },
+      { type:"say", who:"Bram", portrait:"port_bram", text:"…I can now. It's that I wanted somebody in the boat. That's all it ever was. Thirty-one years and it was just that. ♥" },
+    ]},
+  ]);
+})();
 function heartEventFor(id){
   const evs = HEART_EVENTS[id]; if(!evs) return null;
   const h = heartsOf(id);

@@ -2045,9 +2045,10 @@ const TOM_GLUT = [
 // v3.41 (owner, extending the v3.40 sweep to buying): both take an optional count, clamped to
 // what the purse can cover — ask for 20 with coin for 12 and you get 12, said plainly, one toast.
 function buySeed(id, n){
-  const c = CROPS[id]; if(state.gold < c.seed) return;
-  n = Math.max(1, Math.min(n||1, Math.floor(state.gold / c.seed)));
-  state.gold -= c.seed * n; give(c.name+" Seeds", n, true);
+  const c = CROPS[id], p = tomPrice(c.seed);   // v5.6: the same figure the row printed
+  if(state.gold < p) return;
+  n = Math.max(1, Math.min(n||1, Math.floor(state.gold / p)));
+  state.gold -= p * n; give(c.name+" Seeds", n, true);
   toast("Bought " + (n>1 ? n+"× " : "") + c.name+" Seeds", "#8fd06a");
   playSfx("coin"); refreshHUD(); renderShop(); refreshHotbar();
 }

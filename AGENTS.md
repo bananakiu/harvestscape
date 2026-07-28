@@ -229,7 +229,11 @@ tests a copy tests nothing.
   already taught) and the floor-45 terminal fight Act III's finale had been naming with nothing behind
   it. **v5.5 "Moved In" SHIPPED** — the spouse
   is in the cottage mornings and evenings, their props stamp into `genCottage`, two post-wedding scenes
-  on `daysMarried()`, and time-of-day married dialogue pools. **Next unbuilt release: v5.6 "Ten Hearts."** Build it the
+  on `daysMarried()`, and time-of-day married dialogue pools. **v5.6 "Ten Hearts" SHIPPED** — the cap rises 6→10
+  (free by construction: hearts are DERIVED from uncapped `rel.points`, only the reading was clamped),
+  Tom's and Pip's capstones, a late scene for the whole cast, and the v4.6 unreachable-event guard made
+  structural in the harness. **Next unbuilt release: v5.7 "Four Walls"** — ★ the version's XL; the plan
+  says if it slips, it slips WHOLE (never ship a half-persistent cottage). Build it the
   `V4_BUILD_PLAN.md` way — write that release's build order fresh, re-verify every symbol anchor
   `V5_PLAN.md` names, one release per session, strictly in order.
   ★ Two load-order lessons from v5.1, both worth carrying: (1) a `const X = f()` evaluated at load in

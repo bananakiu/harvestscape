@@ -22,6 +22,76 @@
 
 ---
 
+## 2026-07-29 — v5.6.0 "Ten Hearts" (code 131, tag `v5.6.0`) — the friendship system stops switching itself off
+
+### Why this release, and the door it closes
+
+**`heartsOf` clamped at 6, so every relationship point past 600 evaporated.** A player maxes the
+entire cast in roughly two seasons; from then on every gift, every conversation and every shared
+morning fed a number nothing read. The system turned itself off at exactly the moment the player had
+succeeded at it. Tom's ladder ended at 5♥, Pip's at 4♥, and `DESIGN_SCORECARD.md` has been asking for
+those two capstones since v3.32.
+
+**★ Owner decision, taken deliberately as a one-way door** (`V5_PLAN.md` §6.4): the cap rises to
+**10**, not 8 — 10 leaves room for V6's married and newcomer arcs, and *the cap may rise once and not
+twice.* This release is the only chance to get that number right.
+
+### The migration is free, by construction
+
+Hearts are **derived** from `rel[id].points`, which was never capped — only the *reading* was. So a
+save that has sat above 600 with Maya for a year simply **has** more hearts the moment it loads.
+Nothing is granted, nothing is owed, nothing is migrated. The points were always there.
+
+`heartStr` prints the full six-pip row while it can still be read at a glance and switches to `♥×8`
+past that, because ten pips in a dialogue header is a wall, not a readout.
+
+### Added — the two capstones the scorecard asked for
+
+- **Tom, 8♥** — why he kept the shop open through nine years of eleven customers, and what it meant
+  when somebody finally walked in and bought six turnip seeds. *"Somebody's planting something."*
+- **Tom, 10♥** — his ledger, three generations of handwriting, the last page blank with your name on it.
+- **Pip, 6♥** — he works out that he doesn't have to be the thing everyone said he'd be.
+- **Pip, 8♥** — he tells his dad. Tom goes in the back and comes out with the trowel *his* father gave
+  him, kept in a box for thirty years. *"Don't come, you'll make me brave and I want to do it the
+  scared way."*
+
+### Added — a late scene for the rest of the cast
+
+Rowan (8♥) burns the list of two hundred and six names he has been reading on bad nights. Elias (8♥)
+goes back to the ruin of his house on the ridge and finds a birch growing where the kitchen was, and
+feels something too small to name. Nell (8♥) tells you about the year she nearly left, and the cow
+that stopped her. Maya (8♥, 10♥) says yes to the tenth window and then counts the lit ones. Bram
+(8♥, 10♥) names the boat, and finally says what thirty-one years alone on the water was about.
+
+### The v4.6 guard, made structural
+
+v4.6 shipped a `hearts:8` event while the cap was 6 — **unreachable forever**, and nobody noticed
+until an audit read the table. Raising the cap makes the mirror-image mistake possible, so both
+directions are now asserted in `tools/check-saves.mjs`, on every era fixture:
+
+1. no heart event sits above `HEART_CAP` (unreachable);
+2. no two events share a `flag` (one of them could never fire);
+3. **any `he_*` flag that was true before migration is still true after** — a retier may never
+   un-see a scene.
+
+Structurally this cannot break anyway — every old scene is at 2–6, every new one at 8–10, and each is
+latched by its own flag — but "structurally impossible" is a claim, and the harness turns it into a
+check. **1,297 invariants now, up from 697.**
+
+### Fixed — two flags that promised things
+
+Writing the scenes produced two `state.flags` that nothing read: `tomDiscount` and `pipPlot`. A flag
+that does nothing is a promise the game doesn't keep, which is the exact defect v5.5 existed to
+repair, so neither shipped that way.
+
+- **`tomDiscount` is now real** — 10% off everything Tom sells, forever, applied through **one**
+  `tomPrice()` called by both the shop rows and the buy handlers. v4.37's entire release was about
+  prices that disagreed with the counter; a discount applied in one place and not the other is that
+  bug wearing a bow.
+- **`pipPlot` is gone.** It implied a corner of your field Pip could farm — a whole feature. The scene
+  didn't need it: he starts his patch behind the shop, presses six carrot seeds on you the way he
+  once pressed a sapling, and the beat is complete.
+
 ## 2026-07-29 — v5.5.0 "Moved In" (code 130, tag `v5.5.0`) — the promise the wedding scene made, four versions late
 
 ### Why this release
