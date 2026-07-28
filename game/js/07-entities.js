@@ -151,7 +151,12 @@ function toolValidFor(tool, fx, fy){
   if(tool==="Can")   return !o && tt===T.TILLED;
   if(tool==="Seeds") return !o && (tt===T.TILLED||tt===T.WATERED) && !curMap.crops[k];
   if(tool==="Axe")   return !!(o && (TREES[o.kind] || o.kind==="deadfall" || o.kind==="ancient"));
-  if(tool==="Pick")  return !!(o && (ORES[o.kind] || o.kind==="gemrock" || o.kind==="crystal"));
+  // v5.3: the gem seams join the oracle — and so does the GEODE, which has been missing since v3.28.
+  // This one predicate drives three things at once (smart-tool's choice, the cursor tint, and the
+  // first-time pick hint), so anything mineable that is absent here is a rock the game will not reach
+  // for the pick on. With "Pick tools for me" on by default since v4.27, that reads as the rock simply
+  // not responding. Found while testing the seams; the geode had the same hole all along.
+  if(tool==="Pick")  return !!(o && (ORES[o.kind] || GEM_SEAMS[o.kind] || o.kind==="gemrock" || o.kind==="crystal" || o.kind==="geode"));
   if(tool==="Rod")   return tt===T.WATER;
   return false;   // the Stave is deliberately absent: combat is aimed at creatures, never at a tile
 }

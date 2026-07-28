@@ -198,13 +198,22 @@ function genMine(m){
     const oreP    = 0.03 * (1 + 0.02*Math.min(depth,40)) * oreBoost;   // ore keeps enriching to floor 40 (deeper out-pays camping)
     const gemP    = 0.002 * Math.min(depth,20) * gemBoost;             // gems stay clamped at 20 — never re-open the gem-gold faucet the economy nerfed
     const geodeP  = depth >= 25 ? 0.004 : 0;
+    // v5.3 the gem seams. Deliberately an order of magnitude rarer than ore (0.03) and clamped like
+    // the gem term above rather than scaled to floor 40 like ore — this must not re-open the gem-gold
+    // faucet that v2.9.2 and v3.16 spent two releases closing. At ~600 floor tiles a deep floor
+    // carries roughly one or two. Which seam appears is depth-gated, deepest-first, so the Ruby Seam
+    // is a thing you go DOWN for.
+    let seamKind = null;
+    for(const sk in GEM_SEAMS) if(depth >= GEM_SEAMS[sk].depth && (!seamKind || GEM_SEAMS[sk].depth > GEM_SEAMS[seamKind].depth)) seamKind = sk;
+    const seamP = seamKind ? 0.0035 * (1 + 0.02*Math.min(depth,45)) * gemBoost : 0;
     const rockP   = 0.24;   // plain stone filler
-    if(r < geodeP){ put(m,x,y,"geode",{hp:6+Math.floor(depth/4)}); }
-    else if(r < geodeP + gemP){ put(m,x,y, rng() < (0.30 + depth*0.008) ? "crystal" : "gemrock", {hp:3+Math.floor(depth/2)}); }
-    else if(r < geodeP + gemP + oreP){ const k = oreTable[randiR(rng,0,oreTable.length-1)]; put(m,x,y,k,{hp:ORES[k].hp}); }
-    else if(r < geodeP + gemP + oreP + rockP){ put(m,x,y,"stone",{hp:ORES.stone.hp}); }
-    else if(r < geodeP + gemP + oreP + rockP + 0.03){ put(m,x,y, rng()<0.5?"rubble":"minecart"); }
-    else if(r < geodeP + gemP + oreP + rockP + 0.045){ put(m,x,y,"beam"); }
+    if(r < seamP && seamKind){ put(m,x,y,seamKind,{hp:GEM_SEAMS[seamKind].hp}); }
+    else if(r < seamP + geodeP){ put(m,x,y,"geode",{hp:6+Math.floor(depth/4)}); }
+    else if(r < seamP + geodeP + gemP){ put(m,x,y, rng() < (0.30 + depth*0.008) ? "crystal" : "gemrock", {hp:3+Math.floor(depth/2)}); }
+    else if(r < seamP + geodeP + gemP + oreP){ const k = oreTable[randiR(rng,0,oreTable.length-1)]; put(m,x,y,k,{hp:ORES[k].hp}); }
+    else if(r < seamP + geodeP + gemP + oreP + rockP){ put(m,x,y,"stone",{hp:ORES.stone.hp}); }
+    else if(r < seamP + geodeP + gemP + oreP + rockP + 0.03){ put(m,x,y, rng()<0.5?"rubble":"minecart"); }
+    else if(r < seamP + geodeP + gemP + oreP + rockP + 0.045){ put(m,x,y,"beam"); }
   }
   // torches on some wall edges for light (never over an existing object — would trap the player)
   for(const [x,y] of floors){ if(!m.objects[key(x,y)] && rng()<0.04){ const above=m.tiles[(y-1)*W+x]; if(above===T.MWALL) put(m,x,y,"torch"); } }
@@ -215,7 +224,7 @@ function genMine(m){
     const o = m.objects[key(ax,ay)]; if(o && o.kind !== "lift" && o.kind !== "ladderup") delete m.objects[key(ax,ay)];
   }
 
-  const minable = k => !!ORES[k] || k==="crystal" || k==="gemrock";   // a pick clears these; props don't
+  const minable = k => !!ORES[k] || k==="crystal" || k==="gemrock" || !!GEM_SEAMS[k];   // a pick clears these; props don't (v5.3: seams too, or a seam could seal a pocket)
   const open = (x,y) => {
     if(x<1||y<1||x>=m.w-1||y>=m.h-1) return false;
     if(m.tiles[y*W+x] !== T.MFLOOR) return false;

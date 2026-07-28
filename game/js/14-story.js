@@ -635,6 +635,27 @@ function onEnterMap(id){
   if(gameMode !== "play" || !state || !state.flags) return;
   if(id === "guild" && wingsLit() >= 5) queuePage(5, 1200);
   if(id === "mine" && (state.mineDepth||1) >= 3) queuePage(2, 1200);
+  if(id === "mine") prospectFloor();   // v5.3 ◇ Read the seams (Mining 60)
+}
+// v5.3 "Read the seams" — Mining 60, the second thing in the game's worst void (50→70, 19.3% of the
+// whole climb with nothing in it). Deliberately a METHOD unlock, not a number: it reveals nothing you
+// could not find by walking the floor yourself. It saves the walking, which is precisely what a
+// veteran prospector's eye actually is. Fires once on arrival, costs nothing, and is silent on a
+// floor with no seams — a perk that announces "nothing here" every time would be a nag.
+function prospectFloor(){
+  if(skillLvl("Mining") < PROSPECT_LEVEL || !curMap || !curMap.objects) return;
+  const seen = [];
+  for(const k in curMap.objects){
+    const o = curMap.objects[k];
+    if(!o || !GEM_SEAMS[o.kind]) continue;
+    const [x, y] = k.split(",").map(Number);
+    seen.push([x, y, GEM_SEAMS[o.kind].col]);
+  }
+  if(!seen.length) return;
+  seen.forEach(([x, y, col], i) => setTimeout(() => {
+    if(curMap && curMap.id === "mine") pSparkle(x*TILE+8, y*TILE+8, col, 10);
+  }, 260 + i*130));
+  setTimeout(() => toast("◇ You read the seams — " + seen.length + " on this floor.", "#c8b8ff"), 200);
 }
 
 // Page 9 is a letter under the door, the morning after you've found everything else

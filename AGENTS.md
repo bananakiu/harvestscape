@@ -221,7 +221,12 @@ tests a copy tests nothing.
   spend a cooked dish AND a settling drop, the Guild's rounds and the Patron's commissions finally ask
   the farm for something, and GBP gained **§5.2b** ("the baseline IS the balanced game — never tune an
   encounter around a consumable"), which every later consumable and the v5.8 merchant inherit verbatim.
-  **Next unbuilt release: v5.3 "The Deep Seams."** Build it the
+  **v5.3 "The Deep Seams" SHIPPED** — four level-gated gem seams (15/35/55/78, the Ruby inside Mining's
+  worst void), "Read the seams" at 60, and two late legends; Mining 88.5% → 60.9% dead, Fishing 79.0% →
+  56.8%. ★ Two lessons: the seam rate was wrong by 6× until it was SAMPLED against the live generator
+  (a mine floor has ~100 open tiles, not ~600), and the second legend moved 75 → 80 because 75 is
+  already a mastery milestone — the linter turned both into one-line fixes. **Next unbuilt release:
+  v5.4 "The Oldest Knot."** Build it the
   `V4_BUILD_PLAN.md` way — write that release's build order fresh, re-verify every symbol anchor
   `V5_PLAN.md` names, one release per session, strictly in order.
   ★ Two load-order lessons from v5.1, both worth carrying: (1) a `const X = f()` evaluated at load in

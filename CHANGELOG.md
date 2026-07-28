@@ -22,6 +22,85 @@
 
 ---
 
+## 2026-07-29 — v5.3.0 "The Deep Seams" (code 128, tag `v5.3.0`) — the worst void in the game, filled, and measured on the way out
+
+### Why this release
+
+The game's own linter names the target every time it runs. Before today:
+
+- **Mining 50→70 — 20 levels, 19.3% of the entire 1–99 climb, nothing in it.** The single worst void
+  in the game, in the skill with the fewest milestone levels of any gathering craft (11).
+- **Fishing 79.0% dead**, with a 15-level hole at 55→70 and a 10-level one at 75→85.
+
+The ore ladder cannot fix Mining's void: `1/10/20/30/45/70/85` is the unified tier ladder six systems
+key off, and V5's constraint #4 says it does not move. So the fix interleaves *between* its rungs.
+
+### Added — four gem seams (Mining 15 / 35 / 55 / 78)
+
+A seam is a distinct rock that yields a **specific** gem, level-gated like an ore vein — you learn
+where rubies live rather than hoping a gem rock rolls one. Opal at 15, Emerald at 35, **Ruby at 55 —
+planted squarely inside the 50→70 void** — and Diamond at 78, which splits the 75→85 band.
+
+Sprites are generated **from the seam table**, so a future seam needs no new pixels; and they read
+deliberately unlike a gem rock — not a boulder with a lucky glitter, but a band of the gem running
+*through* the stone, so you can tell at a glance which gem it will give.
+
+**★ The GBP pass, done at spec time — and wrong by 6× on the first try.** Gems were de-monetized
+twice (v2.9.2, v3.16: spawn 0.018 → 0.002, average value ~312g → ~150g) precisely because they were
+the runaway faucet, and this release must not quietly undo that. The spec assumed ~600 open tiles per
+mine floor; **sampling 40 deep floors in the live generator showed ~100**, so the first rate produced
+0.23 seams per floor — one every four floors, too scarce to read as an unlock at all. Retuned against
+the measurement to **~0.85 per floor**: you meet a seam on most floors of a deep run, a Ruby Seam
+floor is worth ~340g, and that is a rounding error beside the fishing loop this repo already clocks
+at ~64,000 g/day. A seam yields **one** gem (a second only on the Mining-75 mastery roll). Its value
+is the rung, not the coin.
+
+### Added — ★ Read the seams (Mining 60)
+
+The second thing in the 50→70 band, and deliberately a **method** unlock rather than a number: on
+entering a mine floor, every seam on it shimmers once. It reveals nothing you could not find by
+walking the whole floor yourself — it saves the walking, which is precisely what a veteran
+prospector's eye is. Silent on a floor with no seams, because a perk that announces "nothing here"
+every time is a nag.
+
+### Added — Fishing's late waters, part 1
+
+Two legends on the shipped `LEGENDS` engine (pure data — the cheapest high-value content in the repo,
+and the *right* content for a late band: a legend is a condition to read and a morning to plan, not
+another number). Both are heart-gated clues, which finally gives Bram's ladder a late payoff instead
+of running out at five hearts.
+
+- **Lantern-Jaw** (60) — estuary, fog, autumn, after eight. Carries its own light in front of it.
+- **Tide-Warden** (80) — open coast, winter storm, first light. *"My father called it the Tide-Warden
+  and never fished again after he saw it."*
+
+**★ The Tide-Warden is at 80, not the plan's "~75", and that one-character decision was worth 17.9
+percentage points.** Level 75 is *already* a milestone on every ladder — it is a mastery tier — so a
+legend there would have added a name and moved the cadence not at all. At 80 it splits the 75→85 band
+and the dead zone disappears outright. This is exactly the decision the v5.0 linter exists to make
+possible: the plan proposed a number, the measurement corrected it, and the correction is visible in
+the atlas.
+
+### Fixed — the pick oracle had a hole in it since v3.28
+
+`toolValidFor` — one predicate that drives **three** things (smart-tool's choice, the cursor tint, and
+the first-time pick hint) — listed ore, gem rocks and crystals, but **not geodes**. With "Pick tools
+for me" on by default since v4.27, facing a geode meant the game did not reach for your pick, which
+reads as the rock simply not responding. Found while testing the seams (which had the same hole, being
+new); both are in the oracle now.
+
+### Measured effect
+
+| Skill | Unlocks | Dead share |
+|---|---|---|
+| Mining | 17 → **22** | 88.5% → **60.9%** |
+| Fishing | 30 → **32** | 79.0% → **56.8%** |
+
+Mining's remaining bands are 60→70 (11.4%) and the 85→99 tail (45.4%); Fishing's are the same two.
+Both are reported honestly by the linter and belong to later work — the tail is explicitly V6's
+(`V6_PLAN.md` §2, the L92 transformative unlocks), and this release was scoped as *part 1* of
+Fishing's late waters.
+
 ## 2026-07-29 — v5.2.0 "The Warden's Table" (code 127, tag `v5.2.0`) — Cooking gets its combat consumer, and the wing comes up for supper
 
 ### Why this release

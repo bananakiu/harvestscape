@@ -8,13 +8,20 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "5.2.0", code: 127, codename: "The Warden's Table", date: "2026-07-29" };
+const VERSION = { name: "5.3.0", code: 128, codename: "The Deep Seams", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"5.3.0", code:128, date:"2026-07-29", name:"The Deep Seams", notes:[
+    { t:"new", s:"Four gem seams in the deep mine \u2014 opal, emerald, ruby and diamond \u2014 each a band of the gem running visibly through the rock, each unlocked at its own Mining level (15 / 35 / 55 / 78). You learn where rubies LIVE instead of hoping a gem rock rolls one. The Ruby Seam sits at 55, right in the middle of the emptiest stretch of any skill in the game." },
+    { t:"new", s:"Read the seams \u2014 at Mining 60, every seam on a floor shimmers once as you arrive. It shows you nothing you couldn't find by walking the whole floor yourself; it saves the walking, which is what a prospector's eye actually is." },
+    { t:"new", s:"Two more of Bram's legends, for anglers who've grown into them: the Lantern-Jaw, which carries its own light through the estuary on a foggy autumn night, and the Tide-Warden, which comes in on a winter storm at first light \u2014 the morning nobody sane is on the water. He'll only tell you about them once you've earned the hearts." },
+    { t:"fix", s:"Facing a geode with \u201cPick tools for me\u201d on, the game wouldn't reach for your pick \u2014 so the rock simply didn't respond. It has been that way since geodes arrived. Found while testing the new seams; both are fixed." },
+    { t:"balance", s:"Seams are deliberately scarce \u2014 measured at under one per floor \u2014 and yield a single gem. Gems were made rare on purpose years ago because they were the game's runaway money-maker, and nothing here reopens that. What a seam is worth is the rung on the ladder, not the coin." },
+  ]},
   { v:"5.2.0", code:127, date:"2026-07-29", name:"The Warden's Table", notes:[
     { t:"new", s:"Food finally means something in the dark. Eat anything while you're in the Undercroft and it steadies you as well as feeding you \u2014 the better the dish, the more Resolve it gives back, up to a bit under half a bar. Cooking has been a skill with no reason to exist down there since the tenth door opened; now the kitchen is part of going down." },
     { t:"new", s:"Three Warden's tonics, brewed at any bell alongside the charms, each one spending a COOKED DISH and something you settled \u2014 so the two systems finally feed each other both ways. Ember Broth steadies you slowly for a whole descent. Warden's Tea makes the Guard more forgiving. Gloamsalve catches you once: you go down on one knee and come straight back up, keeping the floor you'd have had to walk back to." },
@@ -992,7 +999,66 @@ const LEGENDS = [
     pal:["#6a5a9a","#c9b6ff"],
     clue:"…And one more. When it storms at night, don't go to the sea — go to your own pond. Something comes up the stream ahead of the weather. My father called it the Stormrider. I never believed him. Then I saw it." },
 ];
+// v5.3 "The Deep Seams" — the late waters. Fishing's last content unlock sat at 85 (a rod tier) with
+// nothing between 55 and 70 and nothing between 75 and 85; the cadence linter measured 79.0% dead.
+// Legends are the cheapest high-value content in the repo — pure data on a shipped engine — and they
+// are the RIGHT content for a late band: a legend is a condition to read and a morning to plan, not
+// another number. Both of these are heart-gated clues (Bram tells one per heart), which finally gives
+// his ladder a late payoff rather than running out at five.
+LEGENDS.push(
+  { id:"lanternjaw", name:"Lantern-Jaw", lvl:60, sell:2100, xp:900,
+    where:"estuary", from:20, to:26, weather:"fog", season:"Fall", chance:0.30,
+    pal:["#3a4a5a","#9fe0d0"],
+    clue:"There's a thing in the estuary on a foul autumn night — fog on the water, after eight, where the salt meets the fresh. It carries its own light in front of it, like a lantern-bearer. I've never landed one. You might." },
+  // Placed at 80, not the plan's "~75": 75 is ALREADY a milestone on every ladder (the mastery tier),
+  // so a legend there would have added a name and moved the cadence not at all. At 80 it splits the
+  // 75→85 band in two and the dead zone disappears outright. Measured, not guessed — this is exactly
+  // the decision the v5.0 linter exists to make possible.
+  { id:"tidewarden", name:"Tide-Warden", lvl:80, sell:3400, xp:1500,
+    where:"coast", from:5, to:9, weather:"storm", season:"Winter", chance:0.26,
+    pal:["#2f3f52","#c8d4dc"],
+    clue:"And the last one, which I'll only tell you because you've earned it. Winter storm, first light, out on the open coast — the morning nobody sane is on the water. Something old comes in on that tide. My father called it the Tide-Warden and never fished again after he saw it." }
+);
 const LEGEND_BY_ID = {}; LEGENDS.forEach(l => LEGEND_BY_ID[l.id] = l);
+
+// ============================================================
+// v5.3 "The Deep Seams" — GEM SEAMS, and Mining's 19.3% void
+//
+// The measurement, from the game's own linter: **Mining 50→70 is 20 levels and 19.3% of the entire
+// 1–99 climb with literally nothing in it** — the single worst void in the game — and Mining has the
+// fewest milestone levels of any gathering skill. The ore ladder cannot fix it: 1/10/20/30/45/70/85
+// is the unified tier ladder that six systems key off, and V5's constraint #4 says it does not move.
+//
+// So the answer interleaves BETWEEN its rungs: four dedicated gem seams at 15 / 35 / 55 / 78, the
+// third of which lands squarely inside the 50→70 void. A seam is a distinct rock that yields a
+// SPECIFIC gem — you learn where rubies live, instead of hoping a gem rock rolls one.
+//
+// ★ THE BALANCE PASS, done at spec time per V5's constraint #3 (there is no demand curve any more —
+// `demandMult` returns 1 — so a new sellable has no systemic brake and its arithmetic must be done
+// BEFORE the code). Gems were deliberately de-monetized twice (v2.9.2, v3.16 "The Long Dark":
+// spawn 0.018 → 0.002, average value ~312g → ~150g) precisely because they were the game's runaway
+// faucet. This release must not quietly undo that. So:
+//   · Seams are RARER than ore veins by an order of magnitude (0.0012 base vs ore's 0.03), and their
+//     depth scaling is clamped like the gem clamp above it, never like ore's to floor 40.
+//   · A seam yields ONE gem (a second only on a Mining-75 mastery roll). It is not a pile.
+//   · ★ MEASURED, not estimated — and the first pass was wrong by 6×. A mine floor carries ~100 open
+//     tiles, not the ~600 first assumed, so the original rate produced 0.23 seams per floor (one every
+//     four floors — too scarce to read as an unlock). Sampled over 40 deep floors and retuned to land
+//     at ~0.85 per floor: you meet a seam on most floors of a deep run, and a Ruby Seam
+//     floor is worth ~340g — real, and a rounding error beside the fishing loop the docs clock at
+//     ~64,000 g/day. The seam's value is the LADDER, not the coin.
+//   · Every gem already has sinks (tool tiers, charms, pledges), so this feeds demand that exists.
+const GEM_SEAMS = {
+  opalseam:    { name:"Opal Seam",    lvl:15, hp:6,  gem:"Opal",    xp:120,  col:"#bcd8d4", depth:8  },
+  emeraldseam: { name:"Emerald Seam", lvl:35, hp:12, gem:"Emerald", xp:340,  col:"#3ec878", depth:22 },
+  // ★ the one this release exists for — planted inside Mining's 50→70 void
+  rubyseam:    { name:"Ruby Seam",    lvl:55, hp:18, gem:"Ruby",    xp:760,  col:"#e0455a", depth:38 },
+  diamondseam: { name:"Diamond Seam", lvl:78, hp:26, gem:"Diamond", xp:1400, col:"#b8ecf7", depth:58 },
+};
+// ★ "Read the seams" — Mining 60, a METHOD unlock rather than a number, and the second thing in the
+// 50→70 band. On entering a mine floor, every seam on it shimmers once. It reveals nothing you could
+// not find by walking; it saves the walking, which is exactly what a veteran prospector's eye is.
+const PROSPECT_LEVEL = 60;
 
 // ---- SELL VALUES ----
 const ITEM_SELL = { "Wood":4, "Pine Wood":9, "Maple Wood":17, "Willow Wood":11, "Elder Wood":32, "Heartwood":70, "Silverwood":113,   // v3.20: wood sells for ~1/3 — the renewable grove made chop-and-sell too easy a purse; wood is a construction material now, not a money crop
@@ -2169,6 +2235,11 @@ const EXAMINE_TILE = {
     EXAMINE[n+" Jam"]  = `${n}, kept the old way — under a lid, for later.`;
   }
   // v5.2 the Warden's tonics — three lines in Elias's register: practical, understated, a little sad.
+  // v5.3 the gem seams — each reads as a band running through the rock, in a miner's register.
+  for(const sk in GEM_SEAMS){
+    const sm = GEM_SEAMS[sk];
+    EXAMINE_OBJ[sk] = "A seam of " + sm.gem.toLowerCase() + " running clean through the stone. Follow it, don't chase it.";
+  }
   EXAMINE["Ember Broth"] = "Ember grit stirred through good stew. Warm the whole way down, and it keeps being warm.";
   EXAMINE["Gloamsalve"] = "Gloam thread steeped in honey until it goes clear. Orla swore by it. She would.";
   EXAMINE["Warden's Tea"] = "Ash and apple, which sounds worse than it tastes. Steadies the hands, and that is the entire trick.";
@@ -2250,7 +2321,9 @@ function unlockLadder(skill){
   if(skill === "Farming")     for(const k in CROPS) add(CROPS[k].lvl, CROPS[k].name + " seeds");
   if(skill === "Woodcutting"){ for(const k in TREES) add(TREES[k].lvl, TREES[k].name);
                                for(const r in DEADFALL) add(DEADFALL[r].lvl, "grove ring " + r); }
-  if(skill === "Mining")      for(const k in ORES) add(ORES[k].lvl, ORES[k].name);
+  if(skill === "Mining"){ for(const k in ORES) add(ORES[k].lvl, ORES[k].name);
+    for(const k in GEM_SEAMS) add(GEM_SEAMS[k].lvl, GEM_SEAMS[k].name);          // v5.3 the gem seams
+    add(PROSPECT_LEVEL, "◇ Read the seams"); }
   if(skill === "Fishing"){ FISH.forEach(f => add(f.lvl, f.name));
                            LEGENDS.forEach(l => add(l.lvl, l.name + " (legend)")); }
   if(skill === "Cooking")     for(const r of RECIPES) if(!r.flag) add(r.lvl, r.name);

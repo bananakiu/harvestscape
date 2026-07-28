@@ -1255,6 +1255,20 @@ function buildMineArt(){
   });
   mkSpr("gemrock", 16, 16, g => { px(g,3,7,10,7,"#4a4550"); px(g,2,9,12,5,"#3d3846"); px(g,5,4,7,4,"#565060");
     px(g,6,8,2,3,"#a877e0"); px(g,9,9,2,2,"#3ec878"); px(g,7,10,1,1,"#e0455a"); px(g,6,8,1,1,"#d8b8f0"); });
+  // v5.3 the gem seams — a SEAM reads differently from a gem rock on purpose: not a boulder with a
+  // lucky glitter in it, but a band of the gem running THROUGH the stone, so a player can tell at a
+  // glance which one they are looking at and therefore which gem it will give. Generated from the
+  // seam table so a new seam needs no new pixels — the same argument the ore rocks make.
+  for(const sk in GEM_SEAMS){
+    const sm = GEM_SEAMS[sk], c = sm.col;
+    mkSpr(sk, 16, 16, g => {
+      px(g,2,6,12,8,"#463f4a"); px(g,3,5,10,2,"#544c58"); px(g,2,13,12,1,"#332e38");   // the host rock
+      // the seam itself — a diagonal band, brightest along its centre line
+      px(g,3,11,3,2,c); px(g,5,9,3,2,c); px(g,7,7,3,2,c); px(g,10,6,3,2,c);
+      px(g,4,11,1,1,"#ffffff"); px(g,8,7,1,1,"#ffffff");
+      px(g,6,10,1,1,c); px(g,9,7,1,1,c);
+    });
+  }
   mkSpr("crystal", 16, 16, g => { px(g,6,4,4,10,"#8fd3ff"); px(g,4,8,3,6,"#7fc0f0"); px(g,10,7,3,7,"#a9e0ff");
     px(g,7,4,1,9,"#d8f0ff"); px(g,6,4,1,1,"#ffffff"); px(g,5,13,7,2,"#3d3846"); });
   // v3.28 geode — a rounded nodule with a hairline crack and a glint of crystal, waiting for a pick

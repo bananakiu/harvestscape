@@ -95,7 +95,7 @@ function tutoringTick(){
     tutTip("hint_can",`${U} waters the soil — young crops drink every day.`);
   else if(tool==="Axe" && obj && TREES[obj.kind])
     tutTip("hint_axe",`Face the tree and press ${U} to chop — it trains Woodcutting.`);
-  else if(tool==="Pick" && obj && (ORES[obj.kind]||obj.kind==="gemrock"||obj.kind==="crystal"||obj.kind==="geode"))
+  else if(tool==="Pick" && obj && (ORES[obj.kind]||GEM_SEAMS[obj.kind]||obj.kind==="gemrock"||obj.kind==="crystal"||obj.kind==="geode"))
     tutTip("hint_pick",`Press ${U} to mine. A better pick breaks the rock faster.`);
   else if(tool==="Rod" && tt===T.WATER)
     tutTip("hint_rod",`Face the water and press ${U} to cast your line.`);
@@ -239,7 +239,9 @@ function nextUnlock(skill){
   const add = (n, label) => { if(n > lv && (!best || n < best.at)) best = { at:n, label }; };
   if(skill==="Farming")     for(const k in CROPS) add(CROPS[k].lvl, CROPS[k].name);
   if(skill==="Woodcutting") for(const k in TREES) add(TREES[k].lvl, TREES[k].name);
-  if(skill==="Mining")      for(const k in ORES)  add(ORES[k].lvl,  ORES[k].name);
+  if(skill==="Mining"){ for(const k in ORES) add(ORES[k].lvl, ORES[k].name);
+    for(const k in GEM_SEAMS) add(GEM_SEAMS[k].lvl, GEM_SEAMS[k].name);          // v5.3
+    add(PROSPECT_LEVEL, "◇ Read the seams"); }
   if(skill==="Fishing"){ FISH.forEach(f=>add(f.lvl, f.name)); LEGENDS.forEach(l=>add(l.lvl, l.name+" (legend)")); }
   if(skill==="Cooking") for(const r of RECIPES) if(!r.flag) add(r.lvl, r.name);   // v4.13: flag-gated (friendship-taught) recipes aren't level unlocks
   if(skill==="Warding") for(const t of WARD_TECHS) add(t.lvl, "⟡ " + t.name);   // v5.1 the technique ladder
@@ -268,7 +270,11 @@ function unlocksAt(skill, lvl){
   const u = [];
   if(skill==="Farming") for(const k in CROPS) if(CROPS[k].lvl===lvl) u.push(CROPS[k].name+" seeds");
   if(skill==="Woodcutting") for(const k in TREES) if(TREES[k].lvl===lvl) u.push(TREES[k].name);
-  if(skill==="Mining") for(const k in ORES) if(ORES[k].lvl===lvl) u.push(ORES[k].name);
+  if(skill==="Mining"){
+    for(const k in ORES) if(ORES[k].lvl===lvl) u.push(ORES[k].name);
+    for(const k in GEM_SEAMS) if(GEM_SEAMS[k].lvl===lvl) u.push(GEM_SEAMS[k].name + " — " + GEM_SEAMS[k].gem + ", where it lives");   // v5.3
+    if(lvl === PROSPECT_LEVEL) u.push("◇ Read the seams — every seam on a floor shimmers as you arrive");
+  }
   if(skill==="Fishing"){ FISH.forEach(f=>{ if(f.lvl===lvl) u.push(f.name); }); LEGENDS.forEach(l=>{ if(l.lvl===lvl) u.push(l.name+" (legend)"); }); }
   if(skill==="Cooking") for(const r of RECIPES) if(!r.flag && r.lvl===lvl) u.push(r.name);   // v4.13: friendship-taught recipes aren't level unlocks
   // v4.20: the tool ladder + the grove's deadfalls — real, enforced gates that the guide never showed.
@@ -507,6 +513,7 @@ const OBJ_TITLE  = { geode:"Geode", bed:"Bed", campfire:"Campfire", stove:"Stove
   stall:"Market Stall", shipbin:"Shipping Bin", sign:"Sign", noticeboard:"Noticeboard", ledger:"The Valley Ledger",
   fountain:"Fountain", boardwalk:"Boardwalk", railcart:"Minecart", memorial:"Standing Stone", berrybush:"Berry Bush",
   frostberry:"Frostberry Bush", fruittree:"Fruit Tree", beehive:"Beehive", torch:"Torch", lamp:"Lamp", lantern:"Lantern",
+  opalseam:"Opal Seam", emeraldseam:"Emerald Seam", rubyseam:"Ruby Seam", diamondseam:"Diamond Seam",   // v5.3
   crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift", olddoor:"A Planked Door", keg:"Keg", jar:"Preserves Jar", sawmill:"Sawmill", press:"Cheese Press", bench:"Bench", plantpot:"Flower Planter",
   milestone:"The Milestone", shrine:"Roadside Shrine", mooring:"The Ferry Landing", samphirenode:"Samphire", hollynode:"Sea Holly", asternode:"Sea Aster",
   cairn:"The Cairn", crater:"The Crater Dell", shardnode:"Starlight", thymenode:"Mountain Thyme", snowdropnode:"Snowdrops",
@@ -862,6 +869,30 @@ function useTool(){
   }
   else if(tool === "Pick"){
     const freeSwing = hasMastery("Mining",25) && chance(0.20);          // ★ Sure Grip
+    // v5.3 the gem seams — a distinct rock that yields a KNOWN gem, level-gated like an ore vein.
+    // Handled before the gem-rock branch because a seam is closer to a vein than to a lucky rock:
+    // it refuses you below its level, it takes real swings, and you learn where rubies live.
+    if(obj && GEM_SEAMS[obj.kind]){
+      const sm = GEM_SEAMS[obj.kind];
+      if(skillLvl("Mining") < sm.lvl){ toast(`Need Mining ${sm.lvl} to work ${sm.name.toLowerCase()}.`, "#ff8a7a"); playSfx("error"); return; }
+      if(!freeSwing && !spendEnergy(2)) return;
+      if(freeSwing) floatText(state.px, state.py-30, "free swing", "#b6f27a");
+      let hit = power;
+      if(hasMastery("Mining",99)) hit = Math.max(hit, Math.ceil(sm.hp/2));   // ★ Stonebreaker applies here too
+      obj.hp -= hit; obj.shakeT = 0.2; cam.shake = 2.4; hitstop = 0.05; playSfx("mine");
+      pChips(tx*TILE+8, ty*TILE+8, sm.col, 5);
+      spawnHitsplat(tx*TILE+8, (ty*TILE+8)-8, Math.min(hit, obj.hp + hit), obj.hp<=0 ? "settle" : "hit");
+      if(obj.hp <= 0){
+        delete curMap.objects[key(tx,ty)];
+        // ONE gem. A second only on the Gemcutter mastery roll — the seam is a ladder rung, not a pile.
+        let n = 1; if(hasMastery("Mining",75) && chance(0.25)) n = 2;
+        give(sm.gem, n);
+        addXP("Mining", sm.xp); bump("mined"); bump("gems");
+        pSparkle(tx*TILE+8, ty*TILE+8, sm.col, 16); playSfx("ore");
+        toast(sm.name + " — " + (n>1 ? n + "× " : "") + sm.gem + ".", sm.col);
+      }
+      refreshHUD(); return;
+    }
     if(obj && (obj.kind==="gemrock" || obj.kind==="crystal" || obj.kind==="geode")){
       if(!freeSwing && !spendEnergy(2)) return;
       if(freeSwing) floatText(state.px, state.py-30, "free swing", "#b6f27a");
