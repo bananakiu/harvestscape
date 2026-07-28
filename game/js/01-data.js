@@ -8,13 +8,19 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "5.9.0", code: 134, codename: "The Writ", date: "2026-07-29" };
+const VERSION = { name: "6.0.0", code: 135, codename: "The Wrens and the Harrows", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"6.0.0", code:135, date:"2026-07-29", name:"The Wrens and the Harrows", notes:[
+    { t:"new", s:"The two houses on the village's south lane open. They have had family names on their signs since Version 3 \u2014 \u201cThe Wrens'\u201d and \u201cThe Harrows'\u201d \u2014 above doors that were nailed shut, with a note in the game's own source promising they'd open \u201cin a later chapter\u201d. This is that chapter. The valley's cast goes from seven people to eleven." },
+    { t:"new", s:"The Wrens came back. Ada weaves \u2014 bring her fleece, any fleece, she'll take the ugly stuff \u2014 and Corin is the mason who has quietly been building every one of Rowan's restorations, with his initials underneath where nobody will ever see them. They're the only family in the valley who left in the dark years and returned, and Ada would rather you said so out loud than were gracious about it." },
+    { t:"new", s:"The Harrows never left. Sable keeps a herbalist's kitchen, a sharp tongue, and forty-one made-up jars nobody ever came back to collect. Wick is her son, Pip's age \u2014 and the two of them worked out they'd each spent years thinking they were the only child in the village, about eight hundred paces apart." },
+    { t:"new", s:"All four have full lives: their own hours, their own places to be, gift tastes, birthdays, opinions about what you build, and a heart ladder all the way to ten with scenes of their own. Walk into the Wrens' at noon and it's empty, because they're out \u2014 Ada's at the dairy buying fleece, Corin's on the plaza stonework, Sable's up on the ridge gathering." },
+  ]},
   { v:"5.9.0", code:134, date:"2026-07-29", name:"The Writ", notes:[
     { t:"new", s:"Rowan keeps a writ \u2014 a list of what the valley needs next, sized to a few relaxed evenings. Eight of them, each asking for things from three different crafts, each one a job that visibly changes something: the village road re-lit, the Guild larder full, Bram's three half-built hulls finished, the ridge path shored before winter takes it." },
     { t:"new", s:"There is no date on it. None. The next writ is only written when this one is finished \u2014 nothing expires, nothing is missed, and nobody is counting the days. Take a season over one if you like; you have lost exactly nothing." },
@@ -721,6 +727,12 @@ const BIRTHDAYS = {
   rowan: { season:"Fall",   day:3  },
   elias: { season:"Fall",   day:26 },   // v4.6 — the last Warden; late fall, clear of the Harvest Fair d22
   bram:  { season:"Winter", day:11 },
+  // v6.0 the two households. Spread across the four seasons and clear of every festival date and of
+  // each other — eleven birthdays on a 112-day year needs placing, not sprinkling.
+  ada:   { season:"Spring", day:26 },
+  wick:  { season:"Summer", day:2  },
+  corin: { season:"Fall",   day:11 },
+  sable: { season:"Winter", day:24 },
 };
 
 // ---- CROPS (level- & season-gated) ----
@@ -1503,6 +1515,7 @@ RECIPES.forEach(r => { ITEM_SELL[r.name] = r.sell; EDIBLE[r.name] = r.energy; })
 // v5.6: Tom's Ledger — a 10♥ keepsake, not a commodity. Sell value 0 for the same reason the
 // Pocketwatch and the Forester's Band have none: a gift that closes somebody's arc is not inventory.
 ITEM_SELL["Tom's Ledger"] = 0;
+ITEM_SELL["Sable's Remedy Book"] = 0;   // v6.0 — a 10♥ keepsake, like the Ledger and the Pocketwatch
 // v5.6: Tom's 8♥ discount. He says "have a discount and stop looking at me like that" and this is it —
 // 10% off everything he sells, forever. ★ Deliberately ONE function called by BOTH the shop rows and
 // the buy handlers: v4.37's whole release was about prices that disagreed with the counter, and a
@@ -2513,6 +2526,7 @@ const EXAMINE_TILE = {
     const sm = GEM_SEAMS[sk];
     EXAMINE_OBJ[sk] = "A seam of " + sm.gem.toLowerCase() + " running clean through the stone. Follow it, don't chase it.";
   }
+  EXAMINE["Sable's Remedy Book"] = "Two hands: her mother's, then hers. Every plant in the valley, what it's good for, and three entries she has never bothered to correct.";
   EXAMINE["Tom's Ledger"] = "Every price in the valley, in three generations of handwriting. The early pages are his father's. The last one is blank, and has your name at the top of it.";
   EXAMINE["Ember Broth"] = "Ember grit stirred through good stew. Warm the whole way down, and it keeps being warm.";
   EXAMINE["Gloamsalve"] = "Gloam thread steeped in honey until it goes clear. Orla swore by it. She would.";

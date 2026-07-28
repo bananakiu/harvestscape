@@ -22,6 +22,96 @@
 
 ---
 
+## 2026-07-29 — v6.0.0 "The Wrens and the Harrows" (code 135, tag `v6.0.0`) — two doors that were nailed shut in v3
+
+### Why this release, and why it is v6.0 and not v6.5
+
+**Owner direction (`DEVLOG.md`, 2026-07-29):** *"I actually want a lot more characters on the horizon
+because right now the village still feels empty and it doesn't feel like there is enough stuff to do,
+like there are two empty houses and stuff. So it would be good to have to fill it in with the story
+and make them functional characters that have their own lives and their own scenes."*
+
+That was the answer to a casting question ("one newcomer: returned warden or new face?"), and it
+replaced the question instead of answering it. The complaint is verifiable in the source, and it is
+worse than remembered — `genVillage` has raised two houses on the south lane since v3:
+
+```js
+// --- ambient neighbours on the south lane (doors are latched; they open in a later chapter) ---
+m.objects[key(9,22)]  = { kind:"sign", text:"The Wrens'" };
+m.objects[key(31,22)] = { kind:"sign", text:"The Harrows'" };
+```
+
+**The game has been naming two families in the village square for three versions, above doors that
+don't open, behind a comment promising a chapter that never came.** Same defect class v5.5 shipped to
+fix for the spouse — a promise the game makes out loud and does not keep — except this one is read
+every single day on the way to the store.
+
+**And the meta-finding that re-cut the whole train:** "not enough to do" was said *after* ten V5
+releases that added a great deal to do. That is the finding, not a contradiction of it. V5 was almost
+entirely **depth** — ladders, trials, the deep, the home. Depth on systems a player already engages
+with does not register as "more to do"; **new surfaces do.** So people moved from fifth-of-seven to
+first, and `V6_PLAN.md` §3 gained a standing constraint: *when a release could go either way, it goes
+wide.*
+
+### Added — four people, and the bar they had to clear
+
+★ The owner's word was **"functional"**, and `V6_PLAN.md` §3.5 now states the consequence as a rule:
+**a new NPC either meets the full cast bar or is not a character.** Someone who merely stands
+somewhere satisfies the request on paper and fails it completely in play — and would make the village
+feel *more* like a set, not less. All four have:
+
+| | Ada Wren | Corin Wren | Sable Harrow | Wick Harrow |
+|---|---|---|---|---|
+| Trade | weaver | mason | herbalist | (child) |
+| Home | the Wrens' | the Wrens' | the Harrows' | the Harrows' |
+| Out by day | the coast dairy, 10–15 | the plaza stonework, 9–18:30 | the ridge scree, 11–16 | the village lane, 9–18 |
+| Birthday | Spring 26 | Fall 11 | Winter 24 | Summer 2 |
+| Hearts | 2/4/6/8/10 | 2/4/6/8/10 | 2/4/6/8/10 | 2/4/6/8/10 |
+
+Plus gift tastes, standing dialogue that tracks the story flags, recognitions for what you build, and
+two new interiors.
+
+**The Wrens came back.** The only family in the game who left in the dark years and returned — which
+is the single most useful thing a new household could be, because the valley's whole story is
+repopulation and nobody had ever embodied it. Ada is blunt and warm and *sick* of everyone being
+gracious about it (her 4♥ scene is the player saying "you left, Ada" out loud, because she asks them
+to). Corin is the mason who has been building Rowan's restorations all along with his initials
+underneath where nobody will ever see them: *"If somebody sees my mark it means the well fell down."*
+
+**The Harrows never left.** Sable is the counterweight — she shut the door and waited it out, and her
+4♥ scene is the only account in the game of what the dark years were *actually* like: *"It wasn't a
+tragedy every day — it was one long Tuesday for nine years."* Her 6♥ is the forty-one made-up jars
+nobody collected, and her 8♥ is the first year that number went **down**.
+
+**Wick is why Pip stops being alone.** Pip has been the only child in the valley since v1.0, which is
+quietly sad and which one line of dialogue cannot fix. Wick's 4♥: *"I was the only one? And he was
+the only one? In the same village, about eight hundred paces apart."*
+
+### Deliberate choices worth recording
+
+- **Gift tastes are chosen to pull, not merely to exist.** Ada wants Wool and Prize Fleece — which
+  `V6_PLAN.md` §1 names as near-orphans (two consumers, zero) — so v6.0 gives them a person before
+  v6.6 gives them a machine. Corin wants the beams the building chain makes; Sable wants the wild
+  forage nobody had a reason to keep; Wick wants small shiny things.
+- **The houses are empty at noon.** Both interiors are unoccupied in the middle of the day because
+  everyone is out. A house you can always walk into and find two attendants standing in is a diorama;
+  the schedules are what make it a home.
+- **Ada's loom is a prop, one version early.** It sits in her front room now so that when v6.6 turns
+  the fibre chain on, the machine will already have been in the room for a version.
+- **No new drawing routines.** Four palettes in `CHAR_SPEC` and four portraits through the existing
+  generator with the existing feature vocabulary. A new face that needed new code would be a new face
+  that looks like it came from a different game.
+
+### Notes
+
+- `build-atlas.mjs`'s `MAP_ACCESS` assertion fired on the two new maps, exactly as designed — the
+  generator refuses to publish a map it has no prose for. Both are described now; the atlas reports
+  **18 maps, 11 NPCs.**
+- Two new keepsakes with zero sell value, on the Pocketwatch precedent: **Sable's Remedy Book** (10♥)
+  and Ada's first wall hanging (6♥).
+- The heart ladders use v5.6's ten tiers from the start — the cap raise three releases ago is what
+  makes a brand-new character able to have an arc this long.
+
 ## 2026-07-29 — v5.9.0 "The Writ" (code 134, tag `v5.9.0`) — the missing middle rung, and the end of Version 5
 
 ### Why this release

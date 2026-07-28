@@ -247,6 +247,13 @@ tests a copy tests nothing.
   keep. ★ **All ten V5 releases are built (v5.0–v5.9); every §4 item shipped and every §6 decision is
   resolved and recorded in `V5_PLAN.md`.** The linter graded the version's own work: Mining 88.5% →
   60.9% dead, Warding 88.5% → 59.1%, Fishing 79.0% → 56.8%.
+  ★ **v6.0 "The Wrens and the Harrows" SHIPPED** (2026-07-29) — both south-lane doors open at last; the
+  cast goes **7 → 11** (Ada + Corin Wren, Sable + Wick Harrow), each with a schedule that puts them in
+  four different places across the day, gift tastes chosen to PULL (Ada wants the Wool/Prize Fleece
+  V6's own diagnosis called near-orphans), birthdays, recognitions, standing dialogue and a full heart
+  ladder to ten. Two new interiors; 18 maps. ★ The rule this release established, now `V6_PLAN.md`
+  §3.5: **a new NPC either meets the full cast bar or is not a character** — someone who merely stands
+  somewhere satisfies the ask on paper and fails it in play. **Next unbuilt release: v6.1 "Neighbours."**
   **Next: `V6_PLAN.md`** — ★ **all five §4 owner decisions are now RESOLVED (2026-07-29)** and the
   release train has been **RE-CUT** around the biggest of them. Build against §4's Decision lines and
   §2's revised table, not the original: the child is IN (placed last, in a furnished house and a full

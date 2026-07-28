@@ -133,6 +133,8 @@ if (D.JOURNAL_PAGES && (D.JOURNAL_PAGES.length !== 9 || !D.JOURNAL_PAGES.every(p
 const MAP_ACCESS = {
   farm: "Where you wake on day 1 — and since v3, purely a farm: fields, both ponds, the meadow, the southwest woods. The east road leads to the village; the Grove path west.",
   village: "East road from the farm. The valley's hub since v3: the plaza (fountain, lamps), Tom's store + noticeboard, the Aldermans', the Guild hall, two neighbour houses — with the mine off its north ridge and the coast down its south path. Maya and Pip stroll the plaza by day.",
+  wrenhouse: "The west house on the village's south lane — the one whose sign has read \"The Wrens'\" since v3 above a door that was latched shut. Opened in v6.0. Ada Wren weaves here mornings and evenings (her loom came back on the cart); Corin Wren, mason, is home late. The only family in the valley who LEFT in the dark years and came back.",
+  harrowhouse: "The east house on the south lane — \"The Harrows'\", latched since v3, opened in v6.0. Sable Harrow keeps a herbalist's kitchen and forty-one made-up jars nobody ever collected; Wick, her son, is only home at the edges of the day. The Harrows never left: they shut the door and waited it out.",
   cottage: "Your front door, on the farm. Sleep here to pass the night; the chest holds a letter, later.",
   coop: "On the farm — houses up to 6 hens (300g each at Tom's).",
   barn: "On the farm — houses up to 4 cows (600g) and up to 4 sheep (500g) at Tom's; shear wool with shears (250g).",

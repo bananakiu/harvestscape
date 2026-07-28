@@ -578,6 +578,19 @@ const CHAR_SPEC = {
   elias:  { skin:"#dcae82", skinSh:"#b98c62", hair:"#8a6250", hairSh:"#66473a", shirt:"#6a7a8a", shirtSh:"#4c5a68", pants:"#413a33", pantsSh:"#2e2924", shoe:"#2a2018" },
   // v3.44 Nell, the coast dairy — Tom's wife: sandy hair under a red kerchief, a creamery apron
   nell:   { skin:"#e6bd90", skinSh:"#c69868", hair:"#c9a45a", hairSh:"#a0803a", shirt:"#cdd6dc", shirtSh:"#9aa6ae", pants:"#7a5636", pantsSh:"#5e4228", shoe:"#4a3020", kerch:"#b0483a" },
+  // ---- v6.0 "The Wrens and the Harrows" ----
+  // Two households that have stood on the south lane since v3 with names on their signs and doors
+  // that never opened. Palettes deliberately don't repeat the existing seven: the valley reads at a
+  // glance by silhouette and colour, and eleven people only works if none of them is another's twin.
+  //
+  // The Wrens came BACK — the only family in the game who left in the dark years and returned. Their
+  // colours are the warm ones: dyer's madder and good wool.
+  ada:    { skin:"#c98a5a", skinSh:"#a86c40", hair:"#2a1e18", hairSh:"#1a120e", shirt:"#a8443a", shirtSh:"#82302a", pants:"#5a4a6a", pantsSh:"#443552", shoe:"#3a2a1a", kerch:"#e0b04a" },
+  corin:  { skin:"#b8794a", skinSh:"#946036", hair:"#4a3a30", hairSh:"#332720", shirt:"#7a8a72", shirtSh:"#5a6a54", pants:"#4a4038", pantsSh:"#352e28", shoe:"#2f2620" },
+  // The Harrows never left — they shut the door and waited it out. Cooler, older colours: dried herb,
+  // slate, the greens of things kept in jars.
+  sable:  { skin:"#e0c0a0", skinSh:"#bd9a78", hair:"#9aa0a6", hairSh:"#767c82", shirt:"#4a6a5a", shirtSh:"#354e42", pants:"#3a3a44", pantsSh:"#2a2a32", shoe:"#3a2a1a" },
+  wick:   { skin:"#d8a878", skinSh:"#bd8e60", hair:"#6a4a2a", hairSh:"#4c341c", shirt:"#5a7a9a", shirtSh:"#425c76", pants:"#6a5a3a", pantsSh:"#4e422a", shoe:"#3a2a1a" },
 };
 function buildChars(){
   for(const name in CHAR_SPEC){
@@ -838,6 +851,17 @@ function buildPortraits(){
     shirt:"#c0503a", feature:"hair", extra:"freckles" });
   portrait("port_nell", { skin:"#e6bd90", skinSh:"#c69868", hair:"#c9a45a", brow:"#9a7838",
     shirt:"#cdd6dc", feature:"kerchief", kerch:"#b0483a", extra:"freckles" });
+  // v6.0 the two households. Same generator, same feature vocabulary as the existing seven — a new
+  // face that needed a new drawing routine would be a new face that looks like it came from a
+  // different game.
+  portrait("port_ada",   { skin:"#c98a5a", skinSh:"#a86c40", hair:"#2a1e18", brow:"#1a120e",
+    shirt:"#a8443a", feature:"braid", extra:"" });
+  portrait("port_corin", { skin:"#b8794a", skinSh:"#946036", hair:"#4a3a30", brow:"#332720",
+    shirt:"#7a8a72", feature:"hair", extra:"beard" });
+  portrait("port_sable", { skin:"#e0c0a0", skinSh:"#bd9a78", hair:"#9aa0a6", brow:"#767c82",
+    shirt:"#4a6a5a", feature:"braid", extra:"" });
+  portrait("port_wick",  { skin:"#d8a878", skinSh:"#bd8e60", hair:"#6a4a2a", brow:"#4c341c",
+    shirt:"#5a7a9a", feature:"hair", extra:"freckles" });
   portrait("port_elias", { skin:"#dcae82", skinSh:"#b98c62", hair:"#8a6250", brow:"#66473a",
     shirt:"#6a7a8a", feature:"hair", extra:"beard" });
   portrait("port_valley", { skin:"#8fd06a", skinSh:"#5fa03e", hair:"#4f8a34", brow:"#3f7a2e",

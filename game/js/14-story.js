@@ -1391,6 +1391,143 @@ const HEART_EVENTS = {
     ]},
   ]);
 })();
+// ============================================================
+// v6.0 — the two households' heart ladders.
+//
+// Four full arcs on the v5.6 ten-tier ladder. ★ This is the half of the release that decides whether
+// the owner's ask was actually met: "functional characters that have their own lives and their own
+// scenes". Four NPCs with schedules and gift tastes but no arcs would be furniture that walks.
+//
+// Each arc is built to answer a question the valley has never asked out loud:
+//   · Ada  — what it costs to be the one who LEFT, and to come back anyway.
+//   · Corin— what it is to build things other people are thanked for.
+//   · Sable— what the dark years were actually like for whoever stayed.
+//   · Wick — what it was like to be a child here with no other children.
+(function addHouseholdHearts(){
+  HEART_EVENTS.ada = [
+    { hearts:2, flag:"he_ada_2", steps:[
+      { type:"say", who:"Ada Wren", portrait:"port_ada", text:"You're the one from the old farm. Sit down, you're blocking my light." },
+      { type:"say", who:"Ada Wren", portrait:"port_ada", text:"This loom came back on the cart with everything else we own, and it weighs more than everything else we own. Corin carried it up the lane himself and said nothing about it for eleven miles." },
+      { type:"say", who:"Ada Wren", portrait:"port_ada", text:"I'll tell you the honest reason we came back, since nobody else will ask me plainly: I got a letter saying the lanterns went out on the water again. That was it. That was the whole reason. …Right. Go on, I'm working." },
+    ]},
+    { hearts:4, flag:"he_ada_4", steps:[
+      { type:"say", who:"Ada Wren", portrait:"port_ada", text:"Can I say a thing I can't say to the others? They're all so KIND about it." },
+      { type:"say", who:"Ada Wren", portrait:"port_ada", text:"We left. In the worst year. My mother was still in that house and we packed a cart and went north, and every single person in this valley has decided to be gracious about it, and it is unbearable." },
+      { type:"say", who:"Ada Wren", portrait:"port_ada", text:"I'd rather one of them said 'you left, Ada.' Just once. Out loud. Then it would be a thing that happened instead of a thing everyone is being careful around." },
+      { type:"say", who:"You", portrait:"port_player", text:"…You left, Ada." },
+      { type:"say", who:"Ada Wren", portrait:"port_ada", text:"…" },
+      { type:"say", who:"Ada Wren", portrait:"port_ada", text:"Thank you. Get out. …Come back tomorrow." },
+    ]},
+    { hearts:6, flag:"he_ada_6", steps:[
+      { type:"say", who:"Ada Wren", portrait:"port_ada", text:"Here. Take it. Don't make a thing of it." },
+      { type:"say", who:"Ada Wren", portrait:"port_ada", text:"It's the first length off the loom since we got back. I've done forty since. This is the one that came out wrong and I kept it, which tells you something about me I'd rather it didn't." },
+      { type:"run", fn:()=>{ give("Wall Hanging", 1, true); } },
+      { type:"say", who:"Ada Wren", portrait:"port_ada", text:"Hang it somewhere you'll see it. That's an instruction, not a suggestion. ♥" },
+    ]},
+    { hearts:8, flag:"he_ada_8", steps:[
+      { type:"say", who:"Ada Wren", portrait:"port_ada", text:"I went and stood in my mother's room. First time. Eleven years and I'd been sleeping two doors down from it and not going in." },
+      { type:"say", who:"Ada Wren", portrait:"port_ada", text:"There's a half-finished piece still on her small loom. She'd have been furious to be caught leaving something unfinished." },
+      { type:"say", who:"Ada Wren", portrait:"port_ada", text:"I'm going to finish it. Badly, probably — her hand was better than mine and she knew it and she'd have said so. …I'm going to finish it." },
+    ]},
+    { hearts:10, flag:"he_ada_10", steps:[
+      { type:"say", who:"Ada Wren", portrait:"port_ada", text:"It's done. Mother's piece. Come and look and then never mention it again." },
+      { type:"say", who:"Ada Wren", portrait:"port_ada", text:"You can see the join. Right there — her hand stops and mine starts, and no amount of cleverness hides it. I tried for a week to hide it." },
+      { type:"say", who:"Ada Wren", portrait:"port_ada", text:"And then I thought: well. That's what a valley is, isn't it. Somebody's hand stops and somebody else's starts and you can always see the join, and it holds anyway." },
+      { type:"say", who:"Ada Wren", portrait:"port_ada", text:"…That's the nicest thing I'll ever say and you were here for it. Insufferable. ♥" },
+    ]},
+  ];
+
+  HEART_EVENTS.corin = [
+    { hearts:2, flag:"he_corin_2", steps:[
+      { type:"say", who:"Corin Wren", portrait:"port_corin", text:"…" },
+      { type:"say", who:"Corin Wren", portrait:"port_corin", text:"Sorry. Was counting. Lost it now. Doesn't matter." },
+      { type:"say", who:"Corin Wren", portrait:"port_corin", text:"Rowan's plaza. The stone's laid on sand and sand moves. Whoever did it was in a hurry, forty years ago, and I've been re-bedding it a yard at a time since we got back. Nobody's noticed. That's the job." },
+    ]},
+    { hearts:4, flag:"he_corin_4", steps:[
+      { type:"say", who:"Corin Wren", portrait:"port_corin", text:"You've funded a fair few of Rowan's works now. Want to know something about them?" },
+      { type:"say", who:"Corin Wren", portrait:"port_corin", text:"Every one has my initials on it. Underneath. On the bed-stone, where it sits in the dirt and nobody will ever see it as long as the thing stands." },
+      { type:"say", who:"Corin Wren", portrait:"port_corin", text:"That's not bitterness. It's the opposite. If somebody sees my mark it means the well fell down. I'd rather nobody ever saw my mark." },
+    ]},
+    { hearts:6, flag:"he_corin_6", steps:[
+      { type:"say", who:"Corin Wren", portrait:"port_corin", text:"Ada tell you why we came back? The letter, the lanterns, all that?" },
+      { type:"say", who:"Corin Wren", portrait:"port_corin", text:"That's her reason. Mine's smaller. The wall along the north lane was leaning when we left, and I thought about it in another town for eleven years." },
+      { type:"say", who:"Corin Wren", portrait:"port_corin", text:"…It's straight now. Took a fortnight. Eleven years of thinking, a fortnight of doing. That's most things, in my experience." },
+      { type:"run", fn:()=>{ give("Heartwood Beam", 2, true); } },
+    ]},
+    { hearts:8, flag:"he_corin_8", steps:[
+      { type:"say", who:"Corin Wren", portrait:"port_corin", text:"Come out to the memorial a minute. …No, don't say anything, just stand there." },
+      { type:"say", who:"Corin Wren", portrait:"port_corin", text:"I cut that stone. Rowan asked and I said yes and I did it in one night because I didn't want to be thinking while I did it." },
+      { type:"say", who:"Corin Wren", portrait:"port_corin", text:"Ada's mother's name is on the back. Small. Nobody asked me to and nobody's found it. …You have now. That's two of us." },
+    ]},
+    { hearts:10, flag:"he_corin_10", steps:[
+      { type:"say", who:"Corin Wren", portrait:"port_corin", text:"I've done a thing and I want it said plainly before you find it yourself and make a fuss." },
+      { type:"say", who:"Corin Wren", portrait:"port_corin", text:"Your farm gate. The post that's been out of plumb since you arrived. I've reset it. Proper footing, drained bed, forty years of standing in it." },
+      { type:"say", who:"Corin Wren", portrait:"port_corin", text:"Didn't ask. Wouldn't take coin. It was bothering me and now it isn't, and that's the entire transaction as far as I'm concerned." },
+      { type:"say", who:"Corin Wren", portrait:"port_corin", text:"…And it'll be straight long after both of us. That's the part I like. ♥" },
+    ]},
+  ];
+
+  HEART_EVENTS.sable = [
+    { hearts:2, flag:"he_sable_2", steps:[
+      { type:"say", who:"Sable Harrow", portrait:"port_sable", text:"Sit. Drink that. No, I'm not telling you what's in it, you'll only have opinions." },
+      { type:"say", who:"Sable Harrow", portrait:"port_sable", text:"Everyone's very taken with the Wrens coming back. Nobody has once said 'well done for staying' to me, and I'd like that noted." },
+      { type:"say", who:"Sable Harrow", portrait:"port_sable", text:"…That was a joke. Mostly. Drink your tea." },
+    ]},
+    { hearts:4, flag:"he_sable_4", steps:[
+      { type:"say", who:"Sable Harrow", portrait:"port_sable", text:"You want to know what the dark years were actually like? Everybody asks Rowan. Rowan will tell you about the Guild. I'll tell you the real of it." },
+      { type:"say", who:"Sable Harrow", portrait:"port_sable", text:"It was quiet. That's all. It wasn't a tragedy every day — it was one long Tuesday for nine years. Fewer people at market, then fewer, and you'd notice a month later that somebody had gone." },
+      { type:"say", who:"Sable Harrow", portrait:"port_sable", text:"Nobody makes a story out of that. But that's what it was. It was Tuesdays." },
+    ]},
+    { hearts:6, flag:"he_sable_6", steps:[
+      { type:"say", who:"Sable Harrow", portrait:"port_sable", text:"There's a shelf in the back you've not seen. Come on then." },
+      { type:"say", who:"Sable Harrow", portrait:"port_sable", text:"Every one of these is somebody's. Made up, labelled, never collected. Forty-one jars. They left, or they stopped needing it, or…" },
+      { type:"say", who:"Sable Harrow", portrait:"port_sable", text:"I make them anyway. Every season. It's not hope, before you say something kind — it's a habit that got away from me. …But I'd have looked a fool if somebody came back and I'd nothing ready." },
+      { type:"run", fn:()=>{ give("Warden's Tea", 2, true); } },
+    ]},
+    { hearts:8, flag:"he_sable_8", steps:[
+      { type:"say", who:"Sable Harrow", portrait:"port_sable", text:"Two of the forty-one went out this season. Ada's. And one for a Wren boy who isn't born yet, which was presumptuous of me and I'll thank you to say nothing." },
+      { type:"say", who:"Sable Harrow", portrait:"port_sable", text:"Thirty-nine to go. I'll not live to hand out thirty-nine. But it's the first year the number went DOWN, and I have thought about that a great deal more than is dignified." },
+    ]},
+    { hearts:10, flag:"he_sable_10", steps:[
+      { type:"say", who:"Sable Harrow", portrait:"port_sable", text:"I've something for you and I've been putting it off because you'll be tiresome about it." },
+      { type:"say", who:"Sable Harrow", portrait:"port_sable", text:"The remedy book. My mother's hand for the first half, mine for the rest. Every plant in this valley and what it's good for and which three of those are nonsense I've never bothered to correct." },
+      { type:"say", who:"Sable Harrow", portrait:"port_sable", text:"You'll want it before I'm done with it, and that's the correct order for these things. Somebody has to have it next." },
+      { type:"run", fn:()=>{ give("Sable's Remedy Book", 1, true); } },
+      { type:"say", who:"Sable Harrow", portrait:"port_sable", text:"Now go away. I've steeping to do and you're standing in the light. ♥" },
+    ]},
+  ];
+
+  HEART_EVENTS.wick = [
+    { hearts:2, flag:"he_wick_2", steps:[
+      { type:"say", who:"Wick Harrow", portrait:"port_wick", text:"You're the farm one. Pip talks about you CONSTANTLY. It's a lot." },
+      { type:"say", who:"Wick Harrow", portrait:"port_wick", text:"We're not new, by the way. Everyone keeps saying 'the new family'. We've been here the WHOLE TIME. You just never knocked." },
+      { type:"say", who:"Wick Harrow", portrait:"port_wick", text:"…Mum says people didn't knock much for a few years. She says it like it's normal. I don't think it's normal." },
+    ]},
+    { hearts:4, flag:"he_wick_4", steps:[
+      { type:"say", who:"Wick Harrow", portrait:"port_wick", text:"Okay so me and Pip are best friends now. That happened. Nobody asked me." },
+      { type:"say", who:"Wick Harrow", portrait:"port_wick", text:"I'm not COMPLAINING. It's just — I was the only one for ages? And he was the only one? And we both thought we were the only one, in the same village, about eight hundred paces apart." },
+      { type:"say", who:"Wick Harrow", portrait:"port_wick", text:"That's so STUPID. I'm still annoyed about it. We've decided to be annoyed about it together, which is apparently what friends do." },
+    ]},
+    { hearts:6, flag:"he_wick_6", steps:[
+      { type:"say", who:"Wick Harrow", portrait:"port_wick", text:"Can I ask a real question? Not a Pip question. A real one." },
+      { type:"say", who:"Wick Harrow", portrait:"port_wick", text:"Is it scary? Down the tenth door. Everyone talks about it like it's a JOB and I've seen you come up with your hands shaking." },
+      { type:"say", who:"You", portrait:"port_player", text:"…Sometimes. Yes." },
+      { type:"say", who:"Wick Harrow", portrait:"port_wick", text:"Good. Everyone else says no. …Thanks. That's the first useful thing an adult has told me all year." },
+    ]},
+    { hearts:8, flag:"he_wick_8", steps:[
+      { type:"say", who:"Wick Harrow", portrait:"port_wick", text:"Mum let me carry the gathering basket on the ridge. On my OWN. She waited at the cairn and let me go up the last bit by myself." },
+      { type:"say", who:"Wick Harrow", portrait:"port_wick", text:"I got snowdrops and mountain thyme and I only fell over once and I'm not saying which one I fell over on." },
+      { type:"say", who:"Wick Harrow", portrait:"port_wick", text:"Here. That's for you. It's the good half. …Don't tell Mum I gave you the good half." },
+      { type:"run", fn:()=>{ give("Snowdrop", 4, true); } },
+    ]},
+    { hearts:10, flag:"he_wick_10", steps:[
+      { type:"say", who:"Wick Harrow", portrait:"port_wick", text:"I've decided what I'm doing. Properly decided, not a saying-it decision." },
+      { type:"say", who:"Wick Harrow", portrait:"port_wick", text:"I'm learning the remedies. From Mum. Not the warden thing — I still want the warden thing, but Mum's the one who's got nobody to give it to and I worked that out on my own and it took me AGES." },
+      { type:"say", who:"Wick Harrow", portrait:"port_wick", text:"She cried. She'd say she didn't. She did." },
+      { type:"say", who:"Wick Harrow", portrait:"port_wick", text:"Anyway I'm going to be the one who knows what's in the jars, and then when I'm old somebody will ask ME. That's a good thing to be. ♥" },
+    ]},
+  ];
+})();
 function heartEventFor(id){
   const evs = HEART_EVENTS[id]; if(!evs) return null;
   const h = heartsOf(id);

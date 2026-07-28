@@ -18,6 +18,8 @@ const MAPS = {
   cottage:   { get w(){ return [11,15,19][Math.min(2, homeRooms())]; },
                get h(){ return [9,9,11][Math.min(2, homeRooms())]; },
                name:"Your Cottage", subtitle:"home sweet home", music:"cozy", bg:"#171009", gen:genCottage },
+  wrenhouse:   { w:11, h:9, name:"The Wrens' House",   subtitle:"back, and staying", music:"cozy", bg:"#171009", gen:genWrenHouse },
+  harrowhouse: { w:11, h:9, name:"The Harrows' House", subtitle:"never once shut for good", music:"cozy", bg:"#171009", gen:genHarrowHouse },
   coop:      { w:12, h:9,  name:"The Coop",              subtitle:"cluck, cluck",    music:"cozy", bg:"#1a1208", gen:genCoop },
   barn:      { w:14, h:10, name:"The Barn",              subtitle:"warm straw, slow breathing", music:"cozy", bg:"#1a1208", gen:genBarn },
   store:     { w:14, h:9,  name:"Tom's General Store",   subtitle:"coin for goods",   music:"cozy", bg:"#171009", gen:genStore },
@@ -95,6 +97,36 @@ function applyHome(m){
     if(m.warps[k]) continue;                                   // and never over the door
     m.objects[k] = { kind:o.kind };
   }
+}
+// v6.0 the Wrens' house — a weaver's front room and a mason's clutter. Ada's loom is the centrepiece
+// (and the direct set-up for V6.6's fibre chain: the machine exists as a prop here a whole version
+// before it becomes a machine, so when it does, it will already have been in the room).
+function genWrenHouse(m){
+  genRoom(m, T.IFLOOR, T.IWALL);
+  for(let y=3;y<=5;y++) for(let x=3;x<=6;x++) m.tiles[y*W+x]=T.CARPET;
+  put(m,2,1,"bed"); put(m,8,1,"bed");
+  put(m,4,1,"painting",{title:"The road back", story:"wrenroad"});
+  put(m,9,3,"bookcase",{title:"Ada's pattern books"});
+  put(m,2,3,"stove"); put(m,6,3,"table"); put(m,5,3,"chair"); put(m,7,3,"chair");
+  put(m,2,6,"dresser",{title:"the dye chest"});
+  put(m,8,6,"barrel"); put(m,9,6,"crate");
+  put(m,7,6,"woolrug");
+  put(m,3,6,"smallshelf",{title:"Corin's chisels"});
+  exitAt(m,5,"village", 6*TILE+8, 24*TILE);
+}
+// v6.0 the Harrows' house — a herbalist's kitchen, hung and jarred. They never left; the room looks
+// like somewhere that has been lived in without pause for twenty years, which is the point.
+function genHarrowHouse(m){
+  genRoom(m, T.IFLOOR, T.IWALL);
+  for(let y=4;y<=5;y++) for(let x=4;x<=7;x++) m.tiles[y*W+x]=T.CARPET;
+  put(m,2,1,"bed"); put(m,9,1,"bed");
+  put(m,2,3,"stove"); put(m,3,3,"barrel",{title:"the steeping crocks"});
+  put(m,6,2,"table"); put(m,5,2,"chair"); put(m,7,2,"chair");
+  put(m,9,3,"bookcase",{title:"Sable's remedy book"});
+  put(m,1,5,"plantpot"); put(m,9,5,"plantpot"); put(m,5,6,"potted");
+  put(m,8,6,"smallshelf",{title:"jars, labelled in a hand nobody else can read"});
+  put(m,3,6,"candlestand");
+  exitAt(m,5,"village", 34*TILE+8, 24*TILE);
 }
 function genCoop(m){
   genRoom(m, T.HAY, T.IWALL);
@@ -766,10 +798,13 @@ function genVillage(m){
   m.warps[key(20,6)] = { to:"guild", sx:8*TILE+8, sy:8*TILE, face:"up" };
   m.objects[key(28,6)] = { kind:"sign", text:"Guild of Nine Crafts" };
   // --- ambient neighbours on the south lane (doors are latched; they open in a later chapter) ---
+  // v6.0 — ★ the later chapter arrived. Both doors open now; the signs have been true since v3.
   rect2(4,19,8,20,T.ROOF); rect2(4,21,8,22,T.WALL); set2(6,22,T.DOOR);
   m.objects[key(9,22)] = { kind:"sign", text:"The Wrens'" };
+  m.warps[key(6,22)] = { to:"wrenhouse", sx:5*TILE+8, sy:6*TILE, face:"up" };
   rect2(32,19,36,20,T.ROOF); rect2(32,21,36,22,T.WALL); set2(34,22,T.DOOR);
   m.objects[key(31,22)] = { kind:"sign", text:"The Harrows'" };
+  m.warps[key(34,22)] = { to:"harrowhouse", sx:5*TILE+8, sy:6*TILE, face:"up" };
   // --- plaza dressing ---
   for(const [lx,ly] of [[14,10],[26,10],[14,18],[26,18]]) m.objects[key(lx,ly)] = { kind:"lamp" };
   // benches + planters on the plaza's north/south edge rows (y10/y18) — verified clear of the
@@ -1060,6 +1095,28 @@ const NPCDEF = {
            loved:["Fine Cheese","Cheese","Prize Fleece"], liked:["Sea Aster","Milk","Wool","Honey","Large Egg","Berry Bun"] },   // Tom's wife, the coast dairy (v3.44); Sea Aster v4.13 — "Cheese" covers Fine Cheese; "Milk" covers Large Milk; "Egg" avoided (would eat plain Egg too — Large Egg is the treat)
   elias: { name:"Elias",       portrait:"port_elias", spr:"elias",
            loved:["Golden Koi","Pearl","Prize Fleece","Warden's Ash"], liked:["Trout","Salmon","Coral","Cooked","Wool","Gloam Thread","Knotwood"] },   // v4.16 the last Warden knows his own wing's spoils; ash of a settled hollow warden means the most
+  // ============================================================
+  // v6.0 "The Wrens and the Harrows" — the two households the village square has been advertising
+  // since v3. `genVillage` raised both houses with their family names on signs and a comment reading
+  // "doors are latched; they open in a later chapter". This is that chapter.
+  //
+  // ★ The bar, set by the owner's own word — "functional characters that have their own lives and
+  // their own scenes": each of these four has a schedule, gift tastes, recognitions, standing
+  // dialogue, a birthday, festival presence and a full heart ladder to ten. A new NPC who merely
+  // stands somewhere would satisfy the request on paper and fail it in play.
+  //
+  // Gift tastes are chosen to PULL, not just to exist: Ada wants the wool and fleece V6's own
+  // diagnosis called near-orphans (two consumers, zero), Corin wants the beams the building chain
+  // produces, Sable wants the wild forage nobody had a reason to keep, and Wick wants the small
+  // shiny things a child would.
+  ada:   { name:"Ada Wren",     portrait:"port_ada",   spr:"ada",
+           loved:["Prize Fleece","Wool"], liked:["Sea Aster","Peony","Cloudberry","Fine Cheese","Silverwood"] },
+  corin: { name:"Corin Wren",   portrait:"port_corin", spr:"corin",
+           loved:["Heartwood Beam","Silverwood Beam"], liked:["Stone","Oak Lumber","Maple Lumber","Emerald","Iron Ore"] },
+  sable: { name:"Sable Harrow", portrait:"port_sable", spr:"sable",
+           loved:["Cloudberry","Honey"], liked:["Sea Aster","Sea Holly","Mountain Thyme","Snowdrop","Samphire","Berry Bun"] },
+  wick:  { name:"Wick Harrow",  portrait:"port_wick",  spr:"wick",
+           loved:["Starlight Shard","Berry Bun"], liked:["Shell","Opal","Topaz","Melon","Coral"] },
 };
 
 // dialogue by heart tier (index clamps); some react to progress
@@ -1207,6 +1264,48 @@ function npcStory(id){
       "You lit the TENTH WING! Rowan says there's TEN crafts now, not nine, which means my whole LIFE the number was WRONG and nobody TOLD me. I'm not upset. I'm a LITTLE upset. Can I hold the warden's stick now? You're basically DONE!",
       "Mum says the man from the ridge — Mister Elias — SMILES now. He didn't used to. She says it's because of you and the tenth door. I think it's the cheese. I didn't say that to her." ]);
     if(near) return "IS IT FESTIVAL YET. Is it?? Mum's bringing cheese from the dairy. I'm gonna eat ALL of it. Don't tell her.";
+  } else if(id==="ada"){
+    // v6.0. Ada Wren: came back. Warm, blunt, impatient with sentiment about the dark years — she
+    // was the one who left, and she has heard quite enough about it from people who didn't.
+    if(state.flags.tenthWingLit) return pick([
+      "Ten windows lit and I keep catching myself counting them like a fool. …Fine. It's good. It's very good. Don't tell Corin I said it warmly.",
+      "I dyed a whole run of wool the colour of that tenth window. Sold every yard in a week. Sentiment, it turns out, is excellent business." ]);
+    if(state.flags.festivalDone) return pick([
+      "We came back for the festival, if you want the truth of it. Heard it was happening again and Corin had the cart loaded before I'd finished the sentence.",
+      "Eleven years in a town three coasts north, and not one night of it as good as the one on that sand. That's not nostalgia. I checked." ]);
+    return pick([
+      "Bring me fleece. Any fleece. I'll take the ugly stuff — the ugly stuff dyes best and nobody believes me.",
+      "The loom was my grandmother's and it came back on the cart with us, and Corin has never once complained about the weight of it. Out loud.",
+      "Everyone here is very kind about us leaving. I'd honestly prefer if one of them said something rude, just to clear the air." ]);
+  } else if(id==="corin"){
+    // Corin Wren: a mason. The valley's restorations have been getting built by SOMEBODY all this
+    // time; v6.0 gives that somebody a face. Dry, sparing, notices everything.
+    if(state.flags.tenthWingLit) return pick([
+      "Repointed the tenth wing's threshold. Nobody asked. It wanted doing.",
+      "That door's older than the rest of the hall by forty years. Whoever hung it knew their business. …I'd have liked to meet them." ]);
+    return pick([
+      "Rowan draws them. I build them. He gets the plaque. That's the arrangement and I'm content with it.",
+      "Your fence post at the east corner is out of plumb. Not by much. …It'll bother me now.",
+      "Stone's honest. It does what the last man who touched it left it doing, for four hundred years. You can't say that of much." ]);
+  } else if(id==="sable"){
+    // Sable Harrow: never left. Older, dry, unsentimental — the counterweight to Ada, and the reason
+    // the two households read as different rather than as four new faces.
+    if(state.flags.tenthWingLit) return pick([
+      "Elias came for a tea he didn't need and sat in my kitchen for two hours. Talked about a birch. …Whatever you did down there, it took.",
+      "I kept a jar of steep for that man for eleven years, in case. Used it last week. That's the whole of my opinion on your tenth door." ]);
+    if(state.flags.festivalDone) return "We didn't go to the first one back. Wick sulked for a week. …We went to the second. Don't make anything of it.";
+    return pick([
+      "We never left. People say that like it's a virtue. It was a door and a lot of jars, that's all it was.",
+      "Cloudberry, if you're gathering. I'll take every one you find and I'll not tell you what it's for.",
+      "Half this valley's remedies are a hot drink and being made to sit down. I'd thank you not to spread that around." ]);
+  } else if(id==="wick"){
+    // Wick Harrow: Pip's age. Pip has been the only child in the valley since v1, which is quietly
+    // sad, and one line of dialogue cannot fix that but a second child can.
+    return pick([
+      "Pip says you've been DOWN THE TENTH DOOR. Pip says a LOT of things. …Have you though?",
+      "Mum makes tea for everyone and everyone drinks it and NOBODY says it tastes like a hedge. I'm the only honest person here.",
+      "We're not new! We've ALWAYS lived here! You just never opened the door. …Nobody ever opened the door.",
+      "I'm going to be a warden. Pip says he's going to be a farmer now which is BORING, no offence, you're a farmer." ]);
   } else if(id==="nell"){
     // v4.17: Nell (living dairy keeper, Tom's wife) sees the finale in Elias — not in the wing itself.
     // Guarded on nellOrderFilled() so her standing daily order still surfaces first when it's open
@@ -1226,6 +1325,14 @@ function npcStory(id){
 // v3.24: the first time you talk to a villager after you've raised something, they NOTICE — one warm,
 // one-time line each (§4.6 "saw your new barn!"). After the ack flag is set they fall back to normal lines.
 const NPC_RECOG = [
+  // v6.0: the two households notice the valley too. A character who never reacts to anything you do
+  // is a character the world doesn't contain — recognitions are the cheapest possible proof they're
+  // living in the same place you are.
+  { npc:"corin", flag:"proj_barn",   ack:"ack_corin_barn",  line:"Saw your barn going up. Sills are square and the footing's drained. …That's a compliment. That's the biggest compliment I have." },
+  { npc:"ada",   flag:"proj_barn",   ack:"ack_ada_barn",    line:"A barn means sheep and sheep mean fleece and fleece means you and I are going to be doing business, whether you'd planned on it or not." },
+  { npc:"wick",  flag:"proj_stable", ack:"ack_wick_stable", line:"You've got a HORSE. An actual HORSE. Pip said you did and I said Pip says a lot of things and now I owe Pip an apology and I'm FURIOUS." },
+  { npc:"sable", flag:"tenthDoorOpen", ack:"ack_sable_door", line:"That door's open, then. …I made up a jar for Elias eleven years ago and never handed it over. I think I might, now. Don't look at me like that." },
+  { npc:"ada",   flag:"tenthWingLit", ack:"ack_ada_wing",   line:"Ten windows. I stood on the lane and counted them twice like a tourist. …We came back for lanterns on water. This is better." },
   { npc:"tom",   flag:"proj_coop",   ack:"ack_tom_coop",     line:"Say — that's a fine coop you raised! Means I can start selling you hens now. Folk'll have fresh eggs on the table again." },
   { npc:"pip",   flag:"proj_coop",   ack:"ack_pip_coop",     line:"You built a COOP! Are there chickens yet?? Can I name one? I'm gonna name one Sir Cluckington and he'll be the BRAVEST hen!" },
   { npc:"tom",   flag:"proj_barn",   ack:"ack_tom_barn",     line:"A whole barn now, cows and sheep both — you're running a proper farm. My wife down the coast will be thrilled for the milk trade." },
@@ -1327,6 +1434,10 @@ function spawnMapNpcs(m){
     // a festival date (review fix: the beach cast includes him all day on those dates, and the
     // Star-Watch lands on a %4 day EVERY year; a festival always outranks the landing).
     if(state.flags.act2Done && h>=7 && h<19 && state.day % 4 === 0 && !beachEvent()) m.npcs.push(mkNpc("elias", 40*TILE, 16*TILE, {face:"down"}));
+  } else if(m.id==="ridge"){
+    // v6.0: Sable gathers on the scree in the afternoons — the herbalist and the alpine forage map
+    // are obviously each other's, and nobody was standing there.
+    if(h>=11 && h<16) m.npcs.push(mkNpc("sable", 30*TILE, 20*TILE, {wander:{x0:26,y0:17,x1:36,y1:24}}));
   } else if(m.id==="butterbrook"){
     // v3.44: of an evening (18:30–22:00) Nell walks the meadow; by day she's inside the creamery
     // (below, Tom's shopkeeper model — never two places), and after 22:00 she's home abed like
@@ -1335,6 +1446,19 @@ function spawnMapNpcs(m){
     if(h>=18.5 && h<22) m.npcs.push(mkNpc("nell", 16*TILE, 14*TILE, {wander:{x0:12,y0:11,x1:24,y1:18}}));
   } else if(m.id==="dairy"){
     if(h>=7 && h<18.5) m.npcs.push(mkNpc("nell", 6*TILE+8, 3*TILE, {face:"down"}));
+    // v6.0: Ada buys her fleece where the fleece is. Two established characters standing in the same
+    // room with a reason to be there is worth more than either of them alone.
+    if(h>=10 && h<15) m.npcs.push(mkNpc("ada", 3*TILE, 5*TILE, {face:"right"}));
+  } else if(m.id==="wrenhouse"){
+    // v6.0: Ada works the loom in the mornings and the evenings; Corin is out on the valley's
+    // stonework all day and home late. A house you can walk into and find EMPTY at noon is a house
+    // where people live, not a diorama with two attendants.
+    if(h<9 || h>=17) m.npcs.push(mkNpc("ada", 4*TILE, 4*TILE, {wander:{x0:2,y0:2,x1:8,y1:6}}));
+    if(h>=19 || h<7) m.npcs.push(mkNpc("corin", 7*TILE, 4*TILE, {face:"left"}));
+  } else if(m.id==="harrowhouse"){
+    // Sable keeps the kitchen; Wick is only ever home at the edges of the day, like any child.
+    if(h<8 || h>=16) m.npcs.push(mkNpc("sable", 3*TILE, 3*TILE, {wander:{x0:2,y0:2,x1:8,y1:6}}));
+    if(h<8 || h>=18.5) m.npcs.push(mkNpc("wick", 8*TILE, 5*TILE, {wander:{x0:6,y0:3,x1:9,y1:6}}));
   } else if(m.id==="cottage"){
     // v5.5: the promise, kept. Mornings before you head out and evenings once you're back — the two
     // times a person who lives with you is actually there. Between those they're about the valley
@@ -1346,6 +1470,11 @@ function spawnMapNpcs(m){
   } else if(m.id==="village"){
     if(h>=7 && h<18.5) m.npcs.push(mkNpc("maya", 24*TILE, 12*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));
     if(h>=8 && h<19)   m.npcs.push(mkNpc("pip",  17*TILE, 16*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));
+    // v6.0: Corin is on the plaza's stonework through the working day — the mason who has been
+    // silently building Rowan's restorations all this time, finally visible doing it. Wick runs the
+    // lane with Pip, which is the point of Wick: Pip has been the only child in the valley.
+    if(h>=9 && h<18.5) m.npcs.push(mkNpc("corin", 20*TILE, 17*TILE, {wander:{x0:16,y0:15,x1:26,y1:19}}));
+    if(h>=9 && h<18)   m.npcs.push(mkNpc("wick",  19*TILE, 16*TILE, {wander:{x0:15,y0:11,x1:25,y1:17}}));
   } else if(m.id==="store"){ m.npcs.push(mkNpc("tom", 7*TILE+8, 2*TILE+8, {face:"down"})); }
   else if(m.id==="mayahouse"){ if(h>=18.5 || h<7) m.npcs.push(mkNpc("maya", 6*TILE, 4*TILE, {face:"down"})); }
   else if(m.id==="guild"){ m.npcs.push(mkNpc("rowan", 8*TILE+8, 5*TILE, {face:"down"})); }
