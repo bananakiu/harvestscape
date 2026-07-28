@@ -1387,14 +1387,52 @@ function cookFish(name){
 }
 
 // ---- eating ----
+// v5.2 "The Warden's Table" — how much Resolve a dish is worth, DOWN THERE only.
+//
+// This closes `V4_PLAN.md` §2's own open spec ("cooked dishes restore it — Cooking's new consumer"),
+// which never shipped: `eatFood` touched only `state.energy`, no code path anywhere fed
+// `state.resolve` from any item, and the bible's §6.4 ("preparation is the real combat skill") was
+// therefore structurally absent — there was nothing to prepare.
+//
+// Scaled off the dish's ENERGY, not its level or price, because energy is already the honest measure
+// of how much work went into it: a Berry Bun is a snack, a Dragonfruit Parfait is an afternoon. The
+// ~0.55 factor and the 45 cap were picked so the best dish in the game restores a bit under half a
+// bar — a real recovery, never a full reset, so a bad floor still ends in a walk back to a bell.
+//
+// ★ THE NAMED INVARIANT, written into GAME_BALANCE_PRINCIPLES.md the day this shipped and repeated
+// here because this is the function that would break it: **no Undercroft encounter is ever balanced
+// assuming food.** The free refill at every bell, at the door and at dawn all stay. The baseline IS
+// the balanced game; food is a comfort a prepared player brings, never a tax on one who didn't.
+function foodResolve(item){
+  const e = EDIBLE[item] || 0;
+  let r = Math.round(e * 0.55);
+  if(hasMastery("Cooking", 50) && (RECIPE_NAMES.has(item) || item.startsWith("Cooked "))) r = Math.round(r * 1.2);
+  return Math.min(45, r);   // the cap goes LAST, or the mastery bonus quietly lifts it past half a bar
+}
 function eatFood(){
   const item = Object.keys(EDIBLE).find(i => state.inv[i] > 0);
   if(!item){ toast("No food! Buy a Berry Bun or cook a fish.", "#ff8a7a"); playSfx("error"); return; }
-  if(state.energy >= 100){ toast("You're full of energy already — save it for later.", "#b6f27a"); return; }
+  // v5.2: in the Undercroft, a meal steadies you. Eating is one key (F) everywhere, so the branch
+  // belongs here rather than in a second verb the player has to learn.
+  const combat = (typeof inCombatMap === "function") && inCombatMap();
+  const rMax = (typeof resolveMax === "function") ? resolveMax() : 100;
+  const wantsResolve = combat && (state.resolve || 0) < rMax;
+  if(state.energy >= 100 && !wantsResolve){
+    toast(combat ? "Full of energy and steady enough — save it." : "You're full of energy already — save it for later.", "#b6f27a");
+    return;
+  }
   const e = foodEnergy(item);
   take(item); state.energy = Math.min(100, state.energy + e);
   floatText(state.px, state.py-18, "+"+e+" energy", "#b6f27a");
-  toast("Ate "+item, "#b6f27a"); playSfx("get"); refreshHUD(); refreshHotbar();
+  if(wantsResolve){
+    const r = foodResolve(item);
+    const before = state.resolve || 0;
+    state.resolve = Math.min(rMax, before + r);
+    floatText(state.px, state.py-30, "+" + (state.resolve - before) + " resolve", "#bfe4ff");
+    pSparkle(state.px, state.py-10, "#bfe4ff", 10);
+    toast("Ate " + item + " — the dark feels a little further off.", "#bfe4ff");
+  } else toast("Ate "+item, "#b6f27a");
+  playSfx("get"); refreshHUD(); refreshHotbar();
 }
 
 // ---- gift (G) — nearest NPC ----
@@ -1649,6 +1687,7 @@ function newDay(){
   if(state.weather === "rain"){ for(let i=0;i<W*H;i++) if(farm.tiles[i]===T.TILLED) farm.tiles[i]=T.WATERED; }
   state.flags.stormWrack = wasStorm;   // one day only; the beach regenerates nightly
   state.deepRun = false;               // a new dawn ends any deep run — you always wake home, haul intact
+  if(typeof clearTonic === "function") clearTonic();   // v5.2: a tonic lasts one descent; a night is not one
   saveGame();
   return { grew, ready, cellared, rain: state.weather === "rain", withered, season: seasonChanged ? newSeason : null,
            spouse: spouseTended, built, weather: state.weather, forecast: state.forecast, wrack: wasStorm,

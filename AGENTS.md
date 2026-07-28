@@ -217,7 +217,11 @@ tests a copy tests nothing.
   10 → 15), and the two Stave arts set at a bell. ★ **Owner decisions in `V5_PLAN.md` §6 are ALL
   RESOLVED** — build against them, don't re-litigate: trials at 50+75 live, heart cap → **10** (binds
   v5.5 as well as v5.6), writ pays gold + marks toward cosmetics (so v5.7's catalog must precede v5.9),
-  merchant ~2 days/week seeded. **Next unbuilt release: v5.2 "The Warden's Table."** Build it the
+  merchant ~2 days/week seeded. **v5.2 "The Warden's Table" SHIPPED** — food restores Resolve in the Undercroft, three tonics that each
+  spend a cooked dish AND a settling drop, the Guild's rounds and the Patron's commissions finally ask
+  the farm for something, and GBP gained **§5.2b** ("the baseline IS the balanced game — never tune an
+  encounter around a consumable"), which every later consumable and the v5.8 merchant inherit verbatim.
+  **Next unbuilt release: v5.3 "The Deep Seams."** Build it the
   `V4_BUILD_PLAN.md` way — write that release's build order fresh, re-verify every symbol anchor
   `V5_PLAN.md` names, one release per session, strictly in order.
   ★ Two load-order lessons from v5.1, both worth carrying: (1) a `const X = f()` evaluated at load in

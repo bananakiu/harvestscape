@@ -688,6 +688,19 @@ function invDetailHtml(it){
   if(EDIBLE[it])    bits.push(`+${EDIBLE[it]} energy`);
   if(bits.length) h += `<div class="sdXp">${bits.join(" · ")}</div>`;
   if(EXAMINE[it]) h += `<div class="sdLine muted" style="font-style:italic">${escapeHtml(EXAMINE[it])}</div>`;
+  // v5.2: a Warden's tonic is drunk from the bag, at the start of a descent — deliberately not a
+  // hotbar verb, because it is a decision you make once and never mid-swing.
+  if(typeof WARD_TONICS !== "undefined"){
+    const t = WARD_TONICS.find(x => x.out === it);
+    if(t){
+      h += `<div class="sdLine unlock">☕ ${escapeHtml(t.blurb)}</div>`;
+      const here = (typeof inCombatMap === "function") && inCombatMap();
+      const on = state.tonic && state.tonic.out === it;
+      h += on ? `<div class="sdLine earned">working — until this descent ends</div>`
+         : here ? `<button class="buy" onclick="drinkTonic('${jsq(it)}')">drink it</button>`
+         : `<div class="sdLine muted">Keep it for the Undercroft — it does nothing up here.</div>`;
+    }
+  }
   if(CHARMS[it]){
     const worn = state.charm === it;
     h += `<div class="sdLine unlock">✦ ${CHARMS[it].effect}</div>`;

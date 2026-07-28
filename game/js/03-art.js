@@ -64,6 +64,17 @@ function buildWardingArt(){
     for(let i=0;i<8;i++) px(g,4+i,11,1,1,"#bfe0ff"); px(g,7,9,2,2,"#8fb8e8"); });
   mkSpr("item_Emberlight Charm", 16, 16, g => { px(g,5,5,6,6,"#2a2018"); px(g,6,6,4,4,"#c05a24"); px(g,7,7,2,2,"#ffce8a");
     px(g,6,6,1,1,"#ffab5a"); });
+  // v5.2 the Warden's tonics — three vessels, each reading as the thing inside it. Same rule as
+  // everything else in this file: procedural, no asset files. A bowl for the broth (it is soup and
+  // ember grit), a stoppered jar for the salve, a tin mug for the tea.
+  mkSpr("item_Ember Broth", 16, 16, g => { px(g,3,8,10,4,"#6a4a2a"); px(g,3,8,10,1,"#8a6640");
+    px(g,4,7,8,2,"#c05a24"); px(g,5,7,6,1,"#ffab5a"); px(g,7,5,1,2,"#8a7a6a"); px(g,9,4,1,2,"#8a7a6a");
+    px(g,2,9,1,2,"#5a3c20"); px(g,13,9,1,2,"#5a3c20"); });
+  mkSpr("item_Gloamsalve", 16, 16, g => { px(g,5,5,6,8,"#2f3f52"); px(g,5,5,6,1,"#4a6076");
+    px(g,6,7,4,5,"#bfe0ff"); px(g,7,8,2,3,"#eaf6ff"); px(g,6,3,4,2,"#6a5540"); px(g,7,2,2,1,"#8a6a4a"); });
+  mkSpr("item_Warden's Tea", 16, 16, g => { px(g,4,6,7,6,"#9aa8b0"); px(g,4,6,7,1,"#c8d4dc");
+    px(g,5,7,5,4,"#5a4028"); px(g,5,7,5,1,"#7a5a38"); px(g,11,7,2,1,"#9aa8b0"); px(g,12,8,1,2,"#9aa8b0");
+    px(g,11,10,2,1,"#9aa8b0"); px(g,6,4,1,2,"#8a9aa6"); px(g,8,3,1,2,"#8a9aa6"); });
 
   // ---- the restless things (2-frame idle) ----
   // Gloam Wisp — a small mournful orb with a trailing wisp; frames wobble the tail.

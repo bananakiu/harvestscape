@@ -8,13 +8,19 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "5.1.0", code: 126, codename: "The Trials", date: "2026-07-29" };
+const VERSION = { name: "5.2.0", code: 127, codename: "The Warden's Table", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"5.2.0", code:127, date:"2026-07-29", name:"The Warden's Table", notes:[
+    { t:"new", s:"Food finally means something in the dark. Eat anything while you're in the Undercroft and it steadies you as well as feeding you \u2014 the better the dish, the more Resolve it gives back, up to a bit under half a bar. Cooking has been a skill with no reason to exist down there since the tenth door opened; now the kitchen is part of going down." },
+    { t:"new", s:"Three Warden's tonics, brewed at any bell alongside the charms, each one spending a COOKED DISH and something you settled \u2014 so the two systems finally feed each other both ways. Ember Broth steadies you slowly for a whole descent. Warden's Tea makes the Guard more forgiving. Gloamsalve catches you once: you go down on one knee and come straight back up, keeping the floor you'd have had to walk back to." },
+    { t:"new", s:"Elias's daily round asks for supper now. Four of the wing's rotations want a fish stew, six good eggs, honey for the salve, or three cheese toasties for a lad who never packs a lunch \u2014 the first time the endgame's daily job has ever looked at your farm. Rowan's standing commissions ask for cheese, wheat and crumble too." },
+    { t:"balance", s:"Nothing down there is balanced around any of it. Every floor, every creature and every boss is still tuned for someone who walked in with an empty bag, and the free Resolve refill at every bell, at the door and at dawn all stay exactly as they were. A tonic lasts one descent and never survives a night." },
+  ]},
   { v:"5.1.0", code:126, date:"2026-07-29", name:"The Trials", notes:[
     { t:"new", s:"Every craft now has two moments in it that aren't a number. Passing 50 in a skill \u2014 and again passing 75 \u2014 means the person who cares about that craft asks you for one thing first, and it is always something from a DIFFERENT craft. Maya wants the beds framed in sawn boards and iron pins. Rowan won't call you a miner until you've propped a roof. Bram won't teach the deep casts to anyone holding a bent stick. Twelve of them, one per craft per gate." },
     { t:"new", s:"Nothing is ever held back from you \u2014 only held. Your XP keeps counting at full rate past the gate; it is the LEVEL that waits, and the moment the trial is done every banked level lands at once. There is no timer, no failure, and no way to lose it. If you were already past a gate when this update arrived, that trial is simply marked done \u2014 you keep everything." },
@@ -1182,6 +1188,11 @@ RECIPES.sort((a,b) => a.lvl - b.lvl);   // v4.8: keep the Kitchen list level-ord
   }
 })();
 RECIPES.forEach(r => { ITEM_SELL[r.name] = r.sell; EDIBLE[r.name] = r.energy; });
+// v5.2 the Warden's tonics. Priced deliberately BELOW the dish that goes into them: a tonic must
+// never be a way to launder a Fish Stew into more gold than the stew was worth, or the kitchen grows
+// a second faucet by accident (GBP §2.5's obligation — the arithmetic before the code). They are a
+// SINK: brewing one spends a dish and a settling drop and returns something you drink.
+ITEM_SELL["Ember Broth"] = 240; ITEM_SELL["Gloamsalve"] = 300; ITEM_SELL["Warden's Tea"] = 260;
 
 // ---- ROWAN'S RESTORATION PROJECTS ----
 // Late-game gold has nowhere to go. These turn a pile of coin into things you can walk on.
@@ -1555,6 +1566,13 @@ function patronCost(n){
 const PATRON_MATS = [
   { "Elder Wood":20 }, { "Heartwood Beam":12 }, { "Silverwood Beam":8 },
   { "Deepgnarl":10 },  { "Gloamstar":6 },       { "Starstone":2 },
+  // v5.2: two rotations that ask the FARM and the KITCHEN. Every entry above comes out of the woods
+  // or the deep, so the valley's endless commission — the one sink a long save actually lives on —
+  // never once wanted a crop or a dish. A civic work is built by people who have to be fed; the
+  // rotation should say so. (Flat ask, like every other rung: escalating a material makes the
+  // MATERIAL the binding constraint instead of the gold, which is the defect this table avoids.)
+  { "Fine Cheese":6, "Wheat":40 },
+  { "Apple Crumble":4, "Honey":12 },
 ];
 // The first ten are named civic fixtures that visibly warm the village; past that Rowan keeps finding
 // more to do. Authoring stops at ten and the tail generates, which bounds the writing without bounding
@@ -2150,6 +2168,10 @@ const EXAMINE_TILE = {
     EXAMINE[n+" Wine"] = `Three days in the barrel, and the ${n.toLowerCase()} learned patience.`;
     EXAMINE[n+" Jam"]  = `${n}, kept the old way — under a lid, for later.`;
   }
+  // v5.2 the Warden's tonics — three lines in Elias's register: practical, understated, a little sad.
+  EXAMINE["Ember Broth"] = "Ember grit stirred through good stew. Warm the whole way down, and it keeps being warm.";
+  EXAMINE["Gloamsalve"] = "Gloam thread steeped in honey until it goes clear. Orla swore by it. She would.";
+  EXAMINE["Warden's Tea"] = "Ash and apple, which sounds worse than it tastes. Steadies the hands, and that is the entire trick.";
   EXAMINE["Keg"] = "It ages whatever you trust it with.";
   EXAMINE["Preserves Jar"] = "A crock with a patient lid.";
   EXAMINE["Sawmill"] = "Feed it logs at night; it gives back clean lumber by morning.";

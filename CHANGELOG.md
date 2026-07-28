@@ -22,6 +22,86 @@
 
 ---
 
+## 2026-07-29 — v5.2.0 "The Warden's Table" (code 127, tag `v5.2.0`) — Cooking gets its combat consumer, and the wing comes up for supper
+
+### Why this release
+
+It closes an open spec the game wrote against itself. `V4_PLAN.md` §2 promised, of Resolve:
+*"cooked dishes restore it — Cooking's new consumer."* It never shipped. `eatFood` touched only
+`state.energy`; **no code path in the entire game fed `state.resolve` from any item**; Resolve
+refilled free at dawn, at the door, on exit and at every bell. So the bible's §6.4 — *"preparation is
+the real combat skill"* — was structurally absent: there was nothing to prepare.
+
+The two newest systems in the game had never touched. Cooking made food nobody needed underground;
+Warding's drops fed only charms; and the endgame's one daily job (`WARD_ROUNDS`) asked exclusively
+for things the *wing* produced, so a player deep in Act III had no reason to plant anything.
+
+### Added — food restores Resolve, in the Undercroft only
+
+One branch in `eatFood`, because eating is one key (F) everywhere and this should not become a second
+verb to learn. Scaled off the dish's **energy** rather than its level or price — energy is already the
+honest measure of how much work went into it; a Berry Bun is a snack, a Dragonfruit Parfait is an
+afternoon.
+
+`min(45, energy × 0.55)`, with Cooking-50's mastery applied **before** the cap. That ordering is the
+whole of the tuning and it was wrong in the first draft: capping first let the ×1.2 lift the real
+ceiling to 54, which is over half a bar. Caught in test, fixed, and the reason §5.2b's second bullet
+now names it specifically.
+
+### Added — three Warden's tonics (the join, in both directions)
+
+Brewed at the bell bench beside the charms. **Every one spends a cooked dish AND a settling drop**,
+which is the point: the kitchen gets a reason to look down the tenth door, and the wing gets a reason
+to come up for supper. Brewing pays **Cooking** XP, because it *is* cooking.
+
+| Tonic | Costs | Does |
+|---|---|---|
+| **Ember Broth** | Ember Grit ×3 + Fish Stew | +2 Resolve every 4s, one descent |
+| **Gloamsalve** | Gloam Thread ×6 + Honey ×3 | catches the next fall, once |
+| **Warden's Tea** | Warden's Ash ×3 + Apple Crumble | a wider parry window, one descent (stacks with ★ Sure Footing) |
+
+**Gloamsalve is worth reading carefully, because it looks like a safety net and is not one.** A
+knockout already costs nothing — you wake at the door with everything you carried *and found*. So
+this cannot save you from a loss; there are none. What it saves is **the walk**, which on floor 38 is
+the only thing a fall has ever actually cost. A convenience, spent, never something the balance leans on.
+
+Tonics are drunk from the **bag**, not the hotbar: it is a decision you make once at the start of a
+descent, and it should not compete with the swing. They last exactly one descent — cleared by a bell
+ride, a knockout and dawn — because a buff that survives a night is a buff the game starts assuming.
+
+### Added — the Guild eats
+
+Four new `WARD_ROUNDS` entries (fish stew, six large eggs, honey for the salve, three cheese toasties
+"for a boy on the second round who has never once packed a lunch, and I have decided it is my
+problem") and two new `PATRON_MATS` rotations asking for cheese, wheat, crumble and honey.
+
+Small as data; structural as design. Before this, the two systems a finished save lives on — the
+daily round and the endless commission — could both be fed entirely from the deep, so the farm became
+scenery the moment Act III opened. A civic work is built by people who have to be fed; the rotation
+should say so.
+
+### Added — GBP §5.2b, the named invariant
+
+Written the day it became possible to break, and named in the code that would break it:
+
+> **No Undercroft encounter is ever balanced assuming food, a tonic, or a charm.**
+
+The free refills all stay. The rule exists because the moment a combat number is justified with *"they
+can always drink something for it"*, the consumable stops being optional and becomes an entry fee, and
+the player who didn't know is punished for not knowing. That is the exact shape `MONETIZATION.md`
+refuses for boosters — *"the moment a balance change is justified with 'they can always watch a video
+for it', the cozy contract is broken in spirit"* — **the same sentence, pointed inward.** §5.2b ships
+with four practical tests (delete it and re-run the fight; cap below a full reset; bound the duration
+to the attempt not the day; never let a consumable prevent a loss, because there are none to prevent).
+
+### Notes
+
+- Tonic prices sit deliberately **below** the dish that goes into them, so brewing can never launder a
+  Fish Stew into more gold than the stew was worth. They are a sink; this release mints nothing.
+- Three new procedural sprites (a bowl, a stoppered jar, a tin mug) and three examine lines in Elias's
+  register. No asset files, as ever.
+- New persisted field: `state.tonic`. Cleared in three places, all of which end a descent.
+
 ## 2026-07-29 — v5.1.0 "The Trials" (code 126, tag `v5.1.0`) — the ladder grows people on it, and Warding's levels finally buy verbs
 
 ### Why this release

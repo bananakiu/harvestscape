@@ -181,6 +181,36 @@ Randomness may only **modulate magnitude upward**; the player's plan cannot fail
 
 **Treasure must have uses, or it's just another faucet** (the gem lesson, applied with teeth). Canopy nests drop mostly seeds and berries — *the grove feeds the farm, not the wallet* — plus single-slot Charms (tiny passives like +5% Woodcutting XP), each worn **one at a time** as the power-creep governor and dropping **once per save** so a charm is an event, not a stack (v3.3.0 Phase 3). The rarest gem, the Starstone, is *required* to forge Star Metal tools — a use beyond resale — yet tuned so mining the 4 shards a tool already needs yields ~76% odds of one (avoid a chicken-and-egg where the required rare is an unreliable gate) (v3.18.0).
 
+### ★ 5.2b The baseline IS the balanced game — never tune an encounter around a consumable
+
+> *Named and adopted v5.2 "The Warden's Table", the day food began restoring Resolve.*
+
+**No Undercroft encounter is ever balanced assuming food, a tonic, or a charm.** Every floor, every
+creature band and every boss is tuned against a player who walked in with an empty bag, and the free
+Resolve refill at every bell, at the door and at dawn all stay exactly as they were. Consumables are
+a comfort a prepared player brings — never a tax on one who didn't.
+
+Why it needs to be a written rule rather than a habit: the moment a combat number is justified with
+*"they can always drink something for it"*, the consumable stops being optional and becomes an
+entry fee, and the player who didn't know is being punished for not knowing. That is the exact shape
+`MONETIZATION.md` refuses for boosters — *"the moment a balance change is justified with 'they can
+always watch a video for it', the cozy contract is broken in spirit"* — and it is the same sentence
+pointed inward. **One rule, both directions: no encounter tuned assuming food, no economy number
+tuned assuming the merchant** (the v5.8 stall inherits this clause verbatim).
+
+Practical tests, run when any consumable ships:
+1. **Delete it and re-run the fight.** If the encounter is now unfair rather than merely slower, the
+   encounter is wrong — not the consumable.
+2. **Cap the restore below a full reset.** v5.2: dishes restore `min(45, energy × 0.55)` — the best
+   dish in the game is under half a Resolve bar, so a bad floor still ends in a walk back to a bell.
+   (The cap is applied *after* the Cooking-50 multiplier; applying it before let mastery lift the
+   real ceiling to 54, which is the bug that made this bullet specific.)
+3. **Bound the duration to the attempt, not the day.** v5.2 tonics last one descent and are cleared
+   by a bell ride, a knockout and dawn. A buff that survives a night is a buff the game starts
+   assuming it has.
+4. **Never let a consumable prevent a loss** — there are no losses to prevent. Gloamsalve saves the
+   *walk back down*, which is the only thing a knockout has ever cost.
+
 ### 5.3 Never punish, never take — reintroduce tension only as opt-in and loss-free
 
 The cozy contract denominates *all* stakes in **foregone gains, never confiscation** (GDP §1, §11 F8). When a cozy concession removes a tension, restore it as an **opt-in mode that touches nothing** — a new axis, not a second limiter on the old one (§4.4).
@@ -295,6 +325,8 @@ Each entry names the trap and points back to the body rule that governs it.
 - **★ v4.23 *The Even Hand*** — tree HP rebalanced (pine 6→4, maple 11→8, elderwood 16→14) after measuring that Woodcutting cost **1.17× Mining's energy for the same 99** (94.5 in-game days vs 81.1); the fix lands both at ~81. *Lesson: two skills on the same panel are implicitly compared — measure days-to-99 per skill, not XP per action.* → §3.4
 - **★ v4.26 *The Patron*** — the repeatable endgame sink: ten named commissions, **954,000g cumulative** (30,000g + 12,000(n−1) + 400(n−1)², deliberately linear-plus-mild-quadratic, never exponential). *Lesson: gold's problem was never the amount, it was the absence of a referent — a sink needs something the player actually wants, and a generated string is not that. Its desire runs out at tier 10 even though the sink doesn't.* → §2.7
 - **★ v4.31 *The Shelf*** — a carry cap (`BAG_CAPS = [24, 36, 48]` kinds) with a purchasable ladder, plus the cottage chest so nothing the pack turns away is ever lost, plus a one-time `bagBonus` grandfathering every existing save. *Lesson: a limit added late must cost no existing player anything — grant the difference once, permanently.* → §5.3
+- **★ v5.1 *The Trials*** — mastery trials at 50 and 75, six crafts, cross-skill asks on the Pledge Ledger; the Warding technique ladder (dead share 88.5% → 59.1%). *Lesson: a gate is legal only if it BANKS — clamp the level, never the XP, make the clamp monotonic, and grandfather every save already past it.* → §4.1, §5.4
+- **★ v5.2 *The Warden's Table*** — food restores Resolve in the Undercroft; tonics join Cooking to Warding both ways. *Lesson: ship the consumer in the same release as the consumable, and write the "baseline is the balanced game" invariant down the day it becomes possible to break.* → §5.2b, §2.3
 - **★ v5.0 *The Strongbox*** — save export/import, the migration harness (`tools/check-saves.mjs`, nine era fixtures built from their own releases' code), the year-3 perf budget, and the unlock-cadence linter. No balance number moved; the ability to *check* balance numbers did. *Lesson: a rule nothing measures is a rule that quietly stops being true — this file's own §2.5 was proof.* → §2.5, §4.1
 
 ---

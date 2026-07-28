@@ -106,6 +106,7 @@ function wardWander(cr, d, dt){
   else cr.timer = 0;   // walked into a wall — repick next tick
 }
 function updateCreatures(dt){
+  tickTonic(dt);   // v5.2: Ember Broth's slow steadying — this loop only runs where Resolve matters
   if(!curMap || !curMap.creatures) return;   // no-op everywhere but the Undercroft
   if(state.iFrame > 0) state.iFrame = Math.max(0, state.iFrame - dt);
   // v4.4 the Warden's Guard clock: the brace window counts down, then a short cooldown before you can raise it again.
@@ -239,7 +240,7 @@ function updateWardBolts(dt){
       // v5.1 ★ Bolt-Turn (Warding 55): note whether this contact was met by a PERFECT parry before
       // drainResolve consumes the guard, then send the bolt home. A turned bolt is a normal bolt
       // with the firer as its target, so it settles them through the same path everything else uses.
-      const perfect = (state.guardT||0) > GUARD_WINDOW - (GUARD_PARRY + (hasTech("footing") ? 0.10 : 0)) && guardFacing(b.x, b.y);
+      const perfect = (state.guardT||0) > GUARD_WINDOW - (GUARD_PARRY + (hasTech("footing") ? 0.10 : 0) + (tonicActive("steady") ? 0.08 : 0)) && guardFacing(b.x, b.y);
       drainResolve(b.dmg, b.x, b.y, b.src);
       if(perfect) boltTurn(b);
       wardBolts.splice(i,1); continue;
@@ -478,7 +479,7 @@ function drainResolve(amt, srcX, srcY, attacker){
     // v5.1 ★ Sure Footing (Warding 65) — a kinder parry window and a shorter recovery. The only rung
     // that touches a number, and deliberately an INPUT one: it changes how forgiving the timing is,
     // never how hard you hit.
-    const parryWin = GUARD_PARRY + (hasTech("footing") ? 0.10 : 0);
+    const parryWin = GUARD_PARRY + (hasTech("footing") ? 0.10 : 0) + (tonicActive("steady") ? 0.08 : 0);   // v5.2 Warden's Tea stacks with ★ Sure Footing
     const perfect = state.guardT > GUARD_WINDOW - parryWin;   // caught in the opening beat = a parry
     state.guardT = 0; state.guardCd = hasTech("footing") ? GUARD_CD * 0.6 : GUARD_CD; state.iFrame = 0.7;   // one press stops one strike
     // melee sources pass the attacker's own center (nearestCreature returns it at dist 0); a bolt passes
@@ -528,6 +529,18 @@ function drainResolve(amt, srcX, srcY, attacker){
 let _wardKOing = false;   // transient guard (module-level, resets on page load) against a double knockout
 function wardKnockout(){
   if(_wardKOing) return;
+  // v5.2 Gloamsalve — you catch yourself, once. Note what this is NOT: a knockout already costs
+  // nothing (you wake at the door with everything you carried and found), so this cannot save you
+  // from a loss. What it saves is the WALK — the trip back down, which on floor 38 is the only thing
+  // a fall actually costs. A convenience, spent, never a safety net the balance leans on.
+  if(tonicActive("catch")){
+    clearTonic();
+    state.resolve = resolveMax(); state.iFrame = 1.6;
+    playSfx("guardParry"); pSparkle(state.px, state.py-10, "#bfe4ff", 26); cam.shake = 3;
+    banner("⟡ The Gloamsalve holds", "You go down on one knee and come straight back up. It is spent — but you keep the floor.");
+    floatText(state.px, state.py-30, "caught!", "#bfe4ff");
+    refreshHUD(); return;
+  }
   _wardKOing = true;
   bump("knockouts");
   playSfx("knockout");
@@ -543,7 +556,7 @@ function wardKnockout(){
     { type:"fade", on:false },
     { type:"say", who:"", portrait:"port_valley", text:"The lantern-bearers found you before the dark had a chance to. They always do — that is the whole reason for the bells." },
     { type:"say", who:"Elder Rowan", portrait:"port_rowan", text:"Back at the door, and everything you carried is still yours — down to the last coin. Sit a while. The Undercroft keeps; it has kept for eleven years." },
-    { type:"run", fn:()=>{ _wardKOing = false; state.resolve = resolveMax(); saveGame(); } },
+    { type:"run", fn:()=>{ _wardKOing = false; state.resolve = resolveMax(); clearTonic(); saveGame(); } },   // v5.2: the descent ended, so the tonic did too
   ]);
 }
 
@@ -593,6 +606,17 @@ function renderBells(){
                       : `<button class="buy" onclick="setStaveArt('${a.id}')">take it up</button>`) + `</div>`;
     }
   }
+  // v5.2 the Warden's table — brewed at the same bench, and listed first because a tonic is what you
+  // want BEFORE the floor while a charm is what you keep forever.
+  html += `<div class="desc" style="margin:.7em 0 .3em;border-top:1px solid rgba(0,0,0,.18);padding-top:.55em;">` +
+    `<b style="color:var(--gold-hi)">☕ The warden's table.</b> <span style="color:var(--ink-soft)">Something cooked, something settled. Each lasts one descent — and no floor down here is ever balanced assuming you brought one.</span></div>`;
+  for(const r of WARD_TONICS){
+    const have = (state.inv[r.out]||0);
+    const can = Object.keys(r.mats).every(it => (state.inv[it]||0) >= r.mats[it]);
+    html += `<div class="row"><span class="lead" data-icon="item_${r.out}"><canvas></canvas><span>${r.out}${have?` <span class="sub" style="color:var(--gold-hi)">×${have}</span>`:''} ` +
+      `<span class="sub">${r.blurb}<br>${matList(r.mats)}</span></span></span>` +
+      `<button class="buy" ${can?"":"disabled"} onclick="brewTonic('${r.out}')">brew</button></div>`;
+  }
   // the workbench
   html += `<div class="desc" style="margin:.7em 0 .3em;border-top:1px solid rgba(0,0,0,.18);padding-top:.55em;">` +
     `<b style="color:var(--gold-hi)">✦ The Warden's workbench.</b> <span style="color:var(--ink-soft)">Bind what you've settled into a charm — worn one at a time, like the grove's.</span></div>`;
@@ -609,6 +633,74 @@ function renderBells(){
   b.innerHTML = html;
   if(typeof hydrateIcons === "function") hydrateIcons(b);
 }
+// ============================================================
+// v5.2 "The Warden's Table" — the Warden's tonics.
+//
+// The two newest systems in the game never touched: Cooking made food, Warding drank nothing, and
+// the Undercroft's drops fed only charms. These are the join, and they are deliberately reciprocal —
+// each tonic spends a COOKED DISH and a SETTLING DROP, so the kitchen has a reason to look down the
+// tenth door and the wing has a reason to come up for supper.
+//
+// They are buffs, never requirements (V5_PLAN §5.1). Each lasts one descent — cleared on knockout,
+// on riding a bell, and at dawn — because a buff that persists across a night is a buff the game
+// starts assuming, and the invariant above forbids exactly that.
+const WARD_TONICS = [
+  { out:"Ember Broth", mats:{ "Ember Grit":3, "Fish Stew":1 },
+    blurb:"steadies you slowly for one descent (+2 Resolve every few seconds)",
+    effect:"regen" },
+  { out:"Gloamsalve", mats:{ "Gloam Thread":6, "Honey":3 },
+    blurb:"the next fall costs you nothing at all — you catch yourself, once",
+    effect:"catch" },
+  { out:"Warden's Tea", mats:{ "Warden's Ash":3, "Apple Crumble":1 },
+    blurb:"the Guard forgives more for one descent (a wider parry window)",
+    effect:"steady" },
+];
+function tonicActive(effect){ return !!(state.tonic && state.tonic.effect === effect); }
+function brewTonic(out){
+  const r = WARD_TONICS.find(x => x.out === out); if(!r) return;
+  for(const it in r.mats) if((state.inv[it]||0) < r.mats[it]){
+    toast("Not enough " + it + "." + (typeof chestNote === "function" ? chestNote(it) : ""), "#ff8a7a"); playSfx("error"); return; }
+  for(const it in r.mats) take(it, r.mats[it]);
+  give(r.out, 1, true);
+  addXP("Cooking", 90);   // it IS cooking — the kitchen skill gets the credit, which is the whole point
+  playSfx("upgrade"); pSparkle(state.px, state.py-12, "#bfe4ff", 16);
+  toast("Brewed " + r.out + " — " + r.blurb, "#bfe4ff");
+  saveGame(); if(openPanels.has("bellPanel")) renderBells();
+}
+// Drinking one. Deliberately a bag action (the Backpack's detail strip), not a hotbar verb: it is a
+// thing you do at the start of a descent, once, and it should not compete with the swing.
+function drinkTonic(out){
+  const r = WARD_TONICS.find(x => x.out === out); if(!r) return;
+  if((state.inv[out]||0) <= 0) return;
+  if(!inCombatMap()){
+    toast("Nothing down here to steady yourself against — save it for the Undercroft.", "#c98a6a"); playSfx("error"); return; }
+  if(state.tonic && state.tonic.out === out){ toast("Already working.", "#c98a6a"); return; }
+  take(out, 1);
+  state.tonic = { out, effect:r.effect, t:0 };
+  playSfx("bellRing"); pSparkle(state.px, state.py-10, "#bfe4ff", 18);
+  toast(out + " — " + r.blurb, "#bfe4ff");
+  refreshHUD(); if(typeof renderInv === "function" && openPanels.has("invPanel")) renderInv();
+}
+// One descent, and no longer. Called from the bell ride, the knockout and dawn.
+function clearTonic(why){
+  if(!state.tonic) return;
+  const out = state.tonic.out; state.tonic = null;
+  if(why) toast("The " + out + " has worn off.", "#9fb0d0");
+  refreshHUD();
+}
+// Ember Broth's slow steadying, ticked from updateCreatures (which already runs only in combat).
+function tickTonic(dt){
+  if(!state.tonic || !inCombatMap()) return;
+  if(state.tonic.effect !== "regen") return;
+  state.tonic.t = (state.tonic.t || 0) + dt;
+  if(state.tonic.t < 4) return;
+  state.tonic.t = 0;
+  const max = resolveMax();
+  if((state.resolve||0) >= max) return;
+  state.resolve = Math.min(max, (state.resolve||0) + 2);
+  pSparkle(state.px, state.py-8, "#ffb06a", 4);
+  refreshHUD();
+}
 function craftWardCharm(out){
   const r = WARD_RECIPES.find(x => x.out === out); if(!r) return;
   for(const it in r.mats) if((state.inv[it]||0) < r.mats[it]){ toast("Not enough " + it + "." + chestNote(it), "#ff8a7a"); playSfx("error"); return; }
@@ -619,6 +711,7 @@ function craftWardCharm(out){
   refreshHUD(); renderBells();
 }
 function rideBell(target){
+  clearTonic();   // v5.2: a tonic lasts one descent, and a bell ride ends the descent
   closeAllPanels(); playSfx("bellRing");
   if(target === 0){ exitUndercroft(); toast("The bell rings, and the way up opens into the Guild.", "#bfe4ff"); return; }
   state.wardDepth = target;
@@ -683,6 +776,14 @@ const WARD_ROUNDS = [
   { item:"Snarlthread",  qty:5, xp:250, want:"The twentieth floor's tangles are re-knitting. Five coils of snarlthread, cut clean — the wing will breathe easier.",    line:"The tangle's combed out. Five coils, and a floor that stays a floor. The book thanks you in its quiet way." },
   { item:"Deepgnarl",    qty:4, xp:320, want:"Deep, past where I ever kept — four knuckles of deepgnarl need lifting before the dark down there sets like stone.",       line:"Lifted, and the deep round holds. I never walked that far, you know. Every day you make me a little less of a coward." },
   { item:"Gloamstar",    qty:3, xp:400, want:"The bottom of the wing has grown three star-gnarls in the root-dark. Settle them, bring the gloamstars up into the light.",  line:"Star-light out of the root-dark, and the whole wing lit corner to corner. Orla would have loved your hands. So do I." },
+  // v5.2: the Guild eats too. Every round before this asked for something the WING produced, so the
+  // endgame's daily rotation never once looked at the farm, the kitchen or the water — and a player
+  // deep in Act III had no reason to plant anything. These four are the same round with a supper in
+  // it, and they are why v5.2's join runs both ways rather than only feeding Warding.
+  { item:"Fish Stew",    qty:2, xp:180, want:"The lantern-bearers walk cold and eat worse. Two bowls of proper fish stew for the ones going down tonight — I'll not send them hungry again.", line:"They ate sitting on the stair with their hands round the bowls, and nobody said a word for a while. That is what a good round looks like." },
+  { item:"Large Egg",    qty:6, xp:150, want:"Six good eggs for the bench, if your hens can spare them. Orla kept a pan down here. I never had the heart to move it.",                          line:"The old pan's seasoned again. It smells like a wing that somebody lives in. Thank you for that." },
+  { item:"Honey",        qty:8, xp:190, want:"Eight jars of honey. Not for eating — the salve wants it, and the bees make a better one than anything the Guild ever mixed.",                     line:"Eight jars, and the salve's the sweetest it has ever been. The bees do the hard part; we only carry it down." },
+  { item:"Cheese Toastie", qty:3, xp:230, want:"Three toasties. Yes, really. There is a boy on the second round who has never once packed a lunch, and I have decided it is my problem.",        line:"He ate all three and looked embarrassed about it. Good. Somebody ought to be feeding him, and now somebody is." },
 ];
 // Chosen once per day and remembered (so it can't reshuffle when you descend mid-morning), gated on the
 // finale being lit — the Round is Elias handing the craft on, which can't happen until ch8 is closed.

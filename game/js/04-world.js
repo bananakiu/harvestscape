@@ -48,6 +48,7 @@ function freshState(){
     pledges:{},                            // the Pledge Ledger: id → { gPaid, mats:{item:n} } (see 01-data.js)
     waystones:[],                          // awakened waystone ids ("way3"…) — permanent, like liftStops
     charm:null,                            // the one canopy charm worn (its item must also be in inv)
+    tonic:null,                            // v5.2 the Warden's tonic in effect this descent: {out,effect,t} — cleared on a bell ride, a knockout, and every dawn
     stats:{ legends:0, tilled:0, planted:0, watered:0, harvested:0, chopped:0, mined:0, fished:0, cooked:0, earned:0, toolUpgrades:0, sold:0, gems:0, forage:0,
             bestCropSold:0, festivals:0, requests:0, warded:0, knockouts:0 },   // bestCropSold resets each season; warded/knockouts are v4.0
     questIdx:0, questDone:[], questReady:false,
