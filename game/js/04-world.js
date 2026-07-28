@@ -276,8 +276,14 @@ function genFarm(m){
   // gold: that's a deep-mine reward.
   for(let i=0;i<26;i++){ const x=randiR(rng,26,43), y=randiR(rng,1,4);
     const r=rng(), kind=r<0.68?"stone":r<0.9?"copper":"iron"; place(x,y,kind,{hp:ORES[kind].hp}); }
-  place(17,12,"oak",{hp:3}); place(19,13,"oak",{hp:3}); place(21,17,"pine",{hp:6});
-  place(23,17,"copper",{hp:4}); place(25,18,"stone",{hp:2});
+  // v5.0: these five hand-placed starters carried LITERAL hp values, and v4.23's tree rebalance
+  // (pine 6→4) missed the pine — so every farm's starter pine stood at 6 hp until the next load,
+  // where migrateSave's clamp quietly knocked it to 4. Harmless in itself (a clamp can only ever
+  // make a tree easier), but it means the generator and the table disagreed, which is how the
+  // NEXT rebalance ships a wrong number too. Found by tools/check-saves.mjs's idempotence check —
+  // its first catch. Read from the tables, and the class of bug is gone.
+  place(17,12,"oak",{hp:TREES.oak.hp}); place(19,13,"oak",{hp:TREES.oak.hp}); place(21,17,"pine",{hp:TREES.pine.hp});
+  place(23,17,"copper",{hp:ORES.copper.hp}); place(25,18,"stone",{hp:ORES.stone.hp});
 
   // meadow (south) — flowery, where folk stroll
   for(let y=24;y<=32;y++) for(let x=24;x<=42;x++){ if(get(x,y)===T.GRASS && rng()<0.35) set(x,y,T.FLOWERGRASS); }
@@ -308,4 +314,131 @@ function loadGame(){
   return null;
 }
 function hasSave(){ try{ return !!localStorage.getItem(SAVE_KEY); }catch(e){ return false; } }
-function wipeSave(){ _wipe = true; try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+// v5.0: a wipe stashes what it deletes into the Strongbox's one-slot backup first. "Delete Save &
+// Restart" is the only button in the game that can cost a player everything, and it was a confirm()
+// away from being irreversible — now the Save panel can put it back.
+function wipeSave(){
+  _wipe = true;
+  try{ const cur = localStorage.getItem(SAVE_KEY); if(cur) localStorage.setItem(BACKUP_KEY, cur); }catch(e){}
+  try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+}
+
+// ============================================================
+// v5.0 "The Strongbox" — save export / import.
+//
+// The whole game lives in ONE localStorage slot on ONE browser profile. Clearing site data,
+// a browser's own storage eviction under pressure, a private window, a reinstall, a new
+// laptop — any of those is TOTAL, PERMANENT loss of a save the player may have spent a
+// hundred hours on. That is the largest possible violation of the cozy contract ("nothing is
+// ever taken from the player"), and until now it sat one browser setting away with no
+// defence at all. This is the defence: the save becomes a file the player owns.
+//
+// Design rules this obeys:
+//  · It must work with `state === null` — the title screen is exactly where a player goes
+//    looking for a backup AFTER a scare, so everything here reads the RAW localStorage
+//    string rather than the live object.
+//  · A restore may never destroy what it replaces. The save being overwritten is stashed in
+//    BACKUP_KEY first, and the panel offers to put it back. One undo is enough; two would
+//    just be a second thing to explain.
+//  · A truncated or foreign paste must be REFUSED, not half-applied. The wrapper carries a
+//    cheap checksum so "I copied all but the last line" is caught before it costs anything.
+// ============================================================
+const SAVE_FMT = 1;                                  // export envelope version (bumped only if the envelope changes, never for game content)
+const BACKUP_KEY = "harvestscape_save_backup";       // the one-slot undo for a restore
+
+// FNV-1a over the payload text. Not security — a 32-bit smoke alarm for a truncated paste,
+// which is the realistic failure of "select all, copy, email it to yourself".
+function saveChecksum(txt){
+  let h = 0x811c9dc5;
+  for(let i=0;i<txt.length;i++){ h ^= txt.charCodeAt(i); h = (h + ((h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24))) >>> 0; }
+  return h.toString(16);
+}
+// A one-line human summary of a save, so both the export panel and the import confirmation
+// can say WHICH farm this is. Reads defensively — this runs on foreign, possibly ancient text.
+function saveSummary(s){
+  if(!s || typeof s !== "object") return null;
+  const day = +s.day || 1;
+  const season = SEASONS[Math.floor((day-1)/SEASON_DAYS) % 4] || "Spring";
+  const year = Math.floor((day-1)/YEAR_DAYS) + 1;
+  let lvls = 0; if(s.skills) for(const k in s.skills) lvls += levelFor(s.skills[k]||0);
+  return { day, season, dayOfSeason: ((day-1) % SEASON_DAYS) + 1, year, gold: +s.gold || 0, total: lvls };
+}
+// The text a player copies / downloads. Wraps the save in an envelope that names the game and
+// the build, so a file found in a downloads folder in two years is self-describing.
+function exportSaveText(){
+  let raw = null;
+  try{ raw = localStorage.getItem(SAVE_KEY); }catch(e){}
+  if(!raw) return null;
+  const save = JSON.parse(raw);
+  const env = {
+    game: "harvestscape", fmt: SAVE_FMT,
+    version: VERSION.name, code: VERSION.code,
+    exported: new Date().toISOString(),
+    // Checksum the RE-stringified payload, not `raw`: that is exactly what the importer will
+    // re-stringify to check, so the two can never disagree over a formatting nicety.
+    sum: saveChecksum(JSON.stringify(save)),
+    save,
+  };
+  return JSON.stringify(env);
+}
+// A filename that tells the player which farm this is without opening it.
+function exportSaveName(){
+  let sum = null;
+  try{ sum = saveSummary(JSON.parse(localStorage.getItem(SAVE_KEY))); }catch(e){}
+  return sum ? `harvestscape-y${sum.year}-${sum.season.toLowerCase()}-d${sum.dayOfSeason}.json`
+             : "harvestscape-save.json";
+}
+// Parse + validate pasted text WITHOUT touching storage. Returns { ok, save, summary, from, note }
+// or { ok:false, err }. Accepts the envelope OR a bare state object (a player who pastes only the
+// inner save, or an older hand-extracted copy, should not be turned away).
+function parseSaveText(txt){
+  if(!txt || !txt.trim()) return { ok:false, err:"Nothing pasted." };
+  let o; try{ o = JSON.parse(txt.trim()); }
+  catch(e){ return { ok:false, err:"That isn't a save file — the text didn't parse. Paste the whole thing, including the first { and the last }." }; }
+  let save = o, from = null, note = "";
+  if(o && o.game === "harvestscape" && o.save){
+    save = o.save; from = { version:o.version, code:o.code, exported:o.exported };
+    if(o.sum){
+      // Checksum the payload exactly as it was checksummed on export: the raw save text. Re-
+      // stringifying can reorder nothing (JSON.parse preserves key order), so this is stable.
+      if(saveChecksum(JSON.stringify(save)) !== o.sum)
+        return { ok:false, err:"That save file looks incomplete — the checksum doesn't match. Copy the whole file again; nothing here has been changed." };
+    } else note = "No checksum in this file (an older export) — restoring anyway.";
+  }
+  if(!save || typeof save !== "object" || !save.farm || !save.farm.tiles || !Array.isArray(save.farm.tiles) || !save.farm.tiles.length)
+    return { ok:false, err:"That's valid JSON, but it isn't a Harvestscape farm." };
+  if(typeof save.day !== "number" || typeof save.gold !== "number")
+    return { ok:false, err:"That save is missing its day or its gold — it can't be read." };
+  return { ok:true, save, from, note, summary: saveSummary(save) };
+}
+// Commit a validated save. Stashes whatever it replaces in BACKUP_KEY first — a restore is
+// always undoable, even a restore the player regrets a minute later.
+function importSaveText(txt){
+  const r = parseSaveText(txt);
+  if(!r.ok) return r;
+  try{
+    const cur = localStorage.getItem(SAVE_KEY);
+    if(cur) localStorage.setItem(BACKUP_KEY, cur);
+    localStorage.setItem(SAVE_KEY, JSON.stringify(r.save));
+  }catch(e){ return { ok:false, err:"The browser refused to write the save (storage may be full or blocked)." }; }
+  return r;
+}
+// Freeze all further writes for the rest of this page's life. MANDATORY before reloading after a
+// restore: `beforeunload` and `visibilitychange` both call saveGame (10-ui.js), so the still-live
+// in-memory `state` — the OLD farm — would be written straight back over the save we just restored.
+// That race would make the whole feature silently do nothing, which is worse than not shipping it.
+function suspendSaves(){ _wipe = true; }
+function hasSaveBackup(){ try{ return !!localStorage.getItem(BACKUP_KEY); }catch(e){ return false; } }
+function backupSummary(){ try{ return saveSummary(JSON.parse(localStorage.getItem(BACKUP_KEY))); }catch(e){ return null; } }
+// Put back the save a restore (or a wipe) displaced. Swaps rather than overwrites, so the undo
+// is itself undoable and no branch of this feature can ever end in a lost farm.
+function restoreSaveBackup(){
+  try{
+    const b = localStorage.getItem(BACKUP_KEY); if(!b) return false;
+    const cur = localStorage.getItem(SAVE_KEY);
+    localStorage.setItem(SAVE_KEY, b);
+    if(cur) localStorage.setItem(BACKUP_KEY, cur); else localStorage.removeItem(BACKUP_KEY);
+    _wipe = false;   // a wipe-then-undo in the same session must not have its restore erased on unload
+    return true;
+  }catch(e){ return false; }
+}

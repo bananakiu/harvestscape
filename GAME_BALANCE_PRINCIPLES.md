@@ -60,13 +60,36 @@ When a drop becomes the fastest money-printer, cut **rate and unit value togethe
 
 > *Anchors:* Gems: spawn 0.018→0.010→0.002 (v2.9.2, v3.16.0), payout reweighted from uniform toward cheap gems, average value ~312g→~150g. Wood: the whole timber ladder sits under the money crops on purpose — Wood 4, Willow 11, Elder Wood 32, Heartwood 70, Silverwood 113 (all cut to ~⅓ in v3.20) — *"wood value must never outrun the money crops"* (`01-data.js`, the gem lesson). Willow's 11g is the point: the fast-XP camp trains the skill *without* printing money (v3.3.0 Phase 2). *v3.20 "Timber" went further — sell ÷3 and every construction/craft/upgrade wood requirement ×5 — because the renewable grove made chop-and-sell too easy a purse; wood became a construction material, not an income loop, ahead of the lumber/building system it feeds.*
 
-### 2.5 Anti-glut / demand — tax sameness, not any one item
+### 2.5 Anti-glut / demand — ★ RETIRED as a mechanic (v4.9), and what that costs us
 
-Break single-item money printers with a **per-item saturation sink**: price falls as you dump one good the same day (decay 0.95 per unit past a *value-scaled* free allowance — `clamp(round(280/base)+3, 3..14)`, so dearer goods glut sooner), a price floor of 0.35, and only *partial* overnight recovery (the sold count halves, never clears) so a night's sleep can't fully reset a glut.
+> ★ **Re-anchored v5.0.** This section described Tom's Demand as live for four minor versions after
+> it was switched off. **`demandMult()` (01-data.js) has been a hardcoded `return 1` since v4.9**, an
+> explicit owner call: every unit sells at full base price, always, however many you bring. The
+> player-facing half of the drift was repaired in v4.32 (the How-to still coached spreading your
+> sales); this — the agent-facing half — was not. A balancing doc that describes a brake the build
+> no longer has is worse than silent: it invites the next release to price a new good as though
+> something were holding the line.
+
+**The principle still stands and is still the right one:** break single-item money printers by taxing
+*sameness*, not any particular good. The historical shape (kept for the record, and as the design if
+this is ever re-enabled): price decays 0.95 per unit past a *value-scaled* free allowance —
+`clamp(round(280/base)+3, 3..14)`, so dearer goods glut sooner — with a 0.35 floor and only partial
+overnight recovery (the sold count halves, never clears), so drip-selling a hoard can't dodge it.
 
 > *Anchor — Tom's Demand (v2.0):* a grounding pass measured a starfruit monoculture as a passive printer — **dump-selling 50 starfruit ran ~3,125g/day, sleep-skipping optimal, the day had no reason to be lived.** The first cut was too weak (a drip-seller kept ~96% of price, and the comment was inverted); the retune — value-scaled allowance + overnight *halving* + floor 0.35 + blended sell-all pricing — dropped the **bulk-dumper to ~1,100g/day (65.9% of full price)** and the **drip-seller to ~79%.** **Verify a sink actually bites: model *both* sellers — the bulk-dumper and the patient drip-seller — not just one.**
+>
+> *Anchor — the retirement (v4.9):* the owner's call was that the slide read as a *punishment* for a
+> good harvest — the one thing the cozy contract will not have — and that the friction it added to
+> the sell screen cost more than the glut it prevented. **That call is not being re-litigated here.**
+> What matters is the consequence, stated plainly below.
 
-Every new sellable auto-inherits this curve — including each processed product, whose *own* demand pool means 40 identical jams glut exactly like 40 starfruit (v3.7.0 *The Cellar*).
+**★ The rule that replaces it, and that every new sellable must obey:**
+**there is no systemic brake left.** Nothing auto-inherits a demand curve any more; a new good's
+price is exactly what its table says, forever, at any volume. So **every new sellable gets its own
+faucet arithmetic at spec time — g/hour for both the bulk-dumper and the drip-seller — written into
+that release's build plan *before* the code.** The failure mode is on record: v4.26's Patron needed a
+hand-nerf precisely because a good shipped without that pass. Gems, tonics, writ rewards, merchant
+stock, Loom cloth: each one, every time.
 
 ### 2.6 The money-crop concept, and capping side-activities below it
 
@@ -206,7 +229,7 @@ Apply these directly to a proposed number:
 1. **What is the dominant faucet, and what is the universal key?** Measure gold/hour per activity first; if one activity feeds one currency that unlocks everything, split the key (§2.1).
 2. **Does this reward feed something downstream?** Every reward must be an *input*. Ship the sink in the same release as the resource (§8, the dead-currency faucet).
 3. **Is there a renewable venue sized to the new sink's demand?** (§2.2)
-4. **Does any new sellable have its own demand cap?** (§2.5)
+4. **★ Have you done this sellable's faucet arithmetic — g/hour for both the bulk-dumper and the drip-seller — and written it into the build plan before the code?** There is no demand cap any more: `demandMult` returns 1 (retired v4.9), so a new good's listed price is its price at any volume, forever. This pass is the only brake left (§2.5, §9).
 5. **Does this out-earn the farm, or out-value its rarity neighbours?** Cap it; preserve the ladder (§2.6, §6).
 6. **Where does this sit on the XP curve — does it fill a desert or pile onto a crowded band?** (§4.1)
 7. **Is the gate the *skill*, not just materials or coin?** (§4.2)
@@ -228,7 +251,8 @@ Each entry names the trap and points back to the body rule that governs it.
 - **The universal key** — one currency that buys all progression, flattening every other skill into decoration (gold pre-v2.9.2). → §2.1
 - **The dead currency / pure faucet** — a resource nothing downstream consumes (Cobalt/Star Metal Shard/Silverwood/Heartwood before v3.12). → §4.3
 - **The trivializing purchase** — power bought with hoarded materials and no earned skill (the gold axe; closed by `TIER_LEVEL`, v3.17). → §4.2
-- **The glut / monocrop printer** — one item dump-sold for passive infinite money (starfruit pre-v2.0; the weak first Demand cut). → §2.5
+- **The glut / monocrop printer** — one item dump-sold for passive infinite money (starfruit pre-v2.0; the weak first Demand cut). → §2.5 ★ **and note the guard is gone: Demand was retired in v4.9, so this failure mode is currently prevented only by per-item pricing discipline.**
+- **★ The doc that outlived its mechanic** — a balancing rule described as live for four versions after the code stopped doing it (Tom's Demand, v4.9 → v5.0; the player-facing half was caught in v4.32, the agent-facing half in v5.0). An agent reading a stale brake prices the next good as though something were holding the line. *Lesson: when a mechanic is switched off, the same change edits this file.* → §2.5, §9
 - **The stacked limiter** — a second, unrelated constraint punishing the venue's honest one (surprise bedtime on the energy-limited mine; fixed v2.9). → §4.4
 - **The sink drought** — surplus coin with nowhere to go once finite projects are funded (closed by Décor, v3.13). → §2.7
 - **The dead zone** — 60–75 levels of a 1–99 skill that unlock nothing new (all four skills pre-v3.10). → §4.1
@@ -266,6 +290,12 @@ Each entry names the trap and points back to the body rule that governs it.
 - **v3.16.0 *The Long Dark*** — halved floors, ~10-floor ore bands, gems ×5 rarer. *Lesson: make the descent a real climb; keep the money-gem an event.* → §4.6, §5.1
 - **v3.17.0 *The Miner's Ladder*** — every-10-level ore ladder; skill-level gates on tools. *Lesson: gates must be memorable and earned, not just affordable.* → §3.3, §4.2
 - **v3.18.0 *A Handful of Stars*** — RuneScape gem ladder + the required-but-reliable Starstone. *Lesson: model rarity on a shape players recognize; tie the rarest drop to the finest gear without a chicken-and-egg.* → §5.1, §5.2
+- **★ v3.37/v3.38 *The Long Ladder* / one ladder for two skills** — two tool tiers INSERTED between Gold and Star Metal (seven tiers now), and the ore ladder re-pegged to the tree ladder rung for rung: **`TIER_LEVEL = [1, 10, 20, 30, 45, 70, 85]`**. *Lesson: when you insert a tier, you change what every stored index MEANS — the remap is part of the release, not a follow-up (`migrateSave`'s `ladder6` flag exists because of this).* → §4.2
+- **★ v4.9 — Tom's Demand retired** (owner call): `demandMult()` becomes a hardcoded `return 1`. *Lesson: switching a mechanic off is a documentation change too. This one was missed for four versions and half-caught in v4.32; §2.5/§9 were only re-anchored in v5.0.* → §2.5, §9
+- **★ v4.23 *The Even Hand*** — tree HP rebalanced (pine 6→4, maple 11→8, elderwood 16→14) after measuring that Woodcutting cost **1.17× Mining's energy for the same 99** (94.5 in-game days vs 81.1); the fix lands both at ~81. *Lesson: two skills on the same panel are implicitly compared — measure days-to-99 per skill, not XP per action.* → §3.4
+- **★ v4.26 *The Patron*** — the repeatable endgame sink: ten named commissions, **954,000g cumulative** (30,000g + 12,000(n−1) + 400(n−1)², deliberately linear-plus-mild-quadratic, never exponential). *Lesson: gold's problem was never the amount, it was the absence of a referent — a sink needs something the player actually wants, and a generated string is not that. Its desire runs out at tier 10 even though the sink doesn't.* → §2.7
+- **★ v4.31 *The Shelf*** — a carry cap (`BAG_CAPS = [24, 36, 48]` kinds) with a purchasable ladder, plus the cottage chest so nothing the pack turns away is ever lost, plus a one-time `bagBonus` grandfathering every existing save. *Lesson: a limit added late must cost no existing player anything — grant the difference once, permanently.* → §5.3
+- **★ v5.0 *The Strongbox*** — save export/import, the migration harness (`tools/check-saves.mjs`, nine era fixtures built from their own releases' code), the year-3 perf budget, and the unlock-cadence linter. No balance number moved; the ability to *check* balance numbers did. *Lesson: a rule nothing measures is a rule that quietly stops being true — this file's own §2.5 was proof.* → §2.5, §4.1
 
 ---
 
@@ -274,6 +304,25 @@ Each entry names the trap and points back to the body rule that governs it.
 *The numbers of record every "trend" and "ladder" reference in this doc checks against — the g-per-level curve, the GEM_SELL / ORES / wood ladders, and Tom's Demand constants. Audit a proposed price against its neighbours here.*
 
 *HarvestScape balance snapshot — v3.18.0 "A Handful of Stars" (version code 55). All values pulled directly from `game/js/01-data.js`, `00-core.js`, `08-actions.js`, `13-content.js`.*
+
+> ★ **Staleness notice (re-anchored v5.0, version code 125).** **This appendix is a v3.18.0 snapshot —
+> 70 version codes old. Treat it as a shape reference, not as current numbers, and read the live
+> tables before pricing anything.** Verified against the build as of v5.0, the following have moved
+> and the entries below do NOT reflect them:
+>
+> | What | Then (in this appendix) | Now (verified in `game/js`) |
+> |---|---|---|
+> | Tool / ore / tree ladder | 5 tiers | **7 tiers, `TIER_LEVEL = [1, 10, 20, 30, 45, 70, 85]`** (v3.37/v3.38) |
+> | Tom's Demand | live, `decay 0.95 / floor 0.35` | **retired — `demandMult` returns 1** (v4.9); see §2.5, §9 |
+> | Tree HP | pine 6 · maple 11 · elderwood 16 | **pine 4 · maple 8 · elderwood 14** (v4.23) |
+> | Skills | five | **six — Warding** (v4.0) |
+> | Repeatable gold sink | none past the décor statue | **the Patron: 10 commissions, 954,000g cumulative, unbounded after** (v4.26) |
+> | Carry | unlimited kinds | **`BAG_CAPS = [24, 36, 48]` kinds + the cottage chest** (v4.31) |
+>
+> The three tools that keep the *checkable* parts honest from here on: `node tools/check-saves.mjs`
+> (migration invariants), `node tools/check-perf.mjs` (the year-3 budget), and the unlock-cadence
+> table in `GAME_ATLAS.html`, regenerated every release from the live tables. **Rebuilding this
+> appendix against the current build is open work — do it as a release, not as a footnote.**
 
 ### 1. XP / level curve (1–99)
 
@@ -436,15 +485,23 @@ Gems were made ×5 rarer in v3.16 (0.010 → 0.002 coefficient). Ore-table by de
 - **Day runs 6:00 → 26:00 (2 AM).** Clock advances at **60 game-minutes per 16 real seconds** (a full day ≈ 320 s / ~5.3 min of active real time; frozen in the timeless mine).
 - **Sleep** (bed / auto at 26:00): energy → 100, time → 6:00, day++. Overnight also recovers Tom's demand halfway, respawns nodes, rolls weather.
 
-### 9. Market anti-glut — Tom's Demand
+### 9. Market anti-glut — ★ none, since v4.9
+
+**The live rule is one line: `demandMult(item, k) === 1` for every item and every k.** Every unit
+sells at full base price, at any volume, forever. `state.market`, the overnight halving and the
+`DEMAND` constants are still in the source but dormant — call sites see a multiplier of 1.
+
+*Price a new sellable accordingly:* its listed price IS its price at scale. See §2.5 for the
+obligation this creates.
+
+The retired curve, kept for the record (and as the spec if it is ever re-enabled):
 
 ```
-DEMAND = { decay: 0.95, floor: 0.35, overnight: 0.5 }
-free(item) = clamp( round(280 / sellPrice) + 3 , 3 , 14 )     // full-price units/day, value-scaled
+DEMAND = { decay: 0.95, floor: 0.35, overnight: 0.5 }          // v2.0 – v4.9, now dormant
+free(item) = clamp( round(280 / sellPrice) + 3 , 3 , 14 )      // full-price units/day, value-scaled
 mult(k)    = 1                         if k < free
-           = max(0.35, 0.95^(k-free+1)) otherwise             // k = units already sold today
+           = max(0.35, 0.95^(k-free+1)) otherwise              // k = units already sold today
 ```
-Per-item, per-day. Cheap goods get up to 14 free units, luxuries as few as 3. A night restores the glut only **halfway** (`overnight 0.5`), so drip-selling a hoard can't dodge it. Price never drops below 35% of base; nothing is confiscated.
 
 ### 10. Big-ticket gold sinks
 
@@ -462,6 +519,20 @@ Per-item, per-day. Cheap goods get up to 14 free units, luxuries as few as 3. A 
 
 **Other durable sinks:** Keg 900g (+40 Pine Wood, 2 Iron Ore, ×2.2 wine mult); Preserves Jar 550g (+30 Wood, ×1.6 jam); Beehive 700g (max 4); Sheep 500g (max 4) + Shears 250g one-time; fruit-tree saplings 850–1,300g; deep-lift/waystone pledges (§6–7). Wine sells at `2.2×` raw crop, jam at `1.6×` — both deliberately below the kitchen's best dishes.
 
+**★ Added since this table was written (re-anchored v5.0 — read the live tables before pricing):**
+
+- **The Patron (v4.26)** — the *repeatable* endgame sink this section previously lacked. Ten named
+  commissions (`PATRON_FIXTURES`) costing ~954,000g cumulative, then unbounded generated tiers. It
+  exists because gold's problem was never the amount but the **absence of a referent**: a number
+  with nothing to want is not wealth. ★ Its known limit, and V5/V6's problem to solve: the *sink*
+  runs forever, the *desire* stops at tier 10 (exhausted around day 80–110).
+- **Pack tiers (v4.31)** — the carry cap and its upgrade ladder (`BAG_CAPS`); a mid-game sink that
+  buys comfort, and the reason `bagBonus` grandfathering exists in `migrateSave`.
+- **Building projects (v3.21+)** — Coop 500g, Barn 1,800g, Stable, each with a real materials bill;
+  these are cross-skill sinks, not just gold ones (§2.3).
+- Every one of these was priced against §2.5's arithmetic. **With no demand curve left, that pass is
+  the only brake there is** — do not ship a new sellable or a new sink without it.
+
 ---
 
 ## 11. Sources & cross-links
@@ -472,4 +543,13 @@ Per-item, per-day. Cheap goods get up to 14 free units, luxuries as few as 3. A 
 - **`DESIGN_SCORECARD.md`** — the latest graded audit against the principles.
 - **`DEVLOG.md`** — the owner's near-verbatim playtest verdicts (the raw signal behind most anchors here).
 - **`CHANGELOG.md`** — the full audit trail; every version codename cited above resolves there.
-- Data of record: `game/js/01-data.js` (`TIER_COST`, `TIER_LEVEL`, `TIER_POWER`, `TOOL_SKILL`, `GEM_SELL`, `GEM_WEIGHTS`, `ORES`, `DEMAND`, `STAIR_STONE`), `game/js/00-core.js` (the XP curve `inc()` and `XP_TABLE_V27`), `game/js/08-actions.js` (award/sell logic), `game/js/13-content.js` (mine floor/ore/gem tables, Deep Run).
+- **`V5_PLAN.md` / `V6_PLAN.md`** — the two-version roadmap; §2.5's "faucet arithmetic at spec time" is V5's constraint #3, and every content release in both plans owes it.
+- ★ **Tooling of record (v5.0)** — the parts of this doc a machine can now check:
+  - `node tools/check-saves.mjs` — migration invariants across nine era fixtures. Enforces §5.4
+    ("a recalibration must never demote a save") as an assertion instead of an intention.
+  - `node tools/check-perf.mjs` — the year-3 budget (`tools/fixtures/perf-budget.json`); in-game,
+    `await perfProbe(5)` measures a real frame.
+  - `node tools/make-save-fixtures.mjs` — rebuilds the fixtures from each release's own code.
+  - `auditUnlockCadence()` (`01-data.js`) — §4.1's dead-zone rule, measured. `?lint` prints it;
+    the atlas renders it every release.
+- Data of record: `game/js/01-data.js` (`TIER_COST`, `TIER_LEVEL`, `TIER_POWER`, `TOOL_SKILL`, `GEM_SELL`, `GEM_WEIGHTS`, `ORES`, `DEMAND` *(dormant)*, `patronCost`, `STAIR_STONE`), `game/js/00-core.js` (the XP curve `inc()` and `XP_TABLE_V27`), `game/js/08-actions.js` (award/sell logic, `BAG_CAPS`), `game/js/13-content.js` (mine floor/ore/gem tables, Deep Run, `PATRON_FIXTURES`).

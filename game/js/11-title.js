@@ -113,6 +113,11 @@ function initTitle(){
     if(hasSave() && !confirm("Start a new game? This will overwrite your current save.")) return;
     startNewGame(); };
   $("btnHowto").onclick = () => { firstGesture(); showHowto(); };
+  // v5.0 "The Strongbox": the backup panel is reachable BEFORE the game starts. This is the placement
+  // that matters — a player whose save didn't load can't get to Settings, and the title screen is
+  // where they'll be standing when they need it most.
+  const sv = $("btnSaveFile");
+  if(sv) sv.onclick = () => { firstGesture(); openPanel("savePanel", renderSaveManager); };
   const ver = $("verTag");
   if(ver){ ver.textContent = "v" + VERSION.name;
     ver.onclick = (e) => { e.stopPropagation(); firstGesture(); openPanel("newsPanel", renderNews); }; }

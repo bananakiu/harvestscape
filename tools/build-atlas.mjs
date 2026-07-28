@@ -86,6 +86,13 @@ globalThis.__DATA__ = JSON.stringify({
   MAPS: __opt("MAPS") && Object.fromEntries(Object.entries(MAPS).map(([k,v]) =>
     [k, { w:v.w, h:v.h, outdoor:!!v.outdoor, name:v.name, subtitle:v.subtitle||"" }])),
   WINGS: __opt("WINGS") && WINGS.map(w => ({ id:w.id, name:w.name })),
+  // v5.0: the unlock-cadence audit (01-data.js). Slimmed — the per-skill \`ladder\` array is the
+  // raw material, and the atlas already renders every unlock in its own table; what belongs here
+  // is the DIAGNOSIS: where the ladder goes quiet, and what that silence costs in XP.
+  LADDER_AUDIT: __opt("LADDER_AUDIT") && LADDER_AUDIT.map(r => ({
+    skill:r.skill, unlocks:r.unlocks, milestones:r.milestones, first:r.first, last:r.last,
+    dead:r.dead, gaps:r.gaps, worst:r.worst })),
+  LADDER_GAP_WARN: __opt("LADDER_GAP_WARN"),
   LETTERS: {
     intro: __opt("LETTER"), chest: __opt("LETTER_CHEST"), rowan: __opt("LETTER_ROWAN"),
     unsent: __opt("LETTER_ROWAN_UNSENT"), memorial: __opt("LETTER_MEMORIAL"), festival: __opt("LETTER_FESTIVAL"),
@@ -352,12 +359,47 @@ ${ladder("🎣 Fishing", D.MASTERY_NPC?.Fishing, fishRows, D.MASTERY?.Fishing)}
 ${ladder("🍳 Cooking", D.MASTERY_NPC?.Cooking, cookRows, D.MASTERY?.Cooking)}
 ${ladder("🔔 Warding", D.MASTERY_NPC?.Warding, wardRows, D.MASTERY?.Warding)}
 
+${cadenceBlock()}
 <h3>Tools — ${(D.TOOL_TIERS || []).length || "seven"} tiers each</h3>
 <p class="prose">${D.TOOLS.length} tools (${D.TOOLS.join(", ")}), upgraded at Tom's forge (the Stave is the Warden's, v4.0). Power multiplies the work per swing.</p>
 ${table(["Tier", "Power", "Cost"],
   D.TOOL_TIERS.map((t, i) => [`<b>${esc(t)}</b>`, `×${D.TIER_POWER[i]}`,
     D.TIER_COST[i] ? `${D.TIER_COST[i].g.toLocaleString("en-US")}g + ${Object.entries(D.TIER_COST[i].mats).map(([m, n]) => `${n}× ${esc(m)}`).join(" + ")}` : "— (starting kit)"]))}
 </section>`;
+}
+
+// v5.0 "The Strongbox" — the unlock-cadence audit, rendered.
+//
+// This is the one part of the atlas that is deliberately UNFLATTERING. Every other section shows
+// what the game has; this one shows where it has nothing — the bands of levels a player climbs
+// with no new noun waiting at the top. It reads the game's own LADDER_AUDIT (01-data.js), so it
+// can never drift from the tables, and it exists because the V5 roadmap's central measurement
+// ("45.4% of every climb sits above L85, and for four skills L85 is the LAST unlock") was
+// hand-derived and would otherwise have gone stale the first time a table moved.
+function cadenceBlock(){
+  const A = D.LADDER_AUDIT;
+  if(!A || !A.length) return `<h3>Unlock cadence</h3><p class="prose small">— not available for this build —</p>`;
+  const pct = n => (n * 100).toFixed(1) + "%";
+  const worstFirst = A.slice().sort((a, b) => b.dead - a.dead);
+  return `
+<h3>Unlock cadence — where each ladder goes quiet</h3>
+<p class="prose">A “dead band” is ${D.LADDER_GAP_WARN || 8}+ consecutive levels that unlock nothing new —
+no crop, fish, ore, dish, tool tier or mastery line. Because the XP curve is exponential, bands are
+weighted by what they <i>cost</i> rather than how many levels they span: fourteen levels at the top
+of a ladder are worth far more hours than forty at the bottom. Measured live from the same tables the
+game plays from (<code>auditUnlockCadence</code>, <code>01-data.js</code>) — this table is the
+V5 roadmap's diagnosis, kept honest release by release.</p>
+${table(["Skill", "Unlocks", "Levels that unlock something", "Last unlock", "Dead share of the 1–99 climb", "Worst band"],
+  worstFirst.map(r => [
+    `<b>${esc(r.skill)}</b>`, String(r.unlocks), String(r.milestones), `Lv ${r.last}`,
+    `<b class="g">${pct(r.dead)}</b>`,
+    r.worst ? `${r.worst.from} → ${r.worst.to} (${r.worst.span} levels, ${pct(r.worst.share)})` : "—",
+  ]))}
+<details><summary>Every dead band, skill by skill</summary>
+${A.map(r => `<p class="prose small"><b>${esc(r.skill)}</b> — ${r.gaps.length
+    ? r.gaps.map(gp => `${gp.from}→${gp.to} <i>(${gp.span} lv, ${pct(gp.share)}${gp.tail ? ", tail" : ""})</i>`).join(" · ")
+    : "no dead bands."}</p>`).join("")}
+</details>`;
 }
 
 function worldSection(){

@@ -8,13 +8,21 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "4.37.0", code: 124, codename: "The Honest Panel", date: "2026-07-26" };
+const VERSION = { name: "5.0.0", code: 125, codename: "The Strongbox", date: "2026-07-28" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"5.0.0", code:125, date:"2026-07-28", name:"The Strongbox", notes:[
+    { t:"new", s:"Your farm is now a file you own. Until today the whole valley lived in one slot of this browser's storage — clearing your browsing data, switching browsers, or getting a new computer left it behind, permanently, with nothing you could have done about it. There is now a Save File panel, on the title screen and in Settings: copy your save, download it, and load it back any time, on any device." },
+    { t:"new", s:"Nothing this panel does can cost you a farm. Restoring keeps the save it replaced in an undo slot — one click puts it back, and the one you just loaded takes ITS place, so you can swap either way. “Delete Save & Restart” keeps a copy there too; it is no longer the one button in the game you can't take back." },
+    { t:"new", s:"A pasted save that is incomplete is refused, not half-loaded. Every exported file carries a checksum, so “I copied all but the last line” is caught before it costs you anything." },
+    { t:"fix", s:"The starter pine on your farm was tougher than it was meant to be. Last version's tree rebalance lowered pines from six chops to four everywhere except the one hand-placed pine every farm starts with — which then quietly dropped to four the next time you loaded. Found by the game's new save-checking tool, on its first run." },
+    { t:"fix", s:"Panels opened from the title screen no longer have the menu showing through them — and “New Game” can no longer be clicked by accident behind an open panel, which is a strange thing to have been possible on the screen where your save lives." },
+    { t:"change", s:"Behind the scenes: the game now checks itself. Ten test saves — nine of them built from the actual code of releases going back to v2.1 — are run through the save-upgrade path on demand and checked for lost items, lost levels, lost animals and lost friendships; a performance budget is measured against a deliberately overloaded year-3 farm; and the level ladders are measured for stretches that unlock nothing. None of it changes how the game plays. All of it is why the next few versions can safely add much more." },
+  ]},
   { v:"4.37.0", code:124, date:"2026-07-26", name:"The Honest Panel", notes:[
     { t:"fix", s:"Cooking finally gets its level-up moment. Every way of cooking is a button inside the Kitchen, and the level-up banner was painted UNDERNEATH open panels \u2014 so for the whole game, one of your six crafts levelled in complete silence while five others got a card and a chime." },
     { t:"fix", s:"Item prices were wrong wherever you looked at them. Hovering a Cooked Salmon in winter as a good cook read 336g while Tom's counter paid 462g \u2014 the bonuses you'd earned were exactly the ones being hidden. Every price readout now shows what the counter will actually pay, and names why when it's more." },
@@ -2158,4 +2166,93 @@ const EXAMINE_TILE = {
   // from what the earned thing should say to its owner).
   EXAMINE["Storyteller's Banner"] = EXAMINE_OBJ["storybanner"] =
     "Every task done, every story told. Some capes are earned; this one was lived.";
+})();
+
+// ============================================================
+// v5.0 "The Strongbox" — THE UNLOCK-CADENCE LINTER
+//
+// Why this exists. `GAME_DESIGN_PRINCIPLES.md` §4.1 states the single-player rule plainly:
+// "never leave a dead zone." Nothing enforced it, and by v4.37 the ladders had quietly grown
+// large ones — the V5 review measured that the band 85→99 is 45.4% of a skill's entire 1–99 XP
+// while being, for four of six skills, entirely empty; and that Mining 50→70 alone is 19.3% of
+// the climb with literally nothing in it. Those numbers were extracted BY HAND for the roadmap.
+// A number you have to re-derive by hand is a number nobody checks, so V5's content releases
+// would have shipped against a spreadsheet that went stale the first time a table moved.
+//
+// This is that measurement, made a permanent part of the build. It reads the SAME tables the
+// game plays from, so it can never disagree with the game; the atlas renders it every release;
+// and `?lint` in the URL prints it to the console.
+//
+// Deliberately NOT a thrown error and NOT an unconditional console.warn. Every gap it reports
+// today is real and known — warning on load would print twenty lines into every player's console
+// for content the roadmap has already scheduled. The dev flag is the honest middle: loud for
+// whoever is looking, silent for whoever is playing. (v4.23's auditRecipeLadder warns
+// unconditionally because a recipe that pays LESS XP than an earlier one is always a BUG; a
+// sparse band is a design debt, which is a different thing and wants a different volume.)
+//
+// This is state-free by construction — it runs at load, when `state` is null, so it must never
+// call anything that reads a save. That is why it re-walks the tables instead of reusing
+// unlocksAt (08-actions.js), which hides the Stave behind state.flags.staveEarned.
+// ============================================================
+const LADDER_SKILLS = ["Farming", "Woodcutting", "Mining", "Fishing", "Cooking", "Warding"];
+const LADDER_GAP_WARN = 8;   // levels with no new noun before a band counts as dead
+
+// Every level-gated thing a skill unlocks, as {lvl,label}. The mirror of unlocksAt, minus state.
+function unlockLadder(skill){
+  const u = [];
+  const add = (lvl, label) => { if(lvl >= 1 && lvl <= 99) u.push({ lvl, label }); };
+  if(skill === "Farming")     for(const k in CROPS) add(CROPS[k].lvl, CROPS[k].name + " seeds");
+  if(skill === "Woodcutting"){ for(const k in TREES) add(TREES[k].lvl, TREES[k].name);
+                               for(const r in DEADFALL) add(DEADFALL[r].lvl, "grove ring " + r); }
+  if(skill === "Mining")      for(const k in ORES) add(ORES[k].lvl, ORES[k].name);
+  if(skill === "Fishing"){ FISH.forEach(f => add(f.lvl, f.name));
+                           LEGENDS.forEach(l => add(l.lvl, l.name + " (legend)")); }
+  if(skill === "Cooking")     for(const r of RECIPES) if(!r.flag) add(r.lvl, r.name);
+  for(const tool of TOOLS){    // the tool ladder is a hard gate (buyTool enforces TIER_LEVEL) — real content
+    if(TOOL_SKILL[tool] !== skill) continue;
+    for(let t = 1; t <= MAX_TIER; t++) add(TIER_LEVEL[t], TOOL_TIERS[t] + " " + tool);
+  }
+  if(MASTERY[skill]) for(const l in MASTERY[skill]) add(+l, "★ " + MASTERY[skill][l]);
+  u.sort((a,b) => a.lvl - b.lvl);
+  return u;
+}
+// The report. `dead` bands are runs of ≥LADDER_GAP_WARN levels between one unlock and the next,
+// weighted by what they actually COST — XP, not level count, because the curve is exponential and
+// a 14-level band at the top is worth more hours than a 40-level band at the bottom.
+function auditUnlockCadence(){
+  const total = XP_TABLE[99], rows = [];
+  for(const skill of LADDER_SKILLS){
+    const ladder = unlockLadder(skill);
+    const marks = [...new Set(ladder.map(x => x.lvl))].sort((a,b) => a-b);
+    const gaps = [];
+    // Level 1 is where every skill starts, so the run from 1 to the first unlock counts too.
+    const walk = marks[0] === 1 ? marks : [1, ...marks];
+    for(let i = 0; i < walk.length - 1; i++){
+      const from = walk[i], to = walk[i+1];
+      if(to - from < LADDER_GAP_WARN) continue;
+      gaps.push({ from, to, span: to - from, share: (XP_TABLE[to] - XP_TABLE[from]) / total });
+    }
+    const last = marks.length ? marks[marks.length-1] : 1;
+    if(99 - last >= LADDER_GAP_WARN) gaps.push({ from:last, to:99, span:99-last, share:(XP_TABLE[99]-XP_TABLE[last])/total, tail:true });
+    rows.push({
+      skill, unlocks: ladder.length, milestones: marks.length, first: marks[0] || 1, last,
+      gaps, dead: gaps.reduce((a,g) => a + g.share, 0),
+      worst: gaps.slice().sort((a,b) => b.share - a.share)[0] || null,
+      ladder,
+    });
+  }
+  return rows;
+}
+const LADDER_AUDIT = auditUnlockCadence();
+// `?lint` (or localStorage.hs_lint) prints it. Silent for everyone else — see the note above.
+(function(){
+  let on = false;
+  try{ on = /[?&]lint\b/.test(location.search) || !!localStorage.getItem("hs_lint"); }catch(e){}
+  if(!on) return;
+  console.info("[ladder cadence] XP-weighted dead share per skill (bands of ≥" + LADDER_GAP_WARN + " levels with no unlock):");
+  for(const r of LADDER_AUDIT){
+    console.info(`  ${r.skill.padEnd(12)} ${r.unlocks} unlocks over ${r.milestones} levels · dead ${(r.dead*100).toFixed(1)}%` +
+                 (r.worst ? ` · worst ${r.worst.from}→${r.worst.to} (${(r.worst.share*100).toFixed(1)}%)` : ""));
+    for(const g of r.gaps) console.warn(`    [dead band] ${r.skill} ${g.from}→${g.to}: ${g.span} levels, ${(g.share*100).toFixed(1)}% of the 1–99 climb, nothing unlocked${g.tail ? " (tail)" : ""}.`);
+  }
 })();

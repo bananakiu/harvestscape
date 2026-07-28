@@ -7,7 +7,13 @@ You inherit your late grandfather's neglected farm on the edge of the fading val
 ## Play
 
 **▶ Play it live: [harvestscape.vercel.app](https://harvestscape.vercel.app)** — the current `master`,
-auto-deployed on every push (saves live in your browser's localStorage).
+auto-deployed on every push.
+
+> **Your save lives in this browser's localStorage** — so clearing your browsing data, or moving to
+> another browser or computer, leaves it behind. Since **v5.0 "The Strongbox"** you can take it with
+> you: **Save File** on the title screen (or in Settings) copies or downloads your whole valley as a
+> file and loads it back anywhere. Restoring keeps what it replaced in an undo slot, and so does
+> "Delete Save & Restart" — nothing in that panel can cost you a farm.
 
 Or run it locally:
 
@@ -64,7 +70,11 @@ Sell and upgrade at **Tom's stall**; **sleep at your cottage door** to pass the 
 - `DEVLOG.md` — the owner's playtest feedback and direction calls, recorded near-verbatim; the human signal behind the changelog's decisions.
 - `GAME_ATLAS.html` — the whole game on one page (story, quests, unlocks, maps, people, economy, 100% checklist), generated from the live game data by `tools/build-atlas.mjs`; regenerate after any content change.
 - `atlas/` — one atlas snapshot per release (start at `atlas/index.html`): the state of the game at every version, back to v2.1.0. Written automatically by the generator; part of the release checklist.
-- `tools/` — repo tooling (currently just the atlas generator).
+- `tools/` — repo tooling. `build-atlas.mjs` (the atlas), and as of v5.0 the checks that stand in for
+  a test runner: `check-saves.mjs` (ten save fixtures through the current `migrateSave` — no demoted
+  level, no lost item, no `NaN`, idempotent), `check-perf.mjs` (the year-3 budget), and
+  `make-save-fixtures.mjs` (rebuilds the fixtures from each release's own code). `lib/load-game.mjs`
+  runs the real game files in node; `fixtures/` holds the saves and the recorded budget.
 - `GROVE_DEPTHS.md` — the Grove Depths plan (depth rings, waystones on a pledge ledger, tree rarity, canopy treasure, plus the mine lift's ledger retrofit). Shipped in v3.3.0 "The Wood Remembers".
 - `WORLD_EXPANSION.md` — the world-expansion plan: three new areas (the Coast Road, Starfall Ridge, Butterbrook), sequenced and scoped to one release each. All three shipped (v3.36 / v3.43 / v3.44); later layers remain.
 - `V4_STATE_OF_THE_GAME.md` — the factual assessment of the game at v3.45.0: full systems inventory + the diagnosis behind Version 4.
@@ -72,8 +82,9 @@ Sell and upgrade at **Tom's stall**; **sleep at your cottage door** to pass the 
 - `V4_BUILD_PLAN.md` — the v4 implementation work orders: locked decisions, verified code anchors, and per-release specs (v4.0–v4.4) any coding agent can execute cold.
 - `V5_PLAN.md` — the Version 5 roadmap ("A Life in the Valley"): the middle of the game pays — mastery
   trials, the Cooking→Resolve economy, the boss ladder + terminal fight, spouse move-in, the decoratable
-  cottage, hearts to 10, the ferry merchant. Opens with v5.0 "The Strongbox" (save export + migration
-  harness + perf fixture). Roadmap, not built.
+  cottage, hearts to 10, the ferry merchant. **v5.0 "The Strongbox" is built and shipped** (save
+  export/import + the migration harness + the perf budget + the unlock-cadence linter); v5.1 "The
+  Trials" is the next unbuilt release.
 - `V6_PLAN.md` — the Version 6 roadmap ("The Valley, Whole"): the elder game — the deep venues + the
   uncapped Long Round, the perfection ledger + records book, year-aware festivals, earned automation,
   the 100% ceremony. Directional; re-ground after V5. Roadmap, not built.

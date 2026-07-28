@@ -512,14 +512,20 @@ function boardTrackerHtml(){
 }
 
 // ---- panels ----
+// v5.0: two panels open OVER the title screen (What's New, and now Save File). The title's logo and
+// menu sit at z-index 20 and were painting through them; worse, the live "New Game" button stayed
+// clickable behind an open panel — one stray click from overwriting the very save the Save File panel
+// exists to protect. This dims and disarms the title menu for as long as any panel is up.
+function syncTitleDim(){ const t = $("title"); if(t) t.classList.toggle("panelopen", openPanels.size > 0); }
 function openPanel(id, render){
   closeAllPanels(true);
   openPanels.add(id); $(id).classList.remove("hidden");
   if(render) render();
+  syncTitleDim();
   playSfx("menu");
 }
-function closePanel(id){ if(openPanels.has(id)){ openPanels.delete(id); $(id).classList.add("hidden"); playSfx("menuClose"); } }
-function closeAllPanels(silent){ for(const id of Array.from(openPanels)){ openPanels.delete(id); $(id).classList.add("hidden"); } if(!silent && dlg.open) closeDialog(); if(!dlg.open) $("stage").classList.remove("talking"); }   // v4.28: never leave the belt hidden
+function closePanel(id){ if(openPanels.has(id)){ openPanels.delete(id); $(id).classList.add("hidden"); syncTitleDim(); playSfx("menuClose"); } }
+function closeAllPanels(silent){ for(const id of Array.from(openPanels)){ openPanels.delete(id); $(id).classList.add("hidden"); } syncTitleDim(); if(!silent && dlg.open) closeDialog(); if(!dlg.open) $("stage").classList.remove("talking"); }   // v4.28: never leave the belt hidden
 function togglePanel(id, render){ if(openPanels.has(id)) closePanel(id); else openPanel(id, render); }
 
 // A shared tab-strip component. Panels that page their .body (Shop, Journal) render their tab row
@@ -2062,7 +2068,11 @@ function renderSettings(){
     `<div class="setRow"><span></span><span style="color:var(--ink-soft);font-size:.8em;">Facing a tree with the watering can? USE reaches for the axe instead. Only when there's exactly one right tool — watering vs planting on bare soil stays your call.</span></div>` +
     `<div class="setRow"><span>Controls</span><button class="dangerBtn" id="setControls" style="background:#3a4a30;border-color:#6a8f52;color:#eaffd8;">${IS_TOUCH?"Show the card":"Show the card (?)"}</button></div>` +
     `<div class="setRow"><span>How to play</span><button class="dangerBtn" id="setHelp" style="background:#3a4a30;border-color:#6a8f52;color:#eaffd8;">Read the guide</button></div>` +
-    `<div class="setRow"><span>Save</span><span style="color:var(--ink-soft);font-size:.85em;">auto-saves each night</span></div>` +
+    // v5.0 "The Strongbox": the save row stops being a passive reassurance and becomes the way out.
+    // "auto-saves each night" was true and useless — it says nothing about the fact that the whole
+    // farm sits in one browser slot that a cleared cache erases forever.
+    `<div class="setRow"><span>Save file</span><button class="dangerBtn" id="setSaveFile" style="background:#3a3550;border-color:#6a648f;color:#e6e0ff;">Back up or restore…</button></div>` +
+    `<div class="setRow"><span></span><span style="color:var(--ink-soft);font-size:.8em;">Auto-saves each night — but only into this browser. Keep a copy of the file if you'd hate to lose the farm.</span></div>` +
     `<div class="setRow"><span>Version</span><button class="dangerBtn" id="setNews" style="background:#3a3550;border-color:#6a648f;color:#e6e0ff;">v${VERSION.name} — What's New</button></div>` +
     `<div class="setRow"><span>Danger zone</span><button class="dangerBtn" id="setWipe">Delete Save &amp; Restart</button></div>` +
     `<div style="margin-top:.5em;color:var(--ink-soft);font-size:.82em;text-align:center;">Harvestscape v${VERSION.name} — a tiny cozy world, made in code.</div>`;
@@ -2079,7 +2089,126 @@ function renderSettings(){
   $("setControls").onclick = () => openPanel("helpPanel", renderHelp);
   $("setHelp").onclick = () => { closeAllPanels(); openLetter("❔ How to Play", HOWTO_TEXT); };
   $("setNews").onclick = () => openPanel("newsPanel", renderNews);
-  $("setWipe").onclick = () => { if(confirm("Delete your save and restart from the title?")){ wipeSave(); location.reload(); } };
+  $("setSaveFile").onclick = () => openPanel("savePanel", renderSaveManager);
+  // v5.0: the delete now names its own undo, because it has one (wipeSave stashes into the Strongbox
+  // backup slot). A player who clicks this by accident is one panel away from their farm, not zero.
+  $("setWipe").onclick = () => { if(confirm("Delete your save and restart from the title?\n\nIt will be kept in the Save File panel's undo slot — you can put it back from the title screen.")){ wipeSave(); location.reload(); } };
+}
+
+// ============================================================
+// v5.0 "The Strongbox" — the Save File panel.
+//
+// The engine half lives in 04-world.js (exportSaveText / parseSaveText / importSaveText and the
+// one-slot undo). This is the surface, and it is deliberately reachable from BOTH the title screen
+// and Settings: Settings is where a careful player backs up, the title is where a frightened one
+// looks after the save didn't load. It renders identically in both places, and every branch works
+// with `state === null` — nothing in here may touch the live game.
+//
+// Copy has an execCommand fallback because navigator.clipboard is unavailable on plain http:,
+// which is exactly how this game is served locally (python -m http.server on :8643).
+// ============================================================
+function saveBlurbLine(sum){
+  if(!sum) return "";
+  return `Year ${sum.year} · ${sum.season} ${sum.dayOfSeason} (day ${sum.day}) · ${sum.gold.toLocaleString()}g · total level ${sum.total}`;
+}
+function renderSaveManager(){
+  const b = $("savePanel").querySelector(".body");
+  const have = hasSave();
+  let cur = null; try{ cur = saveSummary(JSON.parse(localStorage.getItem(SAVE_KEY))); }catch(e){}
+  const bak = hasSaveBackup() ? backupSummary() : null;
+  b.innerHTML =
+    `<div style="color:var(--ink-soft);font-size:.86em;line-height:1.5;margin-bottom:.7em;">` +
+      `Your farm lives in this browser's storage on this device. Clearing your browsing data — or ` +
+      `switching to another browser or computer — leaves it behind. <b>Keep a copy.</b> The file below ` +
+      `is your whole valley; it can be loaded back here any time.</div>` +
+    `<div class="setRow"><span>This device</span><span style="color:${have?"var(--gold-hi)":"var(--ink-soft)"};font-size:.85em;text-align:right;">` +
+      `${have ? escapeHtml(saveBlurbLine(cur)) : "No save on this device yet."}</span></div>` +
+    (have ?
+      `<div class="setRow"><span>Back up</span><span style="display:flex;gap:.4em;">` +
+        `<button class="dangerBtn" id="savCopy" style="background:#3a4a30;border-color:#6a8f52;color:#eaffd8;">Copy to clipboard</button>` +
+        `<button class="dangerBtn" id="savDown" style="background:#3a4a30;border-color:#6a8f52;color:#eaffd8;">Download file</button></span></div>`
+      : "") +
+    `<div class="setRow" style="border-top:.12em solid rgba(255,255,255,.08);margin-top:.5em;padding-top:.7em;"><span>Restore</span>` +
+      `<span style="display:flex;gap:.4em;align-items:center;">` +
+      `<button class="dangerBtn" id="savPick" style="background:#3a3550;border-color:#6a648f;color:#e6e0ff;">Choose a file…</button>` +
+      `<input type="file" id="savFile" accept=".json,application/json" style="display:none;"></span></div>` +
+    `<div class="setRow"><span style="align-self:flex-start;padding-top:.3em;">…or paste it</span>` +
+      `<textarea id="savText" spellcheck="false" placeholder="Paste the contents of a Harvestscape save file here" ` +
+      `style="flex:1;height:4.6em;resize:vertical;font-family:var(--font);font-size:.7em;background:#1a1714;color:#cfc3b2;` +
+      `border:.12em solid #544d48;border-radius:.4em;padding:.4em;"></textarea></div>` +
+    `<div class="setRow"><span></span><button class="dangerBtn" id="savLoad" style="background:#3a3550;border-color:#6a648f;color:#e6e0ff;">Restore from pasted text</button></div>` +
+    `<div class="setRow"><span></span><span id="savMsg" style="color:var(--ink-soft);font-size:.82em;text-align:right;"></span></div>` +
+    (bak ?
+      `<div class="setRow" style="border-top:.12em solid rgba(255,255,255,.08);margin-top:.5em;padding-top:.7em;"><span>Undo</span>` +
+        `<span style="display:flex;gap:.5em;align-items:center;justify-content:flex-end;flex:1;">` +
+        `<span style="color:var(--ink-soft);font-size:.78em;text-align:right;">Replaced: ${escapeHtml(saveBlurbLine(bak))}</span>` +
+        `<button class="dangerBtn" id="savUndo">Put it back</button></span></div>` +
+        `<div class="setRow"><span></span><span style="color:var(--ink-soft);font-size:.8em;text-align:right;">` +
+        `Whatever a restore or a delete replaced is kept here — one step back, always.</span></div>`
+      : "") +
+    `<div style="margin-top:.6em;color:var(--ink-soft);font-size:.8em;text-align:center;">Nothing is ever taken from you — not even by this panel.</div>`;
+
+  const msg = (t, good) => { const m = $("savMsg"); if(m){ m.textContent = t; m.style.color = good ? "#8fd06a" : "#e0a06a"; } };
+
+  if(have){
+    $("savCopy").onclick = () => {
+      const txt = exportSaveText(); if(!txt){ msg("There's no save to copy."); return; }
+      const done = () => { playSfx("select"); msg("Copied. Paste it somewhere safe — a note, an email to yourself.", true); };
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(done, () => copyFallback(txt, done, msg));
+      } else copyFallback(txt, done, msg);
+    };
+    $("savDown").onclick = () => {
+      const txt = exportSaveText(); if(!txt){ msg("There's no save to download."); return; }
+      try{
+        const url = URL.createObjectURL(new Blob([txt], { type:"application/json" }));
+        const a = document.createElement("a"); a.href = url; a.download = exportSaveName();
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+        playSfx("select"); msg("Saved to your downloads.", true);
+      }catch(e){ msg("The browser blocked the download — use Copy instead."); }
+    };
+  }
+  $("savPick").onclick = () => $("savFile").click();
+  $("savFile").onchange = e => {
+    const f = e.target.files && e.target.files[0]; if(!f) return;
+    const rd = new FileReader();
+    rd.onload = () => doRestore(String(rd.result), msg);
+    rd.onerror = () => msg("That file couldn't be read.");
+    rd.readAsText(f);
+  };
+  $("savLoad").onclick = () => doRestore($("savText").value, msg);
+  if(bak) $("savUndo").onclick = () => {
+    if(!confirm(`Put back the save this replaced?\n\n${saveBlurbLine(bak)}\n\nThe one loaded now takes its place in the undo slot — you can swap back again.`)) return;
+    if(restoreSaveBackup()){ suspendSaves(); location.reload(); }
+    else msg("The undo slot couldn't be read.");
+  };
+}
+// The pre-clipboard-API copy path: a real (offscreen) textarea, selected and copied. Needed because
+// navigator.clipboard is undefined on plain http://, which is how this game is served locally.
+function copyFallback(txt, done, msg){
+  try{
+    const ta = document.createElement("textarea");
+    ta.value = txt; ta.style.position = "fixed"; ta.style.left = "-9999px";
+    document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand("copy"); ta.remove();
+    if(ok) done(); else msg("Couldn't reach the clipboard — use Download file instead.");
+  }catch(e){ msg("Couldn't reach the clipboard — use Download file instead."); }
+}
+// Validate, confirm by NAME (so nobody overwrites the wrong farm), commit, reload. The confirmation
+// spells out both farms because "are you sure?" is useless when both answers look identical.
+function doRestore(txt, msg){
+  const chk = parseSaveText(txt);
+  if(!chk.ok){ msg(chk.err); playSfx("error"); return; }
+  const inc = saveBlurbLine(chk.summary);
+  let cur = null; try{ cur = saveSummary(JSON.parse(localStorage.getItem(SAVE_KEY))); }catch(e){}
+  const from = chk.from ? `\nSaved from v${chk.from.version || "?"}${chk.from.exported ? " on " + String(chk.from.exported).slice(0,10) : ""}.` : "";
+  const warn = cur ? `\n\nThis device currently holds:\n  ${saveBlurbLine(cur)}\nIt will be kept in the undo slot, and you can put it back.` : "";
+  if(!confirm(`Load this farm?\n\n  ${inc}${from}${warn}`)) return;
+  const r = importSaveText(txt);
+  if(!r.ok){ msg(r.err); playSfx("error"); return; }
+  suspendSaves();      // MUST precede the reload — beforeunload/visibilitychange would write the old state back
+  location.reload();
 }
 
 // The "What's New" / version-history panel — the player-facing mirror of CHANGELOG.md.

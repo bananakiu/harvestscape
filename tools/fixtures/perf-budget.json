@@ -1,0 +1,32 @@
+{
+  "recorded": "2026-07-28",
+  "version": "4.37.0",
+  "note": "baseline = what it measured; budget = the ceiling (~3× time, 1.5× size). Re-record with: node tools/check-perf.mjs --set",
+  "baseline": {
+    "migrateSave (dense)": 0.599,
+    "save serialize": 0.172,
+    "save size KB": 54.3,
+    "Strongbox export+parse": 1.936,
+    "export size KB": 54.4,
+    "map gen (slowest)": 0.917,
+    "map gen (all maps)": 3.677
+  },
+  "budget": {
+    "migrateSave (dense)": 2,
+    "save serialize": 1,
+    "save size KB": 82,
+    "Strongbox export+parse": 6,
+    "export size KB": 82,
+    "map gen (slowest)": 3,
+    "map gen (all maps)": 12
+  },
+  "frame": {
+    "avg": 0.99,
+    "p50": 0.5,
+    "p95": 2.7,
+    "worst": 47.8,
+    "on": "Apple M4 / macOS 26.1 / Chromium preview pane, dense-year3 on the farm at noon, 1227 frames",
+    "budgetP95": 8,
+    "caveat": "Driven by hand (loop() called in a tight run with requestAnimationFrame stubbed out) because the harness browser throttles rAF to ~1fps. That measures the same WORK a real frame does, but not vsync, compositing, or a real GPU. `worst` is the first frame plus GC, not a steady-state stall. Re-measure on a real window with: await perfProbe(5)"
+  }
+}

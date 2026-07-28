@@ -654,6 +654,13 @@ body{
 
 /* ---- What's New / version history panel ---- */
 #newsPanel{ z-index:22; }   /* also opens over the title screen (z-index 20), so it must sit above it */
+/* v5.0 the Save File panel — same rule, same reason: it opens from the TITLE menu, and at .panel's
+   z-index 12 the logo and the menu buttons painted straight through it. */
+#savePanel{ z-index:22; }
+/* …and while any panel is up over the title, the menu behind it stands down: the panel background is
+   98% opaque, so bright menu text still ghosted through it, and "New Game" stayed clickable behind a
+   panel whose whole purpose is not losing the save. (Set by syncTitleDim, 10-ui.js.) */
+#title.panelopen #titleMenu, #title.panelopen #titleLogo{ opacity:.1; pointer-events:none; transition:opacity .18s ease; }
 .newsHead{ text-align:center; color:var(--gold-hi); font-size:1.05em; margin:.1em 0 .7em; letter-spacing:.02em; }
 .newsRel{ display:flex; align-items:baseline; gap:.5em; margin:.9em 0 .35em; padding-bottom:.2em;
   border-bottom:.1em solid var(--wood-hi); }
