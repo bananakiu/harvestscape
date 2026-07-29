@@ -458,7 +458,10 @@ body{
 /* ---- Skills panel: RuneScape-style skill grid ---- */
 .skillTotal{ text-align:center; color:var(--gold-hi); font-size:1.05em; margin:.1em 0 .55em; letter-spacing:.02em; }
 .skillTotal b{ color:var(--gold); }
-.skillGrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(8.5em,1fr)); gap:.45em; }
+/* v6.1.5: minmax 8.5em → 7.6em so a wide panel auto-fills FIVE columns at ten crafts instead of four,
+   keeping the grid to two rows and leaving the detail strip above the fold. Six crafts still read as
+   two comfortable rows of three at the narrow sizes. */
+.skillGrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(7.6em,1fr)); gap:.45em; }
 .skillCell{
   display:flex; align-items:center; gap:.5em; padding:.42em .5em; cursor:pointer;
   background:linear-gradient(var(--wood-l),var(--wood)); border:.14em solid var(--wood-d);

@@ -7,7 +7,7 @@
 <title>Harvestscape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=213">
+<link rel="stylesheet" href="css/style.css?v=215">
 </head>
 <body>
 <div id="frame">
@@ -78,7 +78,11 @@
     </div>
 
     <!-- ============ PANELS ============ -->
-    <div class="panel hidden" id="skillsPanel"><div class="phead"><h2>SKILLS</h2><button class="pclose">✕</button></div><div class="body"></div></div>
+    <!-- v6.1.5: `wide`, ahead of the ten-craft world. At the narrow width the grid auto-fills to
+         three columns, so ten skills is four rows and the tenth craft plus the whole detail strip
+         fall below the fold (measured: 432px of content in a 314px body). Wide gives five columns
+         and two rows, with room to spare. -->
+    <div class="panel wide hidden" id="skillsPanel"><div class="phead"><h2>SKILLS</h2><button class="pclose">✕</button></div><div class="body"></div></div>
     <div class="panel wide hidden" id="invPanel"><div class="phead"><h2>BACKPACK</h2><button class="pclose">✕</button></div><div class="body"></div></div>
     <div class="panel wide hidden" id="questPanel"><div class="phead"><h2>JOURNAL</h2><button class="pclose">✕</button></div><div class="tabs" id="journalTabs"></div><div class="body"></div></div>
     <div class="panel wide hidden" id="shopPanel"><div class="phead"><h2>TOM'S GENERAL STORE</h2><button class="pclose">✕</button></div>
@@ -199,21 +203,21 @@
   </div>
 </div>
 
-<script src="js/00-core.js?v=213"></script>
-<script src="js/01-data.js?v=213"></script>
-<script src="js/02-audio.js?v=213"></script>
-<script src="js/03-art.js?v=213"></script>
-<script src="js/04-world.js?v=213"></script>
-<script src="js/05-particles.js?v=213"></script>
-<script src="js/06-weather.js?v=213"></script>
-<script src="js/07-entities.js?v=213"></script>
-<script src="js/08-actions.js?v=213"></script>
-<script src="js/09-quests.js?v=213"></script>
-<script src="js/13-content.js?v=213"></script>
-<script src="js/15-warding.js?v=213"></script>
-<script src="js/10-ui.js?v=213"></script>
-<script src="js/11-title.js?v=213"></script>
-<script src="js/14-story.js?v=213"></script>
-<script src="js/12-game.js?v=213"></script>
+<script src="js/00-core.js?v=215"></script>
+<script src="js/01-data.js?v=215"></script>
+<script src="js/02-audio.js?v=215"></script>
+<script src="js/03-art.js?v=215"></script>
+<script src="js/04-world.js?v=215"></script>
+<script src="js/05-particles.js?v=215"></script>
+<script src="js/06-weather.js?v=215"></script>
+<script src="js/07-entities.js?v=215"></script>
+<script src="js/08-actions.js?v=215"></script>
+<script src="js/09-quests.js?v=215"></script>
+<script src="js/13-content.js?v=215"></script>
+<script src="js/15-warding.js?v=215"></script>
+<script src="js/10-ui.js?v=215"></script>
+<script src="js/11-title.js?v=215"></script>
+<script src="js/14-story.js?v=215"></script>
+<script src="js/12-game.js?v=215"></script>
 </body>
 </html>

@@ -8,13 +8,16 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "6.1.4", code: 140, codename: "Nothing Lost", date: "2026-07-29" };
+const VERSION = { name: "6.1.5", code: 141, codename: "Room for Ten", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"6.1.5", code:141, date:"2026-07-29", name:"Room for Ten", notes:[
+    { t:"change", s:"The Skills panel is ready for a valley with more crafts in it than it has today. It's wider, it lays the crafts out four across instead of three, and the total at the top counts whatever the game actually trains rather than a number typed in once." },
+  ]},
   { v:"6.1.4", code:140, date:"2026-07-29", name:"Nothing Lost", notes:[
     { t:"change", s:"Groundwork, all of it invisible: the game now has one shared answer to \u201cis this a place where Resolve matters?\u201d instead of a hard-coded name in two places, the Warden's Bell list reads the wing's real depth instead of a number typed next to it, and the single function every reward in the game passes through can no longer be made to take something away by accident." },
   ]},
@@ -2648,7 +2651,16 @@ const KNOT_LADDER = {
 };
 function knotRungFor(depth){ return KNOT_LADDER[depth] || KNOT_LADDER[10]; }
 
-const LADDER_SKILLS = ["Farming", "Woodcutting", "Mining", "Fishing", "Cooking", "Warding"];
+// ★ v6.1.5 — DERIVED, not listed. This was a hardcoded array of six, which meant the moment a new
+// craft shipped it would be graded by nothing: the linter would report six clean-ish ladders and stay
+// silent about the new one, which is the ladder most likely to have holes. `freshState().skills` is
+// the same source `renderSkills` and `totalLevel` already read, so the linter now grades whatever the
+// game actually trains. (Four more crafts are coming — Ranching, Foraging, Smithing, Hearthcraft —
+// and the whole point of the linter is to grade them as they are built, not after.)
+function ladderSkills(){
+  try { return Object.keys(freshState().skills); }
+  catch(e){ return ["Farming", "Woodcutting", "Mining", "Fishing", "Cooking", "Warding"]; }
+}
 const LADDER_GAP_WARN = 8;   // levels with no new noun before a band counts as dead
 
 // Every level-gated thing a skill unlocks, as {lvl,label}. The mirror of unlocksAt, minus state.
@@ -2678,7 +2690,7 @@ function unlockLadder(skill){
 // a 14-level band at the top is worth more hours than a 40-level band at the bottom.
 function auditUnlockCadence(){
   const total = XP_TABLE[99], rows = [];
-  for(const skill of LADDER_SKILLS){
+  for(const skill of ladderSkills()){
     const ladder = unlockLadder(skill);
     const marks = [...new Set(ladder.map(x => x.lvl))].sort((a,b) => a-b);
     const gaps = [];

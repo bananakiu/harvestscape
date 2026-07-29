@@ -22,6 +22,32 @@
 
 ---
 
+## 2026-07-29 — v6.1.5 "Room for Ten" (code 141, tag `v6.1.5`) — making room before there is anything to put in it
+
+Prep for the owner's ten-crafts direction, measured rather than assumed.
+
+**The linter now derives its own skill list.** `LADDER_SKILLS` was a hardcoded array of six — so the
+moment a new craft shipped, the unlock-cadence linter would have reported six clean-ish ladders and
+said **nothing at all about the new one**, which is exactly the ladder most likely to have holes. It
+reads `freshState().skills` now, the same source `renderSkills` and `totalLevel` already use. Four
+crafts are coming; the whole point of the linter is to grade them *as they are built*.
+
+**The Skills panel was measured against ten crafts and failed.** Simulated by adding four skills at
+runtime: three columns × four rows = **432px of content in a 314px body** — the tenth craft and the
+entire detail strip fell below the fold. Now `wide`, with the grid's `minmax` at 7.6em, it lays out
+**four across in three rows with everything visible.**
+
+Two things that pleasingly needed *no* work, both because earlier releases derived rather than
+hardcoded:
+
+- **The total re-targets itself.** `99 × Object.keys(state.skills).length` has been the source of
+  truth since v4.0, so the panel read **"126 / 990"** the instant four skills existed — no edit.
+- **v5.1's mastery trials applied automatically.** The simulated crafts immediately showed
+  *"Trial waiting"* and *"held at 50 — XP still banks"*, because the trial engine iterates `TRIALS`
+  and the gate lives in `skillLvl`. A new craft gets the whole bank-and-release apparatus free.
+
+*This is what the last twenty releases of "derive, don't hardcode" buys: the expensive part of adding
+four skills turns out to be the content, not the plumbing.*
 ## 2026-07-29 — v6.1.4 "Nothing Lost" (code 140, tag `v6.1.4`) — three prerequisites, landed before the thing that needs them
 
 Groundwork for v6.2, done separately and first so the release that depends on it lands on solid
