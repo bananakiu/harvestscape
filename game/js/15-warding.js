@@ -26,7 +26,7 @@
 // knockout (below): you wake at the door with everything. Energy (farm stamina) is untouched by combat.
 function resolveMax(){ return 100 + (charmActive("Warded Charm") ? 5 : 0) + (charmActive("Wardstone Charm") ? 10 : 0) + (charmActive("Starward Charm") ? 15 : 0); }   // charms lift the ceiling (one worn at a time)
 function resolveFloor(){ return hasMastery("Warding", 99) ? 10 : 0; }          // ★ Lanternheart — Resolve never falls below 10
-function inCombatMap(){ return !!(curMap && curMap.id === "undercroft"); }      // the only place Resolve matters
+function inCombatMap(){ return !!(curMap && WARD_MAPS.has(curMap.id)); }      // v6.1.4: the one set, not a literal
 
 // ---------------- The Warden's Guard (v4.4) ----------------
 // The counterplay that turns "run from the Hollow Warden" into "stand and settle it". A TAP raises

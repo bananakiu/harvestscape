@@ -463,6 +463,11 @@ function shelfNote(item){
 }
 
 function give(item, n=1, quiet){
+  // ★ v6.1.4 — the grant primitive may only ever ADD. Every reward in the game funnels through here,
+  // and a future caller computing a delta that comes out negative or NaN would silently *subtract*
+  // through the one function whose entire contract is that it gives. One guard closes that class for
+  // good. (Prompted by v6.2's reward design, where a haul is measured as a before/after difference.)
+  if(!(n > 0)) return;
   // The pack only ever redirects a NEW kind arriving from the world — a swing, a cast, a harvest,
   // the non-quiet grants. Deliberate hands-on grants (a shop purchase, a quest reward, a story
   // parcel, a boss drop) pass `quiet` and always land in hand, even over cap: you paid for it or
@@ -1966,7 +1971,7 @@ function updateTime(dt){
   // EXCEPTION (v3.15): during an opt-in Deep Run, time flows — that's the whole expedition. The
   // day ending just sends you home with your haul (doSleep below), so it costs a run, never items.
   if(curMap && curMap.id === "mine" && !state.deepRun) return;
-  if(curMap && curMap.id === "undercroft") return;   // v4.0: the Undercroft is always timeless — a settling run is never raced by the sun (there's no Deep Run here in v4.0)
+  if(curMap && WARD_MAPS.has(curMap.id)) return;   // v6.1.4 (was a hard-coded "undercroft"): v4.0: the wing is always timeless — a settling run is never raced by the sun (there's no Deep Run here in v4.0)
   state.time += dt * (60/16);
   if(curMap && curMap.music === "auto"){ const h = state.time/60; setMusicMode(nightFactor(h)>0.55 ? "night" : "day"); }
   if(state.time >= 26*60){ toast("You stayed up far too late…", "#ff8a7a"); doSleep(); }

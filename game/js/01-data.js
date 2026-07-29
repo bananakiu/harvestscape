@@ -8,13 +8,16 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "6.1.3", code: 139, codename: "Nothing Lost", date: "2026-07-29" };
+const VERSION = { name: "6.1.4", code: 140, codename: "Nothing Lost", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"6.1.4", code:140, date:"2026-07-29", name:"Nothing Lost", notes:[
+    { t:"change", s:"Groundwork, all of it invisible: the game now has one shared answer to \u201cis this a place where Resolve matters?\u201d instead of a hard-coded name in two places, the Warden's Bell list reads the wing's real depth instead of a number typed next to it, and the single function every reward in the game passes through can no longer be made to take something away by accident." },
+  ]},
   { v:"6.1.3", code:139, date:"2026-07-29", name:"Nothing Lost", notes:[
     { t:"fix", s:"Waking up at the door after a knockout now actually saves. It was supposed to \u2014 there is a line of code whose whole job is to write the game down at that moment, and it has quietly been doing nothing since the day it was written. If you'd closed the tab right after being carried out of the wing, everything you found down there would have gone with it. Six other moments had the same silent problem, including the one that records the tenth door being opened." },
   ]},
@@ -2012,11 +2015,16 @@ function pledgeDiscovered(id){
 // Lift stops are discovered by DERIVATION — mineBest ≥ n means you stood on that floor once —
 // so old saves backfill retroactively with zero migration. Listing stops at mineBest keeps the
 // doubling series past floor 20 from rendering to infinity.
+// WARD_FLOOR_MAX lives in 13-content.js, which loads AFTER this file — so read it lazily rather than
+// at load time (the const-TDZ trap this repo has already shipped once, v5.1).
+function WARD_FLOOR_MAX_SAFE(){ return (typeof WARD_FLOOR_MAX !== "undefined") ? WARD_FLOOR_MAX : 45; }
 function ledgerPledges(){
   const out = [];
   for(const id of ["way3","way6","way9"]) if(pledgeDiscovered(id)) out.push(id);
   for(let n = 5; n <= (state.mineBest||0); n += 5) out.push("lift"+n);
-  for(let n = 5; n <= Math.min(45, state.wardBest||0); n += 5) out.push("bell"+n);   // v4.2 Warden's Bells (floors 1–45)
+  // ★ v6.1.4: reads the CAP, not a literal 45 — the two disagreed the moment anything moved the cap,
+  // and v6.2 adds floors past it that must never grow bell pledges.
+  for(let n = 5; n <= Math.min(WARD_FLOOR_MAX_SAFE(), state.wardBest||0); n += 5) out.push("bell"+n);
   // v4.26: the standing commissions — only ever ONE open at a time, so the ledger stays a list of real
   // work rather than an infinite scroll. Rowan starts keeping the list once the Guild is properly awake.
   if((state.wingsLit||0) >= 3 || (state.patronTier||0) > 0) out.push("patron" + ((state.patronTier||0) + 1));
@@ -2749,6 +2757,16 @@ setTimeout(function(){
 // Owner decision 2026-07-29 (`V5_PLAN.md` §6.1): **both gates, live from the start** — not "75 ships
 // dark". Shipping 75 dark would have left L75 empty in the exact band this release exists to fill.
 // ============================================================
+// ★ v6.1.4 — WARD_MAPS: the one place that answers "is this a combat map?".
+//
+// `inCombatMap()` (15-warding.js) and `updateTime()` (08-actions.js) each hard-coded the string
+// "undercroft". Between them those two decide whether Resolve drains, whether tonics tick, whether
+// food restores Resolve, and whether the day clock runs. v6.2 adds two more combat venues, and
+// missing either call site would silently disable the whole Resolve layer in the new places, or
+// silently switch the sun back on underground — with no error anywhere to notice.
+//
+// Declared here rather than in 15-warding.js because 08-actions.js loads FIRST and must see it.
+const WARD_MAPS = new Set(["undercroft"]);
 const TRIAL_GATES = [50, 75];
 
 // Each trial: who asks, what it's called, the cross-skill ask, and the words. `mats` is a plain

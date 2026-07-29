@@ -22,6 +22,32 @@
 
 ---
 
+## 2026-07-29 — v6.1.4 "Nothing Lost" (code 140, tag `v6.1.4`) — three prerequisites, landed before the thing that needs them
+
+Groundwork for v6.2, done separately and first so the release that depends on it lands on solid
+ground rather than carrying its own foundations. All three came out of the adversarial review.
+
+**`WARD_MAPS` — one set, not a string in two places.** `inCombatMap()` (15-warding.js) and
+`updateTime()` (08-actions.js) each hard-coded `curMap.id === "undercroft"`. Between them those two
+lines decide whether Resolve drains, whether tonics tick, whether food restores Resolve, and whether
+the day clock runs. v6.2 adds two more combat venues, and **missing either call site would silently
+disable the entire Resolve layer in the new places, or silently switch the sun back on underground —
+with no error anywhere.** Declared in `01-data.js` rather than `15-warding.js` because `08-actions.js`
+loads first and must see it.
+
+**The bell ledger reads the cap.** `ledgerPledges` had `Math.min(45, …)` next to a `WARD_FLOOR_MAX`
+of 45 — two numbers that agree only by coincidence and disagree the moment anything moves the cap.
+It reads the constant now, lazily (`WARD_FLOOR_MAX` lives in a file that loads *after* `01-data.js`,
+and this repo has already shipped one boot-killing `const` TDZ that way, in v5.1).
+
+**`give()` can no longer subtract.** Every reward in the game funnels through that one function, whose
+entire contract is that it gives. v6.2's walk-out reward measures a haul as a before/after difference,
+and a delta that came out negative or `NaN` would have *subtracted* through it. One guard —
+`if(!(n > 0)) return;` — closes the class permanently. Verified: `give(x, -5)`, `give(x, NaN)` and
+`give(x, 0)` all leave the stack untouched.
+
+*None of this changes anything a player can see, which is the point of doing it as its own release:
+when v6.2 goes wrong, none of these will be why.*
 ## 2026-07-29 — v6.1.3 "Nothing Lost" (code 139, tag `v6.1.3`) — seven persists that were silently doing nothing
 
 ### How this was found
