@@ -264,7 +264,15 @@ tests a copy tests nothing.
   by hand uncovered a third (v5.5's spouse, on every day since) and a fourth (the festival cast).
   ★ **The standard check for ANY schedule change:** sweep every NPC × every map × every few hours ×
   a month and print anyone appearing twice. Overlapping windows are invisible in a diff.
-  **Next unbuilt release: v6.2 "Below the Bottom."**
+  ★ **v6.2 SPLIT (2026-07-29).** Two orchestrated
+  passes — an adversarial review that refuted the Long Round 3/3, then four parallel component specs
+  checked by two verifiers, both returning **FIX_FIRST with 8 blockers**. The decisive finding: **four
+  specs designed in parallel did not compose** (two run-boundary flags, disjoint hook vocabularies, two
+  answers to when the reward is paid). **`V6_PLAN.md` §2.5 carries the reconciled spec — build from it,
+  do not re-derive.** **Next: v6.2 "The Deep Venues"** (the two venues, no unresolved economy), then
+  **v6.3 "Below the Bottom"** (the Long Round). ★ Its sharpest open question is in §2.5(5): the lantern
+  walls at floor 67 while the reward table plateaus at 90, and "endless" was an owner decision — so the
+  lantern's CAPACITY must grow with something earned. Decide that before writing any number.
   **Next: `V6_PLAN.md`** — ★ **all five §4 owner decisions are now RESOLVED (2026-07-29)** and the
   release train has been **RE-CUT** around the biggest of them. Build against §4's Decision lines and
   §2's revised table, not the original: the child is IN (placed last, in a furnished house and a full

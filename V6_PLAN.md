@@ -111,6 +111,63 @@ and it re-lights the blanked goal card. Then the calendar, then ease, then cerem
 
 </details>
 
+## 2.5 ★ v6.2 — the reconciled spec, and why the release SPLIT (2026-07-29)
+
+Two orchestrated passes produced this section: an adversarial review that refuted the original Long
+Round design 3/3, then four parallel component specs checked by two independent verifiers. **Both
+verifiers returned FIX_FIRST with eight blockers between them**, and the decisive finding was not any
+single defect — it was that **four specs designed in parallel did not compose.** Two independent
+run-boundary flags guaranteed to disagree; disjoint hook vocabularies where neither side defined the
+other's functions; and two different answers to *when the depth reward is paid*.
+
+That is a real result, not a process failure: parallel design without a shared interface produces
+components that are individually sound and jointly broken, and the verify phase exists to catch
+exactly that. It did.
+
+### The split
+
+**v6.2 "The Deep Venues"** — the Gloam Grove ring and the Sunken Workings. Additive content with no
+unresolved economy. Ships first.
+
+**v6.3 "Below the Bottom"** — the Long Round. Held until the contradictions below are resolved,
+because its blockers are all about the *reward economy*, which is where the owner's decision lives.
+
+### The reconciliation — decisions the implementer must build against, not re-derive
+
+1. **ONE run boundary: `state.longRun`.** The mode owns navigation; the scoring ledger reads it.
+   A second flag was specced independently and would have diverged by design (one cleared on load,
+   the other deliberately preserved).
+2. **ONE hook vocabulary.** Scoring's calls go directly into the mode's descend/settle/close verbs —
+   no `typeof`-guarded `on*` indirection that nobody defines.
+3. **★ The depth due is paid ON ARRIVAL, once per floor per day, gated on `next > state.longWalked`.**
+   Paying at close made it re-earnable on every re-entry — an **unbounded gold faucet**, since a
+   walked floor costs no oil to return to. Paying on arrival also satisfies R3 by construction: a
+   knockout can never forgo something already handed over.
+4. **"Cleared" means no creature standing** — not "the stair opened". The stair-knot is an *object*,
+   settled by the stave's object branch; keying the reward to it would have paid a stair-rush the
+   full rate for skipping every creature on the floor.
+5. **★ Decide the ceiling before writing a number.** The specs contradict: the lantern's own
+   arithmetic walls at floor 67 (cost 14+4×67 > 100) while the reward table plateaus at floor 90.
+   Either the descent is genuinely endless — and the lantern's *capacity* must grow with something
+   earned — or it is bounded at ~67 and the reward bands stop there. **It cannot be both, and
+   "endless, procedurally generated" was an explicit owner decision (§4.4), so the capacity must grow.**
+6. **Deep material drops must be capped below the cap — or the monuments re-priced, explicitly.**
+   The reward *nouns* are clean (gold, oil) but the drop table is not: bands 3–4 are 40–60% Star-Gnarl,
+   and Gloamstar/Deepgnarl/Snarlthread feed the 4,000g `settledcairn`, the 6,000g `wardenlantern` and
+   the Starward Charm. Retiring their scarcity by accident is the failure GBP §2.4 names.
+7. **`longRoundOpen()` after the oil check, never before** — a refused descent was opening a phantom
+   run, after which climbing one floor teleported the player out of the wing entirely.
+8. **Re-entry after a fall is one fade from the door** — routed straight to the day's deepest walked
+   floor. Otherwise a knockout on floor 60 costs a walk from floor 1, which is a knockout that costs
+   something (R1) and makes the free instant knockout the *better* exit (R8).
+9. **The touch exit is a hard dependency, not a nicety.** Without an always-visible ⬆ button, a touch
+   player must walk to the entry tile — re-traversal — while `wardKnockout` remains a free instant
+   teleport. Deliberate self-knockout would be correct play on touch.
+10. **`MAP_ACCESS` prose for every new map id**, or `build-atlas.mjs` throws — which is a required
+    step of every release commit. (The guard working as designed.)
+11. **Four lighting sites in `06-weather.js`, not three**, and two of them are per-map *value*
+    branches that a Set-membership test cannot express — they need explicit arms.
+
 ## 3. Constraints carried into every V6 build
 
 1. **The Long Round's knockout rule is the version's load-bearing sentence** (§2, v6.0) — it is the
