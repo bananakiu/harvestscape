@@ -22,6 +22,43 @@
 
 ---
 
+## 2026-07-29 — v6.4.1 "Hands" (code 145, tag `v6.4.1`) — the Hammer had no job
+
+A same-day correction to v6.4, and the correction matters more than the bug.
+
+**What was wrong.** v6.4 gave Smithing a Hammer on the standard seven tiers, **counted those six rungs
+as ladder marks**, and gave the tool nothing to do. `HOTBAR` (08-actions.js:7) is a fixed six-slot
+array with the Stave pushed on at index 6; the Hammer was never added to it. So the release note
+saying *"the hotbar goes to eight"* was **false** — key 8 dispatched to an index that does not exist,
+and the tool could not be held at all.
+
+That means six of the thirty-eight marks were furniture. Which is precisely the rule v6.4 itself wrote
+down for the three crafts still to come: *a mark must be a real noun or verb the player gets, not a
+stat bump.* Broken by the release that stated it, in the same commit.
+
+**How it was found.** Not by reading — by pressing the key. `selectSlot(7)` left `slotSel` at 0 and
+the belt printed `[Hoe, Can, Axe, Pick, Rod, Seeds]`. The plan's §4 item 8 had flagged "the hotbar
+stops at key 7" and the fix I made was to widen the *key string*, which was the visible half of the
+problem and not the real one. Widening a dispatch to reach a slot nobody creates is not a fix.
+
+**The fix.** Not a hammer in your hand — you do not swing a smith's hammer at a valley. The tier means
+something **at the anvil**: `FORGE_ENERGY_BY_TIER = [6, 5, 4, 3, 2, 1, 0]`, Basic through Star Metal.
+A better hammer takes less out of you per working, one felt step per rung, down to nothing at all.
+Purely a saving, never a gate — the rule the whole craft was built on. At the top the constraint stops
+being your body and becomes your materials, which is the right shape for a late crafting skill. The
+Basic cost stays at 6, so no existing save pays more than it did yesterday.
+
+The forge panel now says what your hammer is doing and what the next one would do, so the six rungs
+are visible rather than merely present.
+
+**The key string is reverted to `"1234567"`** — the Hammer is not a belt tool, and pretending it was
+one was the original error.
+
+Re-graded after the fix: Smithing **38 marks · 0.0% dead · worst band 5 (80→85) · 5 marks above L85**.
+Same numbers as claimed yesterday, but now every mark is behind something the player can feel.
+
+---
+
 ## [Unreleased]
 
 ### Tooling — the atlas now guards what a Guild wing lights ON, not just that it has prose

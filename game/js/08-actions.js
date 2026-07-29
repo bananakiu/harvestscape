@@ -1462,7 +1462,7 @@ function forgeItem(name){
   // taken — a half-consumed forging that then refuses would be taking something, which the contract
   // forbids outright.
   const freeSwing = hasMastery("Smithing", 25) && chance(0.18);
-  const cost = freeSwing ? 0 : FORGE_ENERGY;
+  const cost = freeSwing ? 0 : forgeEnergy();
   if(state.energy < cost){ toast("Too tired to work the fire.", "#ff8a7a"); playSfx("error"); return; }
   for(const it in r.ing) take(it, r.ing[it]);
   state.energy -= cost;
@@ -1483,7 +1483,23 @@ function forgeItem(name){
 // ★ THE ANSWER TO THE HARD PROBLEM (see FORGE, 01-data.js). Smithing never gates a tool tier — it
 // offers a second way to PAY for one. Same TIER_LEVEL requirement on the tool's own craft, same
 // materials, plus bars; what changes is the gold. Additive, never blocking.
-const FORGE_ENERGY = 6;
+// ★ v6.4.1 — WHAT THE HAMMER IS FOR.
+//
+// v6.4 gave Smithing a Hammer on the standard seven tiers, counted those six rungs as ladder marks,
+// and then gave the tool nothing to do. It was not in HOTBAR (a fixed six-slot array with the Stave
+// pushed on at index 6), so it could not even be held — and the release note claiming "the hotbar
+// goes to eight" was simply false: key 8 dispatched to an index that does not exist. Six of the
+// thirty-eight marks were furniture. That is exactly the "a mark must be a real noun or verb, not a
+// stat bump" rule, broken by the release that wrote it down.
+//
+// The fix is not to put a hammer in your hand — you do not swing a smith's hammer at a valley. It is
+// to make the tier mean something at the anvil: a better hammer takes less out of you per working,
+// from six energy down to none. Purely a saving, never a gate, which is the rule this whole craft
+// was built on. At the top the constraint stops being your body and becomes your materials, which is
+// the right shape for a late crafting skill.
+const FORGE_ENERGY = 6;                                       // the Basic hammer — unchanged, so no save loses anything
+const FORGE_ENERGY_BY_TIER = [6, 5, 4, 3, 2, 1, 0];           // Basic → Star Metal, one felt step per rung
+function forgeEnergy(){ return FORGE_ENERGY_BY_TIER[state.tools.Hammer || 0] ?? FORGE_ENERGY; }
 function forgeHeadFor(tool, tier){
   const c = TIER_COST[tier]; if(!c) return null;
   const barFor = [null, "Copper Bar", "Iron Bar", "Gold Bar", "Cobalt Bar", "Deepsilver Bar", "Star Metal Bar"][tier];

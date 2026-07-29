@@ -2065,7 +2065,12 @@ function renderForge(){
   const el = $("forgePanel"); if(!el) return;
   const b = el.querySelector(".body"); if(!b) return;
   const lvl = skillLvl("Smithing");
-  let html = `<div style="color:var(--ink-soft);margin-bottom:6px;">Smelt ore into bars; forge bars into what the valley needs. Trains Smithing. Each working costs ${FORGE_ENERGY} energy.</div>`;
+  const hammerTier = state.tools.Hammer || 0, e = forgeEnergy();
+  let html = `<div style="color:var(--ink-soft);margin-bottom:6px;">Smelt ore into bars; forge bars into what the valley needs. Trains Smithing.<br>` +
+    `Your <b style="color:${TIER_COL[hammerTier]}">${TOOL_TIERS[hammerTier]} Hammer</b> works at ` +
+    (e > 0 ? `<b>${e} energy</b> a working` : `<b>no cost at all</b>`) +
+    (hammerTier < MAX_TIER ? ` — a ${TOOL_TIERS[hammerTier+1]} one would work at ${FORGE_ENERGY_BY_TIER[hammerTier+1]}.` : `. Nothing strikes truer.`) +
+    `</div>`;
   const row = (r) => {
     const can = Object.keys(r.ing).every(it => (state.inv[it]||0) >= r.ing[it]);
     if(lvl < r.lvl)
@@ -2680,7 +2685,9 @@ document.addEventListener("keydown", e => {
   // v4.27.1: guard BEFORE preventDefault — swallowing Tab unconditionally kills keyboard focus
   // navigation (the settings sliders, the quantity boxes) whenever a panel is open.
   else if(k === "tab"){ if(inputBusy()) return; e.preventDefault(); cycleSlot(e.shiftKey ? -1 : 1); }
-  else if("12345678".includes(k)) selectSlot(+k-1);   // v4.0: 7th slot is the Stave (only present once earned)
+  // v4.0: 7th slot is the Stave (only present once earned). v6.4.1: NOT eight — the Hammer is not a
+  // belt tool. It lives at the anvil, and HOTBAR never held it, so key 8 dispatched to nothing.
+  else if("1234567".includes(k)) selectSlot(+k-1);
 });
 document.addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
 // v4.27: THE MOUSE WHEEL. Stardew's most-used input by a mile — you scroll to change tools without ever

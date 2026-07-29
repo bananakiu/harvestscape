@@ -8,18 +8,21 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "6.4.0", code: 144, codename: "Hands", date: "2026-07-29" };
+const VERSION = { name: "6.4.1", code: 145, codename: "Hands", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"6.4.1", code:145, date:"2026-07-29", name:"Hands", notes:[
+    { t:"fix", s:"The Hammer does something now. Yesterday's release gave Smithing a hammer on seven tiers and then gave the tool no job \u2014 it wasn't in the belt, so it couldn't even be held, and the note saying the hotbar went to eight was wrong: that key pressed nothing. A better hammer now works the anvil for less: six energy a working at Basic, none at all with Star Metal." },
+  ]},
   { v:"6.4.0", code:144, date:"2026-07-29", name:"Hands", notes:[
     { t:"new", s:"Smithing \u2014 the seventh craft, trained 1 to 99. Fenn's forge stands on the village road where you pass it walking home with ore in your pack: smelt ore into bars, forge bars into the things the valley actually runs on. Nails and hinges, chain and braziers, lantern frames, a plough blade, a bell. Twenty-six workings, and every one of them is an input to something rather than a trophy." },
     { t:"new", s:"Fenn. She has been here the whole time \u2014 the anvil that rings outside Tom's store is hers, and Tom has been selling you tools he plainly does not make. Her sign says so, in different paint. Four scenes, a birthday in Fall, and an arc about the one thing a maker can't make." },
     { t:"new", s:"You can strike your own tool heads now, for 55% less than Tom charges. \u2605 What it does NOT do is gate them: a Gold Pick still needs Mining 30 and Tom will still sell you one at Smithing 0. The forge only ever offers a cheaper way to pay. No craft in this game waits on another one, and adding a smith was never going to be the thing that broke that." },
-    { t:"new", s:"A Hammer joins the tool ladder, and the hotbar goes to eight." },
+    { t:"new", s:"A Hammer joins the tool ladder. It is not a belt tool \u2014 you don\u2019t swing a smith\u2019s hammer at a valley \u2014 it is what you work at the anvil with, and a better one takes less out of you: six energy a working down to none at all." },
     { t:"change", s:"Smithing's ladder is the densest in the game on purpose: 38 things to reach, no gap longer than five levels, and five of them above level 85. For comparison, the other six ladders go quiet for between a third and three-fifths of the climb. It is meant to be the shape the next three crafts copy." },
   ]},
   { v:"6.3.0", code:143, date:"2026-07-29", name:"The Green", notes:[
