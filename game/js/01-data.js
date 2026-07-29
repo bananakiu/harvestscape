@@ -8,13 +8,16 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "6.4.1", code: 145, codename: "Hands", date: "2026-07-29" };
+const VERSION = { name: "6.4.2", code: 146, codename: "Hands", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"6.4.2", code:146, date:"2026-07-29", name:"Hands", notes:[
+    { t:"fix", s:"Benches work again. Every bench in the valley \u2014 the ridge, Butterbrook, the village square, Marrow Point, the Green \u2014 has done nothing at all since the Festival Green shipped: one letter wrong in the code that runs when you sit down, and pressing E on any of them quietly failed. Sitting is a small thing and it should not have been broken for two releases." },
+  ]},
   { v:"6.4.1", code:145, date:"2026-07-29", name:"Hands", notes:[
     { t:"fix", s:"The Hammer does something now. Yesterday's release gave Smithing a hammer on seven tiers and then gave the tool no job \u2014 it wasn't in the belt, so it couldn't even be held, and the note saying the hotbar went to eight was wrong: that key pressed nothing. A better hammer now works the anvil for less: six energy a working at Basic, none at all with Star Metal." },
   ]},

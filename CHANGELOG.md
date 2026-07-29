@@ -59,6 +59,36 @@ Same numbers as claimed yesterday, but now every mark is behind something the pl
 
 ---
 
+## 2026-07-29 — v6.4.2 "Hands" (code 146, tag `v6.4.2`) — every bench in the valley was broken
+
+**A one-letter crash, live for three releases.** v6.3's Maya's-bench code opened with
+`if(o.story === "mayabench")`. The local in that switch is `obj`, not `o` — so `interact()` threw
+`ReferenceError: o is not defined` on the FIRST line of `case "bench"`, before any branch. Not just
+Maya's bench: **every bench in the game** — Starfall Ridge, Butterbrook's meadow, the village square,
+Marrow Point, the Green. Pressing E on any of them did nothing at all and logged an error the player
+would never see.
+
+Shipped in v6.3.0 and live through v6.4.0 and v6.4.1.
+
+**Why nothing caught it.** All three harnesses stayed green, and they were right to: `check-saves`
+tests migrations, `check-schedules` tests NPC placement, `check-perf` tests generation cost. None of
+them press a key. Node's `new Function(src)` syntax check passes happily — `o` is a perfectly legal
+identifier, it just isn't bound at runtime. This is a *runtime reference in a rarely-hit branch*,
+which is the exact shape that only exercising the path can find.
+
+**How it was found.** By trying to test something else. I was verifying the Egg Fair's venue and the
+bench's three dialogue states — a path I had written and shipped without ever pressing E on it — and
+the browser threw. That is the second time today the same lesson landed: in v6.4 the Hammer's key
+binding was "fixed" by widening a key string without checking that a slot existed to select. Both
+bugs were invisible to reading and instant under exercise.
+
+**What was verified after the fix**, in the running game rather than by inspection:
+- Maya's bench returns all three of its states — stranger, 3♥, and 3♥-with-festivals-returned.
+- An ordinary bench on the ridge gives its cozy sit toast again.
+- The Egg Fair is on the Green with 8 nests and all 11 of the cast; the beach is empty that day.
+
+---
+
 ## [Unreleased]
 
 ### Tooling — the atlas now guards what a Guild wing lights ON, not just that it has prose

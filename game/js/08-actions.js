@@ -1091,7 +1091,7 @@ function interact(){
         // lovely line about nowhere. This is the bench, and what it says depends on whether she has
         // said it to you yet and on whether the festivals came back — so the payoff is HERS, not the
         // map's. Nothing here is gated behind the writ except the last, best case.
-        if(o.story === "mayabench"){
+        if(obj.story === "mayabench"){
           const h = typeof heartsOf === "function" ? heartsOf("maya") : 0;
           const festivals = typeof writGreenDone === "function" && writGreenDone();
           if(h >= 3 && festivals)
