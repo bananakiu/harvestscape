@@ -112,9 +112,31 @@ export function loadGame({ files = CORE_FILES, srcDir = path.join(ROOT, "game", 
     + `\n;globalThis.__GET = n => { try { return eval(n); } catch(e){ return undefined; } };`
     // `state` is a `let` in that same lexical scope (00-core.js:34), so a harness that wants to
     // measure the map generators — several of which read the save — needs a way in. This is it.
-    + `\n;globalThis.__SETSTATE = s => { state = s; return state; };`;
+    + `\n;globalThis.__SETSTATE = s => { state = s; return state; };`
+    // ★ v6.4.3 — and `curMap` is a `let` in the SAME scope (04-world.js:8). Without this accessor a
+    // harness can only assign `sandbox.curMap`, which creates an unrelated global property and leaves
+    // the real binding null — so `interact()` returns at its first guard and the harness reports a
+    // clean sweep it never actually performed. check-interactions.mjs was written that way first and
+    // passed 1,864 presses with a KNOWN live crash in the code it claimed to be exercising. A harness
+    // that cannot fail is worse than no harness, because it is believed.
+    + `\n;globalThis.__SETCURMAP = m => { curMap = m; return curMap; };`
+    + `\n;globalThis.__GETCURMAP = () => curMap;`
+    // ★ The general form, and the one that should have been written first. `state`, `curMap`,
+    // `gameMode`, `paused`, `slotSel` and friends are all top-level `let`s in the script's lexical
+    // scope, invisible and unassignable from outside it. Adding a named accessor per variable meant
+    // discovering the next one only when a harness silently did nothing: check-interactions.mjs was
+    // written with `sandbox.curMap = m`, reported 1,864 clean presses with a KNOWN live crash in the
+    // code, gained a curMap accessor, and STILL reported clean — because interact()'s very first
+    // guard reads `gameMode`, which was also out of reach. Two rounds of the same mistake.
+    // This closes the class: eval runs inside the scope, so it can both read and assign any binding.
+    + `\n;globalThis.__SETVAR = (n, v) => { eval(n + " = v"); return eval(n); };`;
   vm.runInNewContext(src, sandbox, { filename: "harvestscape.js" });
   sandbox.get = n => sandbox.__GET(n);
   sandbox.setState = s => sandbox.__SETSTATE(s);
+  sandbox.setCurMap = m => sandbox.__SETCURMAP(m);
+  sandbox.getCurMap = () => sandbox.__GETCURMAP();
+  // set(name, value) — assign ANY top-level binding. Returns the value as the game now sees it, so a
+  // caller can assert the write took rather than assume it (see check-interactions.mjs).
+  sandbox.set = (n, v) => sandbox.__SETVAR(n, v);
   return sandbox;
 }

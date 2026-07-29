@@ -89,6 +89,51 @@ bugs were invisible to reading and instant under exercise.
 
 ---
 
+## 2026-07-29 — v6.4.3 "Hands" (code 147, tag `v6.4.3`) — the harness that presses the key
+
+Two bugs shipped today and both were invisible to every check this repo has: **every bench in the game
+dead for three releases** (v6.4.2), and **the Hammer unholdable** while its six tier-rungs were counted
+as ladder content (v6.4.1). The repo had three harnesses and **not one of them pressed a key.**
+
+`tools/check-interactions.mjs` stands the player on an adjacent tile facing every object on every map
+and calls the real `interact()`, then `examine()`. **1,934 presses, 20 maps, 84 object kinds.** It
+catches the class node's `new Function(src)` lint structurally cannot: a legal identifier that simply
+is not bound, in a branch nothing else exercises.
+
+### ★ It was a no-op three times before it worked
+
+This is the part worth keeping. Each time it printed a confident *"1,864 presses… all invariants
+hold"* while a **known live crash** sat in the code it claimed to be exercising. Three causes, one
+shape — every one of them a top-level `let` that cannot be reached from outside the script's scope:
+
+1. `sandbox.curMap = m` creates an unrelated property; the real `curMap` (04-world.js:8) stayed null,
+   so `interact()` returned at its first guard.
+2. Fixed — still clean. That same first guard reads `gameMode`, also a top-level `let`, still
+   `"title"`. `load-game.mjs` now exposes a general `set(name, value)` (an `eval` inside the scope)
+   rather than one named accessor discovered per failure.
+3. Fixed — still clean **for every map after the cottage**. Pressing E on the bed runs `doSleep`,
+   which sets `paused = true`, and `paused` is the next term in that same guard. One press silently
+   disarmed the remainder of the run.
+
+**The lesson is not "remember the bed."** It is that a harness driving real game code must **re-arm
+its preconditions on every iteration**, because the code under test is entitled to change global state
+— that is its job. And: *a green harness proves nothing until you have watched it go red.* All three
+rounds were caught only by reintroducing the bench bug and checking. The header says to do that
+whenever the file is extended.
+
+Verified against three separate faults: the real v6.3 bench bug, an invented typo in the forge case,
+and a clean build. Red, red, green.
+
+### What it stubs, and the line it won't cross
+
+`interact()` reaches presentation — `showDialog`, `toast`, `playSfx`, `pSparkle`, `openPanel`. Those
+are stubbed: they are the renderer and the speaker, not the game. Every branch the switch takes, every
+`give`/`take`, every flag write and skill check is the shipped code, per AGENTS.md's rule that a
+harness testing a copy tests nothing. `07-entities.js` is loaded rather than stubbed because it
+declares `fishing`, which the first guard reads — that is game state, not presentation.
+
+---
+
 ## [Unreleased]
 
 ### Tooling — the atlas now guards what a Guild wing lights ON, not just that it has prose
