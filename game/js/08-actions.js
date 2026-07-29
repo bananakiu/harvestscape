@@ -2279,7 +2279,7 @@ function buyTool(tool){
   for(const it in c.mats) take(it, c.mats[it]);
   state.tools[tool] = cur+1; bump("toolUpgrades");
   const sub = cur+1===MAX_TIER ? "Forged from the deep floors and the heart of the grove. There is no finer tool in the valley."
-            : cur+1===3        ? "The "+TIER3_GEM[tool]+" is set into the handle. Earned across every craft."
+            : cur+1===3 && TIER3_GEM[tool] ? "The "+TIER3_GEM[tool]+" is set into the handle. Earned across every craft."
             :                    "Faster, stronger, cozier.";
   banner("🔧 "+TOOL_TIERS[cur+1]+" "+tool+"!", sub);
   playSfx("upgrade"); pSparkle(state.px, state.py-14, cur+1===MAX_TIER ? "#bfe4ff" : "#ffce5a", 14); refreshHUD(); renderShop(); refreshHotbar();

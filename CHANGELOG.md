@@ -134,6 +134,38 @@ declares `fishing`, which the first guard reads — that is game state, not pres
 
 ---
 
+## 2026-07-29 — v6.4.4 "Hands" (code 148, tag `v6.4.4`) — "The undefined is set into the handle"
+
+Every tool takes a keepsake gem at tier 3 — Hoe/Opal, Can/Topaz, Axe/Emerald, Pick/Ruby, Rod/Pearl,
+Stave/Sapphire. **v6.4 added a seventh tool and did not add a seventh row.** `TIER3_GEM` had no
+`Hammer`, and `08-actions.js:2282` reads it **unguarded**, so buying a Gold Hammer from Tom banners:
+
+> 🔧 Gold Hammer! — *The undefined is set into the handle. Earned across every craft.*
+
+Found by the v6.5 design review, not by any check. Reproduced in the running game before fixing.
+The Hammer now takes the **Diamond** — the one gem not yet spoken for, and the only stone a smith
+would rate. The banner line is guarded as well, so a future tool without a gem degrades quietly
+instead of printing `undefined`.
+
+### The real fix: assert the class
+
+This is the **second** table-completeness bug from v6.4's seventh craft in one day. The first
+(`SKILL_ICON`, whose absence draws `spr[undefined]`) was caught before release by luck. Both are the
+same defect — *a table keyed by tool or by skill that a new key was not added to* — and neither is
+visible to a syntax check or to any behavioural harness, because the read **succeeds** and yields
+`undefined`.
+
+`check-saves.mjs` now enumerates them, derived from `freshState`:
+
+- **per skill:** `MASTERY` (4 rungs), `MASTERY_PRAISE` (4), `MASTERY_NPC`, `TRIALS` (2), `SKILL_ICON`
+- **per tool:** `TOOL_ICON`, `TOOL_SKILL`, `TIER3_GEM`
+
+**3,407 invariants**, up from 2,707. Verified with teeth: removing the Hammer's gem fails the run, and
+adding a `Foraging` key to `freshState().skills` immediately names all five tables it still needs —
+which makes it a build checklist for v6.5 rather than a post-mortem.
+
+---
+
 ## [Unreleased]
 
 ### Tooling — the atlas now guards what a Guild wing lights ON, not just that it has prose

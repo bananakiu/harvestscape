@@ -8,13 +8,16 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "6.4.3", code: 147, codename: "Hands", date: "2026-07-29" };
+const VERSION = { name: "6.4.4", code: 148, codename: "Hands", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"6.4.4", code:148, date:"2026-07-29", name:"Hands", notes:[
+    { t:"fix", s:"A Gold Hammer no longer announces that \u201cthe undefined is set into the handle\u201d. Every tool takes a keepsake gem at its third tier and the Hammer was never given one \u2014 it takes a Diamond now, the one stone left unspoken for and the only one a smith would rate." },
+  ]},
   { v:"6.4.3", code:147, date:"2026-07-29", name:"Hands", notes:[
     { t:"change", s:"Housekeeping you will never see: the game now has a check that walks up to every object on every map and presses the button, so the kind of fault that killed every bench in the valley for three releases gets caught before a release instead of after one." },
   ]},
@@ -1905,7 +1908,7 @@ const TIER_COST  = [null,
   { g:7500,  mats:{ "Cobalt Ore":6, "Willow Wood":60 } },                 // v3.37: the first new rung — mid woods, no premium timber yet
   { g:10000, mats:{ "Deepsilver Ore":6, "Elder Wood":50 } },              // v3.37: the deep grove's dark boards carry the second rung
   { g:12000, mats:{ "Star Metal Shard":4, "Cobalt Ore":8, "Silverwood":40, "Heartwood":20, "Starstone":1 } }];   // v3.18: the star gem crowns the ultimate tool; unchanged in v3.37 — at L60 with two rungs before it, its cost finally matches its place
-const TIER3_GEM  = { Hoe:"Opal", Can:"Topaz", Axe:"Emerald", Pick:"Ruby", Rod:"Pearl", Stave:"Sapphire" };   // Hoe was Amethyst (now Gary-only); the Stave takes a Sapphire — cool ward-light set into the head (v4.0)
+const TIER3_GEM  = { Hoe:"Opal", Can:"Topaz", Axe:"Emerald", Pick:"Ruby", Rod:"Pearl", Stave:"Sapphire", Hammer:"Diamond" };   // Hoe was Amethyst (now Gary-only); the Stave takes a Sapphire — cool ward-light set into the head (v4.0). v6.4.4: the Hammer takes the Diamond, the one gem not yet spoken for and the only stone a smith would rate — it was MISSING, and the upgrade banner printed "The undefined is set into the handle."
 function toolCost(tool, tier){
   const base = TIER_COST[tier]; if(!base) return null;
   const mats = Object.assign({}, base.mats);

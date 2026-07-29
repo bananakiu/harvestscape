@@ -146,6 +146,34 @@ for(const file of files){
     ok(s.skills && s.skills[sk] !== undefined, `skills.${sk} missing — the migration never gave this save the craft`);
     ok(Number.isFinite(s.skills && s.skills[sk]), `skills.${sk} is ${s.skills && s.skills[sk]}, not a number`);
   }
+  // ★ v6.4.4 — TABLE COMPLETENESS, the general form of two bugs shipped in one day.
+  //
+  // v6.4 added a seventh craft and a seventh tool, and TWO per-key tables were missed. One was caught
+  // before release (SKILL_ICON — an absent entry draws `spr[undefined]`); the other shipped and was
+  // found by a design review: TIER3_GEM had no `Hammer`, and the upgrade banner read "The undefined
+  // is set into the handle." Both are the same defect — a table keyed by tool or by skill that a new
+  // key was not added to — and neither is visible to a syntax check or to any behavioural harness,
+  // because the read succeeds and yields `undefined`.
+  //
+  // So the tables are enumerated here, derived from freshState, and every future craft and tool is
+  // covered the day its key lands. If a table legitimately does not apply to every key, it does not
+  // belong in this list — say so with a comment rather than loosening the assertion.
+  const perSkill = { MASTERY: 4, MASTERY_PRAISE: 4, MASTERY_NPC: 0, TRIALS: 2, SKILL_ICON: 0 };
+  for(const t in perSkill){
+    const tbl = sb.get(t); if(!tbl) continue;
+    for(const sk in FRESH.skills){
+      ok(tbl[sk] !== undefined, `${t} has no row for the ${sk} craft — a per-skill table a new craft was not added to`);
+      if(perSkill[t] && tbl[sk])
+        ok(Object.keys(tbl[sk]).length === perSkill[t],
+           `${t}.${sk} has ${Object.keys(tbl[sk]).length} rung(s), expected ${perSkill[t]}`);
+    }
+  }
+  const perTool = ["TOOL_ICON", "TOOL_SKILL", "TIER3_GEM"];
+  for(const t of perTool){
+    const tbl = sb.get(t); if(!tbl) continue;
+    for(const tl in FRESH.tools)
+      ok(tbl[tl] !== undefined, `${t} has no entry for the ${tl} — a per-tool table a new tool was not added to`);
+  }
   for(const tl in FRESH.tools){
     ok(s.tools && s.tools[tl] !== undefined, `tools.${tl} missing — the migration never gave this save the tool`);
     ok(Number.isFinite(s.tools && s.tools[tl]), `tools.${tl} is ${s.tools && s.tools[tl]}, not a number`);
