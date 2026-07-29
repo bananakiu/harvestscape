@@ -78,6 +78,13 @@ const PLAIN_KEYS = ["SEASONS", "SEASON_DAYS", "FESTIVALS", "BIRTHDAYS",
   "MASTERY", "MASTERY_NPC", "REQUESTS", "TOOLS", "TOOL_TIERS", "TIER_POWER", "TIER_COST", "CREATURES",
   "QUESTS", "FINALE_IDX", "XP_TABLE", "NPCDEF", "NPC_LINES",
   "HEART_EVENTS", "MARRIAGE_SCENES", "FESTIVAL_SCENES", "JOURNAL_PAGES"];
+// ★ Everything between the backticks below is a JS TEMPLATE LITERAL, and two things bite there:
+//   · a backtick in a comment ENDS it (an innocuous `word` in prose is a syntax error), and
+//   · `\s` is an escape that resolves to a bare "s" — so a /\s+/g written inside this string
+//     silently becomes /s+/g and strips every letter s from whatever it cleans. Both were hit
+//     while adding the wing-condition guard: "skillLvl" came out of it as "killLvl".
+// So the extraction below does no string processing at all. It serializes raw; every regex,
+// trim and normalisation happens on the consuming side, in ordinary module scope.
 const src = GAME_FILES.map(f => fs.readFileSync(f, "utf8")).join("\n;\n") + `
 ;const __opt = n => { try { return eval(n); } catch(e){ return null; } };
 globalThis.__DATA__ = JSON.stringify({
@@ -85,7 +92,7 @@ globalThis.__DATA__ = JSON.stringify({
   ${PLAIN_KEYS.map(k => `${k}: __opt("${k}")`).join(",\n  ")},
   MAPS: __opt("MAPS") && Object.fromEntries(Object.entries(MAPS).map(([k,v]) =>
     [k, { w:v.w, h:v.h, outdoor:!!v.outdoor, name:v.name, subtitle:v.subtitle||"" }])),
-  WINGS: __opt("WINGS") && WINGS.map(w => ({ id:w.id, name:w.name })),
+  WINGS: __opt("WINGS") && WINGS.map(w => ({ id:w.id, name:w.name, lit:String(w.lit) })),
   // v5.0: the unlock-cadence audit (01-data.js). Slimmed — the per-skill \`ladder\` array is the
   // raw material, and the atlas already renders every unlock in its own table; what belongs here
   // is the DIAGNOSIS: where the ladder goes quiet, and what that silence costs in XP.
@@ -109,10 +116,43 @@ const WING_REQ = {
   foraging: "Forage 10 wild finds", smithing: "Upgrade tools twice",
   hearth: "Hold the Grand Festival",
 };
+// ★ The CONDITION each wing lights on, as source. WING_REQ above is hand-written prose describing
+// these; the guard below fails when a condition changes so the prose cannot silently go stale.
+//
+// Why a source snapshot rather than a cleverer check: the obvious version — "every number in the
+// closure must appear in the prose" — has false positives the moment a condition reads `(x||0)>=8`
+// (the 0 is an idiom, not a requirement) or the prose spells a number as a word ("at least one hen").
+// A snapshot has no false negatives and asks the author to do the one thing that actually matters:
+// re-read the sentence when the rule behind it moves. This mirrors how the file already guards
+// JOURNAL_PAGES and MAP_ACCESS — fail loudly rather than publish something untrue.
+//
+// To update: change the condition, run the generator, and it will print the new source for you to
+// paste in — along with a reminder to check the prose still describes it.
+const WING_LIT = {
+  farming:     '()=> skillLvl("Farming")>=10',
+  woodcutting: '()=> skillLvl("Woodcutting")>=8',
+  mining:      '()=> skillLvl("Mining")>=8',
+  fishing:     '()=> skillLvl("Fishing")>=8',
+  cooking:     '()=> (state.stats.cooked||0)>=8',
+  ranching:    '()=> state.animals.chickens.length>=1',
+  foraging:    '()=> (state.stats.forage||0)>=10',
+  smithing:    '()=> (state.stats.toolUpgrades||0)>=2',
+  hearth:      '()=> !!state.flags.festivalDone',
+};
 // Hard failures for the current build; warnings for retro snapshots (can't edit the past).
 const stale = msg => { if (RETRO) console.warn("  warn: " + msg); else throw new Error(msg); };
 if (D.WINGS && (D.WINGS.length !== 9 || !D.WINGS.every(w => WING_REQ[w.id])))
   stale("WINGS changed — update WING_REQ in build-atlas.mjs");
+if (D.WINGS) for (const w of D.WINGS) {
+  if (!w.lit) continue;                                  // a build too old to have serialized it
+  const want = (WING_LIT[w.id] || "").replace(/\s+/g, " ").trim();
+  const got  = w.lit.replace(/\s+/g, " ").trim();
+  if (want !== got) stale(
+    `the "${w.id}" wing now lights on a DIFFERENT condition than build-atlas.mjs records.\n` +
+    `    was: ${want || "(not recorded)"}\n` +
+    `    now: ${got}\n` +
+    `    → update WING_LIT, and RE-READ WING_REQ.${w.id} ("${WING_REQ[w.id]}") — the prose is what players see.`);
+}
 
 // How each almanac page is found (mirrors the queuePage call sites).
 const PAGE_TRIGGER = {

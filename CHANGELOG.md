@@ -22,6 +22,45 @@
 
 ---
 
+## [Unreleased]
+
+### Tooling — the atlas now guards what a Guild wing lights ON, not just that it has prose
+
+`build-atlas.mjs` publishes a hand-written sentence for each of the nine Guild wings ("Forage 10 wild
+finds"). It asserted the wing *count* and that every wing id had a sentence — but never that the
+sentence still described the condition. Change `foraging` from `forage>=10` to `>=25` and the atlas
+would go on publishing "Forage 10 wild finds" forever. Flagged as `V6_WORLD_AND_CRAFTS.md` §4 item 12,
+and about to matter: v6.5 makes Foraging a real craft, so that wing's condition is going to move.
+
+Each wing's `lit()` closure is now serialized as source and compared against a recorded snapshot; a
+changed condition fails the build and prints both versions plus the prose to re-read. **Verified by
+changing a condition and watching it fire**, then reverting — a guard that has not been seen to fail
+is decoration.
+
+Chose a source snapshot over the cleverer "every number in the closure must appear in the prose",
+which has false positives the moment a condition reads `(x||0)>=8` (the 0 is an idiom) or the prose
+spells a number as a word ("at least one hen").
+
+**Two template-literal traps found while writing it**, both now documented above the extraction block:
+the data-extraction code is a JS template literal, so (a) a backtick inside a comment *ends* it, and
+(b) `\s` resolves to a bare `s` — a `/\s+/g` written in there silently becomes `/s+/g` and strips
+every letter *s* from what it cleans. `skillLvl` came out of it as `killLvl`. The extraction now does
+no string processing at all; every regex and trim happens on the consuming side in module scope.
+
+### Checked and NOT changed
+
+Three items from `V6_WORLD_AND_CRAFTS.md` §4 were investigated and are **not live defects** — recorded
+here so the next agent does not spend the time again:
+
+- **§4.4 "the vault map has no gate on a save that already opened it."** Correct as written: the
+  sealed door spawns only while `!foundVault` (13-content.js:364) and is deleted on opening
+  (08-actions.js:1418). A mirror placement showing an *opened* vault would be worse, not better — the
+  mine regenerates daily, so it would appear on a different floor every morning.
+- **§4.10 `m.meta.worked` is never swept.** No such field exists anywhere in the codebase.
+- **§4.10 `state.marks` is uncapped.** The real field is `state.writMarks`, a single integer.
+
+---
+
 ## 2026-07-29 — v6.4.0 "Hands" (code 144, tag `v6.4.0`) — the seventh craft, and the trap it had to avoid
 
 The owner's second direction: *"a lot more to do. maybe there aren't enough skills. afterall, there
