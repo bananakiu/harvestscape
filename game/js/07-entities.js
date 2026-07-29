@@ -133,6 +133,7 @@ const INTERACT_KINDS = new Set(["campfire","stove","counter","stall","shipbin","
   "wardup","wardbell","wardladderdown","knot",                   // v4.0: the Undercroft
   "wardledger",
   "lighthouse","hut","hull",   // v6.2 The Promised Coast
+  "flagpole","firering","trestle","longtable",   // v6.3 The Festival Green
 ]);                                                // v4.3: the Warden's Ledger (Act III) — show the [E] prompt like Rowan's ledger
 function facingInteractable(fx, fy){
   const w = warpAt(fx,fy); if(w && !w.auto) return true;
@@ -571,6 +572,20 @@ function drawObject(ox, oy, o, k){
     if(o.honey > 0 && chance(0.04)) pSparkle(bx+8, by-4, "#ffd75a", 1);
     if(chance(0.05)){ const a = animT*3 + bx;                     // a bee, doing its rounds
       ctx.fillStyle="#ffd75a"; ctx.fillRect(bx+8+Math.cos(a)*7|0, by-2+Math.sin(a*1.7)*5|0, 1, 1); }
+    return;
+  }
+  // v6.3 the Green's flagpole: bare and leaning until the writ is closed, then straight with the
+  // colours up. The lean is drawn (a small rotate) rather than baked into a second sprite, so the
+  // "before" reads as neglect rather than as a different object.
+  if(o.kind==="flagpole"){
+    const s = spr[o.flying ? "flagpole_flying" : "flagpole"];
+    ctx.fillStyle="rgba(0,0,0,0.16)"; ctx.beginPath(); ctx.ellipse(bx+8, by+15, 5, 2, 0, 0, 7); ctx.fill();
+    if(o.flying){ ctx.drawImage(s, bx, by-(s.height-16));
+      if(chance(0.02)) pSparkle(bx+12, by-(s.height-16)+8, "#ffd75a", 1);
+    } else {
+      ctx.save(); ctx.translate(bx+8, by+16); ctx.rotate(0.09); ctx.translate(-(bx+8), -(by+16));
+      ctx.drawImage(s, bx, by-(s.height-16)); ctx.restore();
+    }
     return;
   }
   if(o.kind==="memorial"){ ctx.drawImage(spr.memorial, bx, by-4); if(chance(0.03)) pEmber(bx+2, by+8); return; }

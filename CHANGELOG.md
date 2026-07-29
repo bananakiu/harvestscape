@@ -22,6 +22,92 @@
 
 ---
 
+## 2026-07-29 — v6.3.0 "The Green" (code 143, tag `v6.3.0`) — the promise the player had already paid for
+
+Second release of the bigger-world program, and the same method as v6.2: build what the game already
+promised. This one was the sharpest debt in the sweep, because **the player could already buy it**.
+
+### The two shipped promises this map exists to keep
+
+1. **The writ.** `WRITS[5]` is called **The Festival Green**. Its ask is real, its pay is real, and its
+   completion text reads *"Trestles, canopy, and a table long enough for everybody. Maya has already
+   drawn it."* A player could gather Willow Lumber, Silverwood Beam, Starfruit Sorbet and Cherry Tart,
+   hand them over, and receive **a sentence about a field that did not exist**. That is the worst kind
+   of debt in the list — not an unbuilt place that was merely mentioned, but one the game **took
+   payment for**.
+2. **Maya's 3♥ line**, shipped in v1 and never resolved: *"I saved a bench for us at the old festival
+   grounds. Maybe one day there'll be a festival again. I'd like that."*
+
+Both land here. The writ visibly rebuilds the field; the bench is under the trees on the quiet side and
+says three different things depending on whether she has told you about it and whether the festivals
+came back.
+
+### The field, in two states
+
+Before the writ: a **leaning flagpole** (still with the halyard coiled properly on the cleat, the way
+you do when you expect to be back), a **cold fire-ring**, and **four bald patches of earth** where the
+trestles stood. The absence is drawn rather than described — a shape in the grass reads louder than a
+ruin, because a ruin says "this ended" and a worn patch says "this stopped".
+
+After it: four trestles, a **ten-tile long table**, three canopies over it, and the flag up. The
+examine on the table is the joke the writ set up — *"a table long enough for everybody" turns out to
+have been a measurement*, and there are more places set than there are people in the valley.
+
+### A festival has a venue now
+
+For six versions every festival was on the sand, so **"is there a festival today"** and **"is the coast
+dressed today"** were the same question, and `beachEvent()` answered both. Splitting them was the
+load-bearing change:
+
+- `todaysFestival()` — the calendar
+- `festivalVenue()` — which map
+- `beachEvent()` / `greenEvent()` — which festival dresses *that* ground (beach code untouched)
+
+Three call sites were asking `beachEvent()` while **meaning** "is anybody free today" — Elias's coast
+walk, Pip's fishing mornings, and Bram's ferry stall. Left alone, each would have answered *yes* on
+Harvest Fair day and put its NPC on the beach while they were also at the Green. Fixed at the call
+site, where the intent is now stated in the code rather than implied by a coincidence.
+
+**Venue assignment is argued, not assigned.** The Luau is Bram's pot on the sand and the Star-Watch
+wants the sea horizon; both stay. The Harvest Fair judges crops on trestle tables — *precisely* what
+the writ builds — and an egg hunt is better in long grass than on flat sand.
+
+### The valley turns up
+
+v6.0 added four people (Ada and Corin Wren, Sable and Wick Harrow) and v6.1 added Thea, and **not one
+of them has attended a festival since**. On Harvest Fair day the valley gathered on the sand and Corin
+and Wick strolled an empty plaza. That is the owner's *"the village still feels empty"* in its purest
+form — not too few people, but people who don't turn up to the things the valley does together.
+**Eleven at the festival now, not six.** Nell still keeps the dairy, which is deliberate and is her
+whole character.
+
+### Fixed during the build
+
+**A hundred invisible walls.** The hedge was written `put(m, x, y, "tree")` — and `"tree"` is not a
+kind this game has (`TREES` is keyed oak/pine/maple/willow/…). `objBlocks()` treats any unknown kind as
+solid, so 104 objects were placed that **drew nothing and still blocked**. Nothing threw. All three
+harnesses stayed green. It was obvious the instant the map was looked at. This is the counterexample to
+"the tests passed": a harness asserts what you thought to assert, and a screenshot asserts what is
+there.
+
+**Maya double-booked on the first run.** Her sketching afternoons on the Green collided with the
+village plaza — caught by `check-schedules.mjs` immediately, which is what it is for. The fix is a
+table (`APPOINTMENTS`) rather than one more clause in `npcIsElsewhere`, so the next character with a
+somewhere-else-to-be costs a row instead of a branch. That is the whole lesson of the double-booking
+class this function was created to close.
+
+**Bare earth, not paving.** The worn patches were first laid as `T.PATH`, which is *made* paving and
+read as a road cutting through the field. `T.DIRT`, one tile each, and the ghost of the long table
+worn in gaps rather than a continuous strip: a line of bare spots says "something stood here", a solid
+run says "this goes somewhere".
+
+### Numbers
+
+20 maps · slowest map gen 0.989 ms (budget 3 ms) · all 2,277 save invariants across 10 eras hold ·
+all schedule invariants hold across 364 snapshots, 3,667 placements.
+
+---
+
 ## 2026-07-29 — v6.2.0 "The Promised Coast" (code 142, tag `v6.2.0`) — the first place the game had already promised
 
 The owner's direction: *"i want to make the game world bigger. there are too few places. we want a lot

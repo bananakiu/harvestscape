@@ -1447,6 +1447,35 @@ function buildBeachArt(){
   // both blink are not one lighthouse. `marrowFlash()` (below) is the light's *character* — every
   // place that draws Marrow Point reads it, so the pixel on the ridge and the lamp at the tip are
   // lit by the same clock.
+  // ---- v6.3 THE FESTIVAL GREEN ----
+  // Every one of these draws in TWO states, because the whole point of the Green is that the writ
+  // the player already funded visibly changes it. A prop that looks the same before and after is a
+  // prop that says the payment did nothing.
+  mkSpr("flagpole", 16, 34, g => {                                                    // leaning, bare — the field as found
+    px(g,7,6,2,28,"#8a7a5e"); px(g,7,6,1,28,"#a2937a");                               // the pole (drawn straight; the lean is in the tilt below)
+    px(g,5,32,6,2,"#6a5a44"); px(g,6,4,4,2,"#6a6258"); });
+  mkSpr("flagpole_flying", 16, 34, g => {                                             // straight, with the valley's colours up
+    px(g,7,4,2,30,"#c9b48a"); px(g,7,4,1,30,"#e2d0aa");
+    px(g,5,32,6,2,"#7a6a52"); px(g,6,2,4,2,"#8a8278");
+    px(g,9,5,6,4,"#c94f4f"); px(g,9,9,6,3,"#e2b455"); px(g,9,12,5,2,"#4f8ac9");       // the flag, three bands
+    px(g,9,5,6,1,"#e07070"); });
+  mkSpr("firering", 16, 16, g => {                                                    // cold since the Guild closed
+    const st=(x,y)=>{ px(g,x,y,3,2,"#8a8880"); px(g,x,y,3,1,"#a5a39a"); };
+    st(3,8); st(7,7); st(11,8); st(4,12); st(9,12);
+    px(g,6,10,4,2,"#3a342c"); px(g,7,10,2,1,"#4a443a"); });                           // old ash, gone grey
+  mkSpr("trestle", 16, 16, g => {                                                     // a table on crossed legs
+    px(g,1,6,14,3,"#a8895e"); px(g,1,6,14,1,"#c2a374"); px(g,1,9,14,1,"#7e6444");
+    px(g,3,9,1,6,"#8a6e4a"); px(g,6,9,1,6,"#8a6e4a"); px(g,9,9,1,6,"#8a6e4a"); px(g,12,9,1,6,"#8a6e4a");
+    px(g,3,12,10,1,"#7e6444"); });
+  mkSpr("longtable", 16, 16, g => {                                                   // tiles edge to edge into one long table
+    px(g,0,6,16,4,"#b8965f"); px(g,0,6,16,1,"#d4b280"); px(g,0,10,16,1,"#8a6e44");
+    px(g,2,11,2,5,"#8a6e4a"); px(g,12,11,2,5,"#8a6e4a");
+    px(g,4,4,3,2,"#e8dcc0"); px(g,10,4,2,2,"#c94f4f"); });                            // a cloth, and somebody's cup
+  mkSpr("canopy", 16, 24, g => {                                                      // striped awning on two poles
+    px(g,1,4,14,4,"#e8e2d4");
+    for(let i=0;i<4;i++) px(g,2+i*4,4,2,4,"#c94f4f");
+    px(g,1,8,14,1,"#b8b0a2"); px(g,0,3,16,1,"#8a8278");
+    px(g,2,9,1,14,"#8a7a5e"); px(g,13,9,1,14,"#8a7a5e"); });
   /* Marrow Point Light — character Fl(2) 6s: two quick flashes, then a long dark. Real lights are
      identified by their rhythm, not their brightness, so giving this one a rhythm is what makes it
      a specific lighthouse rather than a lamp on a stick. Returns 0..1; callers keep their own dim

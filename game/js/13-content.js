@@ -40,6 +40,11 @@ const MAPS = {
   dairy:     { w:13, h:9,  name:"The Coast Dairy", subtitle:"cool stone, cream, and patience", music:"cozy", bg:"#171009", gen:genDairy },
   grove:     { w:44, h:30, outdoor:true, name:"The Deep Grove", subtitle:"the forest gives, and grows back", music:"auto", bg:"#0d150c", gen:genGrove },
   village:   { w:40, h:28, outdoor:true, name:"Willowbrook Village", subtitle:"the valley's beating heart", music:"auto", bg:"#101408", gen:genVillage },
+  // v6.3 — the Festival Green. The game has had a weekly writ called "The Festival Green" that the
+  // player can COMPLETE ("trestles, canopy, and a table long enough for everybody"), and a 3♥ line
+  // from Maya about a bench she saved at the old festival grounds. Both described a place that did
+  // not exist. This is that place, and both promises resolve on it.
+  green:     { w:36, h:22, outdoor:true, name:"The Festival Green", subtitle:"the old festival grounds", music:"auto", bg:"#101a10", gen:genGreen },
 };
 
 // ---------------- interior helpers ----------------
@@ -714,6 +719,94 @@ function genMarrowPoint(m){
   // never wall the quay
   for(const [cx,cy] of [[2,13],[3,13],[4,13],[2,14],[3,14],[4,14],[6,13],[6,14]]) delete m.objects[key(cx,cy)];
 }
+// ======================================================================
+//  THE FESTIVAL GREEN (v6.3)
+//
+//  Out past the south lane, through a gap in the hedge: a broad flat field with the bones of old
+//  festivals still in it. A leaning flagpole, a cold fire-ring, and four bald patches in the grass
+//  where the trestles used to stand — the valley stopped holding festivals here when the Guild
+//  closed, and never quite took the ground back.
+//
+//  ★ The design job here is PAYOFF, not novelty. Two shipped promises land on this map:
+//    · the `green` writ (WRITS[5]) — the player can already fund "proper trestles and a canopy…
+//      and a table long enough for everybody". Until now that bought a sentence. Now the field
+//      visibly changes: the bald patches get trestles, the long table goes up, the canopy is
+//      strung, and the flagpole stands straight with a flag on it.
+//    · Maya's 3♥ line — "I saved a bench for us at the old festival grounds. Maybe one day there'll
+//      be a festival again." The bench is here, and once festivals return she is right.
+//
+//  The Egg Fair and the Harvest Fair now happen here (see FESTIVAL_VENUE). An egg hunt belongs in
+//  long grass and a crop judging belongs on trestle tables; the Luau and the Star-Watch keep the sea.
+function genGreen(m){
+  const layout = makeRng(6300);                   // fixed: the field, the ring, the pole never move
+  const rng = makeRng(6400 + state.day*23);       // daily: the wildflowers reshuffle
+  const t = m.tiles;
+  for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++){
+    const n = layout();
+    t[y*W+x] = n<0.10 ? T.FLOWERGRASS : n<0.16 ? T.TALLGRASS : T.GRASS;
+  }
+  for(let x=0;x<m.w;x++){ t[0*W+x]=T.IWALL; t[(m.h-1)*W+x]=T.IWALL; }
+  for(let y=0;y<m.h;y++){ t[y*W+0]=T.IWALL; t[y*W+m.w-1]=T.IWALL; }
+  const green = writGreenDone();
+  // the lane in from the village, along the west edge and into the field
+  for(let x=1;x<=8;x++) t[11*W+x] = T.PATH;
+  for(const wy of [10,11,12]) m.warps[key(1,wy)] = { to:"village", sx:37*TILE, sy:24*TILE+8, face:"left", auto:true };
+  put(m, 4, 9, "sign", {text: green
+    ? "THE FESTIVAL GREEN\n\n(the board is new; the post is not)"
+    : "THE FESTIVAL GREEN\n\n(the lettering has almost gone)"});
+  // The hedge — a ring of trees that makes the field a room rather than a lawn.
+  // ★ Written first as put(…, "tree"), which is not a kind the game has: TREES is keyed
+  // oak/pine/maple/willow/…, so 104 objects were placed that drew NOTHING and still blocked, because
+  // objBlocks() treats any unknown kind as solid. A hundred invisible walls. Nothing threw, the
+  // harnesses were all green, and it was visible the instant the map was looked at — which is why
+  // AGENTS.md asks for a screenshot of anything that renders, and why "the tests passed" is not that.
+  const hedge = () => layout()<0.55 ? "oak" : layout()<0.75 ? "maple" : "willow";
+  for(let x=2;x<m.w-2;x++){ for(const y of [2,3]) if(layout()<0.7 && !m.objects[key(x,y)]) put(m,x,y,hedge());
+                            for(const y of [m.h-3,m.h-4]) if(layout()<0.7 && !m.objects[key(x,y)]) put(m,x,y,hedge()); }
+  for(let y=4;y<m.h-4;y++){ if(layout()<0.6 && !m.objects[key(m.w-3,y)]) put(m,m.w-3,y,hedge());
+                            if(y<9 || y>13){ if(layout()<0.5 && !m.objects[key(2,y)]) put(m,2,y,hedge()); } }
+  // the fire-ring, cold since the Guild closed — and lit for a festival
+  put(m, 12, 15, greenEvent() ? "campfire" : "firering", greenEvent() ? undefined : {story:"greenring"});
+  // the flagpole, at the head of the field
+  put(m, 18, 5, "flagpole", { flying: green, story:"greenpole" });
+  // ★ the four trestle patches. Before the writ they are bald ground and nothing else — the shape of
+  // a thing that used to be here, which reads louder than a ruin would. After it, the tables are back.
+  // T.DIRT, not T.PATH, and one tile each: PATH is laid paving and read as a road cutting through the
+  // field. Bare earth where the feet went is what a disused ground actually looks like.
+  const TREST = [[14,9],[17,9],[20,9],[23,9]];
+  for(const [tx,ty] of TREST){ t[ty*W+tx] = T.DIRT; if(green) put(m, tx, ty, "trestle"); }
+  // the long table — "a table long enough for everybody" — and the canopy over it
+  if(green){
+    for(let x=14;x<=23;x++){ t[13*W+x] = T.DIRT; put(m, x, 13, "longtable"); }
+    for(const cx of [15,19,23]) put(m, cx, 12, "canopy");   // directly over the long table, so it reads as shading it
+  } else {
+    // the ghost of the long table: worn in patches, not a continuous strip — a line of bare spots is
+    // read as "something stood here", a solid run is read as a path to somewhere.
+    for(const x of [15,16,18,19,21,22]) t[13*W+x] = T.DIRT;
+  }
+  // Maya's bench, under the trees on the quiet side. She saved it; it is still here.
+  put(m, 8, 17, "bench", {story:"mayabench"});
+  put(m, 7, 18, "asternode");
+  // wildflowers, reshuffling daily — the field's only gather, deliberately small: the Green is a
+  // place to BE, not a route to farm.
+  for(let i=0;i<7;i++){ const x=randiR(rng,4,m.w-4), y=randiR(rng,5,m.h-5);
+    if(t[y*W+x]===T.GRASS && !m.objects[key(x,y)]) put(m, x, y, rng()<0.5?"flowernode":"herbnode"); }
+  // festival dressing — the Green's own, and it dresses differently from the sand
+  const ev = greenEvent();
+  if(ev){
+    for(let x=6;x<m.w-6;x+=3) put(m, x, 6, "lantern");
+    put(m, 16, 6, "banner"); put(m, 20, 6, "banner");
+    if(ev === "eggfair"){                                             // a hunt wants long grass, not flat sand
+      for(const [x,y] of [[7,8],[10,16],[26,8],[28,15],[6,13],[24,17],[13,18],[30,10]])
+        if(!m.objects[key(x,y)]) put(m, x, y, "nest");
+    } else if(ev === "harvest"){                                      // the judging, on the tables the writ paid for
+      for(const [x,y] of [[15,12],[18,12],[21,12]]) if(!m.objects[key(x,y)]) put(m, x, y, "crate");
+      put(m, 25, 14, "barrel"); put(m, 11, 12, "crate");
+    }
+  }
+  // never wall the way in
+  for(let x=1;x<=8;x++) for(const y of [10,11,12]) delete m.objects[key(x,y)];
+}
 function genCoastRoad(m){
   const layout = makeRng(777);                    // fixed: road, river, landing never move
   const rng = makeRng(888 + state.day*13);        // daily: forage + driftwood reshuffle
@@ -879,6 +972,11 @@ function genVillage(m){
   rect2(32,19,36,20,T.ROOF); rect2(32,21,36,22,T.WALL); set2(34,22,T.DOOR);
   m.objects[key(31,22)] = { kind:"sign", text:"The Harrows'" };
   m.warps[key(34,22)] = { to:"harrowhouse", sx:5*TILE+8, sy:6*TILE, face:"up" };
+  // v6.3 — east off the south lane, out past the houses to the old festival grounds. A 3-tall band
+  // for the same reason every other edge warp has one: walking the very edge must still catch it.
+  for(let x=36;x<=38;x++) t[24*W+x] = T.PATH;
+  for(const gy of [23,24,25]) m.warps[key(39,gy)] = { to:"green", sx:3*TILE, sy:11*TILE+8, face:"right", auto:true };
+  put(m, 36, 23, "sign", {text:"→ The Festival Green"});
   // --- plaza dressing ---
   for(const [lx,ly] of [[14,10],[26,10],[14,18],[26,18]]) m.objects[key(lx,ly)] = { kind:"lamp" };
   // benches + planters on the plaza's north/south edge rows (y10/y18) — verified clear of the
@@ -1157,11 +1255,40 @@ function genBeach(m){
     }
   }
 }
-// Which festival, if any, dresses the coast today. Also drives the NPC gathering.
+// ======================================================================
+//  ★ v6.3 — A FESTIVAL HAS A VENUE.
+//
+//  For six versions every festival happened on the sand, so "is there a festival today" and "is the
+//  coast dressed today" were the same question and `beachEvent()` answered both. The Green splits
+//  them, and the split matters: two of the four festivals move, and every place that asked
+//  `beachEvent()` meaning "is anyone free today" would silently answer *yes* on Harvest Fair day and
+//  put Pip on the beach with a rod while she is also at the Green.
+//
+//  So the questions are now separate, and each caller says which one it means:
+//    todaysFestival()  — is there a festival at all today (the calendar)
+//    festivalVenue()   — which map it is at
+//    beachEvent()      — which festival dresses the COAST (unchanged meaning; beach code untouched)
+//    greenEvent()      — the same, for the Green
+//
+//  Venue assignment is not arbitrary. The Luau is Bram's pot on the sand and the Star-Watch wants the
+//  open sea horizon; both stay. The Harvest Fair judges crops on trestle tables — which is precisely
+//  what the shipped `green` writ builds — and an egg hunt is better in long grass than on flat sand.
+const FESTIVAL_VENUE = { eggfair:"green", luau:"beach", harvest:"green", starwatch:"beach" };
+function festivalVenue(){
+  if(state.flags.festivalActive) return "beach";      // the Act II finale is staged on the sand, always
+  const f = todaysFestival();
+  return f ? (FESTIVAL_VENUE[f.id] || "beach") : null;
+}
+// Which festival, if any, dresses the coast today. Also drives the NPC gathering there.
 function beachEvent(){
   if(state.flags.festivalActive) return "finale";
   const f = todaysFestival();
-  return f ? f.id : null;
+  return f && festivalVenue() === "beach" ? f.id : null;
+}
+// The mirror, for the Green.
+function greenEvent(){
+  const f = todaysFestival();
+  return f && festivalVenue() === "green" ? f.id : null;
 }
 
 // ======================================================================
@@ -1556,12 +1683,31 @@ function spawnMapNpcs(m){
     // Her 8♥ scene and his are about the same eleven years; putting them in one frame says it without
     // either of them having to.
     if(sableVisitingElias()) m.npcs.push(mkNpc("sable", 31*TILE, 26*TILE, {face:"up"}));
+  } else if(m.id==="green"){
+    // v6.3 the Festival Green. On a festival day it holds the whole valley; on an ordinary one it
+    // holds Maya, sketching, on the bench she kept — which is the quiet version of the same promise.
+    const ev = greenEvent();
+    if(ev){
+      m.npcs.push(mkNpc("rowan", 18*TILE, 8*TILE, {face:"down"}));
+      m.npcs.push(mkNpc("tom",   14*TILE, 11*TILE, {face:"down"}));
+      m.npcs.push(mkNpc("maya",  23*TILE, 11*TILE, {face:"down"}));
+      m.npcs.push(mkNpc("bram",  11*TILE, 15*TILE, {face:"right"}));
+      m.npcs.push(mkNpc("pip",   27*TILE, 14*TILE, {face:"left", wander:{x0:25,y0:13,x1:31,y1:17}}));
+      if(state.flags.act2Done) m.npcs.push(mkNpc("elias", 20*TILE, 15*TILE, {face:"right"}));
+      m.npcs.push(mkNpc("ada",    9*TILE, 11*TILE, {face:"right"}));
+      m.npcs.push(mkNpc("corin",  8*TILE, 14*TILE, {face:"right"}));
+      m.npcs.push(mkNpc("sable", 28*TILE,  9*TILE, {face:"down"}));
+      m.npcs.push(mkNpc("wick",  31*TILE, 11*TILE, {face:"left"}));
+      if(state.flags.theaArrived) m.npcs.push(mkNpc("thea", 16*TILE, 17*TILE, {face:"up"}));
+    } else if(h>=14 && h<18 && state.day % 2 === 0){
+      m.npcs.push(mkNpc("maya", 9*TILE, 17*TILE, {face:"right"}));
+    }
   } else if(m.id==="coastroad"){
     // v3.36: the ferryman at the ferry landing, looking the other way for once — north, toward
     // the town he finally left. Same hours as his pond days; only the fourth days — and never on
     // a festival date (review fix: the beach cast includes him all day on those dates, and the
     // Star-Watch lands on a %4 day EVERY year; a festival always outranks the landing).
-    if(state.flags.act2Done && h>=7 && h<19 && state.day % 4 === 0 && !beachEvent()) m.npcs.push(mkNpc("elias", 40*TILE, 16*TILE, {face:"down"}));
+    if(state.flags.act2Done && h>=7 && h<19 && state.day % 4 === 0 && !todaysFestival()) m.npcs.push(mkNpc("elias", 40*TILE, 16*TILE, {face:"down"}));   // v6.3: ANY festival, not just a coast one
   } else if(m.id==="ridge"){
     // v6.0: Sable gathers on the scree in the afternoons — the herbalist and the alpine forage map
     // are obviously each other's, and nobody was standing there.
@@ -1612,7 +1758,7 @@ function spawnMapNpcs(m){
     if(h>=7 && h<18.5) m.npcs.push(mkNpc("maya", 17*TILE, 12*TILE, {wander:{x0:15,y0:11,x1:19,y1:13}}));
     // v6.1: on his beach mornings Pip is at the beach, not here. Nobody is ever in two places — the
     // rule the shopkeeper schedule established, applied to the child who now has somewhere to go.
-    const pipFishing = (h>=7 && h<11 && state.day % 3 === 0 && !beachEvent() && !state.flags.reunionScene);
+    const pipFishing = (h>=7 && h<11 && state.day % 3 === 0 && !todaysFestival() && !state.flags.reunionScene);   // v6.3
     if(h>=8 && h<19 && !pipFishing) m.npcs.push(mkNpc("pip", 23*TILE, 12*TILE, {wander:{x0:22,y0:11,x1:26,y1:13}}));
     // v6.0: Corin is on the plaza's stonework through the working day — the mason who has been
     // silently building Rowan's restorations all this time, finally visible doing it. Wick runs the
@@ -1647,7 +1793,7 @@ function spawnMapNpcs(m){
     // v6.1: Pip fishes beside Bram some mornings. Pip has wanted to be near Bram since v1 and the
     // game has never once put them in the same frame; this is three lines of schedule and it does
     // more for "the valley is populated" than a paragraph of dialogue would.
-    if(!state.flags.reunionScene && !beachEvent() && h>=7 && h<11 && state.day % 3 === 0)
+    if(!state.flags.reunionScene && !todaysFestival() && h>=7 && h<11 && state.day % 3 === 0)   // v6.3
       m.npcs.push(mkNpc("pip", 12*TILE, 12*TILE, {face:"right"}));
     if(state.flags.reunionScene){              // staged cast for the homecoming cutscene
       m.npcs.push(mkNpc("bram",  13*TILE, 11*TILE, {face:"right"}));
@@ -1660,6 +1806,12 @@ function spawnMapNpcs(m){
       m.npcs.push(mkNpc("bram",  14*TILE, 9*TILE, {face:"right"}));
       m.npcs.push(mkNpc("pip",   31*TILE, 10*TILE, {face:"left", wander:{x0:28,y0:8,x1:34,y1:13}}));
       if(state.flags.act2Done) m.npcs.push(mkNpc("elias", 17*TILE, 11*TILE, {face:"right"}));
+      // v6.3 the rest of the valley, at last. Clear of the dressing above and of Pip's wander box.
+      m.npcs.push(mkNpc("ada",   12*TILE,  7*TILE, {face:"right"}));
+      m.npcs.push(mkNpc("corin", 12*TILE, 11*TILE, {face:"right"}));
+      m.npcs.push(mkNpc("sable", 29*TILE,  6*TILE, {face:"down"}));
+      m.npcs.push(mkNpc("wick",  34*TILE,  6*TILE, {face:"left"}));
+      if(state.flags.theaArrived) m.npcs.push(mkNpc("thea", 26*TILE, 12*TILE, {face:"up"}));
     } else {
       m.npcs.push(mkNpc("bram", 9*TILE, (m.h-9)*TILE, {face:"down"}));
     }
@@ -1681,17 +1833,47 @@ function spawnMapNpcs(m){
   // obvious the moment you print the whole week.
   if(m.npcs.length) m.npcs = m.npcs.filter(n => !npcIsElsewhere(n.id, m.id));
 }
-// Authority order: a festival outranks a day job; being at home with your spouse outranks a day job.
-const FESTIVAL_CAST = new Set(["rowan","tom","maya","bram","pip","elias"]);
+// Authority order: a festival outranks a day job; being at home with your spouse outranks a day job;
+// a standing appointment outranks a day job.
+// ★ v6.3 — the cast grew and the festivals never noticed. v6.0 added four people to the valley
+// (Ada and Corin Wren, Sable and Wick Harrow) and v6.1 added Thea, and not one of them has attended
+// a single festival since: on Harvest Fair day the whole valley gathered and Corin and Wick strolled
+// an empty plaza. That is the "the village still feels empty" complaint in its purest form — not too
+// few people, but people who do not turn up to the things the valley does together. Ten now, not six.
+// (Nell stays out on purpose: somebody keeps the dairy, and that is her whole character.)
+const FESTIVAL_CAST = new Set(["rowan","tom","maya","bram","pip","elias","ada","corin","sable","wick","thea"]);
+// ★ v6.3 — STANDING APPOINTMENTS, as data. Giving Maya her sketching afternoons on the Green
+// double-booked her against the village plaza on the very first harness run. The fix could have been
+// one more clause in npcIsElsewhere; it is a table instead, because the next character with a
+// somewhere-else to be should cost a row rather than a branch — that is the whole lesson of the
+// double-booking class this function exists to close.
+//   { who, map, from, to, everyNDays } — `to` is exclusive; everyNDays matches `state.day % n === 0`.
+const APPOINTMENTS = [
+  { who:"maya", map:"green", from:14, to:18, everyNDays:2 },   // the bench she kept, on the afternoons she can
+];
+function appointmentMap(id){
+  const h = curHour();
+  for(const a of APPOINTMENTS){
+    if(a.who !== id) continue;
+    if(h < a.from || h >= a.to) continue;
+    if(a.everyNDays && state.day % a.everyNDays !== 0) continue;
+    return a.map;
+  }
+  return null;
+}
 function spouseAtHome(){
   if(!state.flags.married || !spouseId()) return false;
   const h = curHour();
   return (h >= 6 && h < 9) || (h >= 18.5 && h < 23);
 }
 function npcIsElsewhere(id, mapId){
-  if(mapId !== "beach" && typeof beachEvent === "function" && beachEvent()
-     && !state.flags.reunionScene && FESTIVAL_CAST.has(id)) return true;
+  // v6.3: the festival's venue, not "the beach". This one line is the whole reason the venue split
+  // was worth doing centrally — a per-branch fix would have needed six edits and missed one.
+  const fv = typeof festivalVenue === "function" ? festivalVenue() : null;
+  if(fv && mapId !== fv && !state.flags.reunionScene && FESTIVAL_CAST.has(id)) return true;
   if(mapId !== "cottage" && spouseAtHome() && id === spouseId()) return true;
+  const appt = appointmentMap(id);
+  if(appt && mapId !== appt) return true;
   return false;
 }
 function updateNpcs(dt){

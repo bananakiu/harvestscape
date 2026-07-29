@@ -523,6 +523,7 @@ const OBJ_TITLE  = { geode:"Geode", bed:"Bed", campfire:"Campfire", stove:"Stove
   fountain:"Fountain", boardwalk:"Boardwalk", railcart:"Minecart", memorial:"Standing Stone", berrybush:"Berry Bush",
   frostberry:"Frostberry Bush", fruittree:"Fruit Tree", beehive:"Beehive", torch:"Torch", lamp:"Lamp", lantern:"Lantern",
   lighthouse:"Marrow Point Light", hut:"The ferry-master's hut", hull:"A boat's keel",   // v6.2
+  flagpole:"The Flagpole", firering:"The Fire-Ring", trestle:"A Trestle Table", longtable:"The Long Table", canopy:"The Canopy",   // v6.3
   opalseam:"Opal Seam", emeraldseam:"Emerald Seam", rubyseam:"Ruby Seam", diamondseam:"Diamond Seam",   // v5.3
   crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift", olddoor:"A Planked Door", keg:"Keg", jar:"Preserves Jar", sawmill:"Sawmill", press:"Cheese Press", bench:"Bench", plantpot:"Flower Planter",
   milestone:"The Milestone", shrine:"Roadside Shrine", mooring:"The Ferry Landing", samphirenode:"Samphire", hollynode:"Sea Holly", asternode:"Sea Aster",
@@ -1045,6 +1046,18 @@ function interact(){
         if(!state.flags.act2Done){ toast("A boat would need somewhere to go, and a reason.", "#cbb98f"); return; }
         if(!state.flags.marrowOpen){ startMarrowFirstSailing(); return; }
         sailTo("marrowpoint"); return;
+      case "flagpole":
+        showDialog("The Flagpole", writGreenDone()
+          ? "Straight, re-stepped, and flying the valley's three colours \u2014 red for the orchard, gold for the grain, blue for the water.\n\nThe rope has a new splice in it. Somebody has been up there."
+          : "It leans, and it has leaned long enough that the grass has grown up over the base of it.\n\nThe halyard is still on the cleat. Whoever took the flag down that last time coiled the rope properly first, the way you do when you expect to be back.", "port_valley"); return;
+      case "firering":
+        showDialog("The Fire-Ring", greenEvent()
+          ? "Lit, and drawing well. The stones are warm right through for the first time in years."
+          : "A ring of flat stones with grey ash in the middle. Rain has packed it down hard.\n\nThere is no telling how old it is. It has been a while since anybody had a reason to sweep it out.", "port_valley"); return;
+      case "trestle":
+        showDialog("A Trestle Table", "New timber on crossed legs, planed smooth and waxed against the weather. It folds flat.\n\nSomebody chalked a number on the underside of the top. There are four of them, and they are numbered one to four, which suggests somebody intends there to be more.", "port_valley"); return;
+      case "longtable":
+        showDialog("The Long Table", "\u201cA table long enough for everybody\u201d \u2014 which was the phrase in the writ, and which turns out to have been a measurement.\n\nYou count the places. There are more of them than there are people in the valley. Nobody has said anything about that.", "port_valley"); return;
       case "lighthouse":
         showDialog("Marrow Point Light", "Four flights of iron stair and a lamp the size of a cart wheel.\n\n" +
           "There is a logbook on the sill, kept in three hands. The last entry is eleven years old and reads, in full:\n\n" +
@@ -1070,6 +1083,22 @@ function interact(){
       case "memorial": state.flags.memorialRead = true;
         openLetter("✒ Carved into the standing stone", LETTER_MEMORIAL); return;
       case "bench": {   // a small cozy beat: sit, and the square lives around you for a moment
+        // ★ v6.3 — THE bench. Maya's 3♥ line, shipped long ago, reads: "I saved a bench for us at the
+        // old festival grounds. Maybe one day there'll be a festival again. I'd like that." It was a
+        // lovely line about nowhere. This is the bench, and what it says depends on whether she has
+        // said it to you yet and on whether the festivals came back — so the payoff is HERS, not the
+        // map's. Nothing here is gated behind the writ except the last, best case.
+        if(o.story === "mayabench"){
+          const h = typeof heartsOf === "function" ? heartsOf("maya") : 0;
+          const festivals = typeof writGreenDone === "function" && writGreenDone();
+          if(h >= 3 && festivals)
+            showDialog("The bench", "Two names are cut into the underside of the seat, small, where you would only find them by sitting down and reaching.\n\nHers, and yours.\n\nThe field in front of it is dressed for a festival. She was right to keep it.", "port_maya");
+          else if(h >= 3)
+            showDialog("The bench", "Weathered, and swept. Somebody clears the leaves off this one and not the ground around it.\n\n\u201cI saved a bench for us at the old festival grounds,\u201d she said. This is it, then. It has been waiting a while.", "port_maya");
+          else
+            showDialog("The bench", "An old bench under the trees at the edge of the field, facing the ground rather than the view \u2014 which means it was set here for watching something that used to happen.\n\nSomebody keeps the leaves off it.", "port_valley");
+          playSfx("select"); return;
+        }
         const lines = [
           "You sit a while. Someone's kept the lamps trimmed and the square swept.",
           "You rest on the warm wood and watch the valley go about its day.",

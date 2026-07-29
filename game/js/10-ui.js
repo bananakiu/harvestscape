@@ -985,7 +985,10 @@ const MAP_REGION = { farm:"farm", cottage:"farm", coop:"farm", barn:"farm",
 // whereabouts from the same clock rules rather than reading entities off other maps.
 function npcRegionNow(id){
   const h = (typeof curHour === "function") ? curHour() : 12;
-  if(typeof beachEvent === "function" && beachEvent() && id !== "nell") return "coast";   // a festival gathers everyone on the sand — except Nell, who keeps the dairy (review fix: she was never in the festival cast, so the blanket "coast" put a false dot on her)
+  // v6.3: point at the festival's VENUE, not always at the coast. (Nell keeps the dairy through every
+  // festival — she was never in the cast, and the old blanket "coast" put a false dot on her.)
+  if(typeof festivalVenue === "function" && festivalVenue() && id !== "nell")
+    return festivalVenue() === "green" ? "the Green" : "coast";
   switch(id){
     case "tom":   return "village";
     case "rowan": return "guild";

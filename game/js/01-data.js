@@ -8,13 +8,20 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "6.2.0", code: 142, codename: "The Promised Coast", date: "2026-07-29" };
+const VERSION = { name: "6.3.0", code: 143, codename: "The Green", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"6.3.0", code:143, date:"2026-07-29", name:"The Green", notes:[
+    { t:"new", s:"The Festival Green. East off the village's south lane, through a gap in the hedge: the valley's old festival grounds. You have been able to fund it for some time \u2014 the weekly writ called The Festival Green promises \u201ctrestles, canopy, and a table long enough for everybody\u201d \u2014 and until now that bought a sentence. Now it builds a field. Before the writ: a leaning flagpole, a cold fire-ring, and four bald patches where the tables used to stand. After it: the tables are back, the canopy is up, and the flag flies." },
+    { t:"new", s:"Maya's bench is real. \u201cI saved a bench for us at the old festival grounds,\u201d she has said at three hearts for a very long time. It is here, under the trees, and it has three things to say depending on how well she knows you and whether the festivals ever came back." },
+    { t:"change", s:"The Egg Fair and the Harvest Fair have moved to the Green. An egg hunt belongs in long grass and a crop judging belongs on trestle tables; the Luau and the Star-Watch keep the sea, because Bram's pot and the winter sky both want a coast." },
+    { t:"change", s:"The whole valley turns up now. Ada, Corin, Sable, Wick and Thea have never attended a single festival since they moved in \u2014 on Harvest Fair day the village gathered and two of them strolled an empty plaza. Eleven at the festival now, not six. Nell still keeps the dairy, on purpose." },
+    { t:"fix", s:"Nobody is in two places at once, still. Giving Maya her sketching afternoons on the Green double-booked her against the village square on the very first check; standing appointments are a list now rather than a rule buried in a branch." },
+  ]},
   { v:"6.2.0", code:142, date:"2026-07-29", name:"The Promised Coast", notes:[
     { t:"new", s:"Marrow Point. Thirty-nine miles up the coast, at the end of a headland that narrows until there is only the light — a lighthouse, a ferry-master's hut, a mooring, and sea holly and samphire growing where nothing else will. The ferry has been sailing there since the coast road opened; it just never sailed with you on it." },
     { t:"new", s:"The first crossing is Elias's. He worked that ferry for eleven years and never once made the trip in this direction." },
@@ -1113,7 +1120,7 @@ const FERRY_STOCK = [
 // advance. Never on a festival day: the coast belongs to the festival, and a stall competing with a
 // ceremony helps nobody.
 function ferryToday(){
-  if(typeof beachEvent === "function" && beachEvent()) return false;
+  if(typeof todaysFestival === "function" && todaysFestival()) return false;   // v6.3: any festival day, wherever it is held
   return makeRng(9001 + state.day * 17)() < 0.28;
 }
 function ferryStockToday(){
@@ -1219,6 +1226,12 @@ const WRITS = [
 // ★ The dependency that came with that decision, honoured by the release order: marks are worthless
 // until a catalog exists, so v5.7's interior list had to land first. It did.
 function writIndex(){ return (state.writDone || 0) % WRITS.length; }
+// v6.3 — has the Festival Green writ been closed? Derived from the book's own order rather than a
+// new flag, so it can never disagree with the writ list: writs are strictly sequential (writIndex is
+// a function of writDone alone), so "done >= index+1" is exact. The same shape as v6.2's boatyard
+// gate. Keyed by id, not by a typed-in number, so reordering WRITS cannot silently move the payoff.
+function writClosed(id){ const i = WRITS.findIndex(w => w.id === id); return i >= 0 && (state.writDone || 0) > i; }
+function writGreenDone(){ return writClosed("green"); }
 function currentWrit(){ return WRITS[writIndex()]; }
 function writRemaining(){
   const w = currentWrit(), paid = state.writBundle || {}, rem = {};

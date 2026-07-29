@@ -144,8 +144,8 @@ Sequenced so each release ships alone, and **so that no skill key ever lands bef
 
 | Release | Contents |
 |---|---|
-| **The Promised Coast** | Marrow Point + the Point + the boatyard — the coast road's north end opens at last, on the ferry that already runs. |
-| **The Green** | The Festival Green becomes real: festivals move to the sign that has stood since v3. |
+| **The Promised Coast** ✅ v6.2.0 | Marrow Point + the boatyard — the coast road's north end opens at last, on the ferry that already runs. (The Point deferred to a later coast release.) |
+| **The Green** ✅ v6.3.0 | The Festival Green becomes real: the writ the player could already buy now builds a field, Maya's bench exists, the Egg Fair + Harvest Fair move there, and the whole cast attends. |
 | **Hands (Smithing)** | The template craft, with the forge and Fenn the smith. |
 | **The Wild (Foraging)** | The craft + the wild places it needs: the upper Gullwater, the ruin on the ridge, the hollow. |
 | **The Flock (Ranching)** | The craft + pasture. |
