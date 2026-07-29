@@ -237,23 +237,27 @@ function nextMastery(skill){
   return null;
 }
 // the next piece of CONTENT a skill unlocks — so a level is never a blind grind toward nothing
+// ★ v6.4.5 — DERIVED, not a third copy.
+//
+// This was a hand-maintained mirror of `unlocksAt` (below) and of `unlockLadder` (01-data.js) — three
+// transcriptions of the same knowledge, kept in step by hand. They drifted twice: v5.1 gave Warding's
+// techniques to two of the three, and v6.4 gave Smithing's 26 forgings to only ONE, so the linter
+// graded 38 marks while the panel showed ten and this function skipped nine levels of real content
+// (at Smithing 33 it pointed at 45, past the Brazier, the Plough Blade and the Cobalt Bar).
+//
+// Adding a Smithing branch here would have made it three copies again. Instead it now WALKS
+// `unlocksAt`, which is the state-aware one — so it inherits every gate for free (the Stave stays
+// hidden until Elias gives it) and the next craft cannot forget it, because there is nothing left to
+// forget. Two mirrors remain, and check-saves.mjs asserts they agree for every skill.
+//
+// Cost: at most 99 cheap calls, once, when a panel opens. Not a frame path.
 function nextUnlock(skill){
   const lv = skillLvl(skill);
-  let best = null;
-  const add = (n, label) => { if(n > lv && (!best || n < best.at)) best = { at:n, label }; };
-  if(skill==="Farming")     for(const k in CROPS) add(CROPS[k].lvl, CROPS[k].name);
-  if(skill==="Woodcutting") for(const k in TREES) add(TREES[k].lvl, TREES[k].name);
-  if(skill==="Mining"){ for(const k in ORES) add(ORES[k].lvl, ORES[k].name);
-    for(const k in GEM_SEAMS) add(GEM_SEAMS[k].lvl, GEM_SEAMS[k].name);          // v5.3
-    add(PROSPECT_LEVEL, "◇ Read the seams"); }
-  if(skill==="Fishing"){ FISH.forEach(f=>add(f.lvl, f.name)); LEGENDS.forEach(l=>add(l.lvl, l.name+" (legend)")); }
-  if(skill==="Cooking") for(const r of RECIPES) if(!r.flag) add(r.lvl, r.name);   // v4.13: flag-gated (friendship-taught) recipes aren't level unlocks
-  if(skill==="Warding") for(const t of WARD_TECHS) add(t.lvl, "⟡ " + t.name);   // v5.1 the technique ladder
-  // v4.20: creature families are NOT level unlocks (spawns are keyed on depth — see WARD_BANDS), so the
-  // old Warding branch here was a phantom. The REAL gates are the tool ladder and the grove's deadfalls.
-  toolGates(skill, add);
-  if(skill==="Woodcutting") for(const r in DEADFALL) add(DEADFALL[r].lvl, "the grove's " + ordinalRing(+r) + " ring");
-  return best;
+  for(let l = lv + 1; l <= 99; l++){
+    const u = unlocksAt(skill, l);
+    if(u.length) return { at:l, label:u[0] };
+  }
+  return null;
 }
 // The tool ladder is a real, hard-enforced gate (buyTool refuses below TIER_LEVEL[t]) that appeared in no
 // guide and no level-up banner — so the most-felt upgrades in the game (the Hoe/Can reach at 20, a faster
@@ -281,6 +285,16 @@ function unlocksAt(skill, lvl){
   }
   if(skill==="Fishing"){ FISH.forEach(f=>{ if(f.lvl===lvl) u.push(f.name); }); LEGENDS.forEach(l=>{ if(l.lvl===lvl) u.push(l.name+" (legend)"); }); }
   if(skill==="Cooking") for(const r of RECIPES) if(!r.flag && r.lvl===lvl) u.push(r.name);   // v4.13: friendship-taught recipes aren't level unlocks
+  // ★ v6.4.5 — Smithing. v6.4 added the branch to `unlockLadder` (the LINTER's mirror, 01-data.js)
+  // and forgot this one, which is the panel the PLAYER reads. The linter counted 38 marks and
+  // graded the ladder 0.0% dead; the Skill Guide showed ten — the hammer tiers and the four mastery
+  // rungs — and not one of the twenty-six forgings. A ladder the player cannot see is not a ladder,
+  // and "the template craft" was 74% invisible in the panel that exists to show it.
+  //
+  // The identical omission is recorded at 01-data.js:3075 for Warding in v5.1. Twice is a pattern:
+  // these two functions are mirrors and MUST be edited together. tools/check-saves.mjs now asserts
+  // they agree for every skill, so there is no third time.
+  if(skill==="Smithing") for(const r of FORGE) if(r.lvl===lvl) u.push(r.name + (r.smelt ? " (smelt)" : ""));
   // v4.20: the tool ladder + the grove's deadfalls — real, enforced gates that the guide never showed.
   // (The old Warding creature rows are gone: they were depth content, not level unlocks. See WARD_BANDS.)
   toolGates(skill, (n, label) => { if(n === lvl) u.push(label); });

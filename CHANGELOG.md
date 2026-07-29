@@ -166,6 +166,56 @@ which makes it a build checklist for v6.5 rather than a post-mortem.
 
 ---
 
+## 2026-07-29 — v6.4.5 "Hands" (code 149, tag `v6.4.5`) — three mirrors of one truth, two of them stale
+
+Found by the v6.5 design review, which went looking for what a new craft must land beside and noticed
+that **the last one didn't**.
+
+### The ladder the player could not see
+
+The same knowledge — *what does a level in this craft buy* — was transcribed in **three** places:
+
+| function | file | feeds |
+|---|---|---|
+| `unlockLadder(skill)` | 01-data.js | the cadence linter, the atlas |
+| `unlocksAt(skill, lvl)` | 08-actions.js | the in-game Skill Guide |
+| `nextUnlock(skill)` | 08-actions.js | the level-up pointer |
+
+v6.4 added Smithing's 26 forgings to **the first only**. So the linter graded **38 marks, 0.00% dead**
+and shipped that as the release's headline, while the Skills panel showed the player **ten** — the
+hammer tiers and the four mastery rungs. Every other craft matched exactly (39/39, 25/25, 22/22,
+32/32, 35/35, 15/15); Smithing was 10/38. **The template craft was 74% invisible in the panel that
+exists to show it**, and a metric measuring a table no panel renders is worse than no metric.
+
+`nextUnlock` was stale too: at Smithing 33 it pointed at level **45**, walking past the Brazier (36),
+the Plough Blade (39) and the Cobalt Bar (42).
+
+**This is the second occurrence.** v5.1 did the identical thing to Warding's technique ladder — it is
+written down at `01-data.js:3075`. Twice is a pattern, so the fix is structural rather than another
+branch:
+
+- `unlocksAt` gains its Smithing branch (the panel now shows all 38).
+- **`nextUnlock` is now DERIVED** — it walks `unlocksAt` instead of keeping its own copy. Three
+  mirrors become two, it inherits every state gate for free (the Stave stays hidden until Elias gives
+  it), and the next craft cannot forget it because there is nothing left to forget.
+- `check-saves.mjs` asserts, per skill, that the panel count equals the linter count **and** that the
+  pointer lands on the next real mark. **3,547 invariants**, up from 3,407.
+
+### The Hammer stopped lying
+
+Its upgrade line read *"stronger, less energy"* — the default in `toolPerk`. A smith's hammer is never
+swung at anything, so "stronger" was meaningless. `TOOL_PERK.Hammer` now states what the tier actually
+buys, straight off `FORGE_ENERGY_BY_TIER`: *"3 energy a working"* … *"no cost at all"*.
+
+### One note on reading a red light
+
+The pointer assertion failed all ten fixtures on its first run — and **the harness was wrong, not the
+game**: it compared against `marks[0]`, but `nextUnlock` means the first mark *strictly above* the
+player's level, and Smithing's first mark sits at 1. Recorded because trusting a red light without
+reading it is its own way to lose a day.
+
+---
+
 ## [Unreleased]
 
 ### Tooling — the atlas now guards what a Guild wing lights ON, not just that it has prose

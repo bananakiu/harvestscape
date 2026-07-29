@@ -146,6 +146,47 @@ for(const file of files){
     ok(s.skills && s.skills[sk] !== undefined, `skills.${sk} missing — the migration never gave this save the craft`);
     ok(Number.isFinite(s.skills && s.skills[sk]), `skills.${sk} is ${s.skills && s.skills[sk]}, not a number`);
   }
+  // ★ v6.4.5 — THE TWO LADDER MIRRORS MUST AGREE.
+  //
+  // `unlockLadder(skill)` (01-data.js) feeds the cadence linter and the atlas. `unlocksAt(skill,lvl)`
+  // (08-actions.js) feeds the in-game Skill Guide. They are mirrors of one another and they have now
+  // drifted TWICE: v5.1 shipped Warding's technique ladder to the linter and not to the panel
+  // (recorded at 01-data.js:3075), and v6.4 did exactly the same with Smithing's 26 forgings — the
+  // linter graded 38 marks at 0.0% dead while the player was shown ten.
+  //
+  // A ladder the player cannot see is not a ladder, and a metric that measures a table no panel
+  // renders is worse than no metric. So: for every skill, the two must produce the same count.
+  {
+    const unlockLadder = sb.get("unlockLadder"), unlocksAt = sb.get("unlocksAt");
+    const keep = sb.get("state");
+    sb.setState(Object.assign(FRESH, { flags: Object.assign({}, FRESH.flags, { staveEarned: true }) }));
+    if(unlockLadder && unlocksAt) for(const sk in FRESH.skills){
+      let panel = 0; for(let l = 1; l <= 99; l++) panel += unlocksAt(sk, l).length;
+      const linter = unlockLadder(sk).length;
+      ok(panel === linter,
+        `${sk}: the Skill Guide shows ${panel} unlock(s) and the cadence linter counts ${linter} — ` +
+        `unlocksAt (08-actions.js) and unlockLadder (01-data.js) are mirrors and have drifted`);
+      // …and the level-up pointer must never skip a mark. nextUnlock is derived from unlocksAt as of
+      // v6.4.5, so this can only fail if someone re-writes it as a third hand-kept copy. Which is
+      // exactly what it was, and exactly how it came to point past nine levels of Smithing content.
+      // `nextUnlock` means the first mark STRICTLY ABOVE the player's level, so from a fresh state
+      // (level 1) the answer is the lowest mark greater than 1 — not marks[0], which may sit at 1.
+      // (First pass asserted marks[0] and failed all ten fixtures on correct code. Worth recording:
+      // the harness was wrong and the game was right, which is the failure mode that wastes a day if
+      // you trust the red light without reading it.)
+      const marks = unlockLadder(sk).map(u => u.lvl).sort((a, b) => a - b);
+      const nextUnlock = sb.get("nextUnlock"), skillLvl = sb.get("skillLvl");
+      if(nextUnlock && skillLvl && marks.length){
+        const lv = skillLvl(sk);
+        const want = marks.find(m => m > lv);
+        const n = nextUnlock(sk);
+        ok(want === undefined ? n === null : (n && n.at === want),
+          `${sk}: at level ${lv} nextUnlock points at ${n ? n.at : "nothing"}, but the next real mark is ${want ?? "none"} — the pointer skips content`);
+      }
+    }
+    sb.setState(keep || FRESH);
+  }
+
   // ★ v6.4.4 — TABLE COMPLETENESS, the general form of two bugs shipped in one day.
   //
   // v6.4 added a seventh craft and a seventh tool, and TWO per-key tables were missed. One was caught

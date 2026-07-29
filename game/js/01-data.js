@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "6.4.4", code: 148, codename: "Hands", date: "2026-07-29" };
+const VERSION = { name: "6.4.5", code: 149, codename: "Hands", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"6.4.5", code:149, date:"2026-07-29", name:"Hands", notes:[
+    { t:"fix", s:"The Skills panel shows all of Smithing. It was listing ten things \u2014 the hammer tiers and the four masteries \u2014 and none of the twenty-six forgings, so the craft that was built to have something at every level looked like the emptiest one in the game. All 38 are there now." },
+    { t:"fix", s:"\u201cNext unlock\u201d no longer skips past things. At Smithing 33 it pointed at level 45 and walked straight past the brazier, the plough blade and the cobalt bar." },
+    { t:"fix", s:"A Hammer upgrade stops claiming it makes the tool \u201cstronger\u201d \u2014 you never swing it at anything. It says what it actually buys: how little the fire takes out of you." },
+  ]},
   { v:"6.4.4", code:148, date:"2026-07-29", name:"Hands", notes:[
     { t:"fix", s:"A Gold Hammer no longer announces that \u201cthe undefined is set into the handle\u201d. Every tool takes a keepsake gem at its third tier and the Hammer was never given one \u2014 it takes a Diamond now, the one stone left unspoken for and the only one a smith would rate." },
   ]},
@@ -1895,6 +1900,9 @@ const TOOL_PERK = {
   Can: ["", "waters a 3-tile row", "waters a 5-tile row", "waters 3×3", "waters 3×3, next to no energy", "waters 3×3, harder steel", "waters 3×3, the star's own temper"],
   Hoe: ["", "tills a 3-tile row", "tills a 5-tile row", "tills 3×3", "tills 3×3, next to no energy", "tills 3×3, harder steel", "tills 3×3, the star's own temper"],
   Rod: ["", "faster bites, steadier reel", "faster bites, steadier reel", "faster bites, steadier reel", "faster bites, steadier reel", "faster bites, steadier reel", "faster bites, steadier reel"],
+  // v6.4.5 — the Hammer's default read "stronger, less energy", and "stronger" is a lie: a smith's
+  // hammer is never swung at anything. Say what the tier actually buys (FORGE_ENERGY_BY_TIER).
+  Hammer: ["", "5 energy a working", "4 energy a working", "3 energy a working", "2 energy a working", "1 energy a working", "no cost at all"],
 };
 const toolPerk = (tool, tier) => (TOOL_PERK[tool] && TOOL_PERK[tool][tier]) || "stronger, less energy";
 // Tool tiers cost wood + ore + gold — and the top tiers a signature gem / the deep materials — so
