@@ -77,6 +77,7 @@ const sb = loadGame();                       // the CURRENT build — the thing 
 const levelFor = sb.get("levelFor");
 const W = sb.get("W"), H = sb.get("H");
 const SAVE_KEY = sb.get("SAVE_KEY");
+const FRESH = sb.freshState();               // v6.4: the shape every migrated save must end up matching
 const store = sb.__store;
 
 console.log(`Migration harness — ${files.length} era fixture(s) against v${sb.get("VERSION").name} (code ${sb.get("VERSION").code})\n`);
@@ -130,6 +131,25 @@ for(const file of files){
     ok(capNow >= sb.get("skillLvl")(sk), `${sk}: cap ${capNow} sits below the effective level — that is a demotion`);
   }
   ok(s.skills && s.skills.Warding !== undefined, "skills.Warding missing — a pre-v4 save must gain the sixth skill");
+  // ★ v6.4 — the general form of the line above, which existed only for Warding and so asserted
+  // exactly one release's worth of the rule.
+  //
+  // migrateSave DOES seed new skill and tool keys correctly (two generic loops, 11-title.js ~294 and
+  // ~303) — that was verified by disabling each and re-running, not by reading. But nothing asserted
+  // the OUTCOME: "no demoted level" walks the save's own keys, so an absent key is neither a
+  // demotion nor a NaN, and all 2,317 prior invariants would have passed with a craft missing
+  // entirely. The mechanism was sound and unguarded; a refactor of either loop would have broken
+  // every future craft in silence.
+  //
+  // Derived from freshState, so the three crafts still to come are covered the day their keys land.
+  for(const sk in FRESH.skills){
+    ok(s.skills && s.skills[sk] !== undefined, `skills.${sk} missing — the migration never gave this save the craft`);
+    ok(Number.isFinite(s.skills && s.skills[sk]), `skills.${sk} is ${s.skills && s.skills[sk]}, not a number`);
+  }
+  for(const tl in FRESH.tools){
+    ok(s.tools && s.tools[tl] !== undefined, `tools.${tl} missing — the migration never gave this save the tool`);
+    ok(Number.isFinite(s.tools && s.tools[tl]), `tools.${tl} is ${s.tools && s.tools[tl]}, not a number`);
+  }
 
   // ---- 1c. v5.6: the heart retier is not allowed to cost anyone a scene ----
   //

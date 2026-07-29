@@ -227,6 +227,12 @@ function migrateSave(s){
   }
   const f = freshState();
   for(const k in f){ if(s[k] === undefined) s[k] = f[k]; }
+  // NOTE (v6.4, checked): the loop above is SHALLOW — `s.skills` is never undefined on a real save,
+  // so it does NOT recurse, and a new craft key would not land here. It lands anyway, because two
+  // older generic loops further down already cover exactly this: TOOLS at ~line 294 and f.skills at
+  // ~line 303. Adding a third copy here was the first instinct and it was wrong; what was actually
+  // missing was not a mechanism but an ASSERTION that the mechanism works, which now lives in
+  // tools/check-saves.mjs. Do not add a backfill here — extend one of those two.
   s.mounted = false;   // v3.22: never load mid-ride (a stale saddle would strand the speed/sprite)
   // v4.23 "The Even Hand": farm trees persist as {kind,hp} (04-world.js:256), so a save made before the
   // tree-HP rebalance keeps standing pines/maples/elders at their OLD, higher HP forever — the buff would

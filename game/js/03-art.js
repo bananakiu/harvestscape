@@ -593,6 +593,9 @@ const CHAR_SPEC = {
   // v6.1 Thea — a warden of Orla's order, back from the north. Warden colours (Elias's slate-blue
   // lineage) but hers are unfaded: she wasn't here for the years that wore his out.
   thea:   { skin:"#a8724a", skinSh:"#875634", hair:"#3a3a4a", hairSh:"#26262f", shirt:"#3f5a7a", shirtSh:"#2c4058", pants:"#4a4a52", pantsSh:"#35353c", shoe:"#2a2018" },
+  // v6.4 Fenn — the smith. Forge colours: soot, iron-grey hair gone early, and the one warm thing
+  // about her is the fire she stands in front of all day.
+  fenn:   { skin:"#c08050", skinSh:"#9c6338", hair:"#5a5a60", hairSh:"#41414a", shirt:"#7a4a30", shirtSh:"#5c3622", pants:"#3a3a3a", pantsSh:"#2a2a2a", shoe:"#2a2018" },
   wick:   { skin:"#d8a878", skinSh:"#bd8e60", hair:"#6a4a2a", hairSh:"#4c341c", shirt:"#5a7a9a", shirtSh:"#425c76", pants:"#6a5a3a", pantsSh:"#4e422a", shoe:"#3a2a1a" },
 };
 function buildChars(){
@@ -863,6 +866,8 @@ function buildPortraits(){
     shirt:"#7a8a72", feature:"hair", extra:"beard" });
   portrait("port_sable", { skin:"#e0c0a0", skinSh:"#bd9a78", hair:"#9aa0a6", brow:"#767c82",
     shirt:"#4a6a5a", feature:"braid", extra:"" });
+  portrait("port_fenn",  { skin:"#c08050", skinSh:"#9c6338", hair:"#5a5a60", brow:"#41414a",
+    shirt:"#7a4a30", feature:"braid", extra:"" });
   portrait("port_wick",  { skin:"#d8a878", skinSh:"#bd8e60", hair:"#6a4a2a", brow:"#4c341c",
     shirt:"#5a7a9a", feature:"hair", extra:"freckles" });
   portrait("port_thea",  { skin:"#a8724a", skinSh:"#875634", hair:"#3a3a4a", brow:"#26262f",
@@ -1447,6 +1452,88 @@ function buildBeachArt(){
   // both blink are not one lighthouse. `marrowFlash()` (below) is the light's *character* — every
   // place that draws Marrow Point reads it, so the pixel on the ridge and the lamp at the tip are
   // lit by the same clock.
+  // ======================================================================
+  //  v6.4 SMITHING — the forge's outputs
+  // ======================================================================
+  //  Twenty-six items is more sprites than any previous release added at once, so they are drawn by
+  //  SHAPE FUNCTIONS parameterised on the metal's colour rather than one-off by hand. That is not a
+  //  shortcut — it is the reason the ladder reads: a Copper Bar and a Star Metal Bar are recognisably
+  //  the same object in different metal, which is exactly the information the player needs at a
+  //  glance. The colour comes from FORGE's own `col`, so a rebalance that changes a metal changes its
+  //  picture too. (§8.1: shade by rotating hue, not just value — `sh()` below already does that.)
+  // shade() takes a MULTIPLIER; the forge's shape functions read better in percent. One wrapper.
+  const shd = (c, pct) => shade(c, 1 + pct/100);
+  mkSpr("tool_hammer", 16, 16, g => {
+    px(g,7,5,2,9,"#a0774a"); px(g,7,5,1,9,"#b98d5c");
+    px(g,3,3,10,4,"#9aa2ac"); px(g,3,3,10,1,"#c2cad4"); px(g,3,6,10,1,"#6e7883");
+    px(g,4,4,2,2,"#c8d0da"); });
+  const barSpr  = (c) => (g) => { px(g,3,7,10,5,c); px(g,3,7,10,1,shd(c,26)); px(g,3,11,10,1,shd(c,-30));
+                                  px(g,4,8,3,2,shd(c,42)); px(g,2,8,1,4,shd(c,-18)); px(g,13,8,1,4,shd(c,-18)); };
+  const barsOf  = { "Copper Bar":"#c77b3f", "Iron Bar":"#bfa8a0", "Gold Bar":"#ffd75a",
+                    "Cobalt Bar":"#4f7ac9", "Deepsilver Bar":"#b8c4d0", "Star Metal Bar":"#c8b4ff" };
+  for(const n in barsOf) mkSpr("item_"+n, 16, 16, barSpr(barsOf[n]));
+
+  mkSpr("item_Nails", 16, 16, g => { for(let i=0;i<4;i++){ const x=3+i*3, y=4+(i%2)*3;
+    px(g,x,y,1,7,"#9a8a78"); px(g,x-1,y,3,1,"#c2b4a0"); } });
+  mkSpr("item_Hook", 16, 16, g => { px(g,7,3,2,4,"#a8917a"); px(g,6,7,4,2,"#c2ae94");
+    px(g,5,9,2,3,"#a8917a"); px(g,7,12,4,2,"#a8917a"); px(g,10,10,1,3,"#8a7460"); });
+  const hingeArt = (c) => (g) => { px(g,3,4,4,9,c); px(g,9,4,4,9,c); px(g,3,4,4,1,shd(c,28)); px(g,9,4,4,1,shd(c,28));
+    px(g,7,5,2,7,shd(c,-24)); for(const y of [6,9]) { px(g,4,y,1,1,shd(c,-40)); px(g,11,y,1,1,shd(c,-40)); } };
+  mkSpr("item_Hinge",      16, 16, hingeArt("#b08a5a"));
+  mkSpr("item_Gate Hinge", 16, 16, hingeArt("#5f86c9"));
+  mkSpr("item_Horseshoe", 16, 16, g => { px(g,4,4,8,2,"#9a9a9a"); px(g,3,6,2,6,"#9a9a9a"); px(g,11,6,2,6,"#9a9a9a");
+    px(g,4,4,8,1,"#c4c4c4"); px(g,3,11,2,1,"#6e6e6e"); px(g,11,11,2,1,"#6e6e6e");
+    for(const y of [6,9]){ px(g,4,y,1,1,"#5a5a5a"); px(g,11,y,1,1,"#5a5a5a"); } });
+  const chainArt = (c) => (g) => { for(let i=0;i<3;i++){ const y=3+i*4;
+    px(g,5,y,6,1,c); px(g,5,y+3,6,1,c); px(g,4,y+1,1,2,c); px(g,11,y+1,1,2,c); px(g,5,y,6,1,shd(c,30)); } };
+  mkSpr("item_Chain",          16, 16, chainArt("#8f9aa6"));
+  mkSpr("item_The Long Chain", 16, 16, chainArt("#c8d4e4"));
+  mkSpr("item_Trivet", 16, 16, g => { px(g,3,6,10,2,"#7e8894"); px(g,3,6,10,1,"#a2acb8");
+    px(g,4,8,1,5,"#6e7883"); px(g,11,8,1,5,"#6e7883"); px(g,7,8,2,5,"#6e7883"); });
+  mkSpr("item_Fire-Iron", 16, 16, g => { px(g,8,2,2,10,"#6e7883"); px(g,8,2,1,10,"#8f9aa6");
+    px(g,5,12,6,2,"#6e7883"); px(g,5,12,6,1,"#8f9aa6"); px(g,7,1,4,2,"#5a636d"); });
+  const lanternArt = (c, glow) => (g) => {
+    px(g,6,2,4,1,shd(c,-30)); px(g,7,3,2,1,shd(c,-30));
+    px(g,4,4,8,2,c); px(g,4,4,8,1,shd(c,32)); px(g,4,11,8,2,c);
+    px(g,4,6,1,5,c); px(g,11,6,1,5,c);
+    px(g,5,6,6,5,glow); px(g,6,7,4,3,"#fff8d8"); };
+  mkSpr("item_Lantern Frame", 16, 16, lanternArt("#ffce5a", "rgba(255,230,160,0.35)"));
+  mkSpr("item_Fine Lantern",  16, 16, lanternArt("#e2ecf4", "#ffe6a0"));
+  mkSpr("item_Brazier", 16, 16, g => { px(g,4,6,8,4,"#c98a4a"); px(g,4,6,8,1,"#e2a868"); px(g,4,9,8,1,"#9a6838");
+    px(g,7,10,2,3,"#8a5c30"); px(g,5,13,6,1,"#8a5c30");
+    px(g,6,3,1,3,"#ff9a3a"); px(g,8,2,1,4,"#ffce5a"); px(g,10,4,1,2,"#ff7a2a"); });
+  mkSpr("item_Plough Blade", 16, 16, g => { px(g,3,5,9,3,"#a8b0bc"); px(g,3,5,9,1,"#ccd4e0");
+    for(let i=0;i<7;i++) px(g,4+i,8+((i*3)%3),1,2,"#8f9aa6"); px(g,11,4,2,5,"#7e8894"); });
+  mkSpr("item_Forge Tongs", 16, 16, g => { px(g,4,3,2,8,"#4f6a8a"); px(g,10,3,2,8,"#4f6a8a");
+    px(g,4,3,2,1,"#6f8aaa"); px(g,10,3,2,1,"#6f8aaa");
+    px(g,6,11,4,2,"#3f5a7a"); px(g,7,12,2,2,"#3f5a7a"); px(g,5,2,2,2,"#6f8aaa"); px(g,9,2,2,2,"#6f8aaa"); });
+  mkSpr("item_Cauldron", 16, 16, g => { px(g,3,6,10,6,"#3f4a5a"); px(g,4,12,8,1,"#2f3846");
+    px(g,3,5,10,2,"#556074"); px(g,2,6,1,3,"#2f3846"); px(g,13,6,1,3,"#2f3846");
+    px(g,5,7,6,2,"#68758a"); px(g,6,3,4,2,"#8f9aa6"); });
+  const vaneArt = (c) => (g) => { px(g,7,4,2,10,"#8a7a5e"); px(g,4,6,9,1,c); px(g,7,3,2,1,c);
+    px(g,9,3,4,3,c); px(g,9,3,4,1,shd(c,30)); px(g,3,5,2,3,c); px(g,6,13,4,1,"#6a5a44"); };
+  mkSpr("item_Weathervane", 16, 16, vaneArt("#d8b45a"));
+  const bellArt = (c) => (g) => { px(g,6,2,4,2,shd(c,-30)); px(g,5,4,6,6,c); px(g,4,10,8,2,c);
+    px(g,5,4,6,1,shd(c,34)); px(g,4,11,8,1,shd(c,-30)); px(g,7,12,2,2,shd(c,-18)); px(g,6,5,2,4,shd(c,22)); };
+  mkSpr("item_Founder's Bell", 16, 16, bellArt("#c8b478"));
+  mkSpr("item_Sun-Bell",       16, 16, bellArt("#ffe27a"));
+  const fittingArt = (c) => (g) => { px(g,3,5,10,3,c); px(g,3,5,10,1,shd(c,30));
+    px(g,5,8,2,5,c); px(g,9,8,2,5,c); px(g,4,13,3,1,shd(c,-26)); px(g,9,13,3,1,shd(c,-26));
+    px(g,7,3,2,2,shd(c,20)); };
+  mkSpr("item_Warden's Fitting", 16, 16, fittingArt("#9fc4e8"));
+  mkSpr("item_Star Fitting",     16, 16, fittingArt("#c8b4ff"));
+  const anvilArt = (c) => (g) => { px(g,3,5,10,3,c); px(g,3,5,10,1,shd(c,30)); px(g,2,6,1,2,c);
+    px(g,6,8,4,3,shd(c,-20)); px(g,4,11,8,2,shd(c,-14)); px(g,4,12,8,1,shd(c,-34)); };
+  mkSpr("item_Anvil-Steel",   16, 16, anvilArt("#7e8894"));
+  mkSpr("item_Starward Anvil",16, 16, anvilArt("#d8c8ff"));
+  // the forge itself, on the map — a stone hearth with the fire always in
+  mkSpr("forge", 16, 24, g => {
+    px(g,1,10,14,13,"#5a5048"); px(g,1,10,14,1,"#726558"); px(g,2,22,12,2,"#3f3830");
+    px(g,3,13,10,7,"#2c2620"); px(g,4,16,8,4,"#c94f2a"); px(g,5,17,6,3,"#ff9a3a"); px(g,6,18,4,2,"#ffd75a");
+    px(g,3,4,4,7,"#4a4238"); px(g,3,4,4,1,"#635a4e"); px(g,4,2,2,2,"#3a352e"); });
+  mkSpr("anvil", 16, 16, g => {
+    px(g,2,5,12,3,"#5a636d"); px(g,2,5,12,1,"#7e8894"); px(g,1,6,1,2,"#5a636d");
+    px(g,6,8,4,3,"#4a525b"); px(g,3,11,10,3,"#4a525b"); px(g,3,13,10,1,"#333a42"); });
   // ---- v6.3 THE FESTIVAL GREEN ----
   // Every one of these draws in TWO states, because the whole point of the Green is that the writ
   // the player already funded visibly changes it. A prop that looks the same before and after is a

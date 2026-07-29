@@ -146,7 +146,7 @@ Sequenced so each release ships alone, and **so that no skill key ever lands bef
 |---|---|
 | **The Promised Coast** ✅ v6.2.0 | Marrow Point + the boatyard — the coast road's north end opens at last, on the ferry that already runs. (The Point deferred to a later coast release.) |
 | **The Green** ✅ v6.3.0 | The Festival Green becomes real: the writ the player could already buy now builds a field, Maya's bench exists, the Egg Fair + Harvest Fair move there, and the whole cast attends. |
-| **Hands (Smithing)** | The template craft, with the forge and Fenn the smith. |
+| **Hands (Smithing)** ✅ v6.4.0 | The template craft: 38 marks, 0.0%% dead, no gap over 5 levels, 5 marks above L85. Fenn + the open-air smithy. Tool heads at 45%% of Tom's gold, gating nothing. |
 | **The Wild (Foraging)** | The craft + the wild places it needs: the upper Gullwater, the ruin on the ridge, the hollow. |
 | **The Flock (Ranching)** | The craft + pasture. |
 | **The Hearth** | Hearthcraft, the Guild kitchen and larder, the rooms behind the hall. |

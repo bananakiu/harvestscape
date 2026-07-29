@@ -571,7 +571,7 @@ function panelTabs(panelId, stripId, tabs, render){
 // there (principle 4.3) without burying the levels. Icons reuse the mkIcon/hydrateIcons sprite
 // pipeline; every colour role is the pre-blessed one (level --gold, bar --blue, unlock --blue,
 // mastery --gold-hi, next-mastery --ink-soft) — no new hex, no new frame.
-const SKILL_ICON = { Farming:"item_Turnip", Woodcutting:"item_Wood", Mining:"item_Stone", Fishing:"item_Sardine", Cooking:"item_Berry Bun", Warding:"item_Stave" };   // v4.0
+const SKILL_ICON = { Farming:"item_Turnip", Woodcutting:"item_Wood", Mining:"item_Stone", Fishing:"item_Sardine", Cooking:"item_Berry Bun", Warding:"item_Stave", Smithing:"item_Iron Bar" };   // v4.0 · v6.4
 let skillSel = null;   // which skill's detail is expanded (null = grid only)
 function selectSkill(s){ skillSel = (skillSel === s) ? null : s; playSfx("select"); renderSkills(); }
 // v4.11 (owner update 1) — a RuneScape-style Skill Guide: EVERY level that unlocks something, for the
@@ -2053,6 +2053,54 @@ function rideWaystone(id){
 }
 
 // ---- kitchen ----
+// ======================================================================
+//  v6.4 THE FORGE PANEL
+// ======================================================================
+//  Structurally the cooking panel, deliberately: a player who has used one has used the other. The
+//  one thing it does differently is split SMELT from FORGE, because they are different verbs — one
+//  turns ore into stock, the other turns stock into a thing — and a single flat list of 26 rows
+//  hides that completely.
+function openForge(){ openPanel("forgePanel", renderForge); }
+function renderForge(){
+  const el = $("forgePanel"); if(!el) return;
+  const b = el.querySelector(".body"); if(!b) return;
+  const lvl = skillLvl("Smithing");
+  let html = `<div style="color:var(--ink-soft);margin-bottom:6px;">Smelt ore into bars; forge bars into what the valley needs. Trains Smithing. Each working costs ${FORGE_ENERGY} energy.</div>`;
+  const row = (r) => {
+    const can = Object.keys(r.ing).every(it => (state.inv[it]||0) >= r.ing[it]);
+    if(lvl < r.lvl)
+      return `<div class="row locked"><span class="lead" data-icon="item_${r.name}"><canvas></canvas>` +
+        `<span>${r.name} <span class="sub">🔒 Smithing ${r.lvl}</span></span></span><button disabled>make</button></div>`;
+    return `<div class="row"><span class="lead" data-icon="item_${r.name}"><canvas></canvas>` +
+      `<span>${r.name} <span class="sub">${matList(r.ing, ", ", true)}</span></span></span>` +
+      `<button ${can ? "" : "disabled"} onclick="forgeItem('${jsq(r.name)}')">make</button></div>`;
+  };
+  html += `<h2 style="font-size:1em;color:var(--gold-hi);margin:.2em 0;">SMELT</h2>`;
+  FORGE.filter(r => r.smelt).forEach(r => { html += row(r); });
+  html += `<h2 style="font-size:1em;color:var(--gold-hi);margin:.4em 0 .2em;">FORGE</h2>`;
+  FORGE.filter(r => !r.smelt).forEach(r => { html += row(r); });
+  // The tool heads. This is the section that makes Smithing worth levelling for a player who does
+  // not care about ironwork, and the reason it can exist at all is that it never GATES: the tool's
+  // own craft still decides whether you may hold the tier.
+  const heads = [];
+  for(const tool of TOOLS){
+    const cur = state.tools[tool] || 0; if(cur >= MAX_TIER) continue;
+    if(tool === "Stave" && !state.flags.staveEarned) continue;
+    const t = cur + 1, h = forgeHeadFor(tool, t); if(!h) continue;
+    const own = TOOL_SKILL[tool], ownLvl = skillLvl(own);
+    const okOwn = ownLvl >= h.lvl, okSmith = lvl >= h.smith;
+    const canMats = Object.keys(h.mats).every(it => (state.inv[it]||0) >= h.mats[it]) && state.gold >= h.g;
+    const why = !okOwn ? `🔒 ${own} ${h.lvl}` : !okSmith ? `🔒 Smithing ${h.smith}` : "";
+    heads.push(`<div class="row${why ? " locked" : ""}"><span class="lead" data-icon="tool_${TOOL_ICON[tool]}"><canvas></canvas>` +
+      `<span>${TOOL_TIERS[t]} ${tool} <span class="sub">${why || matList(h.mats, ", ", true) + " · " + h.g + "g"}</span></span></span>` +
+      `<button ${(!why && canMats) ? "" : "disabled"} onclick="forgeHead('${jsq(tool)}')">forge</button></div>`);
+  }
+  if(heads.length){
+    html += `<h2 style="font-size:1em;color:var(--gold-hi);margin:.4em 0 .2em;">TOOL HEADS <span class="sub" style="font-weight:normal;">— ${Math.round((1-FORGE_HEAD_DISCOUNT)*100)}% off Tom's price if you make it yourself</span></h2>`;
+    html += heads.join("");
+  }
+  b.innerHTML = html; hydrateIcons(b);
+}
 function openCooking(){ openPanel("cookPanel", renderCooking); }
 function renderCooking(){
   const b = $("cookPanel").querySelector(".body");
@@ -2632,7 +2680,7 @@ document.addEventListener("keydown", e => {
   // v4.27.1: guard BEFORE preventDefault — swallowing Tab unconditionally kills keyboard focus
   // navigation (the settings sliders, the quantity boxes) whenever a panel is open.
   else if(k === "tab"){ if(inputBusy()) return; e.preventDefault(); cycleSlot(e.shiftKey ? -1 : 1); }
-  else if("1234567".includes(k)) selectSlot(+k-1);   // v4.0: 7th slot is the Stave (only present once earned)
+  else if("12345678".includes(k)) selectSlot(+k-1);   // v4.0: 7th slot is the Stave (only present once earned)
 });
 document.addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
 // v4.27: THE MOUSE WHEEL. Stardew's most-used input by a mile — you scroll to change tools without ever

@@ -523,7 +523,7 @@ const OBJ_TITLE  = { geode:"Geode", bed:"Bed", campfire:"Campfire", stove:"Stove
   fountain:"Fountain", boardwalk:"Boardwalk", railcart:"Minecart", memorial:"Standing Stone", berrybush:"Berry Bush",
   frostberry:"Frostberry Bush", fruittree:"Fruit Tree", beehive:"Beehive", torch:"Torch", lamp:"Lamp", lantern:"Lantern",
   lighthouse:"Marrow Point Light", hut:"The ferry-master's hut", hull:"A boat's keel",   // v6.2
-  flagpole:"The Flagpole", firering:"The Fire-Ring", trestle:"A Trestle Table", longtable:"The Long Table", canopy:"The Canopy",   // v6.3
+  forge:"Fenn's Forge", anvil:"The Anvil", flagpole:"The Flagpole", firering:"The Fire-Ring", trestle:"A Trestle Table", longtable:"The Long Table", canopy:"The Canopy",   // v6.3
   opalseam:"Opal Seam", emeraldseam:"Emerald Seam", rubyseam:"Ruby Seam", diamondseam:"Diamond Seam",   // v5.3
   crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift", olddoor:"A Planked Door", keg:"Keg", jar:"Preserves Jar", sawmill:"Sawmill", press:"Cheese Press", bench:"Bench", plantpot:"Flower Planter",
   milestone:"The Milestone", shrine:"Roadside Shrine", mooring:"The Ferry Landing", samphirenode:"Samphire", hollynode:"Sea Holly", asternode:"Sea Aster",
@@ -1046,6 +1046,9 @@ function interact(){
         if(!state.flags.act2Done){ toast("A boat would need somewhere to go, and a reason.", "#cbb98f"); return; }
         if(!state.flags.marrowOpen){ startMarrowFirstSailing(); return; }
         sailTo("marrowpoint"); return;
+      case "forge": openForge(); return;
+      case "anvil":
+        showDialog("The Anvil", "Two hundredweight of it, on an elm stump sunk four feet into the ground so the ring doesn't travel.\n\nThe face is worn into a shallow dish, dead centre. That is a great many hammer-blows landing in exactly the same place, by somebody who was not aiming.", "port_valley"); return;
       case "flagpole":
         showDialog("The Flagpole", writGreenDone()
           ? "Straight, re-stepped, and flying the valley's three colours \u2014 red for the orchard, gold for the grain, blue for the water.\n\nThe rope has a new splice in it. Somebody has been up there."
@@ -1437,6 +1440,75 @@ function useWaystone(tx, ty, obj){
 }
 
 // ---- cooking ----
+// ======================================================================
+//  v6.4 SMITHING — forging
+// ======================================================================
+function forge(){ openForge(); }
+function forgeItem(name){
+  const r = FORGE_BY_NAME[name]; if(!r) return;
+  if(skillLvl("Smithing") < r.lvl){ toast(`Need Smithing ${r.lvl} to make ${r.name}.`, "#ff8a7a"); playSfx("error"); return; }
+  // The v4.33 lesson, applied: name what's short and by how much, and say if it's in the chest.
+  {
+    const short = Object.keys(r.ing).filter(it => (state.inv[it]||0) < r.ing[it]);
+    if(short.length){
+      const bits = short.map(it => `${r.ing[it] - (state.inv[it]||0)} more ${it}`);
+      const chest = short.filter(it => chestQty(it) > 0);
+      toast("You need " + bits.join(" and ") + "." +
+        (chest.length ? ` (${chest.join(" and ")} ${chest.length===1?"is":"are"} in your cottage chest.)` : ""), "#ff8a7a");
+      playSfx("error"); return;
+    }
+  }
+  // ★ Hot Work (25): the forging is sometimes free. Energy is checked BEFORE the ingredients are
+  // taken — a half-consumed forging that then refuses would be taking something, which the contract
+  // forbids outright.
+  const freeSwing = hasMastery("Smithing", 25) && chance(0.18);
+  const cost = freeSwing ? 0 : FORGE_ENERGY;
+  if(state.energy < cost){ toast("Too tired to work the fire.", "#ff8a7a"); playSfx("error"); return; }
+  for(const it in r.ing) take(it, r.ing[it]);
+  state.energy -= cost;
+  give(r.name, 1, true);
+  // ★ Thrift (50): a bar comes back off the anvil. Only ever a bar — returning a finished good would
+  // double the output of the whole ladder, and this is meant to soften the cost, not break it.
+  let back = null;
+  if(hasMastery("Smithing", 50) && chance(hasMastery("Smithing", 99) ? 0.30 : 0.16)){
+    const bars = Object.keys(r.ing).filter(it => /Bar$/.test(it));
+    if(bars.length){ back = pick(bars); give(back, 1, true); }
+  }
+  addXP("Smithing", r.xp); bump("forged");
+  toast(back ? `Forged ${r.name} — and saved a ${back}.`
+             : (freeSwing ? `Forged ${r.name} — the fire did the work.` : "Forged " + r.name + "!"), "#ffce5a");
+  playSfx("get"); pSparkle(state.px, state.py-14, r.col, back ? 14 : 8);
+  renderForge(); refreshHUD();
+}
+// ★ THE ANSWER TO THE HARD PROBLEM (see FORGE, 01-data.js). Smithing never gates a tool tier — it
+// offers a second way to PAY for one. Same TIER_LEVEL requirement on the tool's own craft, same
+// materials, plus bars; what changes is the gold. Additive, never blocking.
+const FORGE_ENERGY = 6;
+function forgeHeadFor(tool, tier){
+  const c = TIER_COST[tier]; if(!c) return null;
+  const barFor = [null, "Copper Bar", "Iron Bar", "Gold Bar", "Cobalt Bar", "Deepsilver Bar", "Star Metal Bar"][tier];
+  return { g: Math.round(c.g * FORGE_HEAD_DISCOUNT), mats: { ...c.mats, [barFor]: 2 }, bar: barFor,
+           lvl: TIER_LEVEL[tier], smith: Math.max(1, TIER_LEVEL[tier] - 5) };
+}
+function forgeHead(tool){
+  const cur = state.tools[tool] || 0, t = cur + 1;
+  const h = forgeHeadFor(tool, t); if(!h) return;
+  const own = TOOL_SKILL[tool];
+  // The tool's OWN craft is still the only thing that decides whether you may hold this tier. Smithing
+  // decides only what it costs. If this check ever moves, the whole design goes with it.
+  if(skillLvl(own) < h.lvl){ toast(`A ${TOOL_TIERS[t]} ${tool} needs ${own} ${h.lvl}.`, "#ff8a7a"); playSfx("error"); return; }
+  if(skillLvl("Smithing") < h.smith){ toast(`You'd need Smithing ${h.smith} to strike that head yourself.`, "#ff8a7a"); playSfx("error"); return; }
+  const short = Object.keys(h.mats).filter(it => (state.inv[it]||0) < h.mats[it]);
+  if(short.length){ toast("You need " + short.map(it => `${h.mats[it]-(state.inv[it]||0)} more ${it}`).join(" and ") + ".", "#ff8a7a"); playSfx("error"); return; }
+  if(state.gold < h.g){ toast(`${h.g}g for the charcoal and the flux — you have ${state.gold}g.`, "#ff8a7a"); playSfx("error"); return; }
+  for(const it in h.mats) take(it, h.mats[it]);
+  state.gold -= h.g;
+  state.tools[tool] = t;
+  addXP("Smithing", 120 + t * 220);
+  toast(`Struck a ${TOOL_TIERS[t]} ${tool} on your own anvil.`, "#ffce5a");
+  playSfx("levelup"); pSparkle(state.px, state.py-14, TIER_COL ? (TIER_COL[t]||"#ffd75a") : "#ffd75a", 16);
+  renderForge(); refreshHUD();
+}
 function cook(){ openCooking(); }
 function cookRecipe(i){
   const r = RECIPES[i]; if(!r) return;

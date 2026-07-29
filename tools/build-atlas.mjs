@@ -74,7 +74,7 @@ const PLAIN_KEYS = ["SEASONS", "SEASON_DAYS", "FESTIVALS", "BIRTHDAYS",
   "CROPS", "TREES", "ORES", "FISH", "FRUIT_TREES", "TREE_MATURE_DAYS", "TREE_FRUIT_CAP",
   "HIVE_COST", "HIVE_RADIUS", "HIVE_CAP", "HIVE_MAX",
   "WATER", "LEGENDS", "ITEM_SELL", "GEM_SELL", "SHORE",
-  "RECIPES", "PROJECTS", "WEATHERS", "WEATHER_ODDS",
+  "RECIPES", "FORGE", "FORGE_HEAD_DISCOUNT", "PROJECTS", "WEATHERS", "WEATHER_ODDS",
   "MASTERY", "MASTERY_NPC", "REQUESTS", "TOOLS", "TOOL_TIERS", "TIER_POWER", "TIER_COST", "CREATURES",
   "QUESTS", "FINALE_IDX", "XP_TABLE", "NPCDEF", "NPC_LINES",
   "HEART_EVENTS", "MARRIAGE_SCENES", "FESTIVAL_SCENES", "JOURNAL_PAGES"];
@@ -205,6 +205,7 @@ const STATS = [
   [cropList.length, "crops"],
   [(D.FISH || []).length + (D.LEGENDS || []).length, "fish (5 of them legendary)"],
   [(D.RECIPES || []).length, "recipes"],
+  [(D.FORGE || []).length, "forgings"],
   [(D.FESTIVALS || []).length + 1, "festivals a year (one earned)"],
   [masteryCount, `mastery perks across ${Object.keys(D.MASTERY || {}).length || 6} skills`],
 ].filter(([n]) => n > 0);
@@ -336,6 +337,11 @@ function skillsSection(){
   const fishRows = D.FISH.map(f => [f.lvl, `${dots(f.pal)} <b>${esc(f.name)}</b> — ${f.sell}g · lives in ${["pond", "coast"].filter(w => D.WATER[w].includes(f.name)).join(" & ") || "both waters"}`])
     .concat(D.LEGENDS.map(l => [l.lvl, `${dots(l.pal)} <b class="gold">★ ${esc(l.name)}</b> — legendary, ${l.sell}g (see The Hunt)`]));
   const cookRows = D.RECIPES.map(r => [r.lvl, `<b>${esc(r.name)}</b> — ${Object.entries(r.ing).map(([i, n]) => `${n}× ${esc(i)}`).join(" + ")} · ${r.energy} energy · ${r.sell}g`]);
+  // v6.4 Smithing — bars are stock, goods are inputs to something else. Marked so the two verbs read
+  // apart on the page the way they do in the panel.
+  const smithRows = (D.FORGE || []).map(r => [r.lvl,
+    `<b>${esc(r.name)}</b>${r.smelt ? ` <span class="sub">(smelt)</span>` : ""} — ` +
+    Object.entries(r.ing).map(([i, n]) => `${n}× ${esc(i)}`).join(" + ") + ` · ${r.xp} XP · ${r.sell}g`]);
   // v4.0 Warding — the "content" at each level is a creature family to settle (not a slay).
   const wardRows = Object.values(D.CREATURES || {}).map(c => {
     const tag = c.boss ? ` <b class="gold">★ boss</b>` : c.splits ? ` <span class="sub">(splits into Tanglets)</span>` : c.block ? ` <span class="sub">(guards its front)</span>` : "";
@@ -361,6 +367,7 @@ ${ladder("🪓 Woodcutting", D.MASTERY_NPC?.Woodcutting, woodRows, D.MASTERY?.Wo
 ${ladder("⛏ Mining", D.MASTERY_NPC?.Mining, mineRows, D.MASTERY?.Mining)}
 ${ladder("🎣 Fishing", D.MASTERY_NPC?.Fishing, fishRows, D.MASTERY?.Fishing)}
 ${ladder("🍳 Cooking", D.MASTERY_NPC?.Cooking, cookRows, D.MASTERY?.Cooking)}
+${D.FORGE ? ladder("🔨 Smithing", D.MASTERY_NPC?.Smithing, smithRows, D.MASTERY?.Smithing) : ""}
 ${ladder("🔔 Warding", D.MASTERY_NPC?.Warding, wardRows, D.MASTERY?.Warding)}
 
 ${cadenceBlock()}

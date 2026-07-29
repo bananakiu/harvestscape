@@ -134,6 +134,7 @@ const INTERACT_KINDS = new Set(["campfire","stove","counter","stall","shipbin","
   "wardledger",
   "lighthouse","hut","hull",   // v6.2 The Promised Coast
   "flagpole","firering","trestle","longtable",   // v6.3 The Festival Green
+  "forge","anvil",   // v6.4 Smithing
 ]);                                                // v4.3: the Warden's Ledger (Act III) — show the [E] prompt like Rowan's ledger
 function facingInteractable(fx, fy){
   const w = warpAt(fx,fy); if(w && !w.auto) return true;

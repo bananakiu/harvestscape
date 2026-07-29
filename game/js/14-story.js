@@ -1209,6 +1209,40 @@ const FESTIVAL_SCENES = {
 // ===================== HEART EVENTS =====================
 // Short scripted scenes, triggered when you talk to an NPC at a new heart tier.
 const HEART_EVENTS = {
+  // v6.4 Fenn. Her arc is about the thing a maker cannot make: a successor. It resolves the same
+  // question her 75 trial asks out loud — she wants ten brackets that outlast her, and she wants
+  // somebody else's hands on them. Four beats, all at the forge, none of them romantic.
+  fenn: [
+    { hearts:2, flag:"he_fenn_2", steps:[
+      { type:"say", who:"Fenn", portrait:"port_fenn", text:"Stand there. No — there. Where you can see the colour of it." },
+      { type:"say", who:"Fenn", portrait:"port_fenn", text:"Straw. Then bronze. Then that. That's the one. Any hotter and you're burning the good out of it, any cooler and you're just hitting a cold thing with a hammer and calling it work." },
+      { type:"say", who:"You", portrait:"port_player", text:"How long did it take you to learn to see that?" },
+      { type:"say", who:"Fenn", portrait:"port_fenn", text:"Eleven years. And I'm telling you in nine seconds, and you'll still take eleven years, because knowing it and seeing it aren't cousins." },
+      { type:"say", who:"Fenn", portrait:"port_fenn", text:"…But you're looking at the right part of the fire. That's day one done. Come back." },
+    ]},
+    { hearts:4, flag:"he_fenn_4", steps:[
+      { type:"say", who:"Fenn", portrait:"port_fenn", text:"You've noticed the bell's not rung on the smithing wing since the Guild opened again." },
+      { type:"say", who:"You", portrait:"port_player", text:"I hadn't, actually." },
+      { type:"say", who:"Fenn", portrait:"port_fenn", text:"Good. Then I've hidden it well. It lights when somebody upgrades a tool twice, and for eleven years the only person upgrading tools was me, upgrading my own." },
+      { type:"say", who:"Fenn", portrait:"port_fenn", text:"A craft with one hand in it isn't a craft. It's a hobby with a fire." },
+      { type:"say", who:"Fenn", portrait:"port_fenn", text:"…It's rung twice since you came. I heard it both times and I didn't say anything either time. I'm saying it now." },
+    ]},
+    { hearts:5, flag:"he_fenn_5", steps:[
+      { type:"say", who:"Fenn", portrait:"port_fenn", text:"Here. Hold this. Careful — the shoulder's still warm." },
+      { type:"say", who:"You", portrait:"port_player", text:"It's a hammer." },
+      { type:"say", who:"Fenn", portrait:"port_fenn", text:"It's MY hammer. Head's mine, haft's my mother's, the wedge is from a Guild bracket that came down in the year the roof went." },
+      { type:"say", who:"Fenn", portrait:"port_fenn", text:"Everybody thinks a smith's tools are the tools. They're not. They're the only thing in a forge that isn't for sale." },
+      { type:"say", who:"Fenn", portrait:"port_fenn", text:"Give it back. …Not yet. Hold it a bit longer. I want to see how you hold it when nobody's asked you to do anything with it." },
+    ]},
+    { hearts:6, flag:"he_fenn_6", steps:[
+      { type:"say", who:"Fenn", portrait:"port_fenn", text:"I've been thinking about the brackets. The ten." },
+      { type:"say", who:"Fenn", portrait:"port_fenn", text:"When I made the first nine I was thirty-one and I thought I was making lamp fittings. I wasn't. I was writing my name in a building." },
+      { type:"say", who:"You", portrait:"port_player", text:"That doesn't sound like a bad thing." },
+      { type:"say", who:"Fenn", portrait:"port_fenn", text:"It's not. It's just that a name in a building only means something if somebody comes along after and adds theirs under it." },
+      { type:"say", who:"Fenn", portrait:"port_fenn", text:"So." },
+      { type:"say", who:"Fenn", portrait:"port_fenn", text:"…So nothing. Fire's up. Get the tongs." },
+    ]},
+  ],
   maya: [
     { hearts:2, flag:"he_maya_2", steps:[
       { type:"say", who:"Maya", portrait:"port_maya", text:"Oh — hey. Can I show you something? I don't usually show people this." },

@@ -27,8 +27,8 @@ function freshState(){
     market:{},                            // how much of each item Tom has taken today; cleared at dawn
     dailyXpActs:{},                        // v4.0 variety spark: {skill: sparked-grants-today}; reset each dawn
     seedSel:"turnip",
-    skills:{ Farming:0, Woodcutting:0, Mining:0, Fishing:0, Cooking:0, Warding:0 },   // v4.0: Warding, the sixth skill
-    tools:{ Hoe:0, Can:0, Axe:0, Pick:0, Rod:0, Stave:0 },   // Stave is owned only once Elias grants it (state.flags.staveEarned) — 0 here just seeds the tier
+    skills:{ Farming:0, Woodcutting:0, Mining:0, Fishing:0, Cooking:0, Warding:0, Smithing:0 },   // v4.0: Warding, the sixth skill · v6.4: Smithing, the seventh
+    tools:{ Hoe:0, Can:0, Axe:0, Pick:0, Rod:0, Stave:0, Hammer:0 },   // Stave is owned only once Elias grants it (state.flags.staveEarned) — 0 here just seeds the tier
     rel:{},                               // per-NPC relationship { points, talkedDay, giftedDay }
     animals:{ chickens:[], cows:[], sheep:[] },   // each: { friend, eggDay|milkDay|woolDay, petDay }
     mounted:false,                        // v3.22: are you riding the horse right now (transient; reset on load)

@@ -22,6 +22,111 @@
 
 ---
 
+## 2026-07-29 — v6.4.0 "Hands" (code 144, tag `v6.4.0`) — the seventh craft, and the trap it had to avoid
+
+The owner's second direction: *"a lot more to do. maybe there aren't enough skills. afterall, there
+should be 10 crafts."* The Guild hall has named nine crafts since v1 and the game has trained six.
+This is the first of the four missing ones, and `V6_WORLD_AND_CRAFTS.md` §2 makes it the **template**
+the other three must copy.
+
+### ★ The hard problem, and why a smithing skill was never added before
+
+Every tool tier in this game is gated on the tool's **own** craft (`TOOL_SKILL` × `TIER_LEVEL`): a
+Star Metal Pick needs Mining 85, a Star Metal Rod needs Fishing 85. The obvious design for a smithing
+skill — *the smith makes the tools* — moves all six of those gates onto Smithing. Then **six skills
+wait on a seventh**, and a player standing at Fishing 85 is told their fishing is not the problem.
+
+So **Smithing never gates a tool. It offers a second way to pay for one.** `forgeHeadFor(tool, tier)`
+lets you strike the head yourself for **45% of Tom's gold**; the tool's own craft still decides
+whether you may hold the tier, and Tom's shop is untouched. Verified in the running game: at Smithing
+0 with Mining 30, Tom still sells a Gold Pick and the forge refuses it; at Smithing 30 the forge makes
+it for 2,250g against Tom's 5,000g. The panel's own lock text is the proof — every row reads
+`🔒 Farming 10`, `🔒 Woodcutting 10`, `🔒 Mining 10`. Never `🔒 Smithing`.
+
+Purely additive, never blocking. That is the cozy contract — *nothing is ever taken from the player* —
+applied to a production skill.
+
+### The ladder, which is the actual deliverable
+
+Graded by `auditUnlockCadence()` against the live tables:
+
+| skill | marks | dead XP | worst gap | marks above L85 |
+|---|---|---|---|---|
+| **Smithing** | **38** | **0.0%** | **none** | **5** |
+| Cooking | 34 | 34.6% | 90→99 | 2 |
+| Farming | 29 | 41.2% | 90→99 | 2 |
+| Fishing | 26 | 56.8% | 85→99 | 1 |
+| Warding | 15 | 59.1% | 85→99 | 1 |
+| Woodcutting | 17 | 59.6% | 85→99 | 1 |
+| Mining | 16 | 60.9% | 85→99 | 1 |
+
+No empty band longer than **5 levels**, anywhere on the climb. Three kinds of thing fill it: six
+**bars** (smelt an ore, one step behind the Mining ladder so the forge is never the bottleneck),
+twenty **goods**, and the **Hammer**'s seven tiers. Every good is an input to something the game
+already wants — lantern frames for the Lantern Round writ, a brazier and a bell for the Guild's wings,
+nails and hinges for the projects, a plough blade for the fields.
+
+### Fenn
+
+She has been in the valley the whole time and the game never said so. The anvil that rings outside
+Tom's store when the smithing wing lights has been there since v3, and Tom has been selling tool
+upgrades he plainly does not make. Her sign says so, in different paint and a steadier hand: *"Tom
+sells them. I make them."*
+
+Her smithy is **deliberately not an interior**. A working forge is open to the air because the heat
+has to go somewhere, and roofing it would have put a door and a loading screen between the player and
+a verb they will use hundreds of times. It stands on the home road, which is where you are when you
+have ore on you.
+
+Four heart scenes, none romantic — this release ships a *craft*, not a second relationship arc. Her
+arc is the one thing a maker cannot make: a successor. It resolves the question her own 75 trial asks
+out loud — she wants ten Guild brackets that outlast her, made by somebody who will still be here.
+
+### Mastery, and why every effect is a saving
+
+Hot Work (25) sometimes makes a forging free; Thrift (50) sometimes returns a **bar** — never a
+finished good, which would double the whole ladder's output. True Temper (75) and Master of the Fire
+(99) widen those. A smith who never levels loses nothing; a smith who does spends less. Same rule as
+the tool heads, one layer down.
+
+### Fixed / found during the build
+
+**A TDZ, for the second time in this version line.** `ITEM_SELL` was given a `...FORGE_SELL` spread
+at its own definition — which sits 400 lines *above* `FORGE`. `const` does not hoist its value, so
+that is a straight crash on boot. (v5.0's `LADDER_AUDIT` was the same shape.) The rule now written
+into `01-data.js`: **a table may only read a table defined above it — otherwise mutate afterwards.**
+
+**A migration scare that turned out to be a coverage gap.** `migrateSave`'s generic backfill is
+shallow (`s.skills` is never undefined, so the loop does not recurse), which looked like it meant a
+new craft key would never land on an existing save. It lands anyway: two *older* generic loops
+already cover exactly this (11-title.js ~294 for tools, ~303 for skills) — verified by disabling each
+and re-running, not by reading. The first instinct was to add a third copy, and that was wrong.
+
+What was genuinely missing was not a mechanism but an **assertion**. All 2,317 prior save invariants
+passed with `skills.Smithing` absent from every era, because "no demoted level" walks the *save's own*
+keys and an absent key is neither a demotion nor a NaN. `check-saves.mjs` now asserts, per era, that
+every key in `freshState().skills` and `.tools` is present and finite — derived, so the three crafts
+still to come are covered the day their keys land. **2,707 invariants**, up from 2,317.
+
+**The hotbar stopped at seven** (`"1234567"`, flagged in the plan's §4). A Hammer at index 7 would
+have been unreachable by keyboard. Eight now.
+
+### Numbers
+
+Total level **594 → 693** (derived; nothing hardcoded). 20 maps · 13 NPCs · 26 forgings · all 2,707
+save invariants hold · all schedule invariants hold across 4,003 placements · all within perf budget.
+
+### Still owed
+
+Three crafts to go (Foraging, Ranching, Hearthcraft) and then the valley trains ten. **Both Foraging's
+and Ranching's ladders are still unwritten** and the plan's §4 marks them BLOCKERS: the stated
+skeletons score 88.5% dead, identical to a bare tool-tier ladder. They get written at this shape or
+they do not ship. Hearthcraft is worse — its proposed ladder *games the linter* (0.0% on paper, 39.1%
+as it would actually ship) and it has no tool, so it inherits none of the six free tier marks the
+others get.
+
+---
+
 ## 2026-07-29 — v6.3.0 "The Green" (code 143, tag `v6.3.0`) — the promise the player had already paid for
 
 Second release of the bigger-world program, and the same method as v6.2: build what the game already

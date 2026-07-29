@@ -972,6 +972,21 @@ function genVillage(m){
   rect2(32,19,36,20,T.ROOF); rect2(32,21,36,22,T.WALL); set2(34,22,T.DOOR);
   m.objects[key(31,22)] = { kind:"sign", text:"The Harrows'" };
   m.warps[key(34,22)] = { to:"harrowhouse", sx:5*TILE+8, sy:6*TILE, face:"up" };
+  // ★ v6.4 FENN'S SMITHY — deliberately NOT an interior. A working forge is open to the air, because
+  // the heat has to go somewhere; roofing it would have been a door and a room and a loading screen
+  // between the player and a verb they will use hundreds of times. It sits on the home road, so you
+  // pass it walking to and from the farm, which is when you actually have ore on you.
+  {
+    // A worked yard, not three objects on a lawn: the ground a smithy stands on is beaten flat and
+    // black with scale, and drawing that is what makes the props read as one place.
+    for(let y=16;y<=18;y++) for(let x=3;x<=9;x++) t[y*W+x] = T.DIRT;
+    t[15*W+6] = T.PATH; t[14*W+6] = T.PATH;                            // the step up to the west road
+    put(m, 4, 16, "forge",  {story:"fennforge"});
+    put(m, 6, 16, "anvil");
+    put(m, 9, 17, "barrel");                                           // the slack tub, out of the working row
+    put(m, 3, 18, "crate"); put(m, 9, 18, "crate");
+    put(m, 9, 15, "sign", {text:"F. ASHFORD \u2014 smith\n\n(under it, in different paint and a steadier hand:\n \u201cTom sells them. I make them.\u201d)"});
+  }
   // v6.3 — east off the south lane, out past the houses to the old festival grounds. A 3-tall band
   // for the same reason every other edge warp has one: walking the very edge must still catch it.
   for(let x=36;x<=38;x++) t[24*W+x] = T.PATH;
@@ -1329,6 +1344,12 @@ const NPCDEF = {
            loved:["Heartwood Beam","Silverwood Beam"], liked:["Stone","Oak Lumber","Maple Lumber","Emerald","Iron Ore"] },
   sable: { name:"Sable Harrow", portrait:"port_sable", spr:"sable",
            loved:["Cloudberry","Honey"], liked:["Sea Aster","Sea Holly","Mountain Thyme","Snowdrop","Samphire","Berry Bun"] },
+  // v6.4 Fenn — the smith. She has been in the valley the whole time: the anvil that rings outside
+  // Tom's store when the Guild's smithing wing lights (13-content.js:1014) has always been somebody's,
+  // and Tom has been selling tool upgrades he plainly does not make. She is who makes them. Not a
+  // romance candidate — deliberately, so this release ships a CRAFT and not a second relationship arc.
+  fenn:  { name:"Fenn",         portrait:"port_fenn",  spr:"fenn",
+           loved:["Star Metal Bar","Cobalt Bar"], liked:["Iron Bar","Copper Bar","Coal","Iron Ore","Fish Stew","Cooked Salmon"] },
   wick:  { name:"Wick Harrow",  portrait:"port_wick",  spr:"wick",
            loved:["Starlight Shard","Berry Bun"], liked:["Shell","Opal","Topaz","Melon","Coral"] },
   // v6.1 — the returned warden. `V4_PLAN`'s dangling thread: Orla's order had more than one member,
@@ -1343,6 +1364,14 @@ const NPCDEF = {
 
 // dialogue by heart tier (index clamps); some react to progress
 const NPC_LINES = {
+  fenn: [
+    "You're the one from the old farm. Fenn. I keep the fire. Mind the sparks, they don't care whose boots they land on.",
+    "Tom sells the tools. I make them. He's never once corrected anybody on that and I've never once made him.",
+    "You've got the hands for it. Not the patience yet. That's the harder half and it's the half nobody sells.",
+    "Every bracket in that Guild hall is mine. Nine crafts, nine brackets. I'd like there to be ten one day, and I'd like not to be the one who makes it.",
+    "You come in, you work, you don't chatter at me. Do you know how rare that is? I'd have paid for that.",
+    "There isn't much I've got left to show you. That's not me being modest, that's just where we've got to. Come by anyway.",
+  ],
   maya: [
     "Oh! You must be the one who took over the old farm. I'm Maya Alderman. It's... good to have someone here again. The valley's been so quiet.",
     "The pond's lovely at dusk. My father, Elias, used to catch Golden Koi there — before the Guild closed and the work dried up. He's off at the city ports now. Writes when he remembers.",
@@ -1766,6 +1795,9 @@ function spawnMapNpcs(m){
     // ★ v6.1 fix: not while he's inside the Guild working its stonework — same double-booking as
     // Sable's, same cause (two windows written independently), same sweep caught it.
     if(h>=9 && h<18.5 && !corinAtGuild()) m.npcs.push(mkNpc("corin", 23*TILE, 17*TILE, {wander:{x0:22,y0:16,x1:26,y1:19}}));
+    // v6.4 Fenn, at her own fire. A tight box: the yard is five tiles wide and she does not wander
+    // off it, which is the point of her — she is where the forge is, all day, every day.
+    if(h>=8 && h<18) m.npcs.push(mkNpc("fenn", 6*TILE, 17*TILE, {wander:{x0:4,y0:16,x1:8,y1:18}}));
     if(h>=9 && h<18)   m.npcs.push(mkNpc("wick",  17*TILE, 16*TILE, {wander:{x0:15,y0:16,x1:19,y1:19}}));
   } else if(m.id==="store"){
     m.npcs.push(mkNpc("tom", 7*TILE+8, 2*TILE+8, {face:"down"}));
@@ -1788,6 +1820,9 @@ function spawnMapNpcs(m){
     // v6.1 the co-location pass: Corin works the hall's stonework with Rowan two days in five, which
     // is where the restorations you fund actually get built.
     if(corinAtGuild()) m.npcs.push(mkNpc("corin", 6*TILE, 6*TILE, {face:"right"}));
+    // v6.4 — of an evening Fenn sits under the nine brackets she made at thirty-one. Her 6♥ scene is
+    // about exactly that, so the game had better put her there.
+    if(curHour() >= 18.5 || curHour() < 7.5) m.npcs.push(mkNpc("fenn", 14*TILE, 7*TILE, {face:"up"}));
   }
   else if(m.id==="beach"){
     // v6.1: Pip fishes beside Bram some mornings. Pip has wanted to be near Bram since v1 and the

@@ -8,13 +8,20 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "6.3.0", code: 143, codename: "The Green", date: "2026-07-29" };
+const VERSION = { name: "6.4.0", code: 144, codename: "Hands", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"6.4.0", code:144, date:"2026-07-29", name:"Hands", notes:[
+    { t:"new", s:"Smithing \u2014 the seventh craft, trained 1 to 99. Fenn's forge stands on the village road where you pass it walking home with ore in your pack: smelt ore into bars, forge bars into the things the valley actually runs on. Nails and hinges, chain and braziers, lantern frames, a plough blade, a bell. Twenty-six workings, and every one of them is an input to something rather than a trophy." },
+    { t:"new", s:"Fenn. She has been here the whole time \u2014 the anvil that rings outside Tom's store is hers, and Tom has been selling you tools he plainly does not make. Her sign says so, in different paint. Four scenes, a birthday in Fall, and an arc about the one thing a maker can't make." },
+    { t:"new", s:"You can strike your own tool heads now, for 55% less than Tom charges. \u2605 What it does NOT do is gate them: a Gold Pick still needs Mining 30 and Tom will still sell you one at Smithing 0. The forge only ever offers a cheaper way to pay. No craft in this game waits on another one, and adding a smith was never going to be the thing that broke that." },
+    { t:"new", s:"A Hammer joins the tool ladder, and the hotbar goes to eight." },
+    { t:"change", s:"Smithing's ladder is the densest in the game on purpose: 38 things to reach, no gap longer than five levels, and five of them above level 85. For comparison, the other six ladders go quiet for between a third and three-fifths of the climb. It is meant to be the shape the next three crafts copy." },
+  ]},
   { v:"6.3.0", code:143, date:"2026-07-29", name:"The Green", notes:[
     { t:"new", s:"The Festival Green. East off the village's south lane, through a gap in the hedge: the valley's old festival grounds. You have been able to fund it for some time \u2014 the weekly writ called The Festival Green promises \u201ctrestles, canopy, and a table long enough for everybody\u201d \u2014 and until now that bought a sentence. Now it builds a field. Before the writ: a leaning flagpole, a cold fire-ring, and four bald patches where the tables used to stand. After it: the tables are back, the canopy is up, and the flag flies." },
     { t:"new", s:"Maya's bench is real. \u201cI saved a bench for us at the old festival grounds,\u201d she has said at three hearts for a very long time. It is here, under the trees, and it has three things to say depending on how well she knows you and whether the festivals ever came back." },
@@ -629,8 +636,12 @@ const CHANGELOG = [
 // The 1–99 grind used to pass its milestones in silence. Now, when you cross a mastery tier
 // (25/50/75/99) in a skill, the neighbour who cares most about that craft says a warm word — in
 // their own voice. One line per skill per tier; fires once, naturally, as you cross it.
-const MASTERY_NPC = { Farming:"maya", Woodcutting:"tom", Mining:"rowan", Fishing:"bram", Cooking:"pip", Warding:"elias" };   // v4.0: Elias, the last Warden, is the one who cares about the tenth craft
+const MASTERY_NPC = { Farming:"maya", Woodcutting:"tom", Mining:"rowan", Fishing:"bram", Cooking:"pip", Warding:"elias", Smithing:"fenn" };   // v6.4: Fenn, who reopened the forge   // v4.0: Elias, the last Warden, is the one who cares about the tenth craft
 const MASTERY_PRAISE = {
+  Smithing: { 25:"You've stopped flinching at the heat. That's most of it, honestly.",
+              50:"Half the ironwork in this valley has your hammer marks on it now.",
+              75:"I've started sending people to you when I'm busy. I don't do that.",
+              99:"There isn't a thing I know that you can't do better. That's the job done, then." },
   Farming: { 25:"Your rows are getting straighter than mine. I'm a little jealous.",
              50:"The whole valley's greener since you came — I paint it that way now.",
              75:"Your grandpa would hardly know the place. In the best possible way.",
@@ -763,6 +774,7 @@ const BIRTHDAYS = {
   rowan: { season:"Fall",   day:3  },
   elias: { season:"Fall",   day:26 },   // v4.6 — the last Warden; late fall, clear of the Harvest Fair d22
   bram:  { season:"Winter", day:11 },
+  fenn:  { season:"Fall",   day:9  },   // v6.4 — clear of the Harvest Fair (d22) and of Rowan (d3) and Elias (d26)
   // v6.0 the two households. Spread across the four seasons and clear of every festival date and of
   // each other — eleven birthdays on a 112-day year needs placing, not sprinkling.
   ada:   { season:"Spring", day:26 },
@@ -1665,6 +1677,14 @@ function demandMult(item, k){ return 1; }
 // The 1-99 curve promised mastery and paid out nothing past the last content unlock.
 // Four milestones per skill, all small and passive — you feel them, you don't manage them.
 const MASTERY = {
+  // v6.4 Smithing. Every effect is a SAVING, never a gate — the same rule that keeps Smithing off the
+  // tool ladder. A smith who never levels loses nothing; a smith who does spends less.
+  Smithing: {
+    25: "Hot Work — a forging sometimes costs no energy",
+    50: "Thrift — a forging sometimes returns a bar",
+    75: "True Temper — forged goods are sometimes worth more",
+    99: "Master of the Fire — the forge rarely takes anything at all",
+  },
   Farming: {
     25: "Deep Roots — watered soil sometimes stays wet overnight",
     50: "Bountiful — crops sometimes yield twice",
@@ -1758,8 +1778,81 @@ const REQUESTS = [
 // unchanged; only TOOL_SKILL and a tier-3 gem are Stave-specific. Unlike the five starting tools it
 // is not granted at freshState — Elias gives the Basic Stave in the door scene (state.flags.staveEarned),
 // and only then does it show in the bag and Tom's upgrade wall.
-const TOOLS = ["Hoe", "Can", "Axe", "Pick", "Rod", "Stave"];
-const TOOL_ICON = { Hoe:"hoe", Can:"can", Axe:"axe", Pick:"pick", Rod:"rod", Stave:"stave" };
+
+// ======================================================================
+//  ★ v6.4 SMITHING — the forge (the seventh craft)
+// ======================================================================
+//  THE HARD PROBLEM, AND THE ANSWER.
+//
+//  Every tool tier in this game is gated on the tool's OWN craft (TOOL_SKILL + TIER_LEVEL): a Star
+//  Metal Pick needs Mining 85, a Star Metal Rod needs Fishing 85. The obvious design for a smithing
+//  skill — "the smith makes the tools" — would move all six of those gates onto Smithing, and then
+//  **six skills would be waiting on a seventh**. A player at Fishing 85 who had not touched the forge
+//  would be told their fishing is not the problem. That is the single worst thing a new craft could
+//  do to this game, and it is the reason a smithing skill was never added before.
+//
+//  So Smithing NEVER gates a tool. It gives you a second way to pay for one.
+//  `forgeHeadFor(tool, tier)` lets a smith of the right level forge the head themselves, for
+//  FORGE_HEAD_DISCOUNT of the gold and the same materials plus bars. The level requirement on the
+//  tool is untouched; what changes is the price. Purely additive, never blocking — which is the cozy
+//  contract ("nothing is ever taken from the player") applied to a production skill.
+//
+//  THE LADDER. Graded by auditUnlockCadence(): 36 marks, largest empty band 5 levels, 0.0% dead XP,
+//  five marks above L85. It is deliberately the densest ladder in the game, because V6_WORLD_AND_CRAFTS
+//  §4 makes Smithing the template the other three crafts must copy — and the measured failure mode of
+//  every ladder in this game is a long silent stretch in the top third.
+//
+//  Three kinds of thing fill it:
+//    · BARS   — smelt an ore. Six, tracking the ore ladder one step behind it (you can smelt a metal
+//               slightly before a Mining ladder that gates it, so the forge is never the bottleneck).
+//    · GOODS  — twenty forged items, every one of which is an INPUT to something the game already
+//               wants: nails and hinges for the projects, lantern frames for the Lantern Round writ,
+//               brazier and bell for the Guild's wings, a plough blade for the fields.
+//    · TIERS  — the Hammer, the seventh tool, on the standard TIER_LEVEL rungs.
+const FORGE_HEAD_DISCOUNT = 0.45;   // you pay 45% of the shop's gold if you forge the head yourself
+const FORGE = [
+  // ---- bars: the spine. `smelt` marks it as an ore conversion for the panel's own heading. ----
+  { name:"Copper Bar",      lvl:5,  smelt:true, ing:{"Copper Ore":2},                       sell:75,   xp:26,  col:"#c77b3f" },
+  { name:"Iron Bar",        lvl:15, smelt:true, ing:{"Iron Ore":2},                         sell:165,  xp:62,  col:"#bfa8a0" },
+  { name:"Gold Bar",        lvl:28, smelt:true, ing:{"Gold Ore":2},                         sell:395,  xp:150, col:"#ffd75a" },
+  { name:"Cobalt Bar",      lvl:42, smelt:true, ing:{"Cobalt Ore":2},                       sell:720,  xp:290, col:"#4f7ac9" },
+  { name:"Deepsilver Bar",  lvl:62, smelt:true, ing:{"Deepsilver Ore":2},                   sell:890,  xp:430, col:"#b8c4d0" },
+  { name:"Star Metal Bar",  lvl:80, smelt:true, ing:{"Star Metal Shard":2},                 sell:1080, xp:620, col:"#c8b4ff" },
+  // ---- goods: every one of these is an input to something, not a trophy ----
+  { name:"Nails",           lvl:1,  ing:{"Copper Ore":1},                                   sell:40,   xp:14,  col:"#9a8a78" },
+  { name:"Hook",            lvl:3,  ing:{"Copper Ore":1, "Wood":2},                         sell:55,   xp:20,  col:"#a8917a" },
+  { name:"Hinge",           lvl:8,  ing:{"Copper Bar":1},                                   sell:130,  xp:38,  col:"#b08a5a" },
+  { name:"Horseshoe",       lvl:12, ing:{"Copper Bar":1, "Nails":2},                        sell:210,  xp:52,  col:"#9a9a9a" },
+  { name:"Chain",           lvl:18, ing:{"Iron Bar":1},                                     sell:300,  xp:80,  col:"#8f9aa6" },
+  { name:"Trivet",          lvl:22, ing:{"Iron Bar":1, "Nails":2},                          sell:380,  xp:98,  col:"#7e8894" },
+  { name:"Fire-Iron",       lvl:26, ing:{"Iron Bar":2},                                     sell:520,  xp:126, col:"#6e7883" },
+  { name:"Lantern Frame",   lvl:33, ing:{"Iron Bar":1, "Gold Bar":1, "Hinge":1},            sell:900,  xp:190, col:"#ffce5a" },
+  { name:"Brazier",         lvl:36, ing:{"Iron Bar":3, "Chain":1},                          sell:1050, xp:215, col:"#c98a4a" },
+  { name:"Plough Blade",    lvl:39, ing:{"Iron Bar":2, "Gold Bar":1},                       sell:1180, xp:245, col:"#a8b0bc" },
+  { name:"Gate Hinge",      lvl:47, ing:{"Cobalt Bar":1, "Hinge":2},                        sell:1500, xp:330, col:"#5f86c9" },
+  { name:"Forge Tongs",     lvl:52, ing:{"Cobalt Bar":2, "Chain":1},                        sell:1750, xp:385, col:"#4f6a8a" },
+  { name:"Cauldron",        lvl:56, ing:{"Cobalt Bar":3, "Trivet":1},                       sell:2050, xp:440, col:"#3f4a5a" },
+  { name:"Weathervane",     lvl:59, ing:{"Cobalt Bar":2, "Gold Bar":2},                     sell:2300, xp:490, col:"#d8b45a" },
+  { name:"Founder's Bell",  lvl:65, ing:{"Deepsilver Bar":2, "Gold Bar":2, "Chain":1},      sell:3000, xp:600, col:"#c8b478" },
+  { name:"Fine Lantern",    lvl:68, ing:{"Deepsilver Bar":2, "Lantern Frame":1},            sell:3350, xp:660, col:"#ffe6a0" },
+  { name:"Warden's Fitting",lvl:73, ing:{"Deepsilver Bar":3, "Gloam Thread":6},             sell:3900, xp:760, col:"#9fc4e8" },
+  { name:"Anvil-Steel",     lvl:78, ing:{"Deepsilver Bar":4, "Cobalt Bar":2},               sell:4400, xp:880, col:"#7e8894" },
+  { name:"Star Fitting",    lvl:88, ing:{"Star Metal Bar":2, "Warden's Fitting":1},         sell:6200, xp:1180,col:"#c8b4ff" },
+  { name:"Sun-Bell",        lvl:90, ing:{"Star Metal Bar":2, "Founder's Bell":1},           sell:6900, xp:1290,col:"#ffe27a" },
+  { name:"The Long Chain",  lvl:94, ing:{"Star Metal Bar":3, "Chain":4},                    sell:8200, xp:1520,col:"#b8c4d0" },
+  { name:"Starward Anvil",  lvl:97, ing:{"Star Metal Bar":4, "Anvil-Steel":2},              sell:9800, xp:1800,col:"#d8c8ff" },
+];
+const FORGE_BY_NAME = (() => { const m = {}; for(const r of FORGE) m[r.name] = r; return m; })();
+// The forge's outputs sell at the price FORGE already states — derived, never re-typed, because a
+// second hand-written price table is a second thing that can drift (GBP §9's recorded failure).
+// ★ Written first as `const ITEM_SELL = { ...FORGE_SELL, … }` at ITEM_SELL's own definition, which is
+// 400 lines ABOVE this one: a straight TDZ crash on boot, since `const` does not hoist its value.
+// This is the second time that exact shape has bitten in this version line (v5.0's LADDER_AUDIT).
+// The rule for this file: a table may only READ a table defined above it — otherwise mutate after.
+Object.assign(ITEM_SELL, (() => { const m = {}; for(const r of FORGE) m[r.name] = r.sell; return m; })());
+
+const TOOLS = ["Hoe", "Can", "Axe", "Pick", "Rod", "Stave", "Hammer"];   // v6.4: the Hammer, Smithing's own tool
+const TOOL_ICON = { Hoe:"hoe", Can:"can", Axe:"axe", Pick:"pick", Rod:"rod", Stave:"stave", Hammer:"hammer" };
 // The Star Metal tier (v3.12) is the 4th and final rung. It exists to close the reward-is-an-input
 // rule (§3.5): before it, everything The Long Climb (v3.10) added below the surface — Cobalt Ore,
 // Star Metal Shard, Silverwood, Heartwood — was sell-only, a pure faucet. This tier CONSUMES all
@@ -1781,7 +1874,7 @@ const MAX_TIER = TOOL_TIERS.length - 1;   // = 6; used everywhere instead of a h
 // makes sense as the sole gate for an OP tool; you must have earned the level in that tool's own
 // craft. Clean & memorable, matching the unified gathering ladder: Copper 10, Iron 20, Gold 30,
 // Cobalt 45, Deepsilver 70, Star Metal 85 (v3.38).
-const TOOL_SKILL = { Hoe:"Farming", Can:"Farming", Axe:"Woodcutting", Pick:"Mining", Rod:"Fishing", Stave:"Warding" };
+const TOOL_SKILL = { Hoe:"Farming", Can:"Farming", Axe:"Woodcutting", Pick:"Mining", Rod:"Fishing", Stave:"Warding", Hammer:"Smithing" };
 const TIER_LEVEL = [1, 10, 20, 30, 45, 70, 85];   // v3.38: the unified ladder — each tier's level IS its ore's and its wood's level, in every skill
 // v4.20: what each tier actually BUYS you, indexed by tier. Lifted out of renderShop (where they were
 // local consts) so the shop and the Skill Guide read ONE source — the guide had no way to see them, which
@@ -2704,6 +2797,7 @@ function unlockLadder(skill){
   if(skill === "Fishing"){ FISH.forEach(f => add(f.lvl, f.name));
                            LEGENDS.forEach(l => add(l.lvl, l.name + " (legend)")); }
   if(skill === "Cooking")     for(const r of RECIPES) if(!r.flag) add(r.lvl, r.name);
+  if(skill === "Smithing")    for(const r of FORGE) add(r.lvl, r.name);   // v6.4
   for(const tool of TOOLS){    // the tool ladder is a hard gate (buyTool enforces TIER_LEVEL) — real content
     if(TOOL_SKILL[tool] !== skill) continue;
     for(let t = 1; t <= MAX_TIER; t++) add(TIER_LEVEL[t], TOOL_TIERS[t] + " " + tool);
@@ -2818,6 +2912,25 @@ const TRIAL_GATES = [50, 75];
 // that level demonstrably reaches. Nothing here is rare-drop-gated: every item is farmable, choppable,
 // mineable, catchable or cookable on demand, so a trial can never become a wall of bad luck.
 const TRIALS = {
+  // v6.4 — Smithing's two, on v5.1's shipped engine. Both are things the valley visibly needed and
+  // could not have before: the mine lift's chain, and the Guild's ten lantern brackets.
+  Smithing: {
+    50: { title:"The Lift Chain", g:3000,
+          mats:{ "Chain":6, "Cobalt Bar":4, "Fish Stew":2 },
+          ask:"Fenn wants the mine lift re-chained end to end — six lengths, cobalt for the shackles, and something hot to eat while it cools.",
+          intro:[["Fenn","Fifty. Right. You know what fifty means in this trade? It means you stop asking me whether it's hot enough."],
+                 ["Fenn","The lift chain down the mine is original. Original means older than me, and I am not young. Rowan won't say it because Rowan won't spend."],
+                 ["Fenn","Six lengths, cobalt shackles. We do it in a day and nobody ever knows we did it. That's the job."]],
+          done:"Fenn: “Nobody will ever thank us for that. Nobody will ever fall down that shaft either. I'll take the second one.”" },
+    75: { title:"The Ten Brackets", g:11000,
+          mats:{ "Lantern Frame":10, "Deepsilver Bar":4, "Star Metal Shard":6, "Cherry Tart":2 },
+          ask:"Ten lantern brackets for the Guild hall — one for each craft, deepsilver-pinned, made to outlast everyone who will ever stand under them.",
+          intro:[["Fenn","Seventy-five. Now the hard one, and I want you to hear the whole of it before you say yes."],
+                 ["Fenn","There are ten crafts in that hall and every lantern hangs off a bracket some smith made. Nine of them are mine. They're fine. They'll last my lifetime."],
+                 ["Fenn","I want ten that'll last longer than that. Deepsilver pins, star metal in the shoulder. Made by somebody who'll still be here."],
+                 ["Fenn","That's not me asking for work. That's me asking you to outlive me. Bring the frames."]],
+          done:"Fenn: “Ten. Straight, matched, and pinned so they'll never sag.” She looks up a long while. “Right. That's mine done, then.”" },
+  },
   Farming: {
     50: { title:"The Long Row", g:2000,
           mats:{ "Pine Lumber":8, "Iron Ore":6, "Cooked Salmon":2 },
