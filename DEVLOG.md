@@ -14,6 +14,91 @@
 
 ---
 
+## 2026-07-29 — Direction: "I want to make the game world bigger. There are too few places."
+
+**Owner direction (near-verbatim):**
+
+> continue development. i want to make the game world bigger. there are too few places. we want a lot more
+
+**Interpretation.** The second breadth call in two days, and the pair of them is the signal — not
+either one alone. First: *"the village still feels empty… two empty houses"* (people). Now: *"too few
+places"* (geography). Both were given **after** an enormous amount of depth shipped, and both name the
+same absence: **surfaces, not systems.**
+
+The count, honestly: the valley has **18 maps**, but nine of those are one-room interiors (cottage,
+coop, barn, store, Maya's, the Guild, the dairy, and v6.0's two houses). The actual *places you can
+walk around in* are **nine**: farm, village, beach, coast road, ridge, Butterbrook, grove, mine,
+Undercroft. For a game with 99-level ladders and a three-act story, nine spaces is thin — and three of
+those nine (grove, mine, Undercroft) are procedurally regenerated single screens rather than places.
+
+**★ The pattern to exploit, proven twice.** v6.0 shipped because the game had been *naming two
+families on signs above doors that never opened since v3*. The same thing is true of geography, and
+more than once:
+
+- The coast road's milestone reads **"MARROW POINT — 39"**, and the road's own map note says *"the
+  road runs on north; the map never will."* A named town, 39 miles up, referenced since v3.36.
+- Elias's 8♥ scene (v5.6) sends him to **his ruined house on the ridge** — *"the roof's gone, there's
+  a birch growing where the kitchen was"* — a place with a description and no coordinates.
+- The ferry landing has had a mooring *"kept good for a boat that never comes"* since v3.36; v6.1
+  finally brought a boat in. **A boat that arrives can also depart.**
+
+So the method is the same one that worked for the households: **sweep everything the game already
+says — examine text, signs, dialogue, heart events, letters, almanac pages, map-generator comments —
+for places it names and does not let you go, and build those first.** A place the game has already
+promised arrives with its fiction pre-written and its existence already justified; an invented place
+has to earn both from scratch.
+
+**Consequence for the plan.** `V6_PLAN.md` §2.5 had just split v6.2 into "The Deep Venues" (two
+places) and v6.3 "Below the Bottom". Two places is the right direction and nowhere near the stated
+ask. The world expansion becomes the version's spine, and the two deep venues are absorbed into it as
+two entries in a much longer list.
+
+
+### ★ Same message, second half: *"a lot more to do. maybe there aren't enough skills. afterall, there should be 10 crafts"*
+
+**Owner direction (near-verbatim), sent minutes after the world-size call:**
+
+> and a lot more to do. maybe there aren't enough skills. afterall, there should be 10 crafts
+
+**Verified, and it is the largest instance of the pattern yet.** `WINGS` (14-story.js:8) lists **nine
+craft wings** in the Guild hall; `freshState().skills` lists **six** trainable skills. Four wings are
+crafts the game NAMES, gives a lit window to, and never lets the player practise:
+
+| Wing | How it lights today | Trainable |
+|---|---|---|
+| Ranching | own one hen | ✗ |
+| Foraging | forage 10 things | ✗ |
+| Smithing | upgrade tools twice | ✗ |
+| Hearthcraft | hold the festival | ✗ |
+
+Each is lit by a **one-time threshold** and then means nothing for the rest of the save. And each
+already has real mechanics in the game doing nothing for it: Ranching has animals, petting,
+friendship, Large produce; Foraging has `state.stats.forage` and four distinct wild-gather maps;
+Smithing has the tool ladder, the `toolUpgrades` stat and a forge at Tom's; Hearthcraft has the
+festival itself.
+
+So the owner's arithmetic is exactly right: **ten crafts, six skills.** The gap is four.
+
+**Interpretation.** This is the same finding as the empty houses and the unreachable milestone, at the
+largest scale it occurs: *the game's fiction has always been more generous than its mechanics.* The
+Guild of Nine Crafts is the premise of the entire story — Rowan's arc, the wing-lighting progress bar,
+Act I and II — and five of the nine were never crafts at all. Building them is not inventing content;
+it is **paying a debt the premise has been carrying since v1.0.**
+
+★ And the two halves of this direction are **one ask, not two.** "More places" and "more to do" meet
+in the same design: a craft needs somewhere to be practised, and a place needs something to do in it.
+Ranching wants pasture; Foraging wants wild country; Smithing wants a forge; the world expansion and
+the craft expansion should be planned together or they will each be half a feature.
+
+★ Scale note for whoever builds it: four new skills takes total level from **594 to 990**. That number
+is already derived from the live skill count (v4.0 made `99 * Object.keys(state.skills).length` the
+source of truth), and `checkValleyMaster` reads `totalLevel()`, so the crown re-targets itself — but
+every cape, every trial pair (v5.1), every mastery tier, and the unlock-cadence linter's grade all
+multiply by four. This is a version, not a release.
+
+→ Produced: the world-and-crafts expansion plan (same entry date).
+
+
 ## 2026-07-29 — Direction: the V6 decisions, and "the village still feels empty"
 
 **Owner direction (near-verbatim), answering `V6_PLAN.md` §4's five open decisions:**
