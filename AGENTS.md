@@ -302,6 +302,19 @@ tests a copy tests nothing.
   Turning Year (second festivals, playable verbs, year-aware recurrence), and Ease & Voice (earned
   automation AFTER decoration per the bible's F2, the Loom fibre chain, newcomer + optional child,
   the 100% ceremony, the audio-identity pass).
+- `V6_WORLD_AND_CRAFTS.md` — ★ **the expansion plan (2026-07-29), from two owner directions: a bigger
+  world and ten crafts.** Produced by a three-surface sweep of every shipped string + four craft
+  designs + two verifiers (~2.3M tokens). **Its central finding is a method, not a list: the game's
+  fiction is consistently more generous than its mechanics, and the sweep found 72 places the game
+  NAMES but will not let you visit — 45 of them named AND located.** Marrow Point has a carved
+  milestone, two signposts, a resident, a running ferry and *a lighthouse that already renders*. The
+  Festival Green has been signed on the player's own farm since v3 with no festival ever held there.
+  Also: the Guild names nine crafts and the game trains five — Ranching, Foraging, Smithing and
+  Hearthcraft are lit by one-time thresholds and mean nothing after. ★ **§4 is build constraints, not
+  suggestions** (both verifiers returned FIX_FIRST). The two that will bite hardest: **a skill key must
+  never land before its own MASTERY/PRAISE/NPC/TRIALS/SKILL_ICON rows — `nextMastery` hard-crashes the
+  panel otherwise**, and **hold every new ladder to Smithing's shape (~30 marks, max band 5), not to
+  the linter's 8-level threshold, which Hearthcraft proves is passable while 39% dead.**
 - `MONETIZATION.md` — **inward monetization** (owner direction 2026-07-28): turn the rewarded-ad slot
   inwards so it shows our OWN brands (H&Y et al) rather than an ad network's — product video, store
   visits and social engagement in exchange for temporary in-game boosters. ★ The rule that governs it:
