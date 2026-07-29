@@ -1447,7 +1447,11 @@ function paintPanorama(g){
   g.fillStyle = night ? "#1a2a44" : "#4a7aa0"; for(let y=120;y<178;y+=2) g.fillRect(236 + Math.round(Math.sin(y*0.12)*4), y, 3, 2);
   g.fillStyle = night ? "#3a3226" : "#b8a06a"; for(let y=126;y<176;y+=2) g.fillRect(262 + Math.round((176-y)*0.4), y, 3, 2);
   // Marrow Point's light, far up the coast — a blink you can just make out
-  if(Math.floor(animT*1.2)%2===0){ g.fillStyle="#ffe6a0"; g.fillRect(312,121,2,2); g.fillStyle="rgba(255,230,160,0.35)"; g.fillRect(310,119,6,6); }
+  { const f = marrowFlash();                                   // v6.2: the same clock the tower runs on
+    g.fillStyle = f > 0.15 ? "#fff4c8" : "#c9b483";            // the glass still shows between flashes
+    g.fillRect(312,121,2,2);
+    if(f > 0.05){ g.fillStyle = `rgba(255,230,160,${(0.45*f).toFixed(3)})`; g.fillRect(310,119,6,6);
+                  if(f > 0.5){ g.fillStyle = `rgba(255,240,190,${(0.30*f).toFixed(3)})`; g.fillRect(308,117,10,10); } } }
   // weather over everything
   if(isRain() || isStorm()){ g.fillStyle="rgba(140,170,210,0.25)"; for(let i=0;i<90;i++){ const x=(i*37)%320, y=(i*53)%200; g.fillRect(x,y,1,4); } }
   if(isFog()){ g.fillStyle="rgba(200,205,215,0.35)"; g.fillRect(0,100,320,108); }

@@ -8,13 +8,20 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "6.1.5", code: 141, codename: "Room for Ten", date: "2026-07-29" };
+const VERSION = { name: "6.2.0", code: 142, codename: "The Promised Coast", date: "2026-07-29" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"6.2.0", code:142, date:"2026-07-29", name:"The Promised Coast", notes:[
+    { t:"new", s:"Marrow Point. Thirty-nine miles up the coast, at the end of a headland that narrows until there is only the light — a lighthouse, a ferry-master's hut, a mooring, and sea holly and samphire growing where nothing else will. The ferry has been sailing there since the coast road opened; it just never sailed with you on it." },
+    { t:"new", s:"The first crossing is Elias's. He worked that ferry for eleven years and never once made the trip in this direction." },
+    { t:"new", s:"A boatyard on the beach, once you're four writs in \u2014 three keels on the sand, still open at the ribs." },
+    { t:"change", s:"The lighthouse blinking on the horizon from Starfall Ridge and the tower you can now stand under are the same light, on the same clock: two quick flashes, then a long dark. It always was supposed to be the same light; now the code says so too." },
+    { t:"change", s:"The ferry sign on the coast road stops reading \u201cno service\u201d." },
+  ]},
   { v:"6.1.5", code:141, date:"2026-07-29", name:"Room for Ten", notes:[
     { t:"change", s:"The Skills panel is ready for a valley with more crafts in it than it has today. It's wider, it lays the crafts out four across instead of three, and the total at the top counts whatever the game actually trains rather than a number typed in once." },
   ]},
@@ -1248,7 +1255,11 @@ const WATER = {
   // Trout is REHOMED here — its examine always called it a river fish — but stays in the pond table
   // too for now, so no save's routine breaks mid-season; the pond copy can retire in a later pass.
   river:   ["Minnow", "Chub", "Trout", "Rainrunner", "Grayling"],
-  estuary: ["Sardine", "Chub", "Salmon", "Rainrunner", "Grayling", "Gulf Sturgeon"],   // brackish mouth — the sea-run overlap, where "fresh off the sea-run" is literally true
+  estuary: ["Sardine", "Chub", "Salmon", "Rainrunner", "Grayling", "Gulf Sturgeon"],
+  // v6.2 Marrow Point: open northern water, deeper and colder than Willowbrook's coast. Same pool as
+  // the coast — deliberately NOT a new fish table. The place's reason to exist is the place, and a
+  // new species here would be content the coast then lacks. (Foraging's release adds its own nouns.)
+  point:   ["Salmon", "Frostfin", "Moonperch", "Silvergill", "Glassperch", "Gulf Sturgeon", "Coelacanth"],   // brackish mouth — the sea-run overlap, where "fresh off the sea-run" is literally true
 };
 
 // Five fish that rise only under exact conditions. Bram knows all five, and will tell you one
@@ -2577,6 +2588,10 @@ const EXAMINE_TILE = {
   // v3.36 The Coast Road landmarks (the full stories live in their interact dialogs)
   EXAMINE_OBJ["milestone"] = "MARROW POINT — 39. The carving has outlasted everyone who cut it.";
   EXAMINE_OBJ["shrine"] = "Leave what you can spare; take what you need. Today: a pebble, a flower, half a biscuit.";
+  // v6.2 The Promised Coast
+  EXAMINE_OBJ["lighthouse"] = "Forty feet of whitewashed stone with four red bands. It has been blinking at this valley from thirty-nine miles away the whole time.";
+  EXAMINE_OBJ["hut"] = "One room, one stove, one chair. Somebody has swept it recently, which is the strangest thing about it.";
+  EXAMINE_OBJ["hull"] = "Ribs and a keel and no planking yet. A boat is mostly an argument about curves.";
   EXAMINE_OBJ["mooring"] = "Nothing has tied up here in years. Somebody keeps the boards good anyway.";
   EXAMINE_OBJ["samphirenode"] = "Salty green spears, growing where only the tide waters them.";
   EXAMINE_OBJ["asternode"] = "Lilac asters, nodding in the salt wind. They grow nowhere but this meadow.";

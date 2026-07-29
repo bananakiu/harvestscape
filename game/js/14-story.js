@@ -676,6 +676,44 @@ function maybeTheaArrival(){
     { type:"run", fn:()=>{ ensureRel("thea").points = 60; saveGame(true); } },
   ]);
 }
+// ★ v6.2 "The Promised Coast" — the crossing, and the first one.
+//
+// Marrow Point has been named on a milestone, pointed at by two signposts, and drawn as a blinking
+// light in the ridge panorama since v3.43 — while its only resident's whole arc is that he went
+// there and could not come back. So the first sailing is his: he asks to come, and he is the one who
+// says the thing the place is for.
+function sailTo(to){
+  const home = to === "coastroad";
+  startCutscene([
+    { type:"fade", on:true, then:()=>{
+        travelTo(to, home ? 40*TILE : 4*TILE, home ? 18*TILE : 13*TILE+8, home ? "down" : "right"); } },
+    { type:"wait", t:0.5 },
+    { type:"fade", on:false },
+    { type:"run", fn:()=>{ toast(home ? "The boards take your weight, same as ever." : "Thirty-nine miles of grey water, and then a light.", "#cbb98f"); } },
+  ]);
+}
+function startMarrowFirstSailing(){
+  startCutscene([
+    { type:"say", who:"", portrait:"port_valley", text:"The boat is tied up and empty. Nothing stops you getting in it." },
+    { type:"say", who:"Elias", portrait:"port_elias", text:"…Wait." },
+    { type:"say", who:"Elias", portrait:"port_elias", text:"I saw you from the road. I've been standing here a while working out whether to say anything." },
+    { type:"say", who:"Elias", portrait:"port_elias", text:"That's my crossing. Thirty-nine miles, four hours in a fair sea, six in a bad one. I made it eleven hundred and some times and I have never once made it in this direction." },
+    { type:"say", who:"You", portrait:"port_player", text:"Come with me." },
+    { type:"say", who:"Elias", portrait:"port_elias", text:"…" },
+    { type:"say", who:"Elias", portrait:"port_elias", text:"Yes. Alright. Yes." },
+    { type:"fade", on:true, then:()=>{
+        state.flags.marrowOpen = true;
+        clearMapCache();
+        travelTo("marrowpoint", 4*TILE, 13*TILE+8, "right"); } },
+    { type:"wait", t:0.7 },
+    { type:"fade", on:false },
+    { type:"say", who:"Elias", portrait:"port_elias", text:"There. That's the light. I kept that lamp for eleven years and I have never seen it from the water coming IN." },
+    { type:"say", who:"Elias", portrait:"port_elias", text:"It's smaller than I remember. Everything is. That's not sad — I want that understood. It's just smaller." },
+    { type:"say", who:"Elias", portrait:"port_elias", text:"The hut's still there. I'll not go in today. …Ask me again some time and I might." },
+    { type:"banner", big:"⚓ Marrow Point", small:"Thirty-nine miles up the coast. The ferry runs both ways now.", t:3.6 },
+    { type:"run", fn:()=>{ state.flags.marrowOpen = true; saveGame(true); } },
+  ]);
+}
 function onEnterMap(id){
   if(gameMode !== "play" || !state || !state.flags) return;
   if(id === "coastroad") setTimeout(maybeTheaArrival, 900);   // v6.1 — the boat, at last

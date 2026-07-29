@@ -29,6 +29,12 @@ const MAPS = {
   undercroft:{ w:24, h:16, name:"The Undercroft",        subtitle:"the tenth wing",   music:"under", bg:"#0b0a12", gen:genUndercroft },   // v4.0 — sealed under the Guild; the mine's cozy-dark cousin, but knotted with restless things
   beach:     { w:46, h:24, outdoor:true, name:"Willowbrook Coast", subtitle:"salt on the breeze", music:"beach", bg:"#2f4a63", gen:genBeach },
   coastroad: { w:46, h:26, outdoor:true, name:"The Coast Road", subtitle:"north, by the sea", music:"beach", bg:"#2f4a63", gen:genCoastRoad },   // v3.36 — WORLD_EXPANSION.md area 1
+  // ★ v6.2 "The Promised Coast" — the most pre-written place in the game, finally on the map.
+  // The milestone on the coast road has read MARROW POINT — 39 since v3.36; two signposts point at
+  // it; Elias worked its ferry for eleven years; and its LIGHTHOUSE HAS BEEN RENDERING THE WHOLE
+  // TIME — a blink you can just make out from the ridge cairn's panorama (10-ui.js). The atlas's own
+  // prose said "the road runs on north; the map never will." It does now.
+  marrowpoint: { w:46, h:26, outdoor:true, name:"Marrow Point", subtitle:"thirty-nine miles up the coast", music:"beach", bg:"#2b4560", gen:genMarrowPoint },
   ridge:     { w:46, h:30, outdoor:true, name:"Starfall Ridge", subtitle:"where the sky came down", music:"auto", bg:"#141824", gen:genRidge },   // v3.43 — WORLD_EXPANSION.md area 2
   butterbrook:{ w:46, h:34, outdoor:true, name:"Butterbrook", subtitle:"the coast dairy", music:"beach", bg:"#2f4a63", gen:genButterbrook },   // v3.44 — WORLD_EXPANSION.md area 3
   dairy:     { w:13, h:9,  name:"The Coast Dairy", subtitle:"cool stone, cream, and patience", music:"cozy", bg:"#171009", gen:genDairy },
@@ -650,6 +656,64 @@ function genRidge(m){
 // Marrow Point leaves the map (drawn continuing — the forty miles STAY forty miles). Daily regen
 // via mapCache like the beach: the LAYOUT is a fixed seed so the road never moves; only the
 // forage nodes reshuffle with the day.
+// ★ v6.2 — Marrow Point. A working headland: the light at its tip, the quay the ferry ties to, the
+// ferry-master's hut, and the long grey water Bram has been describing for six versions.
+//
+// Deliberately NOT a second Willowbrook. It is somebody else's place — no farm, no Guild, no
+// neighbours who know your name. What it has is the light, the water, and eleven years of Elias's
+// life. The forage and the water are its reasons to keep coming back.
+function genMarrowPoint(m){
+  const layout = makeRng(6100);                   // fixed: the point, the quay, the light never move
+  const rng = makeRng(6200 + state.day*17);       // daily: forage, wrack, driftwood
+  const t = m.tiles;
+  // The headland: grass falling to rock, then sand, then sea on three sides. It is a POINT — the
+  // land narrows as you walk north, which is the whole shape of the place.
+  // ★ The taper is the whole shape of the place — wide where it joins the land, thin at the tip —
+  // but it must never pinch to nothing. The first pass ran `narrow = 3 + (x/w)*7`, which closed the
+  // land completely past x≈36 and left the lighthouse standing in open sea with 233 walkable tiles
+  // on the whole map. Caught by counting tiles rather than by looking at it.
+  // Now: 16 rows of land at the landward end, still 6 at the tip.
+  for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++){
+    const narrow = Math.round((x/m.w) * 5);                     // 0 landward → 5 at the tip
+    const north = 5 + narrow - Math.round(Math.sin(x*0.35)*1.1);
+    const south = m.h - 6 - narrow + Math.round(Math.cos(x*0.4)*1.1);
+    if(y < north || y > south) t[y*W+x] = T.WATER;
+    else if(y < north+2 || y > south-2) t[y*W+x] = T.SAND;
+    else t[y*W+x] = layout()<0.12 ? T.FLOWERGRASS : T.GRASS;
+  }
+  for(let x=0;x<m.w;x++){ t[0*W+x]=T.IWALL; t[(m.h-1)*W+x]=T.IWALL; }
+  for(let y=0;y<m.h;y++){ t[y*W+0]=T.IWALL; t[y*W+m.w-1]=T.IWALL; }
+  // the quay: the way home. Planks out over the water on the west side, where the boat ties up.
+  for(let x=2;x<=5;x++){ t[13*W+x]=T.BRIDGE; t[14*W+x]=T.BRIDGE; }
+  for(const wy of [13,14]) m.warps[key(2,wy)] = { to:"coastroad", sx:40*TILE, sy:18*TILE, face:"down", auto:true };
+  put(m, 6, 12, "sign", {text:"MARROW POINT\n\nFerry to Willowbrook — 39 mi.\nService restored."});
+  put(m, 3, 15, "mooring");
+  // the light. It stands at the tip, which is the east end, which is what the ridge panorama has
+  // been drawing a blink from since v3.43.
+  put(m, 41, 12, "lighthouse", {story:"marrowlight"});
+  put(m, 40, 15, "lantern"); put(m, 42, 15, "lantern");
+  // the ferry-master's hut and the yard Elias kept
+  put(m, 10, 11, "hut", {story:"ferryhut"});
+  put(m, 13, 12, "crate"); put(m, 14, 12, "barrel"); put(m, 12, 15, "bench");
+  put(m, 17, 11, "sign", {text:"E. ALDERMAN — ferryman\n(the paint is eleven years old)"});
+  // the road south, drawn continuing into the wall — the 39 miles you do not walk
+  for(let x=7;x<=20;x++) if(t[16*W+x]!==T.WATER) t[16*W+x]=T.PATH;
+  put(m, 21, 15, "milestone", {far:true});
+  // forage: the point is wind-scoured, so it grows what a headland grows
+  for(let i=0;i<9;i++){ const x=randiR(rng,8,40), y=randiR(rng,6,m.h-8);
+    if(t[y*W+x]===T.GRASS && !m.objects[key(x,y)]) put(m, x, y, "hollynode"); }
+  for(let i=0;i<8;i++){ const x=randiR(rng,6,42), y=randiR(rng,4,m.h-4);
+    if(t[y*W+x]===T.SAND && !m.objects[key(x,y)]) put(m, x, y, "samphirenode"); }
+  for(let i=0;i<7;i++){ const x=randiR(rng,6,42), y=randiR(rng,4,m.h-4);
+    if(t[y*W+x]===T.SAND && !m.objects[key(x,y)]) put(m, x, y, rng()<0.5?"driftwood":"shellnode"); }
+  for(let i=0;i<5;i++){ const x=randiR(rng,24,42), y=randiR(rng,4,m.h-4);
+    if(t[y*W+x]===T.SAND && !m.objects[key(x,y)]) put(m, x, y, "coralnode"); }
+  // a few wind-bent pines on the landward end only — the tip is bare, and that reads as exposure
+  for(let i=0;i<6;i++){ const x=randiR(rng,7,18), y=randiR(rng,7,m.h-9);
+    if(t[y*W+x]===T.GRASS && !m.objects[key(x,y)]) put(m, x, y, "pine"); }
+  // never wall the quay
+  for(const [cx,cy] of [[2,13],[3,13],[4,13],[2,14],[3,14],[4,14],[6,13],[6,14]]) delete m.objects[key(cx,cy)];
+}
 function genCoastRoad(m){
   const layout = makeRng(777);                    // fixed: road, river, landing never move
   const rng = makeRng(888 + state.day*13);        // daily: forage + driftwood reshuffle
@@ -680,7 +744,11 @@ function genCoastRoad(m){
   // regenerates daily like every non-farm map, so "the ferry is in today" is simply a fact about
   // today's map, with nothing to migrate and nothing to clean up tomorrow.
   if(typeof ferryToday === "function" && ferryToday()) put(m, 38, 18, "stall", { ferry:true });
-  put(m, 37, 14, "sign", {text:"FERRY — Marrow Pt. · no service"});
+  // ★ v6.2: the sign has read "no service" since v3.36. A boat runs now (v5.8's trader, v6.1's Thea),
+  // and the far end is a place. Changing this one string is the whole announcement.
+  put(m, 37, 14, "sign", {text: state.flags.marrowOpen
+    ? "FERRY — Marrow Pt. · 39 mi\nSailings when the tide serves."
+    : "FERRY — Marrow Pt. · no service"});
   // the milestone at the road's east end — the road is drawn continuing past it into the wall
   put(m, 43, 7, "milestone");
   // the roadside shrine, halfway along
@@ -1049,6 +1117,19 @@ function genBeach(m){
     let laid = 0;
     for(let i=0;i<40 && laid<8;i++){ const x=randiR(rng,3,m.w-4), y=m.h-10+randiR(rng,0,3);
       if(y>0 && y<m.h && t[y*W+x]===T.SAND && !m.objects[key(x,y)]){ put(m,x,y,"wrack"); laid++; } }
+  }
+  // ★ v6.2 — Bram's boatyard, on the sand, where the shipped writ's own done-text puts it:
+  // "Three boats, finished, on the sand." (01-data.js, THE BOATYARD). The game has had a boatbuilder
+  // with three half-built hulls, a Fishing-75 trial that builds a boat, and an 8♥ scene with a
+  // finished hull waiting to be named after the player — and nowhere for any of it to stand.
+  // The hulls FINISH once the writ that finishes them is done, which is the writ paying off on screen.
+  {
+    const built = (state.writDone || 0) > 0 && (state.writDone || 0) >= 4;   // the Boatyard is writ 4
+    for(const [hx,hy] of [[6,18],[10,19],[14,18]]) if(!m.objects[key(hx,hy)]) put(m, hx, hy, "hull", { built });
+    if(!m.objects[key(4,17)]) put(m, 4, 17, "sign", { text: built
+      ? "BRAM'S YARD\nThree keels, three boats.\n(the last line is newer, and steadier)"
+      : "BRAM'S YARD\nThree keels. One pair of hands." });
+    if(!m.objects[key(17,19)]) put(m, 17, 19, "barrel");
   }
   // festival stage (finale grounds)
   for(let x=(m.w>>1)-2;x<=(m.w>>1)+2;x++) put(m,x,4,"stage");

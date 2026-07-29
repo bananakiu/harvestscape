@@ -45,6 +45,11 @@ function collectLights(){
       case "wing":      if(wingLit(o.wing)) L.push({x:cx,y:cy-2,r:26,c:"255,170,80",i:flick*0.9}); break;
       case "olddoor":   if(state.flags.tenthWingLit) L.push({x:cx,y:cy-2,r:30,c:"255,190,110",i:flick*0.95}); break;   // v4.5: the tenth door, lit as a wing at last (Act III finale)
       case "lantern":   L.push({x:cx,y:cy-2,r:30,c:"255,200,110",i:0.85+0.12*Math.sin(animT*3+x)}); break;
+      // v6.2 Marrow Point Light. Forty feet up, so the source sits well above the tile it stands on
+      // (a 40px sprite on a 16px tile → cy-28), and it sweeps rather than flickers: the radius and
+      // intensity both ride marrowFlash(), the same character the ridge panorama reads.
+      case "lighthouse": { const f = marrowFlash();
+                        L.push({x:cx,y:cy-28,r:24+52*f,c:"255,240,200",i:0.30+0.70*f}); break; }
       case "stall":     L.push({x:cx,y:cy-4,r:34,c:"255,200,120",i:0.9}); break;
       case "banner":    L.push({x:cx,y:cy-6,r:24,c:"255,210,120",i:0.5}); break;
       case "waystone":  if(o.ws==="way1" || (state.waystones||[]).includes(o.ws))

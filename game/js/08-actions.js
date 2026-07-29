@@ -522,6 +522,7 @@ const OBJ_TITLE  = { geode:"Geode", bed:"Bed", campfire:"Campfire", stove:"Stove
   stall:"Market Stall", shipbin:"Shipping Bin", sign:"Sign", noticeboard:"Noticeboard", ledger:"The Valley Ledger",
   fountain:"Fountain", boardwalk:"Boardwalk", railcart:"Minecart", memorial:"Standing Stone", berrybush:"Berry Bush",
   frostberry:"Frostberry Bush", fruittree:"Fruit Tree", beehive:"Beehive", torch:"Torch", lamp:"Lamp", lantern:"Lantern",
+  lighthouse:"Marrow Point Light", hut:"The ferry-master's hut", hull:"A boat's keel",   // v6.2
   opalseam:"Opal Seam", emeraldseam:"Emerald Seam", rubyseam:"Ruby Seam", diamondseam:"Diamond Seam",   // v5.3
   crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift", olddoor:"A Planked Door", keg:"Keg", jar:"Preserves Jar", sawmill:"Sawmill", press:"Cheese Press", bench:"Bench", plantpot:"Flower Planter",
   milestone:"The Milestone", shrine:"Roadside Shrine", mooring:"The Ferry Landing", samphirenode:"Samphire", hollynode:"Sea Holly", asternode:"Sea Aster",
@@ -1035,6 +1036,22 @@ function interact(){
       case "stall":
         if(obj.ferry){ openShop("buy", false, "ferry"); return; }
         break;
+      // ★ v6.2 — the mooring becomes a crossing. Since v3.36 its examine line has read "Nothing has
+      // tied up here in years. Somebody keeps the boards good anyway." v6.1 brought a boat in; this
+      // lets you get on it. The first sailing is Elias's, because it was his ferry for eleven years
+      // and he has never once been asked to go back.
+      case "mooring":
+        if(curMap.id === "marrowpoint"){ sailTo("coastroad"); return; }
+        if(!state.flags.act2Done){ toast("A boat would need somewhere to go, and a reason.", "#cbb98f"); return; }
+        if(!state.flags.marrowOpen){ startMarrowFirstSailing(); return; }
+        sailTo("marrowpoint"); return;
+      case "lighthouse":
+        showDialog("Marrow Point Light", "Four flights of iron stair and a lamp the size of a cart wheel.\n\n" +
+          "There is a logbook on the sill, kept in three hands. The last entry is eleven years old and reads, in full:\n\n" +
+          "  \u201cLight good. Sea heavy. E.A. going home.\u201d", "port_valley"); return;
+      case "hut":
+        showDialog("The ferry-master's hut", "One room, one stove, one chair, and a bed too short for the man who slept in it.\n\n" +
+          "Somebody has swept it. Recently.", "port_valley"); return;
       case "noticeboard": tutTip("tip_board","Someone in the valley wants something small each day. Bring it for coin and goodwill — never required."); showDialog("The Noticeboard", boardText(), "port_sign"); return;
       case "ledger": openProjects(); return;
       case "wardledger":   // v4.3 the Warden's Ledger — Act III. Latched shut until the tenth door gives.
@@ -1519,6 +1536,7 @@ function endFishing(){ fishing.state = "idle"; fishing.fish = null; fishHold = f
 // you stand on), with the split at y14 — the sand line.
 const waterHere = () =>
   curMap.id === "beach" ? "coast" :
+  curMap.id === "marrowpoint" ? "point" :          // v6.2 — open northern water, deeper and colder
   curMap.id === "coastroad" ? (Math.floor(state.py/TILE) >= 14 ? "estuary" : "river") :
   "pond";
 // the raw clock hour, 6..26 — night wraps past midnight, which is why we don't use curHour()

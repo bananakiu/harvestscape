@@ -22,6 +22,84 @@
 
 ---
 
+## 2026-07-29 — v6.2.0 "The Promised Coast" (code 142, tag `v6.2.0`) — the first place the game had already promised
+
+The owner's direction: *"i want to make the game world bigger. there are too few places. we want a lot
+more."* This is the first release of that program, and it deliberately starts with a place the game had
+**already told the player about** rather than with an invented one.
+
+### Why Marrow Point first
+
+The place sweep behind `V6_WORLD_AND_CRAFTS.md` counted **72 places the game names and 45 it names *and*
+locates** — against 18 it lets you stand in. Marrow Point was the most over-promised of all of them:
+
+- a milestone on the coast road carved `MARROW POINT — 39`, since v3.36;
+- **two** signposts pointing north to it;
+- a ferry sign that has read **"no service"** for eight months of releases;
+- a resident of the valley (Elias) whose entire backstory is that he crewed that ferry for eleven years;
+- and — the detail that decided it — **a lighthouse already blinking on the horizon** in the Starfall
+  Ridge panorama since v3.43.
+
+A place with a signposted distance, a working ferry service, a named resident who worked the route, and a
+light you can see from another map is not a new area. It is a **debt**. Building it needed almost no new
+fiction, which is exactly why it goes first: the cheapest possible proof that the world can grow.
+
+### What it is
+
+A headland that **narrows as you walk east**, sixteen rows of land where it joins the coast and six at the
+tip, until there is nothing left but the light. Quay and warp at the west end; the ferry-master's hut; a
+mooring post; wind-bent pines only on the landward end (nothing tall survives the tip); and forage that
+grows nowhere else in the valley — **sea holly** and **samphire**, the plants that live on salt.
+
+**The first crossing is Elias's.** Not the player's alone — he is standing at the mooring, and the scene
+turns on one fact the game established three versions ago and has never used:
+
+> "That's my crossing. Thirty-nine miles, four hours in a fair sea, six in a bad one. I made it eleven
+> hundred and some times and I have never once made it in this direction."
+
+That is the whole argument for building promised places before invented ones: the scene wrote itself out of
+material already on the shelf.
+
+**The boatyard** opens on the beach at four writs done — three keels on the sand, still open at the ribs.
+It is scaffolding for the coast program's later layers, placed now so the beach starts changing early.
+
+### One light, one clock
+
+The panorama's lighthouse blinked on `Math.floor(animT*1.2)%2`. The tower, when first built, **did not
+light at all** — it was a forty-foot sprite with a painted lamp, standing dark at nine at night on a map
+named for it.
+
+Fixing that as "add a light to `collectLights`" would have produced a second, unrelated blink. Two things
+that both blink are not one lighthouse. So Marrow Point Light now has a **character** — `marrowFlash()`,
+Fl(2) 6s: two quick flashes, then a long dark — and *every* place that draws it reads that one function.
+The pixel on the ridge and the lamp at the tip are lit by the same clock. Real lights are identified by
+their rhythm rather than their brightness; giving this one a rhythm is what makes it a specific lighthouse
+instead of a lamp on a stick. Both callers keep a dim baseline, so between flashes the glass still shows —
+from thirty-nine miles you would still see it.
+
+### Fixed during the build
+
+**The point tapered to nothing.** The first taper (`narrow = 3 + (x/w)*7`) closed the land completely past
+x≈36 and left the lighthouse **standing in open sea**, with 233 walkable tiles on a 46×26 map. It was
+caught by *counting tiles*, not by looking at the map — the camera never happened to be pointed at the tip.
+Retapered to 16 rows landward / 6 at the tip: 491 walkable tiles, 471 of them reachable from the quay by
+flood-fill, with the light, the hut and the mooring all connected. **The lesson is the method:** a
+generated map should be asserted about (walkable count, reachability from the entrance) and not merely
+screenshotted, because a screenshot only proves the part of the map that is on screen.
+
+### Numbers
+
+19 maps · `marrowpoint` generates in 0.659 ms (third slowest, budget 3 ms) · all 2,277 save invariants across
+10 eras hold · all schedule invariants hold across 364 snapshots.
+
+### Still owed
+
+The Point (Bram's headland — his 10♥ scene goes there in dialogue today) is deferred to the next coast
+release; it is a second, smaller promise on the same stretch of water and wants its own beat rather than
+being bolted onto this one.
+
+---
+
 ## 2026-07-29 — v6.1.5 "Room for Ten" (code 141, tag `v6.1.5`) — making room before there is anything to put in it
 
 Prep for the owner's ten-crafts direction, measured rather than assumed.

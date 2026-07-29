@@ -1440,6 +1440,40 @@ function buildBeachArt(){
     px(g,3,6,10,10,"#8a8478"); px(g,3,6,10,1,"#a8a296"); px(g,4,4,8,2,"#9a948a");       // body + cap
     g.clearRect(5,9,6,5); px(g,5,13,6,1,"#6a655c");                                     // the hollow + shelf
     px(g,6,11,1,1,"#d8d0c0"); px(g,8,11,1,2,"#c9788a"); px(g,9,12,1,1,"#c9a44a"); });   // pebble, flower, biscuit
+  // ★ v6.2 Marrow Point. The light is the tallest thing in the game — it has been a blinking pixel
+  // in the ridge panorama since v3.43 and this is the same object, close up.
+  // ...which is a claim the code has to actually make. The panorama blinked on its own hand-tuned
+  // `floor(animT*1.2)%2`; the tower, before this, did not light at all. Two blinks that happen to
+  // both blink are not one lighthouse. `marrowFlash()` (below) is the light's *character* — every
+  // place that draws Marrow Point reads it, so the pixel on the ridge and the lamp at the tip are
+  // lit by the same clock.
+  /* Marrow Point Light — character Fl(2) 6s: two quick flashes, then a long dark. Real lights are
+     identified by their rhythm, not their brightness, so giving this one a rhythm is what makes it
+     a specific lighthouse rather than a lamp on a stick. Returns 0..1; callers keep their own dim
+     baseline so the lamp never vanishes entirely (from thirty-nine miles you'd still see the glass). */
+  window.marrowFlash = function(){
+    const ph = animT % 6;
+    return ph < 0.35 ? 1 - ph/0.35
+         : (ph >= 0.9 && ph < 1.25) ? 1 - (ph-0.9)/0.35
+         : 0;
+  };
+  mkSpr("lighthouse", 16, 40, g => {
+    px(g,4,10,8,30,"#e8e2d4"); px(g,4,10,8,2,"#fff8ec"); px(g,11,12,1,28,"#b8b0a2");
+    for(let i=0;i<4;i++) px(g,4,16+i*6,8,2,"#b0483a");                       // the red bands
+    px(g,3,8,10,2,"#6a6258"); px(g,5,2,6,6,"#3a4550");                        // gallery + lamp housing
+    px(g,6,3,4,4,"#ffe6a0"); px(g,7,4,2,2,"#fff8d8");                          // the lamp
+    px(g,4,0,8,2,"#4a5560"); px(g,7,-1,2,2,"#4a5560");
+    px(g,2,38,12,2,"#6a6258"); });
+  mkSpr("hut", 16, 20, g => {
+    px(g,2,8,12,11,"#5a4a3a"); px(g,2,8,12,1,"#6f5c46");
+    px(g,1,4,14,5,"#3f3428"); px(g,1,4,14,1,"#54463a");                        // the low roof
+    px(g,6,12,4,7,"#2c2018"); px(g,9,15,1,1,"#c9922f");                        // the door
+    px(g,3,10,3,3,"#3a4550"); px(g,11,10,2,3,"#3a4550");                       // windows, dark
+    px(g,12,2,2,4,"#4a4038"); });                                              // the chimney
+  mkSpr("hull", 20, 14, g => {
+    px(g,2,7,16,5,"#6e5238"); px(g,2,7,16,1,"#8a6a48"); px(g,1,8,18,3,"#5a422c");
+    for(let i=0;i<5;i++) px(g,3+i*3,3,1,5,"#7a5c40");                          // the ribs, still open
+    px(g,9,1,1,7,"#8a6a48"); px(g,3,12,14,1,"#463522"); });
   mkSpr("mooring", 16, 16, g => {                                                       // salt-silvered post + rope loop
     px(g,6,3,3,11,"#8a8890"); px(g,6,3,3,1,"#a8a6ae"); px(g,6,3,1,11,"#a8a6ae");
     px(g,5,5,5,2,"#b09a6a"); px(g,5,7,1,2,"#b09a6a"); px(g,9,7,1,2,"#b09a6a"); px(g,5,9,5,1,"#98845a"); });
