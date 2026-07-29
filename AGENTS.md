@@ -316,6 +316,14 @@ tests a copy tests nothing.
   never land before its own MASTERY/PRAISE/NPC/TRIALS/SKILL_ICON rows — `nextMastery` hard-crashes the
   panel otherwise**, and **hold every new ladder to Smithing's shape (~30 marks, max band 5), not to
   the linter's 8-level threshold, which Hearthcraft proves is passable while 39% dead.**
+- `V6_5_BUILD_SPEC.md` — ★ **the build order for v6.5 "The Wild" (Foraging)**, written to be executed
+  cold. Produced by an orchestrated design pass (21 agents, ~3.5M tokens): four surveys, three rival
+  ladders judged on three lenses, then adversarial refutation — two of three adversaries refuted the
+  first synthesis. What is in the file is rev 2, with every finding resolved plus four the adversaries
+  missed. **Its §0 fix ledger is the entry point.** Two of those four were fatal and shape the whole
+  release: the *Sedgeway does not exist* (cut — the wetland is a ground rule, not a map), and the
+  *Ruin does not exist* (built — it pays off Elias's shipped 8♥ line). Headline: 45 marks, largest
+  empty band 4, 5 marks above L85, 0.00% dead, measured ~100 in-game days 1→99.
 - `MONETIZATION.md` — **inward monetization** (owner direction 2026-07-28): turn the rewarded-ad slot
   inwards so it shows our OWN brands (H&Y et al) rather than an ad network's — product video, store
   visits and social engagement in exchange for temporary in-game boosters. ★ The rule that governs it:
