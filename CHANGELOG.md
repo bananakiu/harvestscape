@@ -524,6 +524,56 @@ moving. Coordinate math checked exactly — wanted tile [17,24], resolved [17,24
 
 ---
 
+## 2026-08-03 — v6.5.3 "Point and Look" (code 154, tag `v6.5.3`) — the pointer gets a picture
+
+> *"i think the pointer shoulder have some visual feedback (maybe entity highlighting) for a more
+> enjoyable and understandbale experience. idk how we can signal players that they can potentially use
+> the examine (but not too much), but find a way"*
+
+v6.5.2 gave the pointer a name label and no visual answer, which is a weak read: you learn the cursor
+is doing something from a line of text at the edge of your attention.
+
+### Why an outline and not a box
+
+The cursor **already speaks a language in this game**, and the new feedback must not collide with it:
+
+| existing | means |
+|---|---|
+| green box on the faced tile | the held tool works here |
+| gold box | the swing will switch tools (v4.27.1) |
+| faint white box | nothing will happen |
+| pale green boxes around it | the Hoe/Can sweep footprint |
+
+All four are **boxes drawn on a tile**. So hover outlines the **entity** — the sprite's own silhouette,
+one pixel, warm gold — which is a different *shape* of feedback and can never be misread as the tool
+cursor. Verified side by side in one frame: the hovered pine wears an outline while the faced tile
+keeps its green square, and the two do not compete.
+
+Implementation is a cached silhouette per sprite+colour (`drawImage`, then `source-in` fill), drawn at
+four one-pixel offsets under the sprite. Pixel-perfect at any zoom, five blits for the one hovered
+thing, no `ctx.filter`.
+
+### ★ Signalling examine without nagging
+
+This was the harder half of the ask, and the answer is **what does *not* light up**.
+
+Only things with an examine line are outlined. So the highlight is itself the answer to *"will this
+yield anything interesting?"* — given before you commit, and given by absence as much as by presence.
+An empty field stays dark. Nothing is added to the world, no permanent markers, no icons.
+
+The wording hint is on a **teach-then-stop** latch: *"right-click to look"* rides along for the first
+six distinct things you ever point at — long enough to be unmissable, short enough to vanish before it
+becomes furniture — and then the outline and the name carry it alone. Persisted in `state.hoverTaught`,
+so it does not start over every morning.
+
+### Degrades safely
+
+`tileUnderPointer` returns null on a zero-size canvas rather than computing nonsense — which matters,
+because the automation context this was tested in intermittently reports the canvas as 0×0 while the
+page renders perfectly. The feature simply does nothing in that case rather than pointing at tile 0,0.
+
+---
+
 ## [Unreleased]
 
 ### Tooling — the atlas now guards what a Guild wing lights ON, not just that it has prose

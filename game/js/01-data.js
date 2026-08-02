@@ -8,13 +8,17 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "6.5.2", code: 153, codename: "Point and Look", date: "2026-08-03" };
+const VERSION = { name: "6.5.3", code: 154, codename: "Point and Look", date: "2026-08-03" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"6.5.3", code:154, date:"2026-08-03", name:"Point and Look", notes:[
+    { t:"change", s:"Things light up under the pointer. Move the mouse over anything with something to say and it takes a thin warm outline \u2014 the thing itself, not the square it stands on, so it never reads as the tool cursor. Something with nothing to say stays dark, which is how you learn at a glance where the interesting things are." },
+    { t:"change", s:"The \u201cright-click to look\u201d hint comes along for the first six things you point at and then gets out of the way for good." },
+  ]},
   { v:"6.5.2", code:153, date:"2026-08-03", name:"Point and Look", notes:[
     { t:"fix", s:"The smart tool no longer reaches for the hoe. Facing plain ground with an axe in hand, it would switch you into the hoe and till \u2014 up to nine tiles at once \u2014 for a press you meant as a swing. It picks a tool to answer something already in front of you: an axe for a tree, a pick for a rock, a rod for water, a can for soil you already tilled. Tilling ground that was fine as it was is a decision, and it's yours." },
     { t:"fix", s:"Reading the Ground is off the E key. It fired whenever you pressed E with nothing in front of you, which in a field is most of the time. It's on the look key now, where looking belongs." },

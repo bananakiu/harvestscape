@@ -535,6 +535,46 @@ function drawGroundTile(x, y, tt, nf){
 }
 
 const TALL = new Set(["oak","pine","maple","bookshelf","lamp","fireplace","banner","sealeddoor","palm","mineentrance","lift","olddoor","wardbell"]);   // v4.0: the bell stands 22px
+// ======================================================================
+//  ★ v6.5.3 — HOVER HIGHLIGHT
+// ======================================================================
+//  v6.5.2 gave the pointer a name label and no visual answer, which is a weak read: you learn the
+//  cursor is doing something from a line of text at the edge of your attention.
+//
+//  The cursor already speaks a language in this game and the highlight must not collide with it: a
+//  GREEN box on the faced tile means "the held tool works here", GOLD means "the swing will switch
+//  tools", faint white means "nothing will happen". All three are boxes drawn ON A TILE. So hover
+//  outlines the ENTITY instead — the sprite's own silhouette, one pixel, warm — which is a different
+//  shape of feedback entirely and can never be mistaken for the tool cursor.
+//
+//  Only things with something to say are outlined. That is the honest form of the owner's ask: signal
+//  that examine exists without nagging. An object with no examine line does not light up, so the
+//  highlight IS the answer to "will this yield anything interesting", given before you commit.
+let hoverTile = null;                                  // [x,y] under the pointer; set by 10-ui's worldHover
+const _silCache = new Map();
+function spriteSilhouette(sp, col){
+  const k = (sp.__silId || (sp.__silId = String(_silCache.size))) + col;
+  let c = _silCache.get(k);
+  if(c) return c;
+  c = document.createElement("canvas"); c.width = sp.width; c.height = sp.height;
+  const g = c.getContext("2d");
+  g.imageSmoothingEnabled = false;
+  g.drawImage(sp, 0, 0);
+  g.globalCompositeOperation = "source-in";            // keep the alpha, replace every colour
+  g.fillStyle = col; g.fillRect(0, 0, c.width, c.height);
+  _silCache.set(k, c);
+  return c;
+}
+// Draw `sp` at (x,y) with a 1px outline. The silhouette is cached per sprite+colour, so this is four
+// extra blits of an image the size of a game tile — nothing, and only ever for the one hovered thing.
+function drawWithOutline(sp, x, y, col){
+  const sil = spriteSilhouette(sp, col);
+  for(const [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1]]) ctx.drawImage(sil, x+dx, y+dy);
+  ctx.drawImage(sp, x, y);
+}
+function isHovered(ox, oy){ return !!hoverTile && hoverTile[0] === ox && hoverTile[1] === oy; }
+const HOVER_COL = "rgba(255,226,140,0.95)";
+
 function drawObject(ox, oy, o, k){
   const bx = ox*TILE, by = oy*TILE;
   let sway = 0;
@@ -543,11 +583,16 @@ function drawObject(ox, oy, o, k){
   if(TREES[o.kind]){
     ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.beginPath(); ctx.ellipse(bx+8, by+15, 7, 2.6, 0, 0, 7); ctx.fill();
     const tsway = Math.sin(animT*1.3 + ox*1.7)*0.6 + sway;
-    ctx.drawImage(spr[o.kind+"_"+renderSeason] || spr[o.kind], Math.round(bx-2+tsway), by-16); return;
+    const ts = spr[o.kind+"_"+renderSeason] || spr[o.kind];
+    const tx0 = Math.round(bx-2+tsway), ty0 = by-16;
+    if(isHovered(ox, oy)) drawWithOutline(ts, tx0, ty0, HOVER_COL); else ctx.drawImage(ts, tx0, ty0);
+    return;
   }
   if(ORES[o.kind]){
     const cracked = o.hp <= Math.ceil(ORES[o.kind].hp/2);
-    ctx.drawImage(spr[cracked ? o.kind+"_cracked" : o.kind], Math.round(bx+sway), by); return;
+    const os = spr[cracked ? o.kind+"_cracked" : o.kind], ox0 = Math.round(bx+sway);
+    if(isHovered(ox, oy)) drawWithOutline(os, ox0, by, HOVER_COL); else ctx.drawImage(os, ox0, by);
+    return;
   }
   if(o.kind==="gemrock" || o.kind==="crystal"){
     ctx.drawImage(spr[o.kind], Math.round(bx+sway), by);
@@ -607,7 +652,8 @@ function drawObject(ox, oy, o, k){
     if(!known) ctx.globalAlpha = 0.42;
     else if(!wildReady(w)) ctx.globalAlpha = 0.70;
     if(o.pickedDay === state.day) ctx.globalAlpha = 0.22;
-    ctx.drawImage(s2, Math.round(bx+sway), by);
+    const wx0 = Math.round(bx+sway);
+    if(isHovered(ox, oy)) drawWithOutline(s2, wx0, by, HOVER_COL); else ctx.drawImage(s2, wx0, by);
     ctx.restore();
     if(known && o.pickedDay !== state.day && chance(0.012)) pSparkle(bx+8, by+4, w.col, 1);
     return;
@@ -645,5 +691,6 @@ function drawObject(ox, oy, o, k){
   const s = spr[o.kind]; if(!s) return;
   const dw = s.width, dh = s.height;
   if(dh > 16){ ctx.fillStyle="rgba(0,0,0,0.16)"; ctx.beginPath(); ctx.ellipse(bx+8, by+15, 6, 2.2, 0, 0, 7); ctx.fill(); }
-  ctx.drawImage(s, Math.round(bx-(dw-16)/2+sway), by-(dh-16));
+  const dx0 = Math.round(bx-(dw-16)/2+sway), dy0 = by-(dh-16);
+  if(isHovered(ox, oy)) drawWithOutline(s, dx0, dy0, HOVER_COL); else ctx.drawImage(s, dx0, dy0);
 }

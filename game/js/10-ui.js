@@ -3191,23 +3191,32 @@ function tileUnderPointer(e){
   return [tx, ty];
 }
 let _hoverKey = "";
+function clearWorldHover(){ const t = $("tip"); if(t) t.classList.add("hidden"); _hoverKey = ""; hoverTile = null; }
 function worldHover(e){
   const tip = $("tip"); if(!tip) return;
-  if(gameMode !== "play" || uiBlocking() || isCutscene()){ tip.classList.add("hidden"); _hoverKey = ""; return; }
+  if(gameMode !== "play" || uiBlocking() || isCutscene()){ clearWorldHover(); return; }
   const at = tileUnderPointer(e);
-  if(!at){ tip.classList.add("hidden"); _hoverKey = ""; return; }
+  if(!at){ clearWorldHover(); return; }
   const [tx,ty] = at;
   // Only NAME things — never the bare ground. A label on every grass tile is noise, and noise is the
   // opposite of the signal this is for.
   const obj = objAt(tx,ty), crop = curMap.crops[key(tx,ty)], npc = npcAtTile(tx,ty);
-  if(!obj && !crop && !npc){ tip.classList.add("hidden"); _hoverKey = ""; return; }
+  if(!obj && !crop && !npc){ clearWorldHover(); return; }
   const look = examineAt(tx, ty);
-  if(!look || !look.title){ tip.classList.add("hidden"); _hoverKey = ""; return; }
+  if(!look || !look.title || !look.text){ clearWorldHover(); return; }
+  hoverTile = [tx, ty];                                  // 07-entities outlines whatever sits here
   const k = tx + "," + ty + ":" + look.title;
   if(k !== _hoverKey){
     _hoverKey = k;
+    // ★ The hint TEACHES AND THEN STOPS. "right-click to look" on every hover for three hundred hours
+    // is nagging, and the owner asked for a signal that is "not too much". It rides along for the
+    // first six distinct things you point at — long enough to be unmissable, short enough to vanish
+    // before it is furniture — and after that the outline and the name carry it alone. Persisted, so
+    // it does not start over every morning.
+    state.hoverTaught = (state.hoverTaught || 0) + 1;
+    const teach = state.hoverTaught <= 6;
     tip.innerHTML = `<div class="tName">${escapeHtml(look.title)}</div>` +
-      `<div class="tVal" style="opacity:.72">right-click to look</div>`;
+      (teach ? `<div class="tVal" style="opacity:.7">right-click to look</div>` : "");
     tip.classList.remove("hidden");
   }
   const r = cv.getBoundingClientRect();
@@ -3215,7 +3224,7 @@ function worldHover(e){
   tip.style.top  = Math.round(e.clientY - r.top  - 6) + "px";
 }
 cv.addEventListener("mousemove", worldHover);
-cv.addEventListener("mouseleave", () => { const t = $("tip"); if(t) t.classList.add("hidden"); _hoverKey = ""; });
+cv.addEventListener("mouseleave", clearWorldHover);
 
 // mouse on canvas
 cv.addEventListener("mousedown", e => {

@@ -49,6 +49,7 @@ function freshState(){
     waystones:[],                          // awakened waystone ids ("way3"…) — permanent, like liftStops
     charm:null,                            // the one canopy charm worn (its item must also be in inv)
     forageSeeded:true,                     // v6.5 — a save BORN with Foraging never back-credits (migrateSave seeds older ones once)
+    hoverTaught:0,                         // v6.5.3 — how many distinct things the pointer has named; the "right-click to look" hint retires after six
     capBook:false, wildSeen:{},            // v6.5 — the Cap Book read, and what each ground last gave you (the Trug's 5th rung)
     writDone:0, writBundle:{}, writMarks:0,   // v5.9 the weekly writ: how many closed, what's deposited toward the open one, and the marks earned
     home:{ objects:{}, rooms:0 },           // v5.7 the cottage overlay: placed furniture (persists) + how many rooms Rowan has built on
