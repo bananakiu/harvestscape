@@ -74,7 +74,7 @@ const PLAIN_KEYS = ["SEASONS", "SEASON_DAYS", "FESTIVALS", "BIRTHDAYS",
   "CROPS", "TREES", "ORES", "FISH", "FRUIT_TREES", "TREE_MATURE_DAYS", "TREE_FRUIT_CAP",
   "HIVE_COST", "HIVE_RADIUS", "HIVE_CAP", "HIVE_MAX",
   "WATER", "LEGENDS", "ITEM_SELL", "GEM_SELL", "SHORE",
-  "RECIPES", "FORGE", "FORGE_HEAD_DISCOUNT", "PROJECTS", "WEATHERS", "WEATHER_ODDS",
+  "RECIPES", "FORGE", "FORGE_HEAD_DISCOUNT", "WILD", "PREPS", "CAPS", "WILD_CATS", "PROJECTS", "WEATHERS", "WEATHER_ODDS",
   "MASTERY", "MASTERY_NPC", "REQUESTS", "TOOLS", "TOOL_TIERS", "TIER_POWER", "TIER_COST", "CREATURES",
   "QUESTS", "FINALE_IDX", "XP_TABLE", "NPCDEF", "NPC_LINES",
   "HEART_EVENTS", "MARRIAGE_SCENES", "FESTIVAL_SCENES", "JOURNAL_PAGES"];
@@ -113,7 +113,7 @@ const D = JSON.parse(sandbox.__DATA__);
 const WING_REQ = {
   farming: "Reach Farming 10", woodcutting: "Reach Woodcutting 8", mining: "Reach Mining 8",
   fishing: "Reach Fishing 8", cooking: "Cook 8 dishes", ranching: "Keep at least one hen",
-  foraging: "Forage 10 wild finds", smithing: "Upgrade tools twice",
+  foraging: "Reach Foraging 8 — or gather 10 wild finds", smithing: "Upgrade tools twice",
   hearth: "Hold the Grand Festival",
 };
 // ★ The CONDITION each wing lights on, as source. WING_REQ above is hand-written prose describing
@@ -135,7 +135,7 @@ const WING_LIT = {
   fishing:     '()=> skillLvl("Fishing")>=8',
   cooking:     '()=> (state.stats.cooked||0)>=8',
   ranching:    '()=> state.animals.chickens.length>=1',
-  foraging:    '()=> (state.stats.forage||0)>=10',
+  foraging:    '()=> skillLvl("Foraging")>=8 || (state.stats.forage||0)>=10',   // v6.5
   smithing:    '()=> (state.stats.toolUpgrades||0)>=2',
   hearth:      '()=> !!state.flags.festivalDone',
 };
@@ -246,6 +246,7 @@ const STATS = [
   [(D.FISH || []).length + (D.LEGENDS || []).length, "fish (5 of them legendary)"],
   [(D.RECIPES || []).length, "recipes"],
   [(D.FORGE || []).length, "forgings"],
+  [(D.WILD || []).length + (D.PREPS || []).length, "wild finds & preparations"],
   [(D.FESTIVALS || []).length + 1, "festivals a year (one earned)"],
   [masteryCount, `mastery perks across ${Object.keys(D.MASTERY || {}).length || 6} skills`],
 ].filter(([n]) => n > 0);
@@ -377,6 +378,20 @@ function skillsSection(){
   const fishRows = D.FISH.map(f => [f.lvl, `${dots(f.pal)} <b>${esc(f.name)}</b> — ${f.sell}g · lives in ${["pond", "coast"].filter(w => D.WATER[w].includes(f.name)).join(" & ") || "both waters"}`])
     .concat(D.LEGENDS.map(l => [l.lvl, `${dots(l.pal)} <b class="gold">★ ${esc(l.name)}</b> — legendary, ${l.sell}g (see The Hunt)`]));
   const cookRows = D.RECIPES.map(r => [r.lvl, `<b>${esc(r.name)}</b> — ${Object.entries(r.ing).map(([i, n]) => `${n}× ${esc(i)}`).join(" + ")} · ${r.energy} energy · ${r.sell}g`]);
+  // v6.5 Foraging — where and when, because a forager's ladder is a calendar as much as a list.
+  const wildWhen = (w) => [
+    Object.keys(w.maps).join("/"),
+    w.seasons ? w.seasons.join("/") : "all year",
+    w.sky ? ("in " + w.sky) : null,
+    w.fromHour ? ("after " + w.fromHour + ":00") : w.toHour ? ("before " + w.toHour + ":00") : null,
+    (w.ground || []).includes("WET") ? "wet ground" : null,
+    w.ruin ? "the ruin" : w.summit ? "the summit" : null,
+    w.rings ? ("rings " + w.rings.join("–")) : null,
+  ].filter(Boolean).join(" · ");
+  const forageRows = (D.WILD || []).map(w => [w.lvl, `<b>${esc(w.item)}</b> — ${esc(wildWhen(w))} · ${w.xp} XP · ${w.sell}g`])
+    .concat((D.PREPS || []).map(p => [p.lvl, `<b>${esc(p.name)}</b> <span class="sub">(rack)</span> — ` +
+      Object.entries(p.ing).map(([i, n]) => (n && n.cat) ? `${n.n}× any ${esc(D.WILD_CATS[n.cat].label)}` : `${n}× ${esc(i)}`).join(" + ") +
+      ` · ${p.xp} XP · ${p.sell}g`]));
   // v6.4 Smithing — bars are stock, goods are inputs to something else. Marked so the two verbs read
   // apart on the page the way they do in the panel.
   const smithRows = (D.FORGE || []).map(r => [r.lvl,
@@ -408,6 +423,7 @@ ${ladder("⛏ Mining", D.MASTERY_NPC?.Mining, mineRows, D.MASTERY?.Mining)}
 ${ladder("🎣 Fishing", D.MASTERY_NPC?.Fishing, fishRows, D.MASTERY?.Fishing)}
 ${ladder("🍳 Cooking", D.MASTERY_NPC?.Cooking, cookRows, D.MASTERY?.Cooking)}
 ${D.FORGE ? ladder("🔨 Smithing", D.MASTERY_NPC?.Smithing, smithRows, D.MASTERY?.Smithing) : ""}
+${D.WILD ? ladder("🌿 Foraging", D.MASTERY_NPC?.Foraging, forageRows, D.MASTERY?.Foraging) : ""}
 ${ladder("🔔 Warding", D.MASTERY_NPC?.Warding, wardRows, D.MASTERY?.Warding)}
 
 ${cadenceBlock()}

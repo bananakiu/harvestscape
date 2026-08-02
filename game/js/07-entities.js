@@ -135,6 +135,7 @@ const INTERACT_KINDS = new Set(["campfire","stove","counter","stall","shipbin","
   "lighthouse","hut","hull",   // v6.2 The Promised Coast
   "flagpole","firering","trestle","longtable",   // v6.3 The Festival Green
   "forge","anvil",   // v6.4 Smithing
+  "wild","birch","rack",    // v6.5 The Wild — without "wild" here facingInteractable returns false and NO [E] prompt draws over any of the eighteen finds
 ]);                                                // v4.3: the Warden's Ledger (Act III) — show the [E] prompt like Rowan's ledger
 function facingInteractable(fx, fy){
   const w = warpAt(fx,fy); if(w && !w.auto) return true;
@@ -200,6 +201,12 @@ function drawGuard(x, y, face){
 // the valley blank-faced — and the spacing rule reproduces those two cottage windows exactly, so
 // nothing moved. Windows glow at night (nf > 0.4), which is most of why they exist: a lived-in town.
 function isWindowTile(x, y){
+  // ★ v6.5 — never inside the Ruin. Windows are what makes a wall read as a lived-in building, and
+  // the ridge's ruin is a roofless shell with a birch growing in the kitchen: intact glazing was the
+  // one detail that made it look like somebody's tidy cottage instead. (collectLights also lights
+  // every window after dark, so without this the abandoned house glowed at night.)
+  const r = curMap && curMap.ruin;
+  if(r && x >= r.x0 - 1 && x <= r.x1 + 1 && y >= r.y0 - 1 && y <= r.y1 + 1) return false;
   return tileAt(x, y+1) === T.WALL && (x*5 + y*3) % 3 === 0;
 }
 function computeCam(shx, shy){
@@ -587,6 +594,22 @@ function drawObject(ox, oy, o, k){
       ctx.save(); ctx.translate(bx+8, by+16); ctx.rotate(0.09); ctx.translate(-(bx+8), -(by+16));
       ctx.drawImage(s, bx, by-(s.height-16)); ctx.restore();
     }
+    return;
+  }
+  // v6.5 — one drawn node per find, tinted from its own WILD row. A find you cannot yet name draws
+  // paler and without its colour: you can see there is SOMETHING there, which is the whole invitation.
+  if(o.kind==="wild"){
+    const w = WILD_BY_ID[o.w]; if(!w) return;
+    const known = skillLvl("Foraging") >= w.lvl;
+    const s2 = spr["item_" + w.item] || spr["wildnode_" + w.form];
+    if(!s2) return;
+    ctx.save();
+    if(!known) ctx.globalAlpha = 0.42;
+    else if(!wildReady(w)) ctx.globalAlpha = 0.70;
+    if(o.pickedDay === state.day) ctx.globalAlpha = 0.22;
+    ctx.drawImage(s2, Math.round(bx+sway), by);
+    ctx.restore();
+    if(known && o.pickedDay !== state.day && chance(0.012)) pSparkle(bx+8, by+4, w.col, 1);
     return;
   }
   if(o.kind==="memorial"){ ctx.drawImage(spr.memorial, bx, by-4); if(chance(0.03)) pEmber(bx+2, by+8); return; }

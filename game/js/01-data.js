@@ -8,13 +8,23 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "6.4.6", code: 150, codename: "The Valley, Drawn", date: "2026-08-03" };
+const VERSION = { name: "6.5.0", code: 151, codename: "The Wild", date: "2026-08-03" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"6.5.0", code:151, date:"2026-08-03", name:"The Wild", notes:[
+    { t:"new", s:"Foraging \u2014 the eighth craft, trained 1 to 99, and the only one that costs no energy and needs no tool to begin. Eighteen wild finds across the valley, each with its own ground, its own season and sometimes its own hour: nettle in the hedgerows on your first morning, sorrel on the grove floor, bogbean and reedmace in the wet, an unnamed mushroom you carry home for sixteen levels before you can read the book that names it, and moonwort on the summit that only opens after dark." },
+    { t:"new", s:"Nothing was taken from any other craft to make room. Every forage node in the game keeps training exactly what it always trained, at exactly the rate it always did \u2014 they simply pay a little Foraging on top now. Picking berries is still Farming." },
+    { t:"new", s:"You've been foraging since your first day and the game has been counting. An old save starts with the levels that counting earned, up to fifteen." },
+    { t:"new", s:"A drying rack in the cottage, and twelve preparations: dried herbs, nettle cord, cordials, tinctures, and a posy made of every hard thing the valley grows. Several take \u201cany leaf\u201d or \u201cany cap\u201d rather than one named plant \u2014 so a foggy-day mushroom is a better thing to use when you have it, never a thing you're stuck without." },
+    { t:"new", s:"Reading the Ground, at level 5: stand anywhere outdoors, press E, and the place tells you what it is giving today. The Trug \u2014 Foraging's basket \u2014 widens that read at every tier, and at the top it names tomorrow's." },
+    { t:"new", s:"The ruin on the ridge. Elias has described it since his eighth heart: roof gone, a birch growing where the kitchen was, and it's a good birch. It has been possible to hear about and impossible to visit. It's there now, and two things grow in it that grow nowhere else." },
+    { t:"new", s:"Sable Harrow is the valley's forager \u2014 she always was, by her gift tastes \u2014 and now the craft agrees. Two trials: rebinding her mother's remedy book, and three baskets left standing open at the far ends of the valley for whoever walks the long round next." },
+    { t:"change", s:"Nine things that had no use in the game now have one: seaweed, clams, frostberries, starlight shards, mountain thyme, samphire, sea holly, snowdrops and sea aster." },
+  ]},
   { v:"6.4.6", code:150, date:"2026-08-03", name:"The Valley, Drawn", notes:[
     { t:"change", s:"The map in your journal is a map now. It was nine flat boxes in a grid \u2014 no coastline, no roads, no sense that anywhere was near anywhere else \u2014 and it had gone four places and six people out of date. It is drawn on vellum now: the ridge along the north, the sea sweeping up the east, the Gullwater coming down to the ford, the roads that actually run between places, and a dashed ferry line thirty-nine miles up the coast to the light." },
     { t:"fix", s:"Everyone is on it. Ada, Corin, Sable, Wick, Thea and Fenn had no place on the old map at all \u2014 nearly half the valley simply never appeared \u2014 and on a Festival Green day the faces vanished instead of moving there. The map asks the schedule where people are now instead of keeping its own list." },
@@ -658,8 +668,12 @@ const CHANGELOG = [
 // The 1–99 grind used to pass its milestones in silence. Now, when you cross a mastery tier
 // (25/50/75/99) in a skill, the neighbour who cares most about that craft says a warm word — in
 // their own voice. One line per skill per tier; fires once, naturally, as you cross it.
-const MASTERY_NPC = { Farming:"maya", Woodcutting:"tom", Mining:"rowan", Fishing:"bram", Cooking:"pip", Warding:"elias", Smithing:"fenn" };   // v6.4: Fenn, who reopened the forge   // v4.0: Elias, the last Warden, is the one who cares about the tenth craft
+const MASTERY_NPC = { Farming:"maya", Woodcutting:"tom", Mining:"rowan", Fishing:"bram", Cooking:"pip", Warding:"elias", Smithing:"fenn", Foraging:"sable" };   // v6.5: Sable Harrow, whose shipped gift tastes have been Sea Aster / Sea Holly / Mountain Thyme / Snowdrop / Samphire since v6.0 — the valley's forager by taste, before it had the craft   // v6.4: Fenn, who reopened the forge   // v4.0: Elias, the last Warden, is the one who cares about the tenth craft
 const MASTERY_PRAISE = {
+  Foraging: { 25:"You've stopped looking at the ground and started looking at what's ON it. That's the whole trick.",
+              50:"My mother would have liked you. She'd not have said so, but she'd have liked you.",
+              75:"There are three things in that book in my hand and not my mother's. All three are yours.",
+              99:"You found mistletoe. In the crown of an old oak, in the ninth ring, in winter. …I've never seen it. Not once." },
   Smithing: { 25:"You've stopped flinching at the heat. That's most of it, honestly.",
               50:"Half the ironwork in this valley has your hammer marks on it now.",
               75:"I've started sending people to you when I'm busy. I don't do that.",
@@ -1699,6 +1713,13 @@ function demandMult(item, k){ return 1; }
 // The 1-99 curve promised mastery and paid out nothing past the last content unlock.
 // Four milestones per skill, all small and passive — you feel them, you don't manage them.
 const MASTERY = {
+  // v6.5 Foraging. Every rung is a new OUTCOME of the same free press — never a yield percentage.
+  Foraging: {
+    25: "Light Hands — a gathered node sometimes gives again the same day",
+    50: "Sharp Eye — every read also names one thing you have never gathered",
+    75: "Deft Hands — a preparation sometimes returns one of its ingredients",
+    99: "The Valley Knows You — a wild find is left by the cottage door each morning",
+  },
   // v6.4 Smithing. Every effect is a SAVING, never a gate — the same rule that keeps Smithing off the
   // tool ladder. A smith who never levels loses nothing; a smith who does spends less.
   Smithing: {
@@ -1873,8 +1894,151 @@ const FORGE_BY_NAME = (() => { const m = {}; for(const r of FORGE) m[r.name] = r
 // The rule for this file: a table may only READ a table defined above it — otherwise mutate after.
 Object.assign(ITEM_SELL, (() => { const m = {}; for(const r of FORGE) m[r.name] = r.sell; return m; })());
 
-const TOOLS = ["Hoe", "Can", "Axe", "Pick", "Rod", "Stave", "Hammer"];   // v6.4: the Hammer, Smithing's own tool
-const TOOL_ICON = { Hoe:"hoe", Can:"can", Axe:"axe", Pick:"pick", Rod:"rod", Stave:"stave", Hammer:"hammer" };
+// ======================================================================
+//  ★ v6.5 "THE WILD" — FORAGING, the eighth craft
+// ======================================================================
+//  THE TERRITORY ANSWER, first, because it is what makes this craft legal.
+//
+//  Eleven forage nodes already exist (berrybush, frostberry, shellnode, seaweednode, coralnode,
+//  samphirenode, asternode, hollynode, thymenode, snowdropnode, shardnode) and every one of them
+//  trains Farming, Fishing or Mining. The obvious design — "those are Foraging's now" — would take
+//  an XP source away from a player at Farming 40 who has been picking berrybushes for three hundred
+//  hours. The cozy contract forbids that outright.
+//
+//  So NOTHING CHANGES HANDS. Every legacy node keeps its existing grant, byte-identical, and pays a
+//  small SECOND credit to Foraging on top (see forageNode, 08-actions.js). No node gains a level
+//  gate. No existing XP curve moves by one point. Measured: a full weather-weighted year of visiting
+//  all nine outdoor maps every day and picking every node pays 20,170 Foraging XP = level 31 = 2.58%
+//  of the climb. The legacy nodes are a floor, never the ladder.
+//
+//  ★ THE CATEGORIES are the load-bearing idea of this release's economy. WEATHERS' own header states
+//  the contract: weather never takes anything away, it changes what the valley OFFERS for a day. A
+//  preparation REQUIRING a fog-only mushroom breaks that — it turns "fog offers something" into "no
+//  fog, no craft". Fog is 10/6/16/13% by season and is suppressed outright on ~13 dated days a year.
+//  The fix is not to unlock the mushroom: it is to make a locked find a legal SUBSTITUTE rather than
+//  a requirement. Every category holds at least one member available on every day of every season, so
+//  no preparation can ever be blocked — and the rare, place-locked finds are simply the better thing
+//  to put in the slot when you have it.
+//
+//  Second effect, deliberate: categories ADOPT shipped orphans structurally. Mountain Thyme, Samphire,
+//  Snowdrop, Sea Aster and Sea Holly all become ingredients without one shipped recipe changing.
+const WILD_CATS = {
+  green:  { label:"leaf",  items:["Wood Sorrel","Watercress","Hearth Nettle","Mountain Thyme","Samphire"] },
+  fungus: { label:"cap",   items:["Unnamed Cap","Brown Cap","Kingcap","Witch's Butter","Grey Cap","Tinder Bracket"] },
+  marsh:  { label:"marsh", items:["Bogbean","Reedmace Down","Marsh Mallow","Sundew"] },
+  bloom:  { label:"bloom", items:["Snowdrop","Sea Aster","Sea Holly","Elderflower","Marsh Mallow"] },
+};
+// The always-available member of each category. Asserted by the harness — a category whose floor
+// member is later given a season is a broken contract with no visible symptom.
+const WILD_CAT_FLOOR = { green:"Wood Sorrel", fungus:"Unnamed Cap", marsh:"Bogbean", bloom:"Snowdrop" };
+
+//  THE EIGHTEEN FINDS.
+//  `form` selects the sprite shape and `col` tints it (the FORGE pattern — parameterised shapes, not
+//  one-off art). `maps` is a whitelist of map id → spawn attempts per day; on the grove it is PER RING.
+//  `ground` accepts tile names plus the pseudo-ground "WET" (any walkable tile orthogonally adjacent
+//  to water — measured free wet tiles: butterbrook 95 · marrowpoint 85 · coastroad 71 · farm 44 ·
+//  beach 38; ridge/grove/village/green have none). `seasons:null` means all four. `abundant` MULTIPLIES
+//  a count, never gates it. Hour gates are not spawn conditions: the node stands on the map all day and
+//  tells you warmly when it will give, exactly as shardnode does — a node that vanishes by day cannot
+//  be learned.
+//
+//  ★ PRICING IS A RULE, NOT A VIBE: foraging costs NO energy, so a find's gold and XP must sit UNDER
+//  the same-level ore or fish. Watercress L37 sells 100 against Gold Ore L30's 165 · Grey Cap L48 =
+//  160 against Cobalt L45's 300 · Moonwort L88 = 430 against Star Metal L85's 450. XP likewise: a
+//  Copper Vein at L10 pays 78 for an energy-costing swing; an Unnamed Cap at L12 pays 19 for a free press.
+const WILD = [
+  { id:"nettle",   item:"Nettle",        lvl:1,  xp:6,   sell:10,  form:"herb",    col:"#4e7a3c",
+    maps:{farm:5, village:4, coastroad:3}, ground:["GRASS","TALLGRASS","FLOWERGRASS"], seasons:null },
+  { id:"sorrel",   item:"Wood Sorrel",   lvl:3,  xp:9,   sell:16,  form:"leaf",    col:"#7cc45a",
+    maps:{grove:6}, rings:[1,3], ground:["GRASS","TALLGRASS"], seasons:null, abundant:{seasons:["Spring","Summer"], x:1.5} },
+  { id:"pignut",   item:"Pignut",        lvl:7,  xp:13,  sell:24,  form:"cluster", col:"#b89a68",
+    maps:{grove:4, ridge:3}, rings:[1,3], ground:["GRASS"], seasons:null },
+  { id:"unncap",   item:"Unnamed Cap",   lvl:12, xp:19,  sell:30,  form:"cap",     col:"#a89078",
+    maps:{grove:4}, rings:[1,3], ground:["GRASS","TALLGRASS"], seasons:null, abundant:{afterRain:true, x:2} },
+  { id:"bogbean",  item:"Bogbean",       lvl:17, xp:26,  sell:42,  form:"flower",  col:"#d8dcc8",
+    maps:{coastroad:3, butterbrook:3, farm:1}, ground:["WET"], seasons:null },
+  { id:"reedmace", item:"Reedmace Down", lvl:22, xp:36,  sell:52,  form:"reed",    col:"#8a6a3a",
+    maps:{coastroad:3, butterbrook:2, marrowpoint:2}, ground:["WET"], seasons:null },
+  { id:"hnettle",  item:"Hearth Nettle", lvl:27, xp:48,  sell:66,  form:"herb",    col:"#6a7a4a",
+    maps:{ridge:4}, ruin:true, ground:["GRASS","DIRT"], seasons:["Spring","Summer","Fall"] },
+  { id:"elderfl",  item:"Elderflower",   lvl:32, xp:64,  sell:82,  form:"flower",  col:"#f0f0e0",
+    maps:{grove:3}, rings:[1,3], ground:["GRASS","TALLGRASS"], seasons:null, abundant:{seasons:["Spring","Summer"], x:2} },
+  { id:"cress",    item:"Watercress",    lvl:37, xp:86,  sell:100, form:"leaf",    col:"#3ec878",
+    maps:{coastroad:3, butterbrook:2}, ground:["WET"], seasons:null, abundant:{seasons:["Spring","Fall"], x:1.5} },
+  { id:"birchsap", item:"Birch Sap",     lvl:42, xp:115, sell:125, form:"tap",     col:"#e8dcc0",
+    maps:{ridge:1}, ruin:true, ground:["DIRT"], seasons:["Spring"] },
+  { id:"greycap",  item:"Grey Cap",      lvl:48, xp:155, sell:160, form:"cap",     col:"#8f9aa6",
+    maps:{grove:4, coastroad:2, butterbrook:1}, rings:[1,3], ground:["GRASS","TALLGRASS","WET"], seasons:null, sky:"fog" },
+  { id:"bracket",  item:"Tinder Bracket",lvl:53, xp:195, sell:190, form:"bracket", col:"#a06a3a",
+    maps:{grove:4, ridge:3}, rings:[1,3], ground:["GRASS","DIRT"], seasons:["Winter"] },
+  { id:"mallow",   item:"Marsh Mallow",  lvl:58, xp:245, sell:220, form:"flower",  col:"#e8b8c8",
+    maps:{butterbrook:3, coastroad:2}, ground:["WET"], seasons:["Summer"] },
+  { id:"sundew",   item:"Sundew",        lvl:64, xp:310, sell:265, form:"herb",    col:"#e05a6a",
+    maps:{butterbrook:2, coastroad:1, marrowpoint:1}, ground:["WET"], seasons:null, toHour:12,
+    abundant:{seasons:["Summer","Fall"], x:1.5} },
+  { id:"mistle",   item:"Mistletoe",     lvl:73, xp:430, sell:330, form:"cluster", col:"#c8dcb0",
+    maps:{grove:3}, rings:[6,9], ground:["GRASS"], seasons:["Winter"] },
+  { id:"frostfern",item:"Frost Fern",    lvl:79, xp:540, sell:380, form:"leaf",    col:"#bfe4ff",
+    maps:{ridge:4}, summit:true, ground:["SAND","DIRT"], seasons:["Winter"], sky:"snow" },
+  { id:"moonwort", item:"Moonwort",      lvl:88, xp:740, sell:430, form:"flower",  col:"#d8c8ff",
+    maps:{ridge:5}, summit:true, ground:["SAND","DIRT"], seasons:null, fromHour:19 },
+  { id:"heartivy", item:"Heart's Ivy",   lvl:96, xp:1050,sell:560, form:"leaf",    col:"#9ae0c8",
+    maps:{grove:1}, rings:[9,9], ground:["GRASS"], seasons:null, cap:1 },
+];
+const WILD_BY_ID   = (() => { const m = {}; for(const w of WILD) m[w.id]   = w; return m; })();
+const WILD_BY_ITEM = (() => { const m = {}; for(const w of WILD) m[w.item] = w; return m; })();
+
+// The three caps an Unnamed Cap becomes once the Cap Book is read (Foraging 28). Not WILD rows —
+// they are conversions, and their ladder mark belongs to the book, not to themselves. ★ Retroactive
+// by construction: every cap carried home before you could read them still converts.
+const CAPS = [
+  { name:"Brown Cap",      w:0.62, sell:38,  col:"#a07850" },
+  { name:"Kingcap",        w:0.30, sell:95,  col:"#d8a83a" },
+  { name:"Witch's Butter", w:0.08, sell:210, col:"#e8c85a" },
+];
+const CAP_LEVEL = 28, READ_LEVEL = 5, CUTTING_LEVEL = 14, ALMANAC_LEVEL = 8,
+      TRAILSIGN_LEVEL = 62, LONGWALK_LEVEL = 93;
+
+//  THE RACK'S TWELVE. Modelled on FORGE, not on MACHINES: a preparation takes several ingredients and
+//  gives one thing back, which is the forge's shape, not load-one-and-wait. An `ing` entry may be a
+//  plain count OR {cat:"…", n:…} — a category slot, whose price is derived from the CHEAPEST legal
+//  composition, so a premium ingredient is a choice the player makes with what they have and never a
+//  loss the game forces.
+//
+//  ★ ORPHANS ADOPTED, by name, in one release: Seaweed (Nettle Cord — the purest orphan in the build)
+//  · Clam (Sorrel Vinegar) · Frostberry (Preserve) · Starlight Shard (Sundew Tincture) · Mountain
+//  Thyme (Dried Herbs, whose examine line has called it "half the flavour of the valley in a pinch"
+//  with no recipe using it) · Samphire, Snowdrop, Sea Aster, Sea Holly (categories). Orphans created: zero.
+const PREPS = [
+  { name:"Dried Herbs",         lvl:16, ing:{"Mountain Thyme":3, "Nettle":2},                                      sell:280,  xp:38,   col:"#8a9a5a" },
+  { name:"Nettle Cord",         lvl:21, ing:{"Nettle":6, "Seaweed":2},                                             sell:160,  xp:58,   col:"#7a6a4a" },
+  { name:"Sorrel Vinegar",      lvl:26, ing:{ _green:{cat:"green",n:5}, "Clam":2 },                                sell:280,  xp:86,   col:"#c8d86a" },
+  { name:"Cap Powder",          lvl:31, ing:{ _fungus:{cat:"fungus",n:3}, "Dried Herbs":1 },                       sell:670,  xp:125,  col:"#b89878" },
+  { name:"Elderflower Cordial", lvl:36, ing:{ _bloom:{cat:"bloom",n:5}, "Honey":1 },                               sell:520,  xp:180,  col:"#f0e8b0", steep:true },
+  { name:"Frostberry Preserve", lvl:41, ing:{"Frostberry":6, "Honey":2},                                           sell:790,  xp:250,  col:"#a8c8e8", steep:true },
+  { name:"Rush Basket",         lvl:47, ing:{"Reedmace Down":4, "Nettle Cord":2},                                  sell:950,  xp:335,  col:"#c8a86a" },
+  { name:"Marsh Bitters",       lvl:57, ing:{ _marsh:{cat:"marsh",n:4}, "Dried Herbs":1 },                         sell:810,  xp:480,  col:"#6a8a5a", steep:true },
+  { name:"Sable's Steep",       lvl:67, ing:{ _fungus:{cat:"fungus",n:3}, "Elderflower Cordial":1, "Sea Holly":2 },sell:1240, xp:670,  col:"#9ab0a0", steep:true },
+  { name:"Sundew Tincture",     lvl:82, ing:{"Sundew":3, "Marsh Bitters":1, "Starlight Shard":2},                  sell:3040, xp:1020, col:"#e07a8a", steep:true },
+  { name:"Moonwort Cordial",    lvl:91, ing:{"Moonwort":2, "Elderflower Cordial":1, "Honey":2},                    sell:2840, xp:1500, col:"#d8c8ff", steep:true },
+  { name:"The Valley Posy",     lvl:96, ing:{"Heart's Ivy":1, "Frost Fern":2, "Mistletoe":1, "Moonwort":1, "Snowdrop":4 },
+                                                                                                                   sell:4020, xp:2200, col:"#e8d8f0", keepsake:true },
+];
+const PREP_BY_NAME = (() => { const m = {}; for(const p of PREPS) m[p.name] = p; return m; })();
+// Prices and edibles are ASSIGNED, not spread at declaration: ITEM_SELL and EDIBLE are declared some
+// 450 lines above this block, and `const` does not hoist its value. That exact shape has crashed the
+// boot twice in this version line (v5.0's LADDER_AUDIT, v6.4's FORGE_SELL). The file's rule: a table
+// may only READ a table defined above it — otherwise mutate afterwards.
+Object.assign(ITEM_SELL, (() => { const m = {};
+  for(const w of WILD)  m[w.item] = w.sell;
+  for(const c of CAPS)  m[c.name] = c.sell;
+  for(const p of PREPS) m[p.name] = p.sell;
+  m["Wild Cutting"] = 26; return m; })());
+Object.assign(EDIBLE, { "Pignut":14, "Watercress":16, "Brown Cap":18, "Birch Sap":22,
+                        "Elderflower Cordial":40, "Frostberry Preserve":38 });
+
+const TOOLS = ["Hoe", "Can", "Axe", "Pick", "Rod", "Stave", "Hammer", "Trug"];   // v6.4: the Hammer · v6.5: the Trug, Foraging's own
+const TOOL_ICON = { Hoe:"hoe", Can:"can", Axe:"axe", Pick:"pick", Rod:"rod", Stave:"stave", Hammer:"hammer", Trug:"trug" };
 // The Star Metal tier (v3.12) is the 4th and final rung. It exists to close the reward-is-an-input
 // rule (§3.5): before it, everything The Long Climb (v3.10) added below the surface — Cobalt Ore,
 // Star Metal Shard, Silverwood, Heartwood — was sell-only, a pure faucet. This tier CONSUMES all
@@ -1896,7 +2060,7 @@ const MAX_TIER = TOOL_TIERS.length - 1;   // = 6; used everywhere instead of a h
 // makes sense as the sole gate for an OP tool; you must have earned the level in that tool's own
 // craft. Clean & memorable, matching the unified gathering ladder: Copper 10, Iron 20, Gold 30,
 // Cobalt 45, Deepsilver 70, Star Metal 85 (v3.38).
-const TOOL_SKILL = { Hoe:"Farming", Can:"Farming", Axe:"Woodcutting", Pick:"Mining", Rod:"Fishing", Stave:"Warding", Hammer:"Smithing" };
+const TOOL_SKILL = { Hoe:"Farming", Can:"Farming", Axe:"Woodcutting", Pick:"Mining", Rod:"Fishing", Stave:"Warding", Hammer:"Smithing", Trug:"Foraging" };
 const TIER_LEVEL = [1, 10, 20, 30, 45, 70, 85];   // v3.38: the unified ladder — each tier's level IS its ore's and its wood's level, in every skill
 // v4.20: what each tier actually BUYS you, indexed by tier. Lifted out of renderShop (where they were
 // local consts) so the shop and the Skill Guide read ONE source — the guide had no way to see them, which
@@ -1908,6 +2072,13 @@ const TOOL_PERK = {
   // v6.4.5 — the Hammer's default read "stronger, less energy", and "stronger" is a lie: a smith's
   // hammer is never swung at anything. Say what the tier actually buys (FORGE_ENERGY_BY_TIER).
   Hammer: ["", "5 energy a working", "4 energy a working", "3 energy a working", "2 energy a working", "1 energy a working", "no cost at all"],
+  // v6.5 — the Trug. Foraging commits to costing zero energy forever, so there is no FORGE_ENERGY_BY_TIER
+  // equivalent to spend down: the Read's REACH and CONTENTS are all the basket has, and all six rungs
+  // buy one. (v6.4.1's correction, applied at the design stage instead of a release later.)
+  Trug: ["", "a read reaches three tiles", "a read reaches five tiles", "a read carries the whole screen",
+         "a read carries the screen, and names the season's next arrival",
+         "a read also names what this ground last gave you",
+         "a read names tomorrow's offer as well as today's"],
 };
 const toolPerk = (tool, tier) => (TOOL_PERK[tool] && TOOL_PERK[tool][tier]) || "stronger, less energy";
 // Tool tiers cost wood + ore + gold — and the top tiers a signature gem / the deep materials — so
@@ -2624,6 +2795,48 @@ const EXAMINE = {
   "Lantern Charm": "A firefly's worth of glass. Your light carries a little farther.",
   "The Forester's Band": "The old forester's own ring, willow-leaf worked in gold. The whole wood remembers it.",
 };
+// ★ Placed HERE, not up in the v6.5 data block, because EXAMINE is declared below that block and
+// `const` does not hoist its value. Third time this exact shape has been hit in this version
+// line (v5.0's LADDER_AUDIT, v6.4's FORGE_SELL, and this) — the rule at the top of the WILD
+// block is not decoration: a table may only READ a table defined above it.
+// v6.5 — the eighteen finds, three caps, twelve preparations. A forager's examine line should teach
+// you to recognise the thing, not price it: where it likes to be, what it looks like when it is ready.
+Object.assign(EXAMINE, {
+  "Nettle":"Sting on the way in, supper on the way out. Grasp it firmly and it can't get a hand on you — that's not folklore, that's just how the hairs lie.",
+  "Wood Sorrel":"Three heart-shaped leaves that fold shut at dusk and in rain. Sharp as a green apple.",
+  "Pignut":"The leaf above ground is a nothing, a scrap of lace. The nut is a hand's depth down and worth every minute.",
+  "Unnamed Cap":"A cap. You are fairly confident it is a cap. That is the entire extent of what you know about it.",
+  "Bogbean":"Three thick leaves standing above the water, and a flower like something knitted. It only grows where the ground stays wet all year.",
+  "Reedmace Down":"The brown poker splits in autumn and lets go of a cloud that gets absolutely everywhere. Spin it and it becomes cord.",
+  "Hearth Nettle":"Taller and darker than the hedgerow kind, and it only grows where a hearth stood. Nobody knows why. It has been called that longer than anyone can account for.",
+  "Elderflower":"Cream-white plates of tiny flowers, and a smell that is somehow the whole of early summer at once. Pick it dry, in the morning, or it turns.",
+  "Watercress":"Only in running water, never still — still water grows something that looks just like it and is not kind.",
+  "Birch Sap":"Clear as water and barely sweeter. Two weeks in spring and then the tree closes and that is that for a year.",
+  "Grey Cap":"It comes up in fog and it is gone by the afternoon. There is no sense in it and no arguing with it.",
+  "Tinder Bracket":"A hard grey shelf on a dead trunk. Split it and the inside is soft as felt and takes a spark off flint like it has been waiting.",
+  "Marsh Mallow":"Pale pink, deep in the wet, and the root is the part everyone actually wants.",
+  "Sundew":"Little red pads with a bead of glue on every hair. It eats flies. It is also, and this is a separate fact, a remedy.",
+  "Mistletoe":"It has no roots in the ground at all. It lives on the tree and the tree carries it, and in winter it is the only green thing up there.",
+  "Frost Fern":"Not a fern. Frost that has grown in a fern's shape on the summit stone, and holds that shape in your hand for a while.",
+  "Moonwort":"It opens after dark and shuts before you can show anybody. Every forager has been called a liar about this one at least once.",
+  "Heart's Ivy":"It grows on the Heart of the Forest and nowhere else in the world. One shoot a day and no more, and you would not want more.",
+  "Brown Cap":"Named at last. Common, honest, good in a pan.",
+  "Kingcap":"Named at last. Uncommon enough that finding one is a small event.",
+  "Witch's Butter":"Named at last. The book is quite firm that it is edible and slightly less firm about why you would.",
+  "Wild Cutting":"A rooted shoot, wrapped damp. Put it in your own ground and it will keep giving where you can reach it.",
+  "Dried Herbs":"Cut in the morning, hung in the dark, turned twice. All the flavour and none of the water.",
+  "Nettle Cord":"Retted, stripped and twisted. It will hold a person's weight, which is a strange thing to be able to say about a weed.",
+  "Sorrel Vinegar":"Sharp, green, and it keeps a shellfish honest for a month.",
+  "Cap Powder":"Ground fine and dried hard. A spoonful turns a thin broth into something.",
+  "Elderflower Cordial":"Summer, bottled, in the most literal way the valley manages.",
+  "Frostberry Preserve":"The only thing anyone has found to do with a frostberry, and it turns out to be the right thing.",
+  "Rush Basket":"Woven wet and dried tight. It will outlast the person who made it.",
+  "Marsh Bitters":"Tastes of the ground it came out of. That is the point of it.",
+  "Sable's Steep":"Her mother's, half of it. Nobody has ever been told the other half and nobody has ever asked twice.",
+  "Sundew Tincture":"A drop at a time. Star-metal dust and a fly-eating flower, which sounds like nonsense and works.",
+  "Moonwort Cordial":"Made in the dark from something that only exists in the dark. Keeps for years and improves.",
+  "The Valley Posy":"Every hard thing the valley grows, in one bunch: the ivy off the Heart, frost off the summit, mistletoe out of an old oak's crown, moonwort out of the night, and snowdrops, which are easy, and which are there because they are the ones she likes.",
+});
 const EXAMINE_OBJ = {
   "geode": "A round, plain nodule — but it's hollow, and something catches the lamplight through the crack. Worth a pick.",
   "bed": "The quilt is worn thin and warmer for it.",
@@ -2823,6 +3036,13 @@ function unlockLadder(skill){
                            LEGENDS.forEach(l => add(l.lvl, l.name + " (legend)")); }
   if(skill === "Cooking")     for(const r of RECIPES) if(!r.flag) add(r.lvl, r.name);
   if(skill === "Smithing")    for(const r of FORGE) add(r.lvl, r.name);   // v6.4
+  if(skill === "Foraging"){                                                  // v6.5
+    for(const w of WILD)  add(w.lvl, w.item);
+    for(const p of PREPS) add(p.lvl, p.name);
+    add(READ_LEVEL, "◈ Reading the Ground");   add(ALMANAC_LEVEL, "◈ The Gatherer's Almanac");
+    add(CUTTING_LEVEL, "◈ Cuttings");          add(CAP_LEVEL, "◈ The Cap Book");
+    add(TRAILSIGN_LEVEL, "◈ Trail-sign");      add(LONGWALK_LEVEL, "◈ The Long Walk");
+  }
   for(const tool of TOOLS){    // the tool ladder is a hard gate (buyTool enforces TIER_LEVEL) — real content
     if(TOOL_SKILL[tool] !== skill) continue;
     for(let t = 1; t <= MAX_TIER; t++) add(TIER_LEVEL[t], TOOL_TIERS[t] + " " + tool);
@@ -2937,6 +3157,25 @@ const TRIAL_GATES = [50, 75];
 // that level demonstrably reaches. Nothing here is rare-drop-gated: every item is farmable, choppable,
 // mineable, catchable or cookable on demand, so a trial can never become a wall of bad luck.
 const TRIALS = {
+  // v6.5 — Foraging's two. Cross-skill, on the Pledge-Ledger pattern, and NOTHING rare-drop-gated
+  // (the table's own header rule): every ask is a thing you can decide to go and get.
+  Foraging: {
+    50: { title:"The Remedy Book", g:2600,
+          mats:{ "Dried Herbs":4, "Nettle Cord":3, "Cooked Salmon":2, "Oak Lumber":6 },
+          ask:"Sable wants her mother's book rebound and its empty half filled — cord for the spine, boards for the covers, and the herbs to write about.",
+          intro:[["Sable","Fifty. Right. Sit down, this one has a shape to it."],
+                 ["Sable","The remedy book. My mother's hand for the first half, mine for the rest. The spine went years ago and I've been carrying it in two pieces like a coward."],
+                 ["Sable","Cord, boards, and enough dried herb that the empty pages have something to be about. I'll write. You gather."]],
+          done:"Sable: “One book again.” She runs a thumb down the spine. “There's room at the back. I left it on purpose.”" },
+    75: { title:"The Long Round", g:9500,
+          mats:{ "Rush Basket":3, "Sable's Steep":2, "Silverwood Beam":2, "Cherry Tart":2 },
+          ask:"Three baskets, set at the three far ends of the valley, so nobody walking the long round ever has to carry everything at once.",
+          intro:[["Sable","Seventy-five. Now the one I've wanted for eleven years and never had the legs for."],
+                 ["Sable","The long round is the grove, the ridge and the far coast in one day. It is beautiful and it is stupid, because you carry everything you find the whole way."],
+                 ["Sable","Three baskets. Silverwood frames so the weather doesn't have them. One at each far end, left open, for whoever's walking."],
+                 ["Sable","Not for me. I'll not walk it again. For the next one who tries."]],
+          done:"Sable: “Three baskets, standing open at the ends of the valley.” A long pause. “Somebody will find those and never know whose they were. That's the right way round.”" },
+  },
   // v6.4 — Smithing's two, on v5.1's shipped engine. Both are things the valley visibly needed and
   // could not have before: the mine lift's chain, and the Guild's ten lantern brackets.
   Smithing: {

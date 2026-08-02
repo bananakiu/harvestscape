@@ -110,6 +110,8 @@ const STUBS = {
   showXpOrb: () => {}, showSleepCard: () => {}, showLevelUp: () => {}, celebrateWing: () => {},
   openSaveFile: () => {}, openWhatsNew: () => {}, openAlmanac: () => {},
   refreshQuestTracker: () => {}, refreshJournal: () => {}, updateQuestUI: () => {},
+  openRack: () => spoke.push({ how: "panel", id: "rackPanel" }),
+  renderRack: () => {}, readTheGround: () => false,   // v6.5 — both live in 10-ui, which this harness does not load
   openLift: () => spoke.push({ how: "panel", id: "lift" }),
   openPanorama: () => spoke.push({ how: "panel", id: "panorama" }),
   openWaystone: () => spoke.push({ how: "panel", id: "waystone" }),
@@ -120,7 +122,7 @@ for (const k of ["showDialog", "toast", "banner", "playSfx", "pSparkle", "refres
                  "startCutscene", "queuePage", "openLetter", "floatText", "saveGame",
                  "showExamine", "pItemPop", "setMap", "doWarp", "travelTo",
                  "notePickup", "fadeTo", "showXpOrb", "showSleepCard", "showLevelUp", "refreshQuestTracker",
-                 "openLift", "openPanorama", "openWaystone"]) sb[k] = STUBS[k];
+                 "openLift", "openPanorama", "openWaystone", "openRack", "renderRack", "readTheGround"]) sb[k] = STUBS[k];
 // IS_TOUCH is a const in 10-ui.js (which we do not load) read by the shared USEKEY path. It is a
 // device fact, not a decision the game makes — desktop is the honest default for a harness.
 try { sb.set("IS_TOUCH", false); } catch (e) { sb.IS_TOUCH = false; }

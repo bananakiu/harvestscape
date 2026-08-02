@@ -571,7 +571,7 @@ function panelTabs(panelId, stripId, tabs, render){
 // there (principle 4.3) without burying the levels. Icons reuse the mkIcon/hydrateIcons sprite
 // pipeline; every colour role is the pre-blessed one (level --gold, bar --blue, unlock --blue,
 // mastery --gold-hi, next-mastery --ink-soft) — no new hex, no new frame.
-const SKILL_ICON = { Farming:"item_Turnip", Woodcutting:"item_Wood", Mining:"item_Stone", Fishing:"item_Sardine", Cooking:"item_Berry Bun", Warding:"item_Stave", Smithing:"item_Iron Bar" };   // v4.0 · v6.4
+const SKILL_ICON = { Farming:"item_Turnip", Woodcutting:"item_Wood", Mining:"item_Stone", Fishing:"item_Sardine", Cooking:"item_Berry Bun", Warding:"item_Stave", Smithing:"item_Iron Bar", Foraging:"item_Nettle" };   // v4.0 · v6.4
 let skillSel = null;   // which skill's detail is expanded (null = grid only)
 function selectSkill(s){ skillSel = (skillSel === s) ? null : s; playSfx("select"); renderSkills(); }
 // v4.11 (owner update 1) — a RuneScape-style Skill Guide: EVERY level that unlocks something, for the
@@ -813,6 +813,7 @@ const MUSEUM = [
   { name:"The Shore",     items:()=>[...Object.keys(SHORE), ...Object.keys(ROADSIDE), "Sea Aster"] },   // + the coast road's forage (v3.36); Sea Aster the salt-meadow bloom (v4.16)
   { name:"Farm & Forage", items:()=>["Field Salad","Frostberry","Berry Bun","Honey","Egg","Large Egg","Milk","Large Milk","Cheese","Fine Cheese","Wool","Prize Fleece","Mountain Thyme","Snowdrop"] },   // Wool since v3.8; Cheese v3.33; the ridge's forage v3.43
   { name:"The Kitchen",   items:()=>RECIPES.map(r=>r.name) },
+  { name:"The Wild",      items:()=>WILD.map(w=>w.item).concat(CAPS.map(c=>c.name), PREPS.map(p=>p.name), ["Wild Cutting"]) },   // v6.5
   { name:"Materials",     items:()=>["Wood","Pine Wood","Maple Wood","Willow Wood","Elder Wood","Heartwood","Silverwood",...Object.values(WOOD_TO_LUMBER),...Object.values(ORES).map(o=>o.drop)] },   // + milled lumber (v3.21); ores DERIVED from ORES (v3.37 review fix — a hand-list forgot Deepsilver the day it shipped; now the next ore can't be missed)
   { name:"The Deep",      items:()=>[...GEODE_CURIOS, "Geode Heart", "Starlight Shard"] },   // v3.28: geode curios; v3.43: the summit's splinter joins the celestial family
   { name:"The Canopy",    items:()=>Object.keys(CHARMS) },
@@ -2312,6 +2313,164 @@ function rideWaystone(id){
 //  one thing it does differently is split SMELT from FORGE, because they are different verbs — one
 //  turns ore into stock, the other turns stock into a thing — and a single flat list of 26 rows
 //  hides that completely.
+// ======================================================================
+//  v6.5 THE DRYING RACK
+// ======================================================================
+//  Modelled on FORGE, not on MACHINES: MACHINES is load-one-thing-and-wait; a preparation takes
+//  several ingredients and gives one thing back, which is the forge's shape. The panel is v6.4's
+//  forge panel with SMELT/FORGE replaced by DRY/STEEP, plus category-slot resolution.
+function openRack(){ openPanel("rackPanel", renderRack); }
+// A category slot resolves to whatever you actually hold, CHEAPEST FIRST — so a premium ingredient is
+// a choice you make with what you have, never a loss the game forces on you.
+function catMembersHeld(cat){
+  const c = WILD_CATS[cat]; if(!c) return [];
+  return c.items.filter(it => (state.inv[it]||0) > 0)
+                .sort((a,b) => (ITEM_SELL[a]||0) - (ITEM_SELL[b]||0));
+}
+function prepCanMake(p){
+  for(const k in p.ing){
+    const v = p.ing[k];
+    if(v && v.cat){ if(catMembersHeld(v.cat).reduce((a,it) => a + (state.inv[it]||0), 0) < v.n) return false; }
+    else if((state.inv[k]||0) < v) return false;
+  }
+  return true;
+}
+function prepIngHtml(p){
+  const bits = [];
+  for(const k in p.ing){
+    const v = p.ing[k];
+    if(v && v.cat){
+      const held = catMembersHeld(v.cat);
+      const have = held.reduce((a,it) => a + (state.inv[it]||0), 0);
+      bits.push(`<span style="color:${have >= v.n ? "var(--parch)" : "var(--ink-soft)"}">${v.n}× any ${WILD_CATS[v.cat].label}` +
+        (held.length ? ` <span class="sub">(${held.slice(0,3).map(escapeHtml).join(", ")}${held.length>3?"…":""})</span>` : "") + `</span>`);
+    } else bits.push(`<span style="color:${(state.inv[k]||0) >= v ? "var(--parch)" : "var(--ink-soft)"}">${v}× ${escapeHtml(k)}</span>`);
+  }
+  return bits.join(", ");
+}
+function renderRack(){
+  const el = $("rackPanel"); if(!el) return;
+  const b = el.querySelector(".body"); if(!b) return;
+  const lvl = skillLvl("Foraging");
+  let html = `<div style="color:var(--ink-soft);margin-bottom:6px;">Dry what keeps, steep what doesn't. Trains Foraging. A <b>${escapeHtml(WILD_CATS.green.label)}</b>, <b>cap</b>, <b>marsh</b> or <b>bloom</b> slot takes whichever you have — there is always something in season for it.</div>`;
+  const row = (p) => {
+    if(lvl < p.lvl)
+      return `<div class="row locked"><span class="lead" data-icon="item_${p.name}"><canvas></canvas>` +
+        `<span>${escapeHtml(p.name)} <span class="sub">🔒 Foraging ${p.lvl}</span></span></span><button disabled>make</button></div>`;
+    const can = prepCanMake(p);
+    return `<div class="row"><span class="lead" data-icon="item_${p.name}"><canvas></canvas>` +
+      `<span>${escapeHtml(p.name)} <span class="sub">${prepIngHtml(p)}</span></span></span>` +
+      `<button ${can ? "" : "disabled"} onclick="makePrep('${jsq(p.name)}')">make</button></div>`;
+  };
+  html += `<h2 style="font-size:1em;color:var(--gold-hi);margin:.2em 0;">DRY</h2>`;
+  PREPS.filter(p => !p.steep).forEach(p => { html += row(p); });
+  html += `<h2 style="font-size:1em;color:var(--gold-hi);margin:.4em 0 .2em;">STEEP</h2>`;
+  PREPS.filter(p => p.steep).forEach(p => { html += row(p); });
+  // The Cap Book: naming, at the rack. Retroactive by construction — a cap carried home before you
+  // could read them still converts, because the conversion is on the ITEM and not on the picking.
+  if(state.capBook && (state.inv["Unnamed Cap"]||0) > 0){
+    html += `<h2 style="font-size:1em;color:var(--gold-hi);margin:.4em 0 .2em;">THE CAP BOOK</h2>` +
+      `<div class="row"><span class="lead" data-icon="item_Unnamed Cap"><canvas></canvas>` +
+      `<span>Name your caps <span class="sub">${state.inv["Unnamed Cap"]} waiting</span></span></span>` +
+      `<button onclick="nameCaps()">read them</button></div>`;
+  }
+  b.innerHTML = html; hydrateIcons(b);
+}
+function makePrep(name){
+  const p = PREP_BY_NAME[name]; if(!p) return;
+  if(skillLvl("Foraging") < p.lvl){ toast(`Need Foraging ${p.lvl} for ${p.name}.`, "#ff8a7a"); playSfx("error"); return; }
+  if(!prepCanMake(p)){
+    const short = [];
+    for(const k in p.ing){ const v = p.ing[k];
+      if(v && v.cat){ const have = catMembersHeld(v.cat).reduce((a,it)=>a+(state.inv[it]||0),0);
+        if(have < v.n) short.push(`${v.n - have} more of any ${WILD_CATS[v.cat].label}`); }
+      else if((state.inv[k]||0) < v) short.push(`${v - (state.inv[k]||0)} more ${k}`);
+    }
+    toast("You need " + short.join(" and ") + ".", "#ff8a7a"); playSfx("error"); return;
+  }
+  // ★ Deft Hands (75) returns ONE ingredient — chosen before anything is taken, so the message can
+  // name it honestly. A saving, never a gate; and never the finished good, which would double the
+  // whole ladder's output (v6.4's Thrift, transposed, with the same restriction kept).
+  const taken = [];
+  for(const k in p.ing){
+    const v = p.ing[k];
+    if(v && v.cat){
+      let need = v.n;
+      for(const it of catMembersHeld(v.cat)){
+        const use = Math.min(need, state.inv[it]||0);
+        if(use > 0){ take(it, use); taken.push([it, use]); need -= use; }
+        if(need <= 0) break;
+      }
+    } else { take(k, v); taken.push([k, v]); }
+  }
+  give(p.name, 1, true);
+  let back = null;
+  if(hasMastery("Foraging", 75) && taken.length && chance(hasMastery("Foraging", 99) ? 0.28 : 0.16)){
+    back = pick(taken)[0]; give(back, 1, true);
+  }
+  addXP("Foraging", p.xp); bump("prepared");
+  toast(back ? `${p.name} — and the ${back.toLowerCase()} came back off the rack.` : "Made " + p.name + "!", "#ffce5a");
+  playSfx("get"); pSparkle(state.px, state.py-14, p.col, back ? 14 : 8);
+  renderRack(); refreshHUD();
+}
+function nameCaps(){
+  const n = state.inv["Unnamed Cap"] || 0; if(!n) return;
+  take("Unnamed Cap", n);
+  const got = {};
+  for(let i = 0; i < n; i++){
+    let r = Math.random(), c = CAPS[0];
+    for(const cc of CAPS){ if(r < cc.w){ c = cc; break; } r -= cc.w; }
+    give(c.name, 1, true); got[c.name] = (got[c.name]||0) + 1;
+  }
+  addXP("Foraging", 12 * n);
+  toast("Named: " + Object.keys(got).map(k => `${got[k]}× ${k}`).join(", "), "#ffce5a");
+  playSfx("get"); renderRack(); refreshHUD();
+}
+// ★ v6.5 READING THE GROUND (Foraging 5). E on open ground: the place names what it grows in this
+// season and this sky, and the nearest ungathered node glimmers. A METHOD unlock — it reveals nothing
+// you could not find by walking, it saves the walking, which is what a forager's eye actually is.
+// The Trug's six tiers are its reach and its contents; that is all the basket has and all six buy one.
+function readTheGround(){
+  const lvl = skillLvl("Foraging");
+  if(lvl < READ_LEVEL) return false;
+  const tier = state.tools.Trug || 0;
+  const reach = [2, 3, 5, 99, 99, 99, 99][tier];
+  const here = state.map, season = seasonOf(state.day);
+  const grows = WILD.filter(w => w.maps[here] && (!w.seasons || w.seasons.includes(season)));
+  const now   = grows.filter(w => (!w.sky || state.weather === w.sky) && wildReady(w) && lvl >= w.lvl);
+  const lines = [];
+  lines.push(now.length
+    ? "This ground is giving " + now.map(w => w.item.toLowerCase()).join(", ") + " today."
+    : "Nothing here is giving just now.");
+  if(tier >= 3){
+    const next = grows.filter(w => !now.includes(w) && lvl >= w.lvl);
+    if(next.length) lines.push("In season and waiting on the sky or the hour: " + next.map(w=>w.item.toLowerCase()).join(", ") + ".");
+  }
+  if(tier >= 5 && state.wildSeen && state.wildSeen[here]) lines.push("Last thing this ground gave you: " + state.wildSeen[here].toLowerCase() + ".");
+  if(tier >= 6 && state.forecast){
+    const tw = WILD.filter(w => w.maps[here] && (!w.seasons || w.seasons.includes(season)) && w.sky && w.sky === state.forecast && lvl >= w.lvl);
+    if(tw.length) lines.push("Tomorrow's sky would bring " + tw.map(w=>w.item.toLowerCase()).join(", ") + ".");
+  }
+  // ★ Sharp Eye (50): every read also names one thing you have never gathered, wherever it grows.
+  if(hasMastery("Foraging", 50)){
+    const never = WILD.filter(w => !(state.discovered && state.discovered[w.item]) && lvl >= w.lvl);
+    if(never.length){ const w = pick(never); lines.push("You have never brought home " + w.item.toLowerCase() + ". " + wildWhereBlurb(w) + "."); }
+  }
+  // glimmer the nearest ungathered nodes within reach
+  let lit = 0;
+  if(curMap && curMap.objects) for(const k in curMap.objects){
+    const o = curMap.objects[k]; if(o.kind !== "wild" || o.pickedDay === state.day) continue;
+    const [x,y] = k.split(",").map(Number);
+    if(Math.abs(x - Math.floor(state.px/TILE)) > reach || Math.abs(y - Math.floor(state.py/TILE)) > reach) continue;
+    const w = WILD_BY_ID[o.w]; if(!w || lvl < w.lvl) continue;
+    pSparkle(x*TILE+8, y*TILE+6, w.col, 4); lit++;
+  }
+  if(lit) lines.push(lit === 1 ? "There is one within reach." : `There are ${lit} within reach.`);
+  showDialog("You read the ground", lines.join("\n\n"), "port_valley");
+  playSfx("select");
+  return true;
+}
+
 function openForge(){ openPanel("forgePanel", renderForge); }
 function renderForge(){
   const el = $("forgePanel"); if(!el) return;

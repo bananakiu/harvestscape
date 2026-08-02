@@ -89,6 +89,12 @@ function genCottage(m){
   }
   exitAt(m,5,"farm",7*TILE+8,8*TILE);
   applyHome(m);   // v5.7: everything the player has placed wins over the defaults above
+  // v6.5 — the drying rack, in the cottage from the first morning. Foraging's verb costs no energy
+  // and needs no tool, so its workbench should not be a project either: the craft's whole shape is
+  // "go and look", and a rack you must first fund would put a gate in front of a gateless skill.
+  // (9,1), not m.w-3: the bookshelf has stood at (8,2) since v1 and `if(!m.objects[…])` meant the rack
+  // silently never appeared. Caught because check-interactions listed 86 kinds and "rack" was not one.
+  { const rx = 9, ry = 1; if(!m.objects[key(rx,ry)]) put(m, rx, ry, "rack"); }
 }
 // ============================================================
 // v5.7 "Four Walls" — the cottage persistence overlay.
@@ -585,6 +591,7 @@ function genButterbrook(m){
     if(t[ay*W+ax]===T.GRASS && !m.objects[key(ax,ay)]) put(m, ax, ay, "asternode"); }
   // a bench where the meadow meets the sea — somewhere to let the coast be the coast for a while
   { const bx=22, by=m.h-11; if(t[by*W+bx]===T.GRASS){ delete m.objects[key(bx,by)]; put(m, bx, by, "bench"); } }
+  spawnWild(m, "butterbrook");   // v6.5 — after this map's own forage pass, never before it
 }
 function genDairy(m){
   genRoom(m, T.PLANK, T.IWALL);
@@ -622,6 +629,31 @@ function genRidge(m){
   rise(37,25,29); leg(10,37,25); rise(10,20,25); leg(10,36,20); rise(36,14,20); leg(12,36,14); rise(12,8,14); leg(12,22,8);
   for(const wy of [28,29]){ for(const wx of [36,37,38]){ t[wy*W+wx]=T.PATH; if(wy===29) m.warps[key(wx,29)] = { to:"village", sx:37*TILE, sy:2*TILE, face:"down", auto:true }; } }
   put(m, 34, 27, "sign", {text:"↓ Willowbrook Village"});
+  // ★ v6.5 — THE RUIN. Elias's 8♥ scene has described this exact place since v5.6: "It's a ruin.
+  // Roof's gone. There's a birch growing where the kitchen was, and it's a good birch — straight, no
+  // lean to it." The ridge has never had it. Twenty lines, and V6_WORLD_AND_CRAFTS.md's method is
+  // paid in full: the fiction was written years ago and the place was the only thing missing.
+  //
+  // Roofless: WALL where the walls stood, a gap where the door was, DIRT for the floor. The birch is
+  // NOT choppable — no TREES row, no Woodcutting XP — because §1.5's rule is absolute: nothing in
+  // this release may gate or feed another craft. It grows the two finds that only grow where a hearth
+  // was, which is a biome of abandonment the valley otherwise has none of.
+  {
+    const rx0 = 15, ry0 = 21, rx1 = 22, ry1 = 26;
+    m.ruin = { x0:rx0+1, y0:ry0+1, x1:rx1-1, y1:ry1-1 };
+    // The walls have FALLEN in places — a continuous rectangle reads as a building somebody keeps.
+    // Fixed seed, so the gaps are the same stones every visit; the doorway is always open.
+    const fallen = new Set(["15,21","16,21","22,23","15,25","20,21","22,25"]);
+    for(let y=ry0; y<=ry1; y++) for(let x=rx0; x<=rx1; x++){
+      const edge = (y===ry0 || y===ry1 || x===rx0 || x===rx1);
+      const door = (y===ry1 && (x===18 || x===19));
+      if(edge && !door && !fallen.has(x+","+y)) t[y*W+x] = T.WALL;
+      else t[y*W+x] = T.DIRT;
+    }
+    put(m, 19, 23, "birch", {story:"eliasbirch"});
+    put(m, 16, 27, "sign", {text:"E. ALDERMAN\n\n(the post is older than the paint, and the paint is older\nthan anyone who still reads it)"});
+    put(m, 21, 22, "crate");
+  }
   put(m, 34, 24, "sign", {text:"⛰ The switchbacks — mind your footing (gently; nothing here bites)"});
   // the crater dell: a ring of scree on the summit, the star's old bed at its heart
   for(let y=3;y<=7;y++) for(let x=24;x<=32;x++){ if(Math.hypot(x-28,y-5)<=2.6) t[y*W+x]=T.DIRT; }
@@ -653,6 +685,108 @@ function genRidge(m){
   // keep the trail itself clear — a switchback you can't walk is a wall
   for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++)
     if(t[y*W+x]===T.PATH && m.objects[key(x,y)] && !["sign"].includes(m.objects[key(x,y)].kind)) delete m.objects[key(x,y)];
+  spawnWild(m, "ridge");   // v6.5 — after this map's own forage pass, never before it
+}
+
+
+// ======================================================================
+//  ★ v6.5 — THE WILD SPAWNER
+// ======================================================================
+//  One helper, called from every outdoor generator after its own forage pass, so eighteen finds cost
+//  nine call sites instead of eighteen edited generators.
+//
+//  "WET" is a pseudo-ground: any walkable tile orthogonally adjacent to water. That predicate is the
+//  whole wetland — the design's first draft invented a new map for it (the "Sedgeway"), which was cut
+//  because the fiction is already written and already placed: the GULLWATER estuary runs north–south
+//  through the coast road under a plank ford, with its own sign and its own fish. Measured free wet
+//  tiles: butterbrook 95 · marrowpoint 85 · coastroad 71 · farm 44 · beach 38. The valley gains a
+//  biome for the price of one predicate.
+function isWetTile(m, x, y){
+  const t = m.tiles[y*W+x];
+  if(t === T.WATER || t === T.IWALL || t === T.WALL || t === T.ROOF) return false;
+  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+    const nx = x+dx, ny = y+dy;
+    if(nx<0||ny<0||nx>=m.w||ny>=m.h) continue;
+    if(m.tiles[ny*W+nx] === T.WATER) return true;
+  }
+  return false;
+}
+// Does this find's abundance condition hold today? Abundance MULTIPLIES a count and never gates it —
+// the WEATHERS contract in one line: the sky changes what the valley offers, never whether it offers.
+function wildAbundant(w){
+  const a = w.abundant; if(!a) return false;
+  if(a.seasons && !a.seasons.includes(seasonOf(state.day))) return false;
+  if(a.afterRain && !(state.weather === "rain" || state.weather === "storm")) return false;
+  return true;
+}
+// Is this find giving RIGHT NOW? Season and sky decide whether it is on the map at all (handled in
+// the spawner); the hour decides whether it gives when you press it. Deliberately different: a node
+// that vanishes by day cannot be learned, so the hour gate lives in the interact, exactly as
+// shardnode's has since v3.43.
+function wildReady(w){
+  const h = curHour();
+  if(w.fromHour && h < w.fromHour) return false;
+  if(w.toHour   && h >= w.toHour)  return false;
+  return true;
+}
+function wildWaitLine(w){
+  if(w.fromHour) return "Not yet. This one opens after " + w.fromHour + " o'clock.";
+  if(w.toHour)   return "Gone over for the day — it closes up by " + w.toHour + ". Come back in the morning.";
+  return "Not today.";
+}
+function spawnWild(m, mapId){
+  if(!state || !state.skills) return;
+  const season = seasonOf(state.day);
+  const ring = (mapId === "grove") ? Math.max(1, Math.min(state.groveRing || 1, GROVE_RINGS)) : 0;
+  const rng = makeRng(4242 + state.day*31 + mapId.length*7 + ring*13);
+  for(const w of WILD){
+    let n = w.maps[mapId]; if(!n) continue;
+    // ★ `rings` is a GROVE constraint and only the grove has rings. Applied unconditionally it also
+    // skipped every ringed find on its OTHER maps — pignut vanished from the ridge, Grey Cap from the
+    // coast road and Butterbrook, Tinder Bracket from the ridge — because `ring` is 0 everywhere else
+    // and 0 < 1. Three finds lost two thirds of their range to one missing guard, and nothing threw.
+    if(mapId === "grove" && w.rings && (ring < w.rings[0] || ring > w.rings[1])) continue;
+    if(w.seasons && !w.seasons.includes(season)) continue;
+    if(w.sky && state.weather !== w.sky) continue;
+    if(wildAbundant(w)) n = Math.round(n * w.abundant.x);
+    if(w.cap) n = Math.min(n, w.cap);
+    const wantWet = w.ground.includes("WET");
+    const kinds = w.ground.filter(g => g !== "WET").map(g => T[g]);
+    // The anchors. Each is a band of the map rather than a hunted-for tile, so a generator change
+    // upstream degrades the spawn rather than breaking it.
+    const lo = w.summit ? 1 : w.ruin ? (m.ruin ? m.ruin.y0 : 9) : 1;
+    const hi = w.summit ? 8 : w.ruin ? (m.ruin ? m.ruin.y1 : 19) : m.h - 2;
+    const xlo = w.ruin && m.ruin ? m.ruin.x0 : 1, xhi = w.ruin && m.ruin ? m.ruin.x1 : m.w - 2;
+    if(w.ruin && !m.ruin) continue;                       // the ruin is not on this map
+    // ★ COLLECT, THEN SAMPLE — not dart-throwing.
+    //
+    // The first version picked random (x,y) and tested the tile: fine for a ground type covering half
+    // a map, hopeless for one that does not. Measured wanted-vs-placed per map: every DRY find hit its
+    // number exactly (nettle 5/5, moonwort 5/5) while every WET find placed about a third — the coast
+    // road has 69 free wet tiles out of 1,196, and a find wanting three got one. It also decremented
+    // `n` inside its own `i < n*6` bound, shrinking the budget each time it succeeded.
+    //
+    // Same lesson v5.3 paid for at 6× on the gem seams: sample the generator, do not reason about it.
+    // A full scan of a 46×26 map is 1,196 iterations — nothing, once per map per day — and it is
+    // EXACT: a find gets its full count wherever the ground exists at all.
+    const cand = [];
+    for(let y = Math.max(1, lo); y <= Math.min(hi, m.h-2); y++)
+      for(let x = Math.max(1, xlo); x <= Math.min(xhi, m.w-2); x++){
+        if(m.objects[key(x,y)]) continue;
+        const tile = m.tiles[y*W+x];
+        // WET is an ALTERNATIVE ground, not an extra requirement. Written as AND, Grey Cap — whose
+        // row reads ["GRASS","TALLGRASS","WET"] — could not spawn in the grove at all, because the
+        // grove has no water and every candidate needed to be both wet and grassy at once. A find
+        // that lists only WET still works: `kinds` is empty, so the OR reduces to the wet test.
+        const fits = (wantWet && isWetTile(m,x,y)) || kinds.includes(tile);
+        if(!fits) continue;
+        cand.push([x,y]);
+      }
+    for(let i = 0; i < n && cand.length; i++){
+      const [x,y] = cand.splice(randiR(rng, 0, cand.length - 1), 1)[0];
+      put(m, x, y, "wild", { w: w.id });
+    }
+  }
 }
 
 // ---- The Coast Road (v3.36) — WORLD_EXPANSION.md area 1 ----
@@ -718,6 +852,7 @@ function genMarrowPoint(m){
     if(t[y*W+x]===T.GRASS && !m.objects[key(x,y)]) put(m, x, y, "pine"); }
   // never wall the quay
   for(const [cx,cy] of [[2,13],[3,13],[4,13],[2,14],[3,14],[4,14],[6,13],[6,14]]) delete m.objects[key(cx,cy)];
+  spawnWild(m, "marrowpoint");   // v6.5 — after this map's own forage pass, never before it
 }
 // ======================================================================
 //  THE FESTIVAL GREEN (v6.3)
@@ -806,6 +941,7 @@ function genGreen(m){
   }
   // never wall the way in
   for(let x=1;x<=8;x++) for(const y of [10,11,12]) delete m.objects[key(x,y)];
+  spawnWild(m, "green");   // v6.5 — after this map's own forage pass, never before it
 }
 function genCoastRoad(m){
   const layout = makeRng(777);                    // fixed: road, river, landing never move
@@ -860,6 +996,7 @@ function genCoastRoad(m){
     if(t[y*W+x]===T.SAND && !m.objects[key(x,y)]) put(m, x, y, "driftwood"); }
   // keep the road and the ford approach clear of everything above
   for(let x=0;x<=44;x++) for(const wy of [7,8,9]) if(m.objects[key(x,wy)] && !["sign","milestone","shrine"].includes(m.objects[key(x,wy)].kind)) delete m.objects[key(x,wy)];
+  spawnWild(m, "coastroad");   // v6.5 — after this map's own forage pass, never before it
 }
 function doWarp(w){
   if(!w) return;
@@ -1075,6 +1212,7 @@ function genVillage(m){
     m.objects[key(9,22)]  = { kind:"sign", text:"The Wrens' (shuttered)" };
     m.objects[key(31,22)] = { kind:"sign", text:"The Harrows' (shuttered)" };
   }
+  spawnWild(m, "village");   // v6.5 — after this map's own forage pass, never before it
 }
 
 // ---------------- the Deep Grove ----------------
@@ -1171,6 +1309,7 @@ function genGrove(m){
   }
   m.subtitle = "Ring " + ring +
     (ring===GROVE_RINGS ? "  ·  the Heart of the Forest" : ring>=5 ? "  ·  the wood grows old here" : "");
+  spawnWild(m, "grove");   // v6.5 — after this map's own forage pass, never before it
 }
 
 // Ring travel — the grove's mineDown/mineUp. Deeper spawns you by the east trail of the new
@@ -1269,6 +1408,7 @@ function genBeach(m){
       for(const x of [16,19,22,26,29,32]) dress(x, 11, "lantern");
     }
   }
+  spawnWild(m, "beach");   // v6.5 — after this map's own forage pass, never before it
 }
 // ======================================================================
 //  ★ v6.3 — A FESTIVAL HAS A VENUE.

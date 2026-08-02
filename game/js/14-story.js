@@ -12,7 +12,7 @@ const WINGS = [
   { id:"fishing",     name:"Fishing",     lit:()=> skillLvl("Fishing")>=8 },
   { id:"cooking",     name:"Cooking",     lit:()=> (state.stats.cooked||0)>=8 },
   { id:"ranching",    name:"Ranching",    lit:()=> state.animals.chickens.length>=1 },
-  { id:"foraging",    name:"Foraging",    lit:()=> (state.stats.forage||0)>=10 },
+  { id:"foraging",    name:"Foraging",    lit:()=> skillLvl("Foraging")>=8 || (state.stats.forage||0)>=10 },   // v6.5: an OR, never a swap — 10 forages seeds 30 XP (level 1) while XP_TABLE[8]=625 needs 209, so a plain swap would put out a lantern an existing save had already earned. And this is visible content: wingLit("foraging") fruits the village lane hedges.
   { id:"smithing",    name:"Smithing",    lit:()=> (state.stats.toolUpgrades||0)>=2 },
   { id:"hearth",      name:"Hearthcraft", lit:()=> !!state.flags.festivalDone },
 ];

@@ -283,6 +283,143 @@ find.*
 
 ---
 
+## 2026-08-03 — v6.5.0 "The Wild" (code 151, tag `v6.5.0`) — Foraging, the eighth craft
+
+Built from `V6_5_BUILD_SPEC.md`, which was produced by an orchestrated design pass (21 agents, ~3.5M
+tokens: four surveys, three rival ladder designs judged on three lenses each, then adversarial
+refutation — two of three adversaries refuted the first synthesis). Read that file's §0 fix ledger
+before touching any number here.
+
+### The territory answer, which is what made the craft legal
+
+Eleven forage nodes already existed and **every one trained Farming, Fishing or Mining**. The obvious
+design — *those are Foraging's now* — takes an XP source away from a player at Farming 40 who has been
+picking berrybushes for three hundred hours. The cozy contract forbids that outright.
+
+**So nothing changed hands.** Each legacy node keeps its grant byte-identical and pays a small second
+credit to Foraging on top. No node gained a level gate. Measured: a full weather-weighted year of
+visiting all nine outdoor maps every day and picking every node pays **20,170 Foraging XP = level 31 =
+2.58% of the climb**. (The draft claimed 24,304/L34/3.11% by counting clear days only, which
+over-counts because `shardnode` spawns on clear days alone.) The legacy nodes are a floor, never the
+ladder.
+
+### ★ The hardest acceptance criterion, and it passes
+
+`sparkCap()` is `SPARK_CAP + 5*min(4, breadth-1)`, where breadth counts distinct keys in
+`dailyXpActs`. A naive co-credit means **one free level-1 berrybush press registers a second craft and
+widens the +50% variety-spark window for every skill in the game** — a valley-wide XP buff bought with
+nothing, arriving as a side effect of a one-token diff. `addXP` gained `opt.secondary`: full XP, full
+level-ups and trial gates, but no `dailyXpActs` key.
+
+Verified by pressing, not by reading. One berrybush press, v6.5.0:
+
+```
+dailyXpActs : {"Farming":1}      ← byte-identical to v6.4.6
+Farming  XP : 9                  ← 6 × 1.5 spark, unchanged
+Foraging XP : 3                  ← the co-credit, no spark
+sparkCap()  : 10                 ← not 15
+```
+
+### The ladder
+
+| | marks | dead XP | worst gap | above L85 |
+|---|---|---|---|---|
+| **Foraging** | **45** | **0.00%** | **none** | **6** |
+| Smithing | 38 | 0.00% | none | 5 |
+| Cooking | 34 | 34.6% | 90→99 | 2 |
+| Mining | 16 | 60.9% | 85→99 | 1 |
+
+**The authored-only test** — strip the ten marks every craft gets free (six `TIER_LEVEL` rungs, four
+`MASTERY`) — is the honest one, and it is brutal about the older skills:
+
+```
+Foraging     34 marks · max gap  6 · tail  3 ·   0.00% dead
+Smithing     27 marks · max gap  8 · tail  2 ·  15.89% dead
+Cooking      28 marks · max gap  6 · tail  9 ·  34.58% dead
+Fishing      15 marks · max gap 20 · tail 19 ·  85.76% dead
+Woodcutting   6 marks · max gap 28 · tail 21 ·  99.82% dead
+Warding       5 marks · max gap 20 · tail 19 · 100.00% dead
+```
+
+Total level **693 → 792**, derived.
+
+### The supply rules, as a harness rather than an intention
+
+`tools/check-forage.mjs` — **148 invariants**, sampled against the live generators:
+
+- **R1 availability** — every ingredient of every non-keepsake preparation is obtainable on ≥40% of
+  the days of every season. This is the `WEATHERS` contract as a test: a preparation *requiring* a
+  fog-only mushroom turns "fog offers something" into "no fog, no craft". The answer is `WILD_CATS` —
+  four ingredient categories, each with a floor member available every day of every year, so a locked
+  find is a legal **substitute** and never a requirement.
+- **R2 window** — a find that feeds anything gives for ≥6 game hours. One game hour is 16 real
+  seconds, so the draft's 21:00 Moonwort was **eighty real seconds a day** for the top band's only
+  repeatable. It sits at 19:00 now, matching `shardnode`'s shipped precedent exactly.
+- **R3 no orphans** — every find and cap is consumed by something. This release adopts nine of the
+  game's orphans (Seaweed, Clam, Frostberry, Starlight Shard, Mountain Thyme, Samphire, Sea Holly,
+  Snowdrop, Sea Aster) and mints zero.
+
+### The places, without a new map
+
+The draft invented a wetland map, the **Sedgeway**. `grep -rn "Sedge"` over the whole repo returns
+nothing — six of eighteen finds targeted a place the spec never specified building. **Cut.** `"WET"`
+is a predicate instead: any walkable tile orthogonally adjacent to water. Measured free wet tiles —
+butterbrook 95 · marrowpoint 85 · coastroad 71 · farm 44 · beach 38. The fiction was already written:
+the Gullwater estuary has run under a plank ford since v3.36.
+
+**The Ruin** is the one new place, and it is twenty lines. Elias's 8♥ scene has described it since
+v5.6 — *"It's a ruin. Roof's gone. There's a birch growing where the kitchen was, and it's a good
+birch"* — and the ridge never had it. Roofless, walls fallen in six places, dirt floor, the birch, and
+the two finds that only grow where a hearth was. The birch is **not choppable**: no `TREES` row, no
+Woodcutting XP, because nothing in this release may gate or feed another craft.
+
+### Four spawner bugs, all found by censusing rather than by looking
+
+The generator was written, then *sampled* — v5.3's gem-seam lesson (wrong by 6× until measured)
+applied before shipping rather than after:
+
+1. **Dart-throwing at a sparse target.** Random `(x,y)` then test-the-tile is fine for grass and
+   hopeless for a shoreline: the coast road has 69 free wet tiles out of 1,196, so a find wanting
+   three placed **one**. Every dry find hit its number exactly while every wet find placed a third.
+   Now it collects candidates and samples them — exact, and 1,196 iterations once per map per day.
+2. It also decremented `n` inside its own `i < n*6` bound, shrinking the budget each time it succeeded.
+3. **The grove's ring check applied to every map.** `ring` is 0 everywhere else and `0 < 1`, so Pignut
+   vanished from the ridge, Grey Cap from the coast road and Butterbrook, Tinder Bracket from the
+   ridge. Three finds silently lost two thirds of their range.
+4. **`WET` was an extra requirement instead of an alternative.** Grey Cap's ground reads
+   `["GRASS","TALLGRASS","WET"]` and every candidate had to be wet *and* grassy — so it could not
+   spawn in the grove at all, the grove having no water.
+
+Wanted-vs-placed per map is now exact on every find.
+
+### Also fixed
+
+**The Ruin had glazed windows.** `isWindowTile` draws them on any `T.WALL`, and `collectLights` lights
+every window after dark — so the abandoned house had tidy glazing and glowed at night. Excluded.
+
+**The rack was never placed.** It went to `(m.w-3, 2)`, where the cottage bookshelf has stood since
+v1, behind an `if(!m.objects[…])`. Caught because `check-interactions.mjs` listed 86 object kinds and
+`rack` was not among them.
+
+**A third TDZ, in the release that documents the rule.** The `EXAMINE` rows were assigned in the v6.5
+data block, 450 lines above `EXAMINE`'s own declaration. Same shape as v5.0's `LADDER_AUDIT` and
+v6.4's `FORGE_SELL`. Moved below the table.
+
+### Numbers
+
+8 crafts · 20 maps · 18 finds · 12 preparations · 4 categories · total level 792 · 4,157 save
+invariants · 2,036 interaction presses · 148 supply invariants · all within perf budget.
+
+### Still owed
+
+Two crafts to go — **Ranching** and **Hearthcraft** — and then the valley trains ten, as the Guild
+hall has claimed since v1. Both ladders are still unwritten and `V6_WORLD_AND_CRAFTS.md` §4 marks them
+blockers: the stated skeletons score 88.5% dead. They get written at this shape or they do not ship.
+Also unbuilt from this release's own spec: the Gatherer's Almanac (the year-wheel Journal tab), the
+Long Walk, and Cuttings' planted farm nodes — the ladder marks are live, the surfaces are not.
+
+---
+
 ## [Unreleased]
 
 ### Tooling — the atlas now guards what a Guild wing lights ON, not just that it has prose

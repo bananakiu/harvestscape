@@ -1452,6 +1452,78 @@ function buildBeachArt(){
   // both blink are not one lighthouse. `marrowFlash()` (below) is the light's *character* — every
   // place that draws Marrow Point reads it, so the pixel on the ridge and the lamp at the tip are
   // lit by the same clock.
+  // shade() takes a MULTIPLIER; the shape functions below read better in percent. One wrapper, and it
+  // is declared HERE, above every block that uses it — a `const` in this same function scope declared
+  // lower down sits in the TDZ when the code above it runs.
+  const shd = (c, pct) => shade(c, 1 + pct/100);
+  // ======================================================================
+  //  v6.5 THE WILD — 18 finds, 3 caps, 12 preparations, one basket
+  // ======================================================================
+  //  Thirty-four items by SHAPE FUNCTION tinted with each row's own `col` (the FORGE pattern). Not a
+  //  shortcut: it is why the ladder reads at a glance. A Bogbean and a Marsh Mallow are the same
+  //  flower in different colours because that is exactly the information — same kind of thing, one is
+  //  rarer. And the colour comes from WILD's own row, so a rebalance that recolours a find recolours
+  //  its picture too.
+  const wildForm = {
+    herb:    (c) => (g) => { for(let i=0;i<3;i++){ const x=5+i*3; px(g,x,6,1,7,c); px(g,x-1,8,1,3,shd(c,-16)); px(g,x+1,7,1,3,shd(c,18)); }
+                             px(g,4,13,8,1,shd(c,-34)); },
+    leaf:    (c) => (g) => { px(g,7,8,2,6,shd(c,-30)); px(g,3,4,5,5,c); px(g,8,5,5,4,shd(c,-12));
+                             px(g,4,5,3,2,shd(c,26)); px(g,9,6,3,1,shd(c,10)); },
+    cluster: (c) => (g) => { for(const [x,y] of [[5,6],[8,5],[6,9],[9,8],[7,7]]){ px(g,x,y,3,3,c); px(g,x,y,2,1,shd(c,24)); }
+                             px(g,7,11,2,3,shd(c,-40)); },
+    cap:     (c) => (g) => { px(g,4,5,8,4,c); px(g,3,7,10,2,c); px(g,5,5,4,1,shd(c,30)); px(g,3,9,10,1,shd(c,-26));
+                             px(g,7,9,2,5,"#e6ddc8"); px(g,6,13,4,1,"#cfc4ac"); },
+    flower:  (c) => (g) => { px(g,7,8,2,6,"#5a7a4a"); px(g,5,10,2,1,"#5a7a4a"); px(g,9,11,2,1,"#5a7a4a");
+                             px(g,6,4,4,4,c); px(g,5,5,1,2,c); px(g,10,5,1,2,c); px(g,7,3,2,1,shd(c,26)); px(g,7,5,2,2,"#ffe27a"); },
+    reed:    (c) => (g) => { px(g,7,5,2,9,shd(c,-14)); px(g,6,2,4,4,c); px(g,6,2,4,1,shd(c,28));
+                             px(g,4,8,2,1,"#6a8a4a"); px(g,10,10,2,1,"#6a8a4a"); px(g,5,13,6,1,shd(c,-34)); },
+    bracket: (c) => (g) => { px(g,2,7,4,7,"#5a4632"); px(g,6,5,8,3,c); px(g,6,5,8,1,shd(c,26));
+                             px(g,7,8,6,2,shd(c,-20)); px(g,6,8,7,1,shd(c,-8)); },
+    tap:     (c) => (g) => { px(g,3,2,4,12,"#d8d0c0"); px(g,3,4,4,1,"#3a3228"); px(g,3,8,4,1,"#3a3228");
+                             px(g,7,7,3,1,"#8a8278"); px(g,9,8,5,5,c); px(g,9,8,5,1,shd(c,22)); px(g,10,10,3,2,shd(c,-14)); },
+  };
+  for(const w of WILD) mkSpr("item_" + w.item, 16, 16, wildForm[w.form](w.col));
+  for(const c of CAPS) mkSpr("item_" + c.name, 16, 16, wildForm.cap(c.col));
+  mkSpr("item_Wild Cutting", 16, 16, g => { px(g,7,7,2,7,"#7a6a4a"); px(g,5,4,4,4,"#5fa84c"); px(g,9,6,3,3,"#4e8f3e");
+    px(g,6,5,2,1,"#7cc45a"); px(g,4,13,8,1,"#6a5a44"); });
+  // the preparations — a jar, a bundle, a bottle, by shape
+  const prepJar    = (c) => (g) => { px(g,5,2,6,2,"#8a7a5e"); px(g,4,4,8,10,"#d8e0e8"); px(g,5,6,6,7,c);
+                                     px(g,5,6,6,1,shd(c,26)); px(g,4,4,1,10,"#eef2f6"); px(g,4,13,8,1,"#a8b0b8"); };
+  const prepBundle = (c) => (g) => { for(let i=0;i<4;i++) px(g,4+i*2,3,1,9,c); px(g,3,7,10,2,"#a8642a");
+                                     px(g,4,3,1,4,shd(c,26)); px(g,4,12,8,1,shd(c,-30)); };
+  const prepBottle = (c) => (g) => { px(g,7,2,2,3,"#c8d4dc"); px(g,5,5,6,9,"#d8e4ec"); px(g,6,7,4,6,c);
+                                     px(g,6,7,4,1,shd(c,30)); px(g,5,5,1,9,"#eef4f8"); px(g,6,3,4,1,"#8a7a5e"); };
+  const prepWoven  = (c) => (g) => { px(g,2,6,12,7,c); px(g,2,6,12,1,shd(c,26)); px(g,2,12,12,1,shd(c,-30));
+                                     for(let i=0;i<5;i++) px(g,3+i*2,7,1,5,shd(c,-14)); px(g,4,4,8,2,shd(c,10)); };
+  for(const p of PREPS){
+    const f = p.keepsake ? prepWoven : p.steep ? prepBottle : /Cord|Basket/.test(p.name) ? prepWoven
+            : /Herbs/.test(p.name) ? prepBundle : prepJar;
+    mkSpr("item_" + p.name, 16, 16, f(p.col));
+  }
+  // the Trug — Foraging's basket, and the tool whose six tiers buy reach rather than power
+  mkSpr("tool_trug", 16, 16, g => {
+    px(g,2,7,12,6,"#b98d5c"); px(g,2,7,12,1,"#d4a874"); px(g,2,12,12,1,"#8a6a44");
+    for(let i=0;i<5;i++) px(g,3+i*2,8,1,4,"#a07a4e");
+    px(g,4,4,8,1,"#8a6a44"); px(g,4,4,1,3,"#8a6a44"); px(g,11,4,1,3,"#8a6a44");
+    px(g,5,6,3,2,"#5fa84c"); px(g,9,6,2,2,"#c94f4f"); });
+  // the wild node, on the ground — one drawn form per `form`, tinted per find (see drawObject)
+  for(const f in wildForm){
+    mkSpr("wildnode_" + f, 16, 16, (g) => {
+      px(g,3,12,10,2,"rgba(60,80,40,0.20)");
+      wildForm[f]("#8fbf6a")(g);
+    });
+  }
+  // the birch in the ruin's kitchen — not a TREES row, not choppable, and that is the point
+  mkSpr("birch", 16, 32, g => {
+    px(g,6,14,4,18,"#e4e0d4"); px(g,6,14,1,18,"#f4f2ea");
+    for(const y of [17,21,26,30]){ px(g,6,y,4,1,"#4a4640"); px(g,7,y+2,2,1,"#6a665e"); }
+    px(g,3,4,10,9,"#7fae5c"); px(g,4,2,8,4,"#95c46e"); px(g,2,8,12,4,"#6a9a4c"); px(g,5,3,4,2,"#a8d47e"); });
+  // the drying rack
+  mkSpr("rack", 16, 24, g => {
+    px(g,2,6,1,18,"#8a6a44"); px(g,13,6,1,18,"#8a6a44"); px(g,2,6,12,1,"#a07a4e"); px(g,2,14,12,1,"#a07a4e");
+    for(let i=0;i<4;i++){ const x=4+i*3; px(g,x,7,1,5,"#6a8a4a"); px(g,x-1,8,3,1,"#7fae5c"); }
+    for(let i=0;i<3;i++){ const x=5+i*3; px(g,x,15,2,4,"#c8a86a"); }
+    px(g,1,23,14,1,"#6a5a44"); });
   // ======================================================================
   //  v6.4 SMITHING — the forge's outputs
   // ======================================================================
@@ -1461,8 +1533,6 @@ function buildBeachArt(){
   //  the same object in different metal, which is exactly the information the player needs at a
   //  glance. The colour comes from FORGE's own `col`, so a rebalance that changes a metal changes its
   //  picture too. (§8.1: shade by rotating hue, not just value — `sh()` below already does that.)
-  // shade() takes a MULTIPLIER; the forge's shape functions read better in percent. One wrapper.
-  const shd = (c, pct) => shade(c, 1 + pct/100);
   mkSpr("tool_hammer", 16, 16, g => {
     px(g,7,5,2,9,"#a0774a"); px(g,7,5,1,9,"#b98d5c");
     px(g,3,3,10,4,"#9aa2ac"); px(g,3,3,10,1,"#c2cad4"); px(g,3,6,10,1,"#6e7883");

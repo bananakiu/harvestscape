@@ -225,6 +225,27 @@ function migrateSave(s){
     }
     s.trialsSeeded = true;
   }
+  // ★ v6.5 "The Wild" — THE BACK-CREDIT. Warding and Smithing started every save at 0 honestly:
+  // there was no verb before them. Foraging's verb has existed since v1.0.0 and `state.stats.forage`
+  // has been counting it the whole time. Starting a year-3 forager at Foraging 1 is technically not a
+  // demotion and emotionally a theft.
+  //
+  // A top-level boolean, not a `flags` key — `s.flags` is not guaranteed to exist this early (the
+  // `if(!s.flags) s.flags = {}` lands ~80 lines below), and `trialsSeeded` is the proven shape. MUST
+  // run before the generic backfill or freshState's `forageSeeded:true` lands first and this becomes
+  // dead code — the trap documented four times above.
+  //
+  // Sized against the real curve: XP_TABLE[15] = 2,417 = 0.31% of the climb. ×3 is operative below
+  // 806 lifetime forages, the cap above. A 200-forage save seeds to Foraging 7; the dense year-3
+  // fixture (stats.forage 5000) seeds to exactly the cap, 15. Once, capped, monotone, idempotent.
+  if(s.forageSeeded === undefined){
+    if(!s.skills) s.skills = {};
+    const seed = Math.min(((s.stats && s.stats.forage) || 0) * 3, XP_TABLE[15]);
+    s.skills.Foraging = Math.max(s.skills.Foraging || 0, seed);
+    s.forageSeeded = true;
+  }
+  // and the Cap Book is a latch: a save seeded past 28 (or a future save loaded from an export) has read it
+  if(s.skills && levelFor(s.skills.Foraging || 0) >= 28) s.capBook = true;
   const f = freshState();
   for(const k in f){ if(s[k] === undefined) s[k] = f[k]; }
   // NOTE (v6.4, checked): the loop above is SHALLOW — `s.skills` is never undefined on a real save,

@@ -242,7 +242,13 @@ for(const file of files){
            `${t}.${sk} has ${Object.keys(tbl[sk]).length} rung(s), expected ${perSkill[t]}`);
     }
   }
-  const perTool = ["TOOL_ICON", "TOOL_SKILL", "TIER3_GEM"];
+  // ★ TIER3_GEM is deliberately NOT here, and the reason is worth recording. It was in this list when
+  // it was written (v6.4.4, after the Hammer shipped without a row and bannered "The undefined is set
+  // into the handle"), and v6.5's Trug then failed it — correctly, by design: a basket has nowhere to
+  // set a stone. The real defect in v6.4 was never the missing row, it was the UNGUARDED READ at
+  // 08-actions.js:2282. That is fixed, so a tool without a gem now degrades to the plain tier line.
+  // Asserting the table is total would force every future tool to wear jewellery to satisfy a check.
+  const perTool = ["TOOL_ICON", "TOOL_SKILL"];
   for(const t of perTool){
     const tbl = sb.get(t); if(!tbl) continue;
     for(const tl in FRESH.tools)

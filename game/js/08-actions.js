@@ -272,6 +272,21 @@ function toolGates(skill, add){
     }
   }
 }
+// v6.5 — one line saying where and when a find gives, assembled from its own row so it can never
+// disagree with the spawner. Used by the Skill Guide, the Almanac and Reading the Ground.
+function wildWhereBlurb(w){
+  const where = Object.keys(w.maps).map(id => (MAPS[id] && MAPS[id].name) || id).join(", ");
+  const bits = [where];
+  if(w.seasons) bits.push(w.seasons.join("/"));
+  if(w.sky)     bits.push(w.sky === "fog" ? "in fog" : w.sky === "snow" ? "after snow" : "in " + w.sky);
+  if(w.fromHour) bits.push("after " + w.fromHour + ":00");
+  if(w.toHour)   bits.push("before " + w.toHour + ":00");
+  if(w.ground && w.ground.includes("WET")) bits.push("wet ground");
+  if(w.ruin)    bits.push("the ruin");
+  if(w.summit)  bits.push("the summit");
+  if(w.rings)   bits.push(w.rings[0] === w.rings[1] ? ("ring " + w.rings[0]) : ("rings " + w.rings[0] + "–" + w.rings[1]));
+  return bits.join(" · ");
+}
 const ordinalRing = n => ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth"][n] || (n + "th");
 
 function unlocksAt(skill, lvl){
@@ -295,6 +310,18 @@ function unlocksAt(skill, lvl){
   // these two functions are mirrors and MUST be edited together. tools/check-saves.mjs now asserts
   // they agree for every skill, so there is no third time.
   if(skill==="Smithing") for(const r of FORGE) if(r.lvl===lvl) u.push(r.name + (r.smelt ? " (smelt)" : ""));
+  // v6.5 Foraging — written in the SAME commit as unlockLadder's branch, because these two are
+  // mirrors and drifting them apart is what v5.1 and v6.4 each did once. check-saves asserts it.
+  if(skill==="Foraging"){
+    for(const w of WILD)  if(w.lvl===lvl) u.push(w.item + " — " + wildWhereBlurb(w));
+    for(const p of PREPS) if(p.lvl===lvl) u.push(p.name);
+    if(lvl===READ_LEVEL)      u.push("◈ Reading the Ground — the place names what it grows today");
+    if(lvl===ALMANAC_LEVEL)   u.push("◈ The Gatherer's Almanac — the year-wheel, in your Journal");
+    if(lvl===CUTTING_LEVEL)   u.push("◈ Cuttings — plant a wild node on your own farm, for good");
+    if(lvl===CAP_LEVEL)       u.push("◈ The Cap Book — an Unnamed Cap can be named");
+    if(lvl===TRAILSIGN_LEVEL) u.push("◈ Trail-sign — a gather glimmers every other node on the map");
+    if(lvl===LONGWALK_LEVEL)  u.push("◈ The Long Walk — the Almanac gains a valley page");
+  }
   // v4.20: the tool ladder + the grove's deadfalls — real, enforced gates that the guide never showed.
   // (The old Warding creature rows are gone: they were depth content, not level unlocks. See WARD_BANDS.)
   toolGates(skill, (n, label) => { if(n === lvl) u.push(label); });
@@ -306,7 +333,17 @@ function unlocksAt(skill, lvl){
   if(MASTERY[skill] && MASTERY[skill][lvl]) u.push("★ " + MASTERY[skill][lvl]);
   return u;
 }
-function addXP(skill, amt){
+// ★ v6.5 — `opt.secondary` marks a grant the player did not CHOOSE: today, only Foraging's co-credit
+// on the eleven legacy forage nodes. It pays full XP and fires level-ups and trial gates normally, and
+// is otherwise invisible — it writes no `state.dailyXpActs` key.
+//
+// That one omission is load-bearing. `sparkCap()` is `SPARK_CAP + 5*min(4, breadth-1)` where breadth
+// counts distinct keys in dailyXpActs. Without `secondary`, ONE free level-1 berrybush press would
+// register a second craft for the day and widen the +50% variety-spark window for EVERY skill in the
+// game — a valley-wide XP buff bought with nothing, arriving as a side effect of a one-token diff.
+// The acceptance test is byte-identical behaviour: a berrybush press must still write exactly
+// {Farming:1}, exactly as it did in v6.4.6.
+function addXP(skill, amt, opt){
   if(state.inv["Grandpa's Guild Pin"]) amt = Math.round(amt * 1.1);   // keepsake luck
   // canopy charms — one worn at a time, effects deliberately tiny (the gem lesson)
   if(skill === "Woodcutting"){
@@ -322,7 +359,7 @@ function addXP(skill, amt){
   // Reward-shaped and never a tax: rotating skills is visibly optimal; single-skill focus is still free.
   // addXP is the single choke point for ALL skill XP (Farming through Warding), so this covers combat too.
   if(!state.dailyXpActs) state.dailyXpActs = {};
-  if((state.dailyXpActs[skill] || 0) < sparkCap()){
+  if(!(opt && opt.secondary) && (state.dailyXpActs[skill] || 0) < sparkCap()){
     const firstToday = !state.dailyXpActs[skill];
     state.dailyXpActs[skill] = (state.dailyXpActs[skill] || 0) + 1;
     amt = Math.round(amt * SPARK_MULT);
@@ -343,6 +380,9 @@ function addXP(skill, amt){
   for(const g of TRIAL_GATES)
     if(rawBefore < g && levelFor(state.skills[skill]) >= g && !trialPassed(skill, g)) openTrial(skill, g);
   if(after > before){
+    // v6.5 — the Cap Book is a persisted latch, not a level check, so a cap named once stays named
+    // even if a future mastery gate ever clamps the level back below 28.
+    if(skill === "Foraging" && before < CAP_LEVEL && after >= CAP_LEVEL) state.capBook = true;
     let unl = []; for(let l=before+1; l<=after; l++) unl = unl.concat(unlocksAt(skill, l));
     // §4.3 "always show the next unlock" — at the level-up moment too, not only in the panel: when
     // this level unlocked nothing, point at what's still ahead so the grind always has a destination.
@@ -537,7 +577,7 @@ const OBJ_TITLE  = { geode:"Geode", bed:"Bed", campfire:"Campfire", stove:"Stove
   fountain:"Fountain", boardwalk:"Boardwalk", railcart:"Minecart", memorial:"Standing Stone", berrybush:"Berry Bush",
   frostberry:"Frostberry Bush", fruittree:"Fruit Tree", beehive:"Beehive", torch:"Torch", lamp:"Lamp", lantern:"Lantern",
   lighthouse:"Marrow Point Light", hut:"The ferry-master's hut", hull:"A boat's keel",   // v6.2
-  forge:"Fenn's Forge", anvil:"The Anvil", flagpole:"The Flagpole", firering:"The Fire-Ring", trestle:"A Trestle Table", longtable:"The Long Table", canopy:"The Canopy",   // v6.3
+  forge:"Fenn's Forge", anvil:"The Anvil", wild:"Wild Growth", birch:"The Birch", rack:"The Drying Rack",   // v6.5 flagpole:"The Flagpole", firering:"The Fire-Ring", trestle:"A Trestle Table", longtable:"The Long Table", canopy:"The Canopy",   // v6.3
   opalseam:"Opal Seam", emeraldseam:"Emerald Seam", rubyseam:"Ruby Seam", diamondseam:"Diamond Seam",   // v5.3
   crystal:"Crystal", gemrock:"Gem Rock", sealeddoor:"The Sealed Vault", wing:"Guild Wing", banner:"Guild Banner", ladder:"Ladder", lift:"The Old Lift", olddoor:"A Planked Door", keg:"Keg", jar:"Preserves Jar", sawmill:"Sawmill", press:"Cheese Press", bench:"Bench", plantpot:"Flower Planter",
   milestone:"The Milestone", shrine:"Roadside Shrine", mooring:"The Ferry Landing", samphirenode:"Samphire", hollynode:"Sea Holly", asternode:"Sea Aster",
@@ -992,6 +1032,12 @@ function interact(){
   const [tx,ty] = facingTile();
   const k = key(tx,ty), tt = tileAt(tx,ty), obj = objAt(tx,ty);
 
+  // ★ v6.5 Reading the Ground (Foraging 5) — E on OPEN ground with nothing on it. Placed here, after
+  // the crop/object checks would have claimed the tile, so it can never shadow an existing verb: if
+  // there is anything at all to interact with, that wins.
+  if(!obj && !curMap.crops[k] && curMap.outdoor && !warpAt(tx,ty) && tt !== T.DOOR && tt !== T.WATER){
+    if(readTheGround()) return;
+  }
   // door / warp
   const w = warpAt(tx,ty);
   if(w && !w.auto){ doWarp(w); return; }
@@ -1060,6 +1106,38 @@ function interact(){
         if(!state.flags.act2Done){ toast("A boat would need somewhere to go, and a reason.", "#cbb98f"); return; }
         if(!state.flags.marrowOpen){ startMarrowFirstSailing(); return; }
         sailTo("marrowpoint"); return;
+      // ★ v6.5 — one case carries all eighteen finds; obj.w is the id. Everything else — the
+      // once-a-day stamp, rain doubling, the Moss Locket, Light Hands — comes free from forageNode.
+      case "wild": {
+        const w = WILD_BY_ID[obj.w]; if(!w) return;
+        if(skillLvl("Foraging") < w.lvl){
+          toast("You can see there's something here, but you don't know it yet. (Foraging " + w.lvl + ")", "#cbb98f");
+          playSfx("error"); return;
+        }
+        if(!wildReady(w)){ toast(wildWaitLine(w), "#cbb98f"); playSfx("error"); return; }
+        forageNode(tx, ty, obj, w.item, "Foraging", w.xp);
+        if(hasMastery("Foraging", 25) === false && chance(0.05)) {}
+        // Cuttings (14): a gather sometimes leaves you something to plant. The farm is the ONE map
+        // that persists, so its hedgerow is the only place a planted node could ever mean anything.
+        if(skillLvl("Foraging") >= CUTTING_LEVEL && chance(0.07)){
+          give("Wild Cutting", 1);
+          floatText(tx*TILE+8, ty*TILE-14, "a cutting", "#8fe8c8");
+        }
+        if(skillLvl("Foraging") >= TRAILSIGN_LEVEL) trailSign(tx, ty);
+        return;
+      }
+      case "birch": {
+        const w = WILD_BY_ID.birchsap;
+        if(seasonOf(state.day) !== "Spring"){
+          showDialog("The Birch", "Straight, no lean to it. Some seed got in where the kitchen was and simply got on with it.\n\nIt gives nothing at this time of year. In spring the sap rises, and then it would.", "port_valley"); return;
+        }
+        if(skillLvl("Foraging") < w.lvl){
+          showDialog("The Birch", "The bark has a small old scar on the south side, about the height of a man's hand — someone tapped this tree once, and knew where to.\n\nYou don't yet. (Foraging " + w.lvl + ")", "port_valley"); return;
+        }
+        forageNode(tx, ty, obj, w.item, "Foraging", w.xp);
+        return;
+      }
+      case "rack": openRack(); return;
       case "forge": openForge(); return;
       case "anvil":
         showDialog("The Anvil", "Two hundredweight of it, on an elm stump sunk four feet into the ground so the ring doesn't travel.\n\nThe face is worn into a shallow dish, dead centre. That is a great many hammer-blows landing in exactly the same place, by somebody who was not aiming.", "port_valley"); return;
@@ -1122,8 +1200,8 @@ function interact(){
           "A moment on the bench. The fountain's murmur, a door somewhere, the wind." ];
         toast(pick(lines), "#e9dcc0"); playSfx("select"); return;
       }
-      case "berrybush": forageNode(tx,ty,obj,"Field Salad","Farming",6); return;
-      case "frostberry": forageNode(tx,ty,obj,"Frostberry","Farming",14); return;
+      case "berrybush": forageNode(tx,ty,obj,"Field Salad","Farming",6,3); return;
+      case "frostberry": forageNode(tx,ty,obj,"Frostberry","Farming",14,5); return;
       case "fruittree": {
         const t = FRUIT_TREES[obj.type]; if(!t) return;
         const age = obj.age || 0;
@@ -1223,20 +1301,20 @@ function interact(){
         obj.pickedDay = state.day;
         const r = Math.random();
         const item = r < 0.12 ? "Pearl" : r < 0.38 ? "Coral" : r < 0.62 ? "Clam" : r < 0.86 ? "Shell" : "Seaweed";
-        give(item, 1); addXP("Fishing", 22); bump("forage");
+        give(item, 1); addXP("Fishing", 22); bump("forage"); addXP("Foraging", 6, { secondary:true });   // v6.5: storm wrack is beachcombing — leaving it out would make it the only wild gather that does not train the craft
         playSfx(item==="Pearl" ? "ore" : "get");
         pSparkle(tx*TILE+8, ty*TILE+6, item==="Pearl" ? "#e8f4ff" : "#8fd06a", item==="Pearl" ? 16 : 7);
         if(item === "Pearl") floatText(state.px, state.py-30, "a pearl!", "#e8f4ff");
         return;
       }
-      case "shellnode": forageNode(tx,ty,obj, chance(0.5)?"Shell":"Clam","Fishing",8); return;
-      case "seaweednode": forageNode(tx,ty,obj,"Seaweed","Fishing",6); return;
-      case "coralnode": forageNode(tx,ty,obj, chance(0.12)?"Pearl":"Coral","Fishing",12); return;
-      case "samphirenode": forageNode(tx,ty,obj,"Samphire","Fishing",8); return;   // v3.36: the road's tideline forage
-      case "asternode": forageNode(tx,ty,obj,"Sea Aster","Farming",10); return;   // v4.13: Butterbrook's salt-meadow wildflower
-      case "hollynode": forageNode(tx,ty,obj,"Sea Holly","Fishing",6); return;
-      case "thymenode": forageNode(tx,ty,obj,"Mountain Thyme","Farming",7); return;   // v3.43: the ridge's alpine forage
-      case "snowdropnode": forageNode(tx,ty,obj,"Snowdrop","Farming",6); return;
+      case "shellnode": forageNode(tx,ty,obj, chance(0.5)?"Shell":"Clam","Fishing",8,3); return;
+      case "seaweednode": forageNode(tx,ty,obj,"Seaweed","Fishing",6,2); return;
+      case "coralnode": forageNode(tx,ty,obj, chance(0.12)?"Pearl":"Coral","Fishing",12,4); return;
+      case "samphirenode": forageNode(tx,ty,obj,"Samphire","Fishing",8,3); return;   // v3.36: the road's tideline forage
+      case "asternode": forageNode(tx,ty,obj,"Sea Aster","Farming",10,4); return;   // v4.13: Butterbrook's salt-meadow wildflower
+      case "hollynode": forageNode(tx,ty,obj,"Sea Holly","Fishing",6,2); return;
+      case "thymenode": forageNode(tx,ty,obj,"Mountain Thyme","Farming",7,3); return;   // v3.43: the ridge's alpine forage
+      case "snowdropnode": forageNode(tx,ty,obj,"Snowdrop","Farming",6,2); return;
       case "shardnode": {
         // v3.43 star-gleaning — the first activity gated by clock and sky, not tool tier. The
         // shards only spawn on clear days (genRidge) and only give themselves up after dusk;
@@ -1249,7 +1327,7 @@ function interact(){
         const fresh = obj.pickedDay !== state.day;
         if(fresh && chance(0.03)){ give("Star Metal Shard", 1); pSparkle(tx*TILE+8, ty*TILE, "#d8b0ff", 18); playSfx("legend");
           floatText(state.px, state.py-30, "✦ star metal!", "#c8a8ff"); }
-        forageNode(tx,ty,obj,"Starlight Shard","Mining",14);   // forage-class XP (review rebalance: 90 ungated out-leveled the mine's whole early curve)
+        forageNode(tx,ty,obj,"Starlight Shard","Mining",14,5);   // forage-class XP (review rebalance: 90 ungated out-leveled the mine's whole early curve)
         return;
       }
       case "crater": showDialog("The Crater Dell", "A bowl of broken scree, older than the Guild, its rim softened by a hundred winters. This is where it came down — the star whose metal built nine crafts and one long story.\n\nThe stone underfoot is fused smooth. On clear nights, they say, the summit still catches splinters of the old light.", null); return;
@@ -1302,12 +1380,33 @@ function interact(){
   toast("Nothing here. (Space uses your tool)");
 }
 
-function forageNode(x, y, obj, item, skill, xp){
+// ★ v6.5 Trail-sign (Foraging 62). Gathering marks the trail: every other ungathered wild node on
+// the WHOLE map glimmers once. Turns a circuit from a memorised route into something the valley tells
+// you — a METHOD unlock, like Mining's "Read the seams", revealing nothing you could not walk to.
+function trailSign(fromX, fromY){
+  if(!curMap || !curMap.objects) return;
+  let n = 0;
+  for(const k in curMap.objects){
+    const o = curMap.objects[k]; if(o.kind !== "wild" || o.pickedDay === state.day) continue;
+    const [x,y] = k.split(",").map(Number);
+    if(x === fromX && y === fromY) continue;
+    pSparkle(x*TILE+8, y*TILE+6, "#8fe8c8", 3); n++;
+  }
+  if(n) floatText(fromX*TILE+8, fromY*TILE-20, n + " more about", "#8fe8c8");
+}
+function forageNode(x, y, obj, item, skill, xp, fxp){
   if(obj.pickedDay === state.day){ toast("Already gathered here today."); return; }
-  obj.pickedDay = state.day;
+  // ★ v6.5 Light Hands (Foraging 25): the node sometimes gives again the same day, so the press
+  // simply does not stamp it. Distinct from rain (which multiplies one press) and the Moss Locket
+  // (which adds one) — this is a second visit, not a bigger first one.
+  if(!(hasMastery("Foraging", 25) && chance(hasMastery("Foraging", 99) ? 0.22 : 0.12))) obj.pickedDay = state.day;
   let n = isRain() ? 2 : 1;                       // rain swells everything that grows wild — today only
   if(charmActive("Moss Locket") && chance(0.2)){ n++; floatText(x*TILE+8, y*TILE-10, "the moss approves", "#8fe8c8"); }
   give(item, n); addXP(skill, xp); bump("forage", n); playSfx("get");
+  // ★ v6.5 THE CO-CREDIT. Nothing changes hands: the grant above is byte-identical to v6.4.6 and the
+  // legacy node keeps training its own craft forever. `secondary` is not decoration — see addXP.
+  if(fxp && skill !== "Foraging") addXP("Foraging", fxp, { secondary:true });
+  if(skill === "Foraging" && state.wildSeen && obj.w) state.wildSeen[state.map] = item;   // the Trug's 5th rung
   if(isRain() && n > 1) floatText(x*TILE+8, y*TILE-4, "the rain was kind", "#8fd3ff");
   pSparkle(x*TILE+8, y*TILE+6, "#8fd06a", n>1 ? 10 : 6);
 }

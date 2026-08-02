@@ -27,8 +27,8 @@ function freshState(){
     market:{},                            // how much of each item Tom has taken today; cleared at dawn
     dailyXpActs:{},                        // v4.0 variety spark: {skill: sparked-grants-today}; reset each dawn
     seedSel:"turnip",
-    skills:{ Farming:0, Woodcutting:0, Mining:0, Fishing:0, Cooking:0, Warding:0, Smithing:0 },   // v4.0: Warding, the sixth skill · v6.4: Smithing, the seventh
-    tools:{ Hoe:0, Can:0, Axe:0, Pick:0, Rod:0, Stave:0, Hammer:0 },   // Stave is owned only once Elias grants it (state.flags.staveEarned) — 0 here just seeds the tier
+    skills:{ Farming:0, Woodcutting:0, Mining:0, Fishing:0, Cooking:0, Warding:0, Smithing:0, Foraging:0 },   // v4.0: Warding, the sixth skill · v6.4: Smithing, the seventh
+    tools:{ Hoe:0, Can:0, Axe:0, Pick:0, Rod:0, Stave:0, Hammer:0, Trug:0 },   // Stave is owned only once Elias grants it (state.flags.staveEarned) — 0 here just seeds the tier
     rel:{},                               // per-NPC relationship { points, talkedDay, giftedDay }
     animals:{ chickens:[], cows:[], sheep:[] },   // each: { friend, eggDay|milkDay|woolDay, petDay }
     mounted:false,                        // v3.22: are you riding the horse right now (transient; reset on load)
@@ -48,6 +48,8 @@ function freshState(){
     pledges:{},                            // the Pledge Ledger: id → { gPaid, mats:{item:n} } (see 01-data.js)
     waystones:[],                          // awakened waystone ids ("way3"…) — permanent, like liftStops
     charm:null,                            // the one canopy charm worn (its item must also be in inv)
+    forageSeeded:true,                     // v6.5 — a save BORN with Foraging never back-credits (migrateSave seeds older ones once)
+    capBook:false, wildSeen:{},            // v6.5 — the Cap Book read, and what each ground last gave you (the Trug's 5th rung)
     writDone:0, writBundle:{}, writMarks:0,   // v5.9 the weekly writ: how many closed, what's deposited toward the open one, and the marks earned
     home:{ objects:{}, rooms:0 },           // v5.7 the cottage overlay: placed furniture (persists) + how many rooms Rowan has built on
     tonic:null,                            // v5.2 the Warden's tonic in effect this descent: {out,effect,t} — cleared on a bell ride, a knockout, and every dawn
@@ -298,6 +300,7 @@ function genFarm(m){
   // scatter must never wall off a doorway
   for(const wk in m.warps){ const [dx,dy] = wk.split(",").map(Number);
     delete obj[key(dx,dy+1)]; delete obj[key(dx,dy+2)]; }
+  if(typeof spawnWild === "function") spawnWild(m, "farm");   // v6.5 (guarded: 04-world loads before 13-content)
 }
 
 // ---- save / load (only the farm map + meta persist) ----
