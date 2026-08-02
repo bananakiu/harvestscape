@@ -8,13 +8,18 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "6.4.5", code: 149, codename: "Hands", date: "2026-07-29" };
+const VERSION = { name: "6.4.6", code: 150, codename: "The Valley, Drawn", date: "2026-08-03" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"6.4.6", code:150, date:"2026-08-03", name:"The Valley, Drawn", notes:[
+    { t:"change", s:"The map in your journal is a map now. It was nine flat boxes in a grid \u2014 no coastline, no roads, no sense that anywhere was near anywhere else \u2014 and it had gone four places and six people out of date. It is drawn on vellum now: the ridge along the north, the sea sweeping up the east, the Gullwater coming down to the ford, the roads that actually run between places, and a dashed ferry line thirty-nine miles up the coast to the light." },
+    { t:"fix", s:"Everyone is on it. Ada, Corin, Sable, Wick, Thea and Fenn had no place on the old map at all \u2014 nearly half the valley simply never appeared \u2014 and on a Festival Green day the faces vanished instead of moving there. The map asks the schedule where people are now instead of keeping its own list." },
+    { t:"fix", s:"Marrow Point, the Festival Green and the two households are on the map at last." },
+  ]},
   { v:"6.4.5", code:149, date:"2026-07-29", name:"Hands", notes:[
     { t:"fix", s:"The Skills panel shows all of Smithing. It was listing ten things \u2014 the hammer tiers and the four masteries \u2014 and none of the twenty-six forgings, so the craft that was built to have something at every level looked like the emptiest one in the game. All 38 are there now." },
     { t:"fix", s:"\u201cNext unlock\u201d no longer skips past things. At Smithing 33 it pointed at level 45 and walked straight past the brazier, the plough blade and the cobalt bar." },

@@ -29,7 +29,7 @@
    ============================================================ */
 import fs from "node:fs";
 import path from "node:path";
-import { loadGame, ROOT } from "./lib/load-game.mjs";
+import { loadGame, ROOT, CORE_FILES } from "./lib/load-game.mjs";
 
 const DIR = path.join(ROOT, "tools", "fixtures", "saves");
 const only = process.argv[2];
@@ -73,7 +73,17 @@ function firstDiff(a, b, at = ""){
 }
 
 let failures = 0, checks = 0;
-const sb = loadGame();                       // the CURRENT build — the thing under test
+// ★ 10-ui.js is loaded so the journal-map tables (MAP_REGION, WORLD_MAP) are REACHABLE. Without it
+// sb.get("MAP_REGION") is undefined and the map-coverage assertion below skips in silence — which is
+// exactly what it did on its first run, reporting 3,547 green invariants while the check it had just
+// been given did nothing. Fourth instance of that shape today; see check-interactions.mjs's header.
+const sb = (() => {
+  const f = [...CORE_FILES];
+  f.splice(f.indexOf("06-weather.js") + 1, 0, "07-entities.js");
+  f.splice(f.indexOf("01-data.js") + 1, 0, "03-art.js");
+  f.push("10-ui.js");
+  return loadGame({ files: f });
+})();                                        // the CURRENT build — the thing under test
 const levelFor = sb.get("levelFor");
 const W = sb.get("W"), H = sb.get("H");
 const SAVE_KEY = sb.get("SAVE_KEY");
@@ -185,6 +195,29 @@ for(const file of files){
       }
     }
     sb.setState(keep || FRESH);
+  }
+
+  // ★ v6.5 — THE JOURNAL MAP MUST COVER THE WORLD.
+  //
+  // `MAP_REGION` (10-ui.js) folds every live map onto one board region. A map with no entry does not
+  // fail loudly — it silently drops anyone standing on it off the journal map, and the place itself
+  // never appears. That is how the Wrens' and Harrows' houses (v6.0), Marrow Point (v6.2) and the
+  // Festival Green (v6.3) all went missing at once: four maps and, through them, six of thirteen
+  // people. Total over MAPS, and every region must be a real board node.
+  {
+    const MAP_REGION = sb.get("MAP_REGION"), WORLD_MAP = sb.get("WORLD_MAP"), MAPS = sb.get("MAPS");
+    // Not `if (…) {}`: a check that quietly does nothing when its subject is out of reach is the
+    // failure mode this file keeps finding in the game. Assert reachability first, loudly.
+    ok(!!MAP_REGION && !!WORLD_MAP && !!MAPS,
+      "MAP_REGION / WORLD_MAP not reachable from the harness — the journal-map checks below would silently pass");
+    if(MAP_REGION && WORLD_MAP && MAPS){
+      const nodes = new Set(WORLD_MAP.map(n => n.id));
+      for(const id in MAPS){
+        ok(MAP_REGION[id] !== undefined, `MAP_REGION has no entry for the "${id}" map — it and anyone on it vanish from the journal map`);
+        if(MAP_REGION[id]) ok(nodes.has(MAP_REGION[id]),
+          `MAP_REGION["${id}"] = "${MAP_REGION[id]}", which is not a node on the journal map board`);
+      }
+    }
   }
 
   // ★ v6.4.4 — TABLE COMPLETENESS, the general form of two bugs shipped in one day.

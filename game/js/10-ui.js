@@ -964,61 +964,313 @@ function checkCollection(){
 // The layout mirrors the real warp cardinals: grove W of the farm, village E, guild N of the plaza,
 // mine on the NE ridge, coast S. Regions are static; the you-are-here marker and the neighbour dots
 // are derived live from state.map and the day's clock.
+// ======================================================================
+//  ★ v6.5 — THE VALLEY MAP, DRAWN
+// ======================================================================
+//  It used to be nine CSS grid boxes. The stylesheet said so in its own comment ("a schematic
+//  Willowbrook drawn from CSS grid boxes"), and it read exactly like that: flat brown rectangles in
+//  a 4-column grid with an empty hole in the corner, no coastline, no roads, no sense that any place
+//  was NEAR any other. It was also four maps and six people out of date, because both the region
+//  table and the whereabouts function were hand-kept copies of things the game already knew.
+//
+//  This game draws everything. There is no reason its map should be the one thing made of divs.
+//
+//  So it is a canvas now, in the same idiom as the ridge panorama: the sea along the south and up
+//  the east, the ridge along the north, the Gullwater coming down to the ford, roads between the
+//  places that actually connect, and a dashed ferry line thirty-nine miles up the coast to the
+//  light. Positions are the real topology read off the warps, not a grid.
+//
+//  `at` is in map-canvas pixels (WM_W × WM_H). `road` lists the places a road actually runs to —
+//  every one mirrors a warp in 13-content.js, so the drawn lines are not decoration.
+// ★ 2.65:1. The aspect is the fit: at width:100% inside the journal body the drawn height lands
+// under the panel's, so the whole map — cartouche, compass, southern coast — is on screen without
+// the body scrolling. Fighting this in CSS (max-height, object-fit, width:auto) either capped the
+// canvas at its intrinsic size or clipped the south; the shape of the art is the honest lever.
+const WM_W = 520, WM_H = 196;
 const WORLD_MAP = [
-  { id:"grove",   area:"grove",   label:"The Deep Grove",     sub:"forest & rings" },
-  { id:"farm",    area:"farm",    label:"Willowbrook Farm",   sub:"home · coop · barn" },
-  { id:"village", area:"village", label:"Willowbrook Village",sub:"plaza · store · Alderman" },
-  { id:"guild",   area:"guild",   label:"Guild of Nine Crafts",sub:"the valley's heart" },
-  { id:"mine",    area:"mine",    label:"The Old Mine",       sub:"ore & gems" },
-  { id:"coast",   area:"coast",   label:"Willowbrook Coast",  sub:"fishing & festivals" },
-  { id:"coastroad", area:"coastroad", label:"The Coast Road", sub:"the Gullwater · the landing" },   // v3.36
-  { id:"ridge",     area:"ridge",     label:"Starfall Ridge",  sub:"the summit · the view" },         // v3.43
-  { id:"butterbrook", area:"butterbrook", label:"Butterbrook", sub:"the coast dairy · Nell" },          // v3.44
+  { id:"grove",     at:[52,106],  label:"The Deep Grove",  sub:"forest & rings",        icon:"tree",  road:["farm"] },
+  { id:"farm",      at:[150,112], label:"Willowbrook Farm",sub:"home · coop · barn",    icon:"home",  road:["village"] },
+  { id:"village",   at:[248,110], label:"Willowbrook",     sub:"plaza · store",         icon:"town",  road:["guild","green","coast","ridge"] },
+  { id:"guild",     at:[196,58],  label:"The Guild",       sub:"ten crafts",            icon:"guild", road:[] },
+  { id:"mine",      at:[300,44],  label:"The Old Mine",    sub:"ore & gems",            icon:"mine",  road:["village"] },
+  { id:"ridge",     at:[146,40],  label:"Starfall Ridge",  sub:"the summit",            icon:"peak",  road:[] },
+  { id:"green",     at:[350,112], label:"The Festival Green", sub:"the old grounds",    icon:"flag",  road:[] },
+  { id:"coast",     at:[214,158], label:"Willowbrook Coast", sub:"fishing & the sand",  icon:"wave",  road:["butterbrook","coastroad"] },
+  { id:"butterbrook",at:[84,160], label:"Butterbrook",     sub:"the dairy · Nell",      icon:"milk",  road:[] },
+  { id:"coastroad", at:[364,156], label:"The Coast Road",  sub:"the Gullwater",         icon:"road",  road:[] },
+  { id:"marrowpoint",at:[470,46], label:"Marrow Point",    sub:"39 miles up the coast", icon:"light", road:[], ferry:"coastroad",
+    seen:() => !!(state.flags && state.flags.marrowOpen) },
 ];
-// every live map id folds onto one of the nine board regions
+const WM_BY_ID = (() => { const m = {}; for(const n of WORLD_MAP) m[n.id] = n; return m; })();
+
+// Every live map id folds onto one board region. ★ v6.5: this must be TOTAL over MAPS — a map with
+// no entry silently drops anyone standing on it off the board, which is how the Wrens' and Harrows'
+// houses, Marrow Point and the Festival Green went missing. check-saves.mjs asserts it now.
 const MAP_REGION = { farm:"farm", cottage:"farm", coop:"farm", barn:"farm",
-  village:"village", store:"village", mayahouse:"village", guild:"guild", undercroft:"guild",   // v4.0: the tenth door is inside the Guild
+  village:"village", store:"village", mayahouse:"village", wrenhouse:"village", harrowhouse:"village",   // v6.0 the two households
+  guild:"guild", undercroft:"guild",   // v4.0: the tenth door is inside the Guild
   mine:"mine", beach:"coast", grove:"grove", coastroad:"coastroad", ridge:"ridge",
-  butterbrook:"butterbrook", dairy:"butterbrook" };
+  butterbrook:"butterbrook", dairy:"butterbrook",
+  marrowpoint:"marrowpoint",   // v6.2
+  green:"green" };             // v6.3
 // Where each neighbour is right now — inferred read-only from the spawn schedule (spawnMapNpcs,
 // 13-content.js). Live NPC entities only exist on the loaded map, so the map reconstructs their
 // whereabouts from the same clock rules rather than reading entities off other maps.
-function npcRegionNow(id){
-  const h = (typeof curHour === "function") ? curHour() : 12;
-  // v6.3: point at the festival's VENUE, not always at the coast. (Nell keeps the dairy through every
-  // festival — she was never in the cast, and the old blanket "coast" put a false dot on her.)
-  if(typeof festivalVenue === "function" && festivalVenue() && id !== "nell")
-    return festivalVenue() === "green" ? "the Green" : "coast";
-  switch(id){
-    case "tom":   return "village";
-    case "rowan": return "guild";
-    case "bram":  return "coast";
-    case "maya":  return "village";
-    case "pip":   return "village";
-    case "elias": return (state.flags && state.flags.act2Done && h >= 7 && h < 19)
-      ? (state.day % 4 === 0 ? "coastroad" : "farm") : null;   // v3.36: fourth days he walks to the landing
-    case "nell":  return (h >= 7 && h < 22) ? "butterbrook" : null;   // v3.44: dairy 7–18:30, meadow 18:30–22, home after — matches spawnMapNpcs exactly (review fix)
+// ★ v6.5 — ASK THE SCHEDULE, don't re-describe it.
+//
+// This was a hand-written switch: a second, parallel transcription of `spawnMapNpcs` (13-content.js),
+// kept in step by hand. It went stale exactly the way every other mirror in this codebase has —
+// **six of the thirteen cast had no case at all** (Ada, Corin, Sable, Wick, Thea, and Fenn, added
+// four releases apart) so the map simply never showed them, and v6.3's festival branch returned the
+// string "the Green", which is not a region id, so on Green-festival days the faces vanished from
+// the board instead of moving to it.
+//
+// The schedule already knows. `spawnMapNpcs(m)` is the single authority (it is the one the schedule
+// harness sweeps), so the map now RUNS it — over every map, once per game-hour — and reads back who
+// landed where. Six missing people and one broken festival became zero lines of new knowledge, and
+// the next NPC is on the map the day their schedule exists.
+//
+// Cost: ~20 `newMap` calls, memoized on (day, hour). Measured at 8ms for all maps in check-perf, and
+// this is a panel open, not a frame. The memo means re-renders inside the same hour are free.
+let _npcWhereMemo = null, _npcWhereKey = "";
+function npcWhereabouts(){
+  const key = state.day + ":" + Math.floor(curHour() * 2);   // half-hour granularity is plenty
+  if(_npcWhereMemo && _npcWhereKey === key) return _npcWhereMemo;
+  const where = {};
+  const keepMap = curMap;
+  for(const id in MAPS){
+    let m;
+    try { m = newMap(id); spawnMapNpcs(m); } catch(e){ continue; }
+    for(const n of (m.npcs || [])) where[n.id] = MAP_REGION[id] || id;
   }
-  return null;
+  curMap = keepMap;
+  _npcWhereMemo = where; _npcWhereKey = key;
+  return where;
 }
+function npcRegionNow(id){ return npcWhereabouts()[id] || null; }
 function renderWorldMap(b){
-  const cur = MAP_REGION[state.map] || "farm";
-  const byRegion = {};
-  for(const id in NPCDEF){ const r = npcRegionNow(id); if(r){ (byRegion[r] = byRegion[r] || []).push(id); } }
-  let nodes = "";
-  for(const n of WORLD_MAP){
-    const here = n.id === cur;
-    const dots = (byRegion[n.id] || []).map(id => spr[NPCDEF[id].portrait]
-      ? `<span class="wmNpc" data-icon="${NPCDEF[id].portrait}" title="${escapeHtml(NPCDEF[id].name)} is here"><canvas></canvas></span>` : "").join("");
-    nodes += `<div class="wmNode${here?" here":""}" style="grid-area:${n.area}">` +
-      `<span class="wmName">${n.label}</span><span class="wmSub">${n.sub}</span>` +
-      (here ? `<span class="wmYou">✦ you are here</span>` : "") +
-      (dots ? `<span class="wmNpcs">${dots}</span>` : "") + `</div>`;
-  }
   const where = (MAPS[state.map] || {}).name || "the valley";
-  b.innerHTML = `<div class="wmBoard">${nodes}</div>` +
-    `<div class="wmFoot">You're in <b>${escapeHtml(where)}</b>. The faces show where the valley folk are about now.</div>`;
-  hydrateIcons(b);
+  const reg = WM_BY_ID[MAP_REGION[state.map] || ""];
+  b.innerHTML =
+    `<div class="wmWrap"><canvas id="wmCanvas" width="${WM_W}" height="${WM_H}"></canvas></div>` +
+    `<div class="wmFoot">You're in <b>${escapeHtml(where)}</b>` +
+    (reg && reg.sub ? ` <span class="wmSub">— ${escapeHtml(reg.sub)}</span>` : "") +
+    `. The faces show where the valley folk are about now.</div>`;
+  const cv = b.querySelector("#wmCanvas"); if(!cv) return;
+  const g = cv.getContext("2d"); g.imageSmoothingEnabled = false;
+  paintValleyMap(g);
+  // The light on the point blinks and the "you are here" ring breathes, so the map is alive while
+  // it is open. Cleared when the panel closes (the interval checks the node is still in the DOM).
+  const tick = setInterval(() => {
+    if(!document.body.contains(cv)){ clearInterval(tick); return; }
+    paintValleyMap(g);
+  }, 240);
+}
+// ---- the map's own little sprites, drawn once into an offscreen cache ----
+const _wmIcon = {};
+function wmIcon(kind){
+  if(_wmIcon[kind]) return _wmIcon[kind];
+  const c = document.createElement("canvas"); c.width = 16; c.height = 16;
+  const g = c.getContext("2d"); g.imageSmoothingEnabled = false;
+  const P = (x,y,w,h,col) => { g.fillStyle = col; g.fillRect(x,y,w,h); };
+  if(kind === "tree"){ P(7,9,2,5,"#6a5030"); P(4,3,8,7,"#3f7a3a"); P(5,2,6,2,"#4f9048"); P(4,8,8,2,"#2f5f2c"); }
+  else if(kind === "home"){ P(3,7,10,7,"#8a6a48"); P(2,4,12,4,"#a8443a"); P(3,3,10,2,"#c25349"); P(7,10,3,4,"#4a3524"); }
+  else if(kind === "town"){ P(2,6,5,8,"#8a6a48"); P(9,4,5,10,"#8a6a48"); P(1,4,7,3,"#a8443a"); P(8,2,7,3,"#a8443a");
+                            P(3,9,2,2,"#e8d9a8"); P(10,7,2,2,"#e8d9a8"); }
+  else if(kind === "guild"){ P(2,6,12,8,"#b8a888"); P(1,4,14,3,"#8a7a5e"); P(3,8,2,6,"#9a8a6a"); P(7,8,2,6,"#9a8a6a"); P(11,8,2,6,"#9a8a6a");
+                             P(6,1,4,4,"#ffce5a"); P(7,2,2,2,"#fff2c0"); }
+  else if(kind === "mine"){ P(2,8,12,6,"#6a6258"); P(4,5,8,4,"#5a5048"); P(6,8,4,6,"#241c16"); P(5,3,6,2,"#8a8278"); }
+  else if(kind === "peak"){ P(2,11,12,3,"#6a6a72"); P(5,5,6,7,"#7e7e88"); P(7,2,3,4,"#9a9aa4"); P(7,2,3,2,"#e8e8f0"); P(6,5,2,2,"#c8c8d4"); }
+  else if(kind === "flag"){ P(7,3,2,11,"#a8956a"); P(9,3,5,3,"#c94f4f"); P(9,6,5,2,"#e2b455"); P(5,13,6,1,"#6a5a44"); }
+  else if(kind === "wave"){ P(1,7,14,2,"#4f8ac9"); P(3,10,10,2,"#3f76b4"); P(2,4,5,2,"#c9b06a"); P(9,4,5,2,"#c9b06a"); }
+  else if(kind === "milk"){ P(4,6,8,8,"#e8e2d4"); P(5,3,6,3,"#d8d2c4"); P(4,9,8,2,"#4f7ac9"); P(6,2,2,2,"#c8c2b4"); }
+  else if(kind === "road"){ P(2,11,12,2,"#b8a06a"); P(5,7,8,2,"#b8a06a"); P(8,3,6,2,"#b8a06a"); P(1,5,4,8,"#4f8ac9"); }
+  else if(kind === "light"){ P(6,4,4,10,"#e8e2d4"); P(6,6,4,1,"#b0483a"); P(6,9,4,1,"#b0483a"); P(5,2,6,3,"#3a4550");
+                             P(7,3,2,2,"#ffe6a0"); P(4,13,8,1,"#6a6258"); }
+  _wmIcon[kind] = c; return c;
+}
+// ---- the map ----
+function paintValleyMap(g){
+  const W = WM_W, H = WM_H;
+  const P = (x,y,w,h,col) => { g.fillStyle = col; g.fillRect(x|0,y|0,w|0,h|0); };
+  // vellum
+  g.fillStyle = "#e6d7ae"; g.fillRect(0,0,W,H);
+  // an aged, blotchy tone — deterministic, so the map does not shimmer between repaints
+  let sd = 20260729;
+  const rnd = () => (sd = (sd*1664525 + 1013904223) & 0x7fffffff) / 0x7fffffff;
+  for(let i=0;i<900;i++){ const x=rnd()*W, y=rnd()*H; g.fillStyle = rnd()<0.5 ? "rgba(150,120,70,0.07)" : "rgba(255,246,214,0.10)";
+    g.fillRect(x|0,y|0, 1+(rnd()*3|0), 1+(rnd()*2|0)); }
+  // ---- the sea: south, sweeping up the east ----
+  const seaAt = (x) => {                       // the shoreline, as a function of x
+    if(x < 190) return 186 + Math.round(Math.sin(x*0.045)*4);
+    if(x < 380) return 186 - (x-190)*0.20 + Math.round(Math.sin(x*0.055)*4);
+    return 148 - (x-380)*1.15 + Math.round(Math.sin(x*0.065)*3);
+  };
+  // ★ Marrow Point sits on its OWN headland, thirty-nine miles up an open coast — without this it
+  // floated in open water with a lighthouse on it, which is a nice image and a wrong one.
+  const headland = (x, y) => {
+    const cx = 470, cy = 48;
+    const dx = (x - cx) / 54, dy = (y - cy) / 32;
+    return dx*dx + dy*dy < 1;
+  };
+  for(let x=0;x<W;x++){
+    const y = Math.max(0, Math.round(seaAt(x)));
+    P(x, y, 1, H-y, "#7fa8c4");
+    P(x, y, 1, 2, "#cfe0ea");                                     // the surf line
+  }
+  if(!WM_BY_ID.marrowpoint.seen || WM_BY_ID.marrowpoint.seen()){
+    for(let y=6;y<H;y++) for(let x=400;x<W;x++) if(headland(x,y)){
+      P(x, y, 1, 1, "#e6d7ae");
+      if(!headland(x, y+1) && !headland(x, y-1)) P(x, y, 1, 1, "#d8c9a2");   // a soft edge, not a drawn ring
+    }
+  }
+  for(let i=0;i<190;i++){                                          // wave hatching
+    const x = (rnd()*W)|0, y = ((rnd()*H)|0);
+    if(y > seaAt(x)+5) P(x, y, 2+(rnd()*3|0), 1, "rgba(255,255,255,0.18)");
+  }
+  // ---- the ridge along the north ----
+  for(let x=0;x<W;x++){
+    const top = 4 + Math.round(Math.sin(x*0.03)*4 + Math.sin(x*0.009)*6);
+    const base = 28 + Math.round(Math.sin(x*0.042)*4);
+    if(x > 372) continue;                                          // the ridge stops before the sea
+    P(x, top, 1, base-top, "rgba(120,116,110,0.30)");
+    P(x, top, 1, 2, "rgba(90,86,82,0.55)");
+  }
+  for(let i=0;i<34;i++){ const x = 8 + i*11;                       // a row of little peaks
+    if(x > 366) break;
+    const t = 9 + Math.round(Math.sin(x*0.31)*4);
+    g.fillStyle = "rgba(96,92,88,0.55)";
+    g.beginPath(); g.moveTo(x-6, t+14); g.lineTo(x, t); g.lineTo(x+6, t+14); g.closePath(); g.fill();
+  }
+  // ---- the Gullwater: down from the hills, under the ford, out to the sea ----
+  g.strokeStyle = "#7fa8c4"; g.lineWidth = 3; g.beginPath();
+  g.moveTo(306, 24);
+  g.bezierCurveTo(316, 76, 342, 116, 372, seaAt(372));
+  g.stroke();
+  g.strokeStyle = "rgba(207,224,234,0.7)"; g.lineWidth = 1; g.stroke();
+  // ---- roads: every line mirrors a real warp ----
+  g.strokeStyle = "#b8a06a"; g.lineWidth = 2; g.setLineDash([4,3]);
+  for(const n of WORLD_MAP){
+    if(n.seen && !n.seen()) continue;
+    for(const to of (n.road || [])){
+      const t = WM_BY_ID[to]; if(!t || (t.seen && !t.seen())) continue;
+      g.beginPath(); g.moveTo(n.at[0], n.at[1]); g.lineTo(t.at[0], t.at[1]); g.stroke();
+    }
+  }
+  // the ferry — dashed differently, because it is water, and it only exists once it runs
+  const mp = WM_BY_ID.marrowpoint;
+  if(!mp.seen || mp.seen()){
+    g.strokeStyle = "rgba(90,140,180,0.85)"; g.setLineDash([2,4]);
+    const from = WM_BY_ID[mp.ferry];
+    g.beginPath(); g.moveTo(from.at[0], from.at[1]); g.bezierCurveTo(406, 148, 446, 100, mp.at[0], mp.at[1]+14); g.stroke();
+    g.setLineDash([]);
+    g.fillStyle = "#4a6a80"; g.font = "7px monospace"; g.textAlign = "center";
+    g.fillText("39 mi", 424, 118);
+  }
+  g.setLineDash([]);
+  // ---- whereabouts, once ----
+  const byRegion = {};
+  const who = npcWhereabouts();
+  for(const id in who){ if(NPCDEF[id]) (byRegion[who[id]] = byRegion[who[id]] || []).push(id); }
+  const cur = MAP_REGION[state.map] || "farm";
+  // ---- the places ----
+  // ★ A LABEL CLAIM LIST. Hand-tuned coordinates collided the moment two places sat near each other
+  // ("Willowbrook Farm" ran straight through "The Deep Grove"'s subtitle on the first draw), and they
+  // would collide again the next time a place is added — which this version line does every release.
+  // So each label CLAIMS its rectangle; if the spot is taken it steps down until it is free. New
+  // places cost a coordinate, never a re-tune of their neighbours.
+  const claimed = [];
+  // `y` is the text BASELINE. The ink spans baseline-8 (top of the label) to baseline-8+h, so the
+  // claimed rectangle must start there — recording it as `yy - h` put the rect nine pixels above the
+  // ink and let labels sit on their neighbours while the guard reported no collision.
+  // `dir` is +1 to step down, -1 to step up: the three coastal places have no canvas below them, so
+  // their labels hang above the plate instead. Without that the guard pushed them off the bottom
+  // edge or, worse, walked "The Deep Grove" sixty pixels away from its own icon looking for room.
+  const claim = (x, y, w, h, dir) => {
+    dir = dir || 1;
+    for(let t = 0; t < 7; t++){
+      const yy = y + t * 10 * dir, top = yy - 8;
+      if(top < 2 || top + h > H - 2) break;
+      const hit = claimed.some(r => x - w/2 < r.x + r.w && x + w/2 > r.x && top < r.y + r.h && top + h > r.y);
+      if(!hit){ claimed.push({ x: x - w/2, y: top, w, h }); return yy; }
+    }
+    claimed.push({ x: x - w/2, y: y - 8, w, h }); return y;
+  };
+  for(const n of WORLD_MAP) if(!n.seen || n.seen()) claimed.push({ x:n.at[0]-19, y:n.at[1]-12, w:38, h:24 });
+  // the map's own furniture claims space first — the title used to sit on top of Butterbrook
+  claimed.push({ x:6, y:6, w:136, h:20 });         // the cartouche, top-left
+  claimed.push({ x:W-38, y:6, w:32, h:32 });       // the compass, top-right
+  // ---- the faces first, so the labels can step around them ----
+  // (Drawn after the labels originally, which meant "The Guild" ran straight through the two people
+  // standing in it. Claiming happens in draw order, so whoever draws first wins the space.)
+  for(const n of WORLD_MAP){
+    if(n.seen && !n.seen()) continue;
+    const ids = byRegion[n.id] || [];
+    if(!ids.length) continue;
+    const [x,y] = n.at, cw = 13, cols = Math.min(ids.length, 4);
+    let rows = Math.ceil(ids.length / 4);
+    // Faces hang BELOW for the southern row and above for everyone else. Not cosmetic: the coast's
+    // faces drawn above its plate sat exactly where the village's label wanted to go, and the guard
+    // — working correctly — walked "Willowbrook" five steps down until it was beside "Willowbrook
+    // Coast", 70px from its own icon. Diagnosed by printing every label's final baseline rather than
+    // by squinting at the picture, which had already cost four passes.
+    const facesBelow = y > H * 0.66;
+    let fy = facesBelow ? y + 15 : y - 14 - rows*13;
+    claimed.push({ x: x - (cols*cw)/2, y: fy - 2, w: cols*cw, h: rows*13 + 4 });
+    for(let r = 0; r < rows; r++){
+      const slice = ids.slice(r*4, r*4 + 4);
+      let fx = x - (slice.length*cw)/2 + 1;
+      for(const id of slice){
+        const por = spr[NPCDEF[id].portrait];
+        g.fillStyle = "#3a2c1e"; g.fillRect(fx - 1, fy - 1, 14, 14);
+        if(por) g.drawImage(por, 0, 0, por.width, por.height, fx, fy, 12, 12);
+        fx += cw;
+      }
+      fy += 13;
+    }
+  }
+  g.textAlign = "center";
+  for(const n of WORLD_MAP){
+    if(n.seen && !n.seen()) continue;
+    const [x,y] = n.at, here = n.id === cur;
+    // a soft parchment plate so the icon reads over sea or hill
+    if(here){                                                       // the breathing ring
+      const puls = 3 + Math.sin(animT*3)*1.6;
+      g.strokeStyle = "#c9922f"; g.lineWidth = 1.5;
+      g.beginPath(); g.arc(x, y, 12 + puls, 0, 7); g.stroke();
+    }
+    g.fillStyle = "rgba(230,215,174,0.86)";
+    g.fillRect(x - 18, y - 11, 36, 22);
+    g.strokeStyle = here ? "#c9922f" : "#8a7550"; g.lineWidth = here ? 1.6 : 1;
+    g.strokeRect(x - 18.5, y - 11.5, 37, 23);
+    g.drawImage(wmIcon(n.icon), x - 8, y - 8);
+    // ONE line per place. The subtitle used to draw here as a second row and it was the whole
+    // crowding problem — three rows of places in 196px, every label 19px tall, labels walking sixty
+    // pixels from their own icon looking for air. The subtitle now lives in the caption under the
+    // map, for wherever you are standing, which is the only one you actually want to read.
+    g.font = "8px monospace";
+    const lw = g.measureText(n.label).width + 6;
+    const ly = n.above ? claim(x, y - 15, lw, 10, -1) : claim(x, y + 21, lw, 10, 1);
+    g.fillStyle = "rgba(230,215,174,0.92)";
+    g.fillRect(x - lw/2, ly - 8, lw, 10);
+    g.fillStyle = here ? "#8a5a12" : "#3f3020";
+    g.fillText(n.label, x, ly);
+  }
+  // ---- the title cartouche ----
+  g.fillStyle = "rgba(58,44,30,0.9)"; g.fillRect(8, 8, 132, 17);
+  g.strokeStyle = "#c9922f"; g.lineWidth = 1; g.strokeRect(8.5, 8.5, 131, 16);
+  g.fillStyle = "#e9dcc0"; g.font = "8px monospace"; g.textAlign = "left";
+  g.fillText("THE WILLOWBROOK VALLEY", 14, 20);
+  // a compass, because every map has one
+  g.fillStyle = "rgba(58,44,30,0.75)";
+  g.beginPath(); g.arc(W-22, 22, 12, 0, 7); g.fill();
+  g.fillStyle = "#e9dcc0"; g.textAlign = "center"; g.font = "7px monospace";
+  g.fillText("N", W-22, 19);
+  g.fillStyle = "#c9922f";
+  g.beginPath(); g.moveTo(W-22, 13); g.lineTo(W-25, 22); g.lineTo(W-19, 22); g.closePath(); g.fill();
+  g.fillStyle = "#8a7550";
+  g.beginPath(); g.moveTo(W-22, 31); g.lineTo(W-25, 22); g.lineTo(W-19, 22); g.closePath(); g.fill();
+  g.textAlign = "left";
 }
 
 // ---- Grandpa's torn pages: found by living, re-readable forever ----

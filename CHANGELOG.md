@@ -216,6 +216,73 @@ reading it is its own way to lose a day.
 
 ---
 
+## 2026-08-03 — v6.4.6 "The Valley, Drawn" (code 150, tag `v6.4.6`) — the journal map
+
+Owner report: *"when i open the map in the journal ui, it's outdated and ugly."* Both halves were true
+and they had the same cause.
+
+### Ugly
+
+The stylesheet described it accurately in its own comment: *"a schematic Willowbrook drawn from CSS
+grid boxes."* Nine flat brown rectangles in a 4-column grid with an empty hole in one corner. No
+coastline, no roads, no river, no indication that any place was near any other. **This game draws
+everything procedurally; there was no reason its map should be the one thing made of divs.**
+
+It is a canvas now, in the same idiom as the ridge panorama — vellum with age-blotching, the ridge
+along the north, the sea sweeping up the east, the Gullwater running down to the ford, dashed roads
+that each mirror a real warp, a headland for Marrow Point with a dashed ferry line and *"39 mi"* on
+it, a compass and a title cartouche.
+
+### Outdated — and why the map could not help going stale
+
+Two hand-kept copies of things the game already knew:
+
+- **`MAP_REGION`** was missing `wrenhouse`, `harrowhouse`, `marrowpoint` and `green`. A map with no
+  entry doesn't fail — it silently drops the place *and anyone standing on it*.
+- **`npcRegionNow`** was a hand-written `switch`: a parallel transcription of `spawnMapNpcs`. **Six of
+  the thirteen cast had no case at all** (Ada, Corin, Sable, Wick, Thea, Fenn — added across four
+  releases), so the map never showed them. And v6.3's festival branch returned the string `"the
+  Green"`, which is not a region id, so on Green-festival days the faces *vanished* rather than moving.
+
+`npcRegionNow` now **runs the real schedule** — `spawnMapNpcs` over every map, memoized per game
+half-hour — and reads back who landed where. Six missing people and one broken festival became zero
+lines of new knowledge, and the next NPC appears the day their schedule exists.
+
+`check-saves.mjs` asserts `MAP_REGION` is total over `MAPS` and that every region is a real board
+node. **4,027 invariants**, up from 3,547.
+
+### The label guard, and four passes of getting it wrong
+
+Places need labels and labels collide. The fix is a claim list — each label reserves its rectangle and
+steps until it finds free air — so a new place costs a coordinate rather than a re-tune of its
+neighbours. Getting there took four wrong passes, all of them fixed by *measuring* rather than
+squinting:
+
+1. The claimed rectangle was **nine pixels above where the ink lands** (it recorded `y - h`; the text
+   draws from `baseline - 8`). Labels touched while the guard reported no collision.
+2. Subtitles made every label 19px tall on a 196px map, so the guard shoved *"The Deep Grove"* sixty
+   pixels from its own icon looking for room. **The subtitle now lives in the caption**, for wherever
+   you are standing — the only one worth reading.
+3. `width:auto` on a canvas renders at its intrinsic size forever: it caps, it never grows. The aspect
+   of the art (520×196) is the honest lever, not CSS.
+4. The coast's faces drew *above* its plate, exactly where the village's label wanted to go — so
+   "Willowbrook" walked five steps down and landed beside "Willowbrook Coast". Found by printing every
+   label's final baseline. Southern faces hang below now.
+
+Final check is arithmetic, not opinion: **every label sits exactly 21px under its own icon, zero
+guard fallbacks.**
+
+### ★ And the map-coverage assertion was a no-op on its first run
+
+`10-ui.js` was not in the harness's file list, so `sb.get("MAP_REGION")` was `undefined`, the guarded
+block skipped, and the run reported 3,547 green invariants while the check it had just been given did
+nothing. **Fourth time today** — the same shape as `check-interactions.mjs`'s three rounds. The file
+now loads `10-ui.js`, and the reachability itself is asserted rather than guarded with `if`: *a check
+that quietly does nothing when its subject is out of reach is the failure mode this harness exists to
+find.*
+
+---
+
 ## [Unreleased]
 
 ### Tooling — the atlas now guards what a Guild wing lights ON, not just that it has prose
