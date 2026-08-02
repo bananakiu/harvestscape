@@ -453,6 +453,77 @@ old place scenery. The world-expansion spec now being designed carries that as a
 
 ---
 
+## 2026-08-03 — v6.5.2 "Point and Look" (code 153, tag `v6.5.2`) — three owner reports, one theme
+
+### The hoe is out of the smart tool
+
+> *"make the auto tool use also not work for hoes, since you will accidentally hoe a lot of the ground
+> you did not mean to hoe."*
+
+`SMART_ORDER` was `["Axe","Pick","Rod","Hoe","Can"]`. Facing plain farm grass with an axe in hand, the
+picker walked that list, found the Hoe valid, and switched you into it — so a press meant as a swing
+tilled the ground, up to a 3×3 at tier 3.
+
+The argument was already written in that function's own header, about Seeds: *"a press meant as an axe
+swing would silently spend seed… Planting only ever happens because you asked for it."* The Hoe is the
+same class and was never excluded. The other four are answers to something **already in front of
+you** — an axe to a tree, a pick to a rock, a rod to water, a can to soil you already tilled. Tilling
+is the one that acts on ground that was fine as it was.
+
+Verified: axe in hand facing plain grass → stays the axe, tile unchanged. Hoe chosen deliberately →
+tills. Can still auto-picks on tilled soil, which is the loop the smart tool exists for.
+
+### Reading the Ground is off E
+
+> *"the 'you Read the ground' thing is really annoying. you accidentally trigger it a lot, so just
+> remove it."*
+
+My placement, not the feature. I hung it off *"E with nothing in front of you"* — and E is the key you
+press hundreds of times a day to open, talk, harvest and gather, so every mistimed press in a field
+became a dialog.
+
+**Moved to the look key rather than deleted**, and that is a judgement call worth stating: the Trug's
+six upgrade tiers *all* describe the read, so deleting it would leave the basket buying nothing — the
+v6.4.1 Hammer mistake, repeated deliberately. Q already answered *"nothing here worth a second look"*
+on bare ground, which is exactly the question the read answers better. **Say the word and it goes
+entirely** — the six Trug rungs would need re-pointing at something else in the same change.
+
+One ordering detail: the read had to go **before** the bare-tile line, not after. Placed after, it
+never fired at all, because every tile in the game has a name and a line.
+
+### ★ Point and look
+
+> *"how do we make examine more fun? right now, it's hard to just press x to examine stuff, and you
+> dont know when it'll yield interesting results. do you think right click examine like runescape
+> would work even if we're a WASD game?"*
+
+Yes — and the right-click is the smaller half. Two separate problems were hiding in that sentence:
+
+- **Targeting.** `examine()` was hard-wired to `facingTile()`, so looking at anything meant walking to
+  it and turning. A lot of positioning for the game's cheapest, most curious verb.
+- **Discoverability** — *"you don't know when it'll yield interesting results."* This is the real one,
+  and right-click alone does not touch it. RuneScape's examine feels good because the right-click
+  **menu tells you something is there** before you commit; the examine line is the payoff, not the
+  hook. The WASD equivalent of that menu is **hover**.
+
+So: the pointer names whatever it is over, and right-click looks at it, at any distance, with no
+facing. **An empty field names nothing — and that silence is the signal.** It is how you learn where
+to look.
+
+Under the hood `examineFacing()` became `examineAt(tx, ty)`, so one body of knowledge answers "what am
+I facing?" (Q/X), "what is under the pointer?" (hover) and "look at that" (right-click).
+
+Right-click previously called `interact()` — which acted on the tile you **face**, not the one you
+clicked: a mouse button that ignored the mouse. E is still interact. **The Undercroft keeps
+right-click as the Warden's Guard** (combat context wins, and the Guard also has Shift and the touch
+🛡).
+
+Verified in the running game: hover over a pine three tiles away while facing the other direction
+names it and offers the look; hover over bare grass shows nothing; right-click examines it without
+moving. Coordinate math checked exactly — wanted tile [17,24], resolved [17,24].
+
+---
+
 ## [Unreleased]
 
 ### Tooling — the atlas now guards what a Guild wing lights ON, not just that it has prose

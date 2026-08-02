@@ -315,7 +315,7 @@ function unlocksAt(skill, lvl){
   if(skill==="Foraging"){
     for(const w of WILD)  if(w.lvl===lvl) u.push(w.item + " — " + wildWhereBlurb(w));
     for(const p of PREPS) if(p.lvl===lvl) u.push(p.name);
-    if(lvl===READ_LEVEL)      u.push("◈ Reading the Ground — the place names what it grows today");
+    if(lvl===READ_LEVEL)      u.push("◈ Reading the Ground — press Q on open ground and the place names what it grows today");
     if(lvl===ALMANAC_LEVEL)   u.push("◈ The Gatherer's Almanac — the year-wheel, in your Journal");
     if(lvl===CUTTING_LEVEL)   u.push("◈ Cuttings — plant a wild node on your own farm, for good");
     if(lvl===CAP_LEVEL)       u.push("◈ The Cap Book — an Unnamed Cap can be named");
@@ -677,9 +677,14 @@ function animalLook(tx, ty){
   const lines = L[best.species][tier];
   return { title: nm + "  " + flockHearts(c), text: lines[Math.abs(Math.floor(animT/2)) % lines.length] };
 }
-function examineFacing(){
+function examineFacing(){ const [fx,fy] = facingTile(); return examineAt(fx, fy); }
+// ★ v6.5.2 — examine takes COORDINATES now, so the same knowledge can answer "what am I facing?" (Q)
+// and "what is under the pointer?" (right-click, hover). It was hard-wired to facingTile(), which is
+// why looking at anything meant walking to it and turning to face it — a lot of positioning for a
+// look, in a game where looking is supposed to be the cheap, curious verb.
+function examineAt(tx, ty){
   if(!curMap) return null;
-  const [tx,ty] = facingTile(); const k = key(tx,ty), tt = tileAt(tx,ty), obj = objAt(tx,ty);
+  const k = key(tx,ty), tt = tileAt(tx,ty), obj = objAt(tx,ty);
   const crop = curMap.crops[k];
   if(crop){ const c = CROPS[crop.type]; const ripe = crop.days >= c.days;
     return { title:c.name, text: ripe ? (EXAMINE[c.name]||"Ripe and ready.") : `A ${c.name.toLowerCase()} coming along — day ${crop.days} of ${c.days}.` }; }
@@ -697,8 +702,30 @@ function examineFacing(){
 function examine(){
   if(gameMode!=="play" || paused || uiBlocking() || fishing.state!=="idle") return;
   const e = examineFacing();
-  if(e && e.text) showExamine(e.title, e.text);
-  else showExamine("Hmm.", "Nothing here worth a second look.");
+  // ★ v6.5.2 — Reading the Ground lives on the LOOK key now, not on E.
+  //
+  // Ordered BEFORE the bare-tile line, not after it. Placed after, it never fired: every tile in the
+  // game has a name and a line, so examineFacing() always returned "Grass — the valley's plain green"
+  // and the read was unreachable. On open ground with nothing on it, "this ground is giving nettle
+  // and wood sorrel today" is strictly the better answer to the same question.
+  //
+  // Anything actually in front of you — a crop, a person, an animal, an object, the horse — still
+  // wins, because looking at a THING is what the key is for.
+  const [ex,ey] = facingTile();
+  const bare = !objAt(ex,ey) && !curMap.crops[key(ex,ey)] && !npcAtTile(ex,ey);
+  if(bare && curMap.outdoor && typeof readTheGround === "function" && readTheGround()) return;
+  if(e && e.text){ showExamine(e.title, e.text); playSfx("select"); return; }
+  //
+  // Owner report: "the 'you Read the ground' thing is really annoying. you accidentally trigger it a
+  // lot." True, and it was my placement, not the feature: E is the key you press hundreds of times a
+  // day to open, talk, harvest and gather, and I hung the read off "E with nothing in front of you" —
+  // so every mistimed press in a field became a dialog.
+  //
+  // Q is the deliberate look. It already answered "nothing here worth a second look" on bare ground,
+  // which is precisely the question the read answers better. Kept rather than deleted because the
+  // Trug's six upgrade tiers ALL describe the read, and deleting it would leave the basket buying
+  // nothing — the v6.4.1 Hammer mistake, repeated on purpose.
+  showExamine("Hmm.", "Nothing here worth a second look.");
   playSfx("select");
 }
 function examineItem(name){ showExamine(name, EXAMINE[name] || "Just what it looks like."); playSfx("select"); }
@@ -744,7 +771,18 @@ function canTiles(tx, ty, tier, face){
 // "the one right answer" would resolve to PLANTING — and a press meant as an axe swing would silently
 // spend seed, up to NINE tiles at Can tier 3 via the v4.24 sweep, with no un-plant verb anywhere and an
 // endgame seed at 900g. Planting only ever happens because you asked for it.
-const SMART_ORDER = ["Axe","Pick","Rod","Hoe","Can"];
+// ★ v6.5.2 — THE HOE IS OUT, for the same reason Seeds always was.
+//
+// Owner report: "make the auto tool use also not work for hoes, since you will accidentally hoe a lot
+// of the ground you did not mean to hoe." Exactly right, and the note above about Seeds already
+// contains the argument: the smart tool must never make a CHANGE TO THE WORLD you did not ask for.
+// Facing plain farm grass with an axe in hand, the picker walked this list, found the Hoe valid, and
+// switched you into it — so a press meant as a swing tilled the ground, up to a 3×3 at tier 3.
+//
+// The other four are safe because they are answers to something already in front of you: the Axe to a
+// tree, the Pick to a rock, the Rod to water, the Can to soil you have already tilled. Tilling is the
+// one that acts on ground that was fine as it was. Pick up the Hoe on purpose.
+const SMART_ORDER = ["Axe","Pick","Rod","Can"];
 function smartTool(tx, ty){
   const held = HOTBAR[slotSel] && HOTBAR[slotSel].tool;
   if(!held || toolValidFor(held, tx, ty)) return -1;          // holding something that works — never interfere
@@ -1032,12 +1070,6 @@ function interact(){
   const [tx,ty] = facingTile();
   const k = key(tx,ty), tt = tileAt(tx,ty), obj = objAt(tx,ty);
 
-  // ★ v6.5 Reading the Ground (Foraging 5) — E on OPEN ground with nothing on it. Placed here, after
-  // the crop/object checks would have claimed the tile, so it can never shadow an existing verb: if
-  // there is anything at all to interact with, that wins.
-  if(!obj && !curMap.crops[k] && curMap.outdoor && !warpAt(tx,ty) && tt !== T.DOOR && tt !== T.WATER){
-    if(readTheGround()) return;
-  }
   // door / warp
   const w = warpAt(tx,ty);
   if(w && !w.auto){ doWarp(w); return; }

@@ -3159,6 +3159,64 @@ window.addEventListener("blur", () => { for(const kk in keys) keys[kk] = false; 
 // the quest tracker sits where the reel bar draws, so fade it out while you fight a fish
 function setReelUI(on){ $("stage").classList.toggle("reeling", !!on); }
 
+// ======================================================================
+//  ★ v6.5.2 — POINT AND LOOK
+// ======================================================================
+//  Owner question: "how do we make examine more fun? right now it's hard to just press x to examine
+//  stuff, and you dont know when it'll yield interesting results. do you think right click examine
+//  like runescape would work even if we're a WASD game?"
+//
+//  Yes — but the right-click is the smaller half. Two separate problems were hiding in that sentence:
+//
+//    TARGETING — examine was hard-wired to the tile you FACE, so looking at anything meant walking to
+//    it and turning. A lot of positioning for the game's cheapest, most curious verb.
+//
+//    DISCOVERABILITY — "you don't know when it'll yield interesting results". This is the real one,
+//    and right-click alone does not touch it. RuneScape's examine feels good because the right-click
+//    MENU tells you something is there before you commit; the examine is the payoff, not the hook.
+//    The WASD equivalent of that menu is HOVER.
+//
+//  So: the pointer names whatever it is over, and right-click looks at it. An empty field names
+//  nothing, which is itself the signal — the absence of a label is how you learn where to look.
+//  Q and X keep working on the faced tile (keyboard and touch parity), and Reading the Ground stays
+//  on Q, because it reads the ground you are standing in rather than a tile you pointed at.
+function tileUnderPointer(e){
+  if(!curMap) return null;
+  const r = cv.getBoundingClientRect();
+  if(!r.width || !r.height) return null;
+  const px = (e.clientX - r.left) / r.width  * VIEW_W + cam.x;
+  const py = (e.clientY - r.top)  / r.height * VIEW_H + cam.y;
+  const tx = Math.floor(px / TILE), ty = Math.floor(py / TILE);
+  if(tx < 0 || ty < 0 || tx >= curMap.w || ty >= curMap.h) return null;
+  return [tx, ty];
+}
+let _hoverKey = "";
+function worldHover(e){
+  const tip = $("tip"); if(!tip) return;
+  if(gameMode !== "play" || uiBlocking() || isCutscene()){ tip.classList.add("hidden"); _hoverKey = ""; return; }
+  const at = tileUnderPointer(e);
+  if(!at){ tip.classList.add("hidden"); _hoverKey = ""; return; }
+  const [tx,ty] = at;
+  // Only NAME things — never the bare ground. A label on every grass tile is noise, and noise is the
+  // opposite of the signal this is for.
+  const obj = objAt(tx,ty), crop = curMap.crops[key(tx,ty)], npc = npcAtTile(tx,ty);
+  if(!obj && !crop && !npc){ tip.classList.add("hidden"); _hoverKey = ""; return; }
+  const look = examineAt(tx, ty);
+  if(!look || !look.title){ tip.classList.add("hidden"); _hoverKey = ""; return; }
+  const k = tx + "," + ty + ":" + look.title;
+  if(k !== _hoverKey){
+    _hoverKey = k;
+    tip.innerHTML = `<div class="tName">${escapeHtml(look.title)}</div>` +
+      `<div class="tVal" style="opacity:.72">right-click to look</div>`;
+    tip.classList.remove("hidden");
+  }
+  const r = cv.getBoundingClientRect();
+  tip.style.left = Math.round(e.clientX - r.left + 14) + "px";
+  tip.style.top  = Math.round(e.clientY - r.top  - 6) + "px";
+}
+cv.addEventListener("mousemove", worldHover);
+cv.addEventListener("mouseleave", () => { const t = $("tip"); if(t) t.classList.add("hidden"); _hoverKey = ""; });
+
 // mouse on canvas
 cv.addEventListener("mousedown", e => {
   firstGesture();
@@ -3166,7 +3224,17 @@ cv.addEventListener("mousedown", e => {
   e.preventDefault();
   if(!$("intro").classList.contains("hidden")) return;   // letter handles its own clicks
   if(isCutscene()){ cutsceneAdvance(); return; }
-  if(e.button === 2){ if(inCombatMap()){ startGuard(); return; } interact(); return; }   // v4.4: right-click is the "shield click" in the Undercroft; interact everywhere else
+  // v4.4: right-click is the "shield click" in the Undercroft — combat context wins, and the Guard also
+  // has Shift and the touch 🛡. v6.5.2: everywhere else it EXAMINES what is under the pointer. It used
+  // to call interact(), which acted on the tile you FACE rather than the one you clicked — a mouse
+  // button that ignored the mouse. E is still interact, and it is right there.
+  if(e.button === 2){
+    if(inCombatMap()){ startGuard(); return; }
+    const at = tileUnderPointer(e);
+    if(at){ const look = examineAt(at[0], at[1]);
+      if(look && look.text){ showExamine(look.title, look.text); playSfx("select"); return; } }
+    interact(); return;
+  }
   if(fishing.state === "reel") fishHold = true;          // held, not tapped
   else if(fishing.state !== "idle") reelOrCatch();
   else if(!uiBlocking()) useTool();
