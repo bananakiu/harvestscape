@@ -420,6 +420,39 @@ Long Walk, and Cuttings' planted farm nodes — the ladder marks are live, the s
 
 ---
 
+## 2026-08-03 — v6.5.1 "The Wild" (code 152, tag `v6.5.1`) — the shipping bin sells nothing
+
+Owner report: *"remove the store in the farm cuz that's useless and makes tom's store obsolete."*
+
+`case "shipbin"` called `openShop("sell", true)` — **with no vendor argument**. `openShop` defaults to
+`"tom"`, and `renderShop` gives Tom the full five-tab set. So the bin in the middle of your own farm
+opened *Tom's General Store*: Sell, Seeds & Food, Tools, Décor, Cottage.
+
+Which means the walk into the village was **optional**. Tom's counter is not just a shop — it is where
+his turn-ins live, where his noticeboard requests are fulfilled, and where his recognitions fire
+(`08-actions.js:1081-1089`, and the comment there says so: *"Tom stands behind the counter and can't
+be talked to directly, so his turn-ins and his noticeboard requests both have to be reachable from
+here"*). The entire village layout is built around that hub, and a bin thirty tiles from your bed made
+it scenery.
+
+The bin now has its own vendor id and its own single tab:
+
+```
+THE SHIPPING BIN  ·  [Ship]
+TOM'S GENERAL STORE  ·  [Sell] [Seeds & Food] [Tools] [Décor] [Cottage]
+```
+
+**Prices are unchanged.** The bin pays exactly what Tom pays, because docking it would take something
+from every player who has been using it. What it loses is four tabs it should never have had.
+
+Verified in the running game: the bin opens one tab and still sells a Turnip; Tom's opens five.
+
+★ This is also the sharpest possible statement of what the next release must avoid — in both
+directions. A new area with nothing in it is scenery; a new area that duplicates a service makes the
+old place scenery. The world-expansion spec now being designed carries that as a per-area test.
+
+---
+
 ## [Unreleased]
 
 ### Tooling — the atlas now guards what a Guild wing lights ON, not just that it has prose

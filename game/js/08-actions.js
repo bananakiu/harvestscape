@@ -1090,7 +1090,7 @@ function interact(){
         if(recTom){ showDialog(NPCDEF.tom.name + "   " + heartStr(heartsOf("tom")), recTom, NPCDEF.tom.portrait); return; }
         openShop(); return;
       }
-      case "shipbin": toast("Shipping bin — sell your goods here.", "#e9dcc0"); openShop("sell", true); return;
+      case "shipbin": toast("Shipping bin — sell your goods here.", "#e9dcc0"); openShop("sell", true, "bin"); return;   // v6.6: its OWN vendor id — it used to default to Tom and open his whole store
       case "sign": showDialog("Weathered Sign", obj.text || "…", "port_sign"); return;
       // v5.8 the visiting trader. Opens the same shop panel every vendor uses (one grammar), on its
       // own vendor id so the tab set and the greeting are its own.

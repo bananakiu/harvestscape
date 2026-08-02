@@ -8,13 +8,16 @@
 // Single source of truth for the build. `name` is the semantic version shown to players;
 // `code` is a monotonic integer (bump every release) used to detect "you've updated" and
 // to gate save migrations. Keep this in lockstep with CHANGELOG.md and CHANGELOG (below).
-const VERSION = { name: "6.5.0", code: 151, codename: "The Wild", date: "2026-08-03" };
+const VERSION = { name: "6.5.1", code: 152, codename: "The Wild", date: "2026-08-03" };
 
 // ---- IN-GAME CHANGE LOG ----
 // The player-readable mirror of CHANGELOG.md (the full audit trail lives there, with the
 // design reasoning). Newest first. Shown in the "What's New" panel. When you cut a release:
 // bump VERSION, add an entry here, and write the detailed version in CHANGELOG.md — same change.
 const CHANGELOG = [
+  { v:"6.5.1", code:152, date:"2026-08-03", name:"The Wild", notes:[
+    { t:"fix", s:"The shipping bin ships. It has been opening Tom's entire shop \u2014 seeds, tools, d\u00e9cor, cottage upgrades \u2014 from the middle of your own farm, which meant the walk into the village was optional and Tom's counter was scenery. It sells what you put in it, at exactly the price it always paid, and nothing else. Its own examine line has said so from the start: \u201cwhatever goes in tonight is sold by morning\u201d." },
+  ]},
   { v:"6.5.0", code:151, date:"2026-08-03", name:"The Wild", notes:[
     { t:"new", s:"Foraging \u2014 the eighth craft, trained 1 to 99, and the only one that costs no energy and needs no tool to begin. Eighteen wild finds across the valley, each with its own ground, its own season and sometimes its own hour: nettle in the hedgerows on your first morning, sorrel on the grove floor, bogbean and reedmace in the wet, an unnamed mushroom you carry home for sixteen levels before you can read the book that names it, and moonwort on the summit that only opens after dark." },
     { t:"new", s:"Nothing was taken from any other craft to make room. Every forage node in the game keeps training exactly what it always trained, at exactly the rate it always did \u2014 they simply pay a little Foraging on top now. Picking berries is still Farming." },

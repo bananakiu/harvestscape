@@ -1407,14 +1407,25 @@ function projectsRowsHtml(){
 // décor); Bram's Bait & Tackle is on the coast; Nell's Larder is at the Butterbrook dairy.
 let _shopVendor = "tom";
 const SHOP_TITLES = { tom:"TOM'S GENERAL STORE", bram:"BRAM'S BAIT & TACKLE", nell:"NELL'S LARDER",
-                     ferry:"THE FERRY TRADER" };   // v5.8
+                     ferry:"THE FERRY TRADER",   // v5.8
+                     bin:"THE SHIPPING BIN" };   // v6.6 — sells nothing; see the note on TABS below
 function openShop(tab, silent, vendor){ _shopVendor = vendor || "tom"; _panelTab["shopPanel"] = tab || "sell"; openPanel("shopPanel", renderShop);
   if(!silent && _shopVendor === "tom") toast(pick(TOM_GREET), "#e9dcc0"); }
 function renderShop(){
   const b = $("shopPanel").querySelector(".body");
   const vendor = _shopVendor || "tom";
   const h2 = $("shopPanel").querySelector(".phead h2"); if(h2) h2.textContent = SHOP_TITLES[vendor] || "SHOP";
-  const TABS = vendor === "tom"  ? [["sell","Sell"],["buy","Seeds & Food"],["tools","Tools"],["decor","Décor"],["home","Cottage"]]
+  // ★ v6.6 — THE BIN SELLS NOTHING. It called openShop("sell", true) with no vendor, which defaults
+  // to "tom" and therefore rendered all five of his tabs: standing at your own shipping bin you could
+  // buy seeds, tools, décor and cottage upgrades without ever walking to the village. Tom's store —
+  // the hub the whole village layout is built around, where his turn-ins, his noticeboard requests
+  // and his recognitions live — was optional scenery. Owner report: "remove the store in the farm cuz
+  // that's useless and makes tom's store obsolete."
+  //
+  // Prices are UNCHANGED: the bin pays exactly what Tom pays, because docking it would take something
+  // from every player who has been using it. What it loses is the four tabs it should never have had.
+  const TABS = vendor === "bin"  ? [["sell","Ship"]]
+             : vendor === "tom"  ? [["sell","Sell"],["buy","Seeds & Food"],["tools","Tools"],["decor","Décor"],["home","Cottage"]]
              : vendor === "bram" ? [["sell","Sell"],["buy","Bait & Tackle"]]
              : vendor === "ferry"? [["buy","Today's Cargo"]]     // v5.8: no sell tab — he isn't buying, he's passing through
              :                     [["sell","Sell"],["buy","Larder"]];
